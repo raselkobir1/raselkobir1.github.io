@@ -1,0 +1,1996 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Apache Kafka Mastery — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#ff8c42; --accent2:#4aa3ff;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff;
+    --code-bg:#0b0f14; --kw:#79c0ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  /* Sidebar */
+  .sidebar{
+    width:290px; flex:0 0 290px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14.5px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(255,140,66,.22),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#111}
+  /* Main */
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--accent2)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--accent2)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#8fd0ff}
+  .viz{background:var(--code-bg); border:1px solid var(--border); border-radius:12px; padding:20px 18px 12px; margin:18px 0}
+  .viz svg{width:100%; height:auto; display:block; overflow:visible}
+  .viz figcaption{color:var(--muted); font-size:13px; margin-top:10px; text-align:center; line-height:1.5}
+  .viz .lgnd{display:flex; gap:18px; justify-content:center; flex-wrap:wrap; margin-top:12px; font-size:13px; color:var(--muted)}
+  .viz .lgnd span{display:inline-flex; align-items:center; gap:6px}
+  .viz .sw{width:13px; height:13px; border-radius:3px; display:inline-block}
+  .viz text{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .viz .bn{font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla",sans-serif}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  .en{font-style:normal}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .toc a{color:var(--accent2); text-decoration:none}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>Apache Kafka Mastery</h1>
+      <p>Beginner → Advanced • বাংলায় (keyword ইংরেজিতে)</p>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+// ================= CONTENT =================
+const pages = [
+  {id:"foundation", icon:"🏛️", title:"Foundation — কেন Kafka?"},
+  {id:"architecture", icon:"🧱", title:"Architecture"},
+  {id:"internal", icon:"⚙️", title:"Internal Working"},
+  {id:"storage", icon:"💾", title:"Storage Internals"},
+  {id:"producer", icon:"📤", title:"Producer"},
+  {id:"consumer", icon:"📥", title:"Consumer"},
+  {id:"replication", icon:"🔁", title:"Replication"},
+  {id:"performance", icon:"🚀", title:"Performance"},
+  {id:"reliability", icon:"🛡️", title:"Reliability"},
+  {id:"scaling", icon:"📈", title:"Scaling"},
+  {id:"failure", icon:"💥", title:"Failure Scenarios"},
+  {id:"ecosystem", icon:"🧩", title:"Ecosystem — Connect, Streams, Schema"},
+  {id:"security", icon:"🔐", title:"Security"},
+  {id:"operations", icon:"📟", title:"Operations & Monitoring"},
+  {id:"production", icon:"🏦", title:"Production: Accounting System"},
+];
+</script>
+
+<!-- Content is injected below via template blocks for readability -->
+<template data-page="foundation">
+<h2 class="title">১. Foundation — কেন Kafka তৈরি হলো?</h2>
+<p class="lead">এই অংশে আমরা শুধু "Kafka কী" শিখব না — বরং <b>কেন</b> এটা বানানো হলো, <b>কোন সমস্যা</b> সমাধান করে, <b>ভেতরে কীভাবে</b> কাজ করে, আর <b>কেন এই ডিজাইন</b> বেছে নেওয়া হলো — সেটা বুঝব।</p>
+
+<h3>Kafka আসলে কী?</h3>
+<p>Apache Kafka একটা <span class="kw">distributed event streaming platform</span>. সহজ ভাষায় — এটা একটা বিশাল, distributed, append-only <span class="kw">log</span> (লগবই), যেখানে অসংখ্য producer ডেটা লিখে আর অসংখ্য consumer সেই ডেটা পড়ে। এটা LinkedIn-এ ২০১০ সালের দিকে তৈরি হয়, পরে Apache-এ open-source হয়।</p>
+<p>মনে রাখবেন — Kafka একটা সাধারণ <span class="kw">message queue</span> নয়। এটা একটা <span class="kw">durable, replayable commit log</span>। এই একটা পার্থক্যই এর পুরো ডিজাইন ব্যাখ্যা করে।</p>
+
+<h3>কেন তৈরি হলো? — কোন সমস্যা?</h3>
+<p>LinkedIn-এর সমস্যাটা ছিল <span class="kw">data integration</span>-এর। কল্পনা করুন আপনার অনেকগুলো system আছে — website activity, database, metrics, logs, search index, cache, data warehouse। প্রতিটা system-কে প্রতিটার সাথে যুক্ত করতে গেলে <b>N × M</b> সংখ্যক point-to-point connection লাগে। এটা একটা "spaghetti architecture"।</p>
+<div class="diagram"><pre>
+Before Kafka (N x M chaos):          After Kafka (N + M):
+
+ App1 ─┬─→ DB                          App1 ─┐
+ App2 ─┼─→ Search                      App2 ─┼─→ [ KAFKA ] ─┬─→ DB
+ App3 ─┼─→ Cache                       App3 ─┘   (log)      ├─→ Search
+       └─→ Warehouse                                        ├─→ Cache
+  (প্রতিটা তীর আলাদা integration)                            └─→ Warehouse
+</pre></div>
+<p>Kafka মাঝখানে একটা <span class="kw">central nervous system</span> হিসেবে বসে। প্রত্যেকে শুধু Kafka-র সাথে কথা বলে — একে অপরের সাথে না। এতে integration সংখ্যা <b>N×M থেকে N+M</b>-এ নেমে আসে।</p>
+
+<div class="callout why"><span class="tag">Why designed this way</span>
+Kafka message পড়ে ফেললে delete করে না (traditional queue-র মতো)। ডেটা একটা retention period পর্যন্ত disk-এ থেকে যায়। ফলে একই ডেটা অনেক consumer আলাদা আলাদা গতিতে, আলাদা সময়ে পড়তে পারে — এমনকি পুরনো ডেটা <span class="kw">replay</span> করা যায়। এই "replayable log" ধারণাই Kafka-কে RabbitMQ/ActiveMQ থেকে আলাদা করে।</div>
+
+<h3>Kafka vs Traditional Message Queue</h3>
+<table>
+<tr><th>বিষয়</th><th>Traditional Queue (RabbitMQ)</th><th>Kafka</th></tr>
+<tr><td>Message পড়ার পর</td><td>delete হয়ে যায়</td><td>retention পর্যন্ত থাকে (replayable)</td></tr>
+<tr><td>Consumer position</td><td>broker track করে</td><td><span class="kw">consumer</span> নিজে offset track করে</td></tr>
+<tr><td>Throughput</td><td>মাঝারি</td><td>অত্যন্ত high (millions/sec)</td></tr>
+<tr><td>Storage model</td><td>in-memory + queue</td><td>append-only log on disk</td></tr>
+<tr><td>Ordering</td><td>সীমিত</td><td>per-partition strict ordering</td></tr>
+</table>
+
+<h3>ভেতরে কীভাবে কাজ করে (high level)</h3>
+<ul>
+<li>Producer একটা <span class="kw">topic</span>-এ message পাঠায়।</li>
+<li>Topic ভাগ হয় অনেকগুলো <span class="kw">partition</span>-এ — প্রতিটা partition একটা independent, ordered log।</li>
+<li>প্রতিটা partition কোনো একটা <span class="kw">broker</span>-এ leader হিসেবে থাকে, disk-এ append হয়।</li>
+<li>Consumer একটা <span class="kw">consumer group</span>-এর মধ্যে থেকে partition পড়ে, আর নিজের <span class="kw">offset</span> track করে।</li>
+</ul>
+
+<div class="callout behind"><span class="tag">Behind the scenes</span>
+Kafka-র সব performance-এর রহস্য একটাই সিদ্ধান্তে: <b>ডেটাকে sequential append-only log হিসেবে disk-এ রাখা এবং OS-এর page cache ব্যবহার করা</b>। random disk I/O না করে sequential I/O করায় HDD-তেও এটা অসম্ভব দ্রুত। (বিস্তারিত Storage ও Performance ট্যাবে।)</div>
+
+<h3>Real production examples</h3>
+<ul>
+<li><b>LinkedIn:</b> দিনে ৭ trillion+ message — activity tracking, metrics।</li>
+<li><b>Uber:</b> real-time trip, pricing, fraud detection pipeline।</li>
+<li><b>Netflix:</b> সব microservice-এর event backbone।</li>
+<li><b>Banking/Accounting:</b> transaction event stream, audit log, ledger updates (আপনার ক্ষেত্রে সবচেয়ে প্রাসঙ্গিক — শেষ ট্যাব দেখুন)।</li>
+</ul>
+
+<div class="callout mistake"><span class="tag">Common mistakes</span>
+<ul style="margin:4px 0">
+<li>Kafka-কে database ভাবা — এটা primary datastore নয়, event log।</li>
+<li>একটা topic-এ শুধু ১টা partition রেখে পরে scale করতে না পারা।</li>
+<li>Message size বড় (MB scale) রাখা — Kafka ছোট message-এর জন্য optimized।</li>
+</ul></div>
+<div class="callout best"><span class="tag">Best practices</span>
+<ul style="margin:4px 0">
+<li>শুরুতেই partition count নিয়ে ভাবুন (কমানো যায় না, বাড়ানো ordering ভাঙে)।</li>
+<li>Schema management-এ <span class="kw">Schema Registry</span> (Avro/Protobuf) ব্যবহার করুন।</li>
+<li>Topic naming convention ঠিক করুন: <code>domain.entity.event</code> — যেমন <code>accounting.invoice.created</code>।</li>
+</ul></div>
+</template>
+
+<template data-page="architecture">
+<h2 class="title">২. Architecture — গভীরভাবে</h2>
+<p class="lead">Kafka-র প্রতিটা component কী, কেন আছে, আর production-এ কীভাবে সাজানো হয় — diagram সহ।</p>
+
+<figure class="viz">
+<svg viewBox="0 0 820 330" role="img" aria-label="Kafka cluster with 3 brokers, each holding leader and follower replicas of a topic's partitions">
+  <text x="410" y="26" text-anchor="middle" fill="#ff8c42" font-size="16" font-weight="700" letter-spacing="1">KAFKA CLUSTER</text>
+  <rect x="24" y="42" width="772" height="216" rx="12" fill="none" stroke="#2d333b" stroke-dasharray="5 5"/>
+  <!-- Broker 1 -->
+  <g>
+    <rect x="40" y="60" width="228" height="184" rx="10" fill="#161b22" stroke="#2d333b"/>
+    <rect x="40" y="60" width="228" height="34" rx="10" fill="#1c2330"/>
+    <text x="56" y="82" fill="#4aa3ff" font-size="14" font-weight="700">Broker 1</text>
+    <rect x="170" y="68" width="86" height="18" rx="9" fill="rgba(188,140,255,.18)" stroke="#bc8cff"/>
+    <text x="213" y="81" text-anchor="middle" fill="#bc8cff" font-size="10.5">Controller</text>
+    <!-- pills -->
+    <rect x="54" y="104" width="200" height="38" rx="8" fill="rgba(255,140,66,.16)" stroke="#ff8c42"/>
+    <text x="68" y="128" fill="#e6edf3" font-size="12.5">TopicA · P0</text>
+    <rect x="222" y="112" width="22" height="22" rx="5" fill="#ff8c42"/><text x="233" y="128" text-anchor="middle" fill="#111" font-size="12" font-weight="700">L</text>
+    <rect x="54" y="150" width="200" height="38" rx="8" fill="rgba(74,163,255,.10)" stroke="#2d5170"/>
+    <text x="68" y="174" fill="#c9d1d9" font-size="12.5">TopicA · P1</text>
+    <rect x="222" y="158" width="22" height="22" rx="5" fill="#4aa3ff"/><text x="233" y="174" text-anchor="middle" fill="#111" font-size="12" font-weight="700">F</text>
+    <rect x="54" y="196" width="200" height="38" rx="8" fill="rgba(74,163,255,.10)" stroke="#2d5170"/>
+    <text x="68" y="220" fill="#c9d1d9" font-size="12.5">TopicA · P2</text>
+    <rect x="222" y="204" width="22" height="22" rx="5" fill="#4aa3ff"/><text x="233" y="220" text-anchor="middle" fill="#111" font-size="12" font-weight="700">F</text>
+  </g>
+  <!-- Broker 2 -->
+  <g>
+    <rect x="296" y="60" width="228" height="184" rx="10" fill="#161b22" stroke="#2d333b"/>
+    <rect x="296" y="60" width="228" height="34" rx="10" fill="#1c2330"/>
+    <text x="312" y="82" fill="#4aa3ff" font-size="14" font-weight="700">Broker 2</text>
+    <rect x="310" y="104" width="200" height="38" rx="8" fill="rgba(74,163,255,.10)" stroke="#2d5170"/>
+    <text x="324" y="128" fill="#c9d1d9" font-size="12.5">TopicA · P0</text>
+    <rect x="478" y="112" width="22" height="22" rx="5" fill="#4aa3ff"/><text x="489" y="128" text-anchor="middle" fill="#111" font-size="12" font-weight="700">F</text>
+    <rect x="310" y="150" width="200" height="38" rx="8" fill="rgba(255,140,66,.16)" stroke="#ff8c42"/>
+    <text x="324" y="174" fill="#e6edf3" font-size="12.5">TopicA · P1</text>
+    <rect x="478" y="158" width="22" height="22" rx="5" fill="#ff8c42"/><text x="489" y="174" text-anchor="middle" fill="#111" font-size="12" font-weight="700">L</text>
+    <rect x="310" y="196" width="200" height="38" rx="8" fill="rgba(74,163,255,.10)" stroke="#2d5170"/>
+    <text x="324" y="220" fill="#c9d1d9" font-size="12.5">TopicA · P2</text>
+    <rect x="478" y="204" width="22" height="22" rx="5" fill="#4aa3ff"/><text x="489" y="220" text-anchor="middle" fill="#111" font-size="12" font-weight="700">F</text>
+  </g>
+  <!-- Broker 3 -->
+  <g>
+    <rect x="552" y="60" width="228" height="184" rx="10" fill="#161b22" stroke="#2d333b"/>
+    <rect x="552" y="60" width="228" height="34" rx="10" fill="#1c2330"/>
+    <text x="568" y="82" fill="#4aa3ff" font-size="14" font-weight="700">Broker 3</text>
+    <rect x="566" y="104" width="200" height="38" rx="8" fill="rgba(74,163,255,.10)" stroke="#2d5170"/>
+    <text x="580" y="128" fill="#c9d1d9" font-size="12.5">TopicA · P0</text>
+    <rect x="734" y="112" width="22" height="22" rx="5" fill="#4aa3ff"/><text x="745" y="128" text-anchor="middle" fill="#111" font-size="12" font-weight="700">F</text>
+    <rect x="566" y="150" width="200" height="38" rx="8" fill="rgba(74,163,255,.10)" stroke="#2d5170"/>
+    <text x="580" y="174" fill="#c9d1d9" font-size="12.5">TopicA · P1</text>
+    <rect x="734" y="158" width="22" height="22" rx="5" fill="#4aa3ff"/><text x="745" y="174" text-anchor="middle" fill="#111" font-size="12" font-weight="700">F</text>
+    <rect x="566" y="196" width="200" height="38" rx="8" fill="rgba(255,140,66,.16)" stroke="#ff8c42"/>
+    <text x="580" y="220" fill="#e6edf3" font-size="12.5">TopicA · P2</text>
+    <rect x="734" y="204" width="22" height="22" rx="5" fill="#ff8c42"/><text x="745" y="220" text-anchor="middle" fill="#111" font-size="12" font-weight="700">L</text>
+  </g>
+  <text x="410" y="284" text-anchor="middle" fill="#9aa7b4" font-size="12.5" class="bn">প্রতিটা partition এর ৩টা replica ৩ broker এ ছড়ানো — ১টা Leader, ২টা Follower</text>
+  <text x="410" y="306" text-anchor="middle" fill="#9aa7b4" font-size="12.5" class="bn">Metadata KRaft (Raft quorum) দিয়ে manage হয় · Controller leader election চালায়</text>
+</svg>
+<div class="lgnd">
+  <span><i class="sw" style="background:#ff8c42"></i> Leader replica (read/write এখানে)</span>
+  <span><i class="sw" style="background:#4aa3ff"></i> Follower replica (শুধু replicate)</span>
+  <span><i class="sw" style="background:#bc8cff"></i> Controller role</span>
+</div>
+<figcaption>Topic "TopicA" · 3 partitions · replication.factor=3 — leader ৩ broker এ ছড়িয়ে load balance হয়েছে</figcaption>
+</figure>
+
+<h3>Broker</h3>
+<p><span class="kw">Broker</span> হলো একটা একক Kafka server (একটা JVM process)। এটা partition-এর data disk-এ রাখে, producer থেকে write নেয়, consumer-কে read দেয়, আর replication চালায়। প্রতিটা broker-এর একটা unique <code>broker.id</code> থাকে।</p>
+
+<h3>Cluster</h3>
+<p>একাধিক broker মিলে একটা <span class="kw">cluster</span>। Cluster-ই fault tolerance আর scalability দেয়। একটা broker down হলে অন্য broker-এ থাকা replica কাজ চালিয়ে নেয়।</p>
+
+<h3>Kafka কোন Protocol ব্যবহার করে?</h3>
+<p>Kafka কোনো standard protocol (AMQP/HTTP/MQTT) ব্যবহার করে <b>না</b> — এর আছে নিজস্ব একটা <span class="kw">custom binary protocol over TCP</span> (সাধারণভাবে "Kafka wire protocol")। Client ও broker এই protocol-এ length-prefixed binary request/response আদান-প্রদান করে। এটাই RabbitMQ (যা standard AMQP ব্যবহার করে)-র সাথে মৌলিক পার্থক্য।</p>
+<ul>
+<li><b>TCP-ভিত্তিক, binary:</b> প্রতিটা request length-prefixed — কম overhead, দ্রুত parse।</li>
+<li><b>Request/response API:</b> প্রতিটা operation একটা "API" — যেমন <code>Produce</code>, <code>Fetch</code>, <code>Metadata</code>, <code>ListOffsets</code>, <code>OffsetCommit</code>/<code>OffsetFetch</code>, আর consumer group-এর <code>JoinGroup</code>/<code>SyncGroup</code>/<code>Heartbeat</code>।</li>
+<li><b>API versioning:</b> প্রতি request-এ একটা API key + version থাকে; client ও broker version negotiate করে — তাই পুরনো client নতুন broker-এর সাথে চলে (backward/forward compatibility)।</li>
+<li><b>Batching ও pipelining:</b> একটা connection-এ একাধিক request pipeline করা যায়; produce/fetch batch-এ হয় → high throughput।</li>
+<li><b>Long-lived connection:</b> client broker-এর সাথে persistent TCP connection রাখে, প্রতি request-এ নতুন খোলে না।</li>
+</ul>
+<div class="callout behind"><span class="tag">Behind the scenes — কেন custom protocol</span>
+Kafka-র লক্ষ্য বিশাল throughput। Custom binary protocol batching, <code>sendfile()</code> zero-copy (Performance ট্যাব), আর কম per-message overhead সম্ভব করে — যা generic protocol-এ কঠিন। Client প্রথমে যেকোনো broker-কে <code>Metadata</code> request পাঠিয়ে জেনে নেয় কোন partition-এর leader কোন broker-এ, তারপর সরাসরি সেই leader broker-এ produce/fetch করে।</div>
+<h4>Security listener ও port</h4>
+<table>
+<tr><th>Listener protocol</th><th>কী</th></tr>
+<tr><td><code>PLAINTEXT</code></td><td>encryption/auth ছাড়া (শুধু dev), default port <code>9092</code></td></tr>
+<tr><td><code>SSL</code></td><td>TLS encryption (+ ঐচ্ছিক mTLS auth)</td></tr>
+<tr><td><code>SASL_PLAINTEXT</code></td><td>SASL auth, কিন্তু encryption নেই</td></tr>
+<tr><td><code>SASL_SSL</code></td><td>SASL auth + TLS — production-এ এটাই</td></tr>
+</table>
+<p>SASL mechanism: <code>PLAIN</code>, <code>SCRAM-SHA-256/512</code>, <code>GSSAPI</code> (Kerberos), <code>OAUTHBEARER</code> — বিস্তারিত Security ট্যাবে।</p>
+<div class="callout why"><span class="tag">RabbitMQ (AMQP) বনাম Kafka (custom)</span>
+RabbitMQ standard <b>AMQP 0-9-1</b> ব্যবহার করে, তাই routing বুদ্ধি (exchange/binding) protocol-এই সংজ্ঞায়িত। Kafka-র custom protocol শুধু log-এ append ও offset-ভিত্তিক fetch-এ কেন্দ্রীভূত — routing বুদ্ধি client-এ। এজন্যই AMQP client দিয়ে Kafka-তে সংযোগ করা যায় না (উল্টোটাও নয়) — প্রতিটার আলাদা client library লাগে।</div>
+
+<h3>Controller ও KRaft</h3>
+<p>Cluster-এ একটা broker <span class="kw">Controller</span>-এর ভূমিকা পালন করে। এর কাজ: partition leader election, broker join/leave handle করা, metadata manage করা।</p>
+<p><span class="kw">KRaft</span> (Kafka Raft) হলো নতুন metadata management mode (Kafka 2.8+, 3.3-এ production-ready, 4.0-এ default)। এখানে metadata নিজেই একটা internal Kafka topic (<code>__cluster_metadata</code>)-এ Raft consensus দিয়ে রাখা হয়। কয়েকটা broker <span class="kw">controller quorum</span> তৈরি করে।</p>
+<div class="callout why"><span class="tag">Why KRaft replaced ZooKeeper</span>
+ZooKeeper আলাদা একটা system — আলাদা deploy, tune, monitor করতে হতো। বড় cluster-এ ZooKeeper-এ metadata scale করত না (partition বাড়লে metadata operation ধীর হতো)। KRaft সব এক জায়গায় আনে — কম moving parts, দ্রুত failover (controller failover সেকেন্ডে), millions of partition support।</div>
+
+<h4>ZooKeeper (legacy)</h4>
+<p>পুরনো Kafka-তে <span class="kw">ZooKeeper</span> metadata (topic config, ACL, broker membership, controller election) রাখত। নতুন কাজে KRaft ব্যবহার করুন; ZooKeeper Kafka 4.0-এ সম্পূর্ণ বাদ।</p>
+
+<h3>Topic, Partition, Replica</h3>
+<p><span class="kw">Topic</span> একটা logical stream/category (যেমন <code>orders</code>)। প্রতিটা topic ভাগ হয় <span class="kw">partition</span>-এ। Partition-ই আসল unit — parallelism, ordering, storage সব partition level-এ।</p>
+<p>প্রতিটা partition-এর কয়েকটা কপি থাকে — এদের বলে <span class="kw">replica</span>। <code>replication.factor=3</code> মানে প্রতিটা partition-এর ৩টা কপি ৩টা আলাদা broker-এ।</p>
+
+<div class="diagram"><pre>
+Topic "orders" (partitions=3, replication.factor=3)
+
+ Partition 0:  [0][1][2][3][4]...   ← offset বাড়ে, append-only
+ Partition 1:  [0][1][2][3]...
+ Partition 2:  [0][1][2][3][4][5]...
+
+ প্রতিটা partition একটা independent ordered log.
+ Ordering guarantee শুধু একটা partition-এর ভেতরে — পুরো topic জুড়ে নয়!
+</pre></div>
+
+<h3>Leader, Follower, ISR</h3>
+<p>প্রতিটা partition-এর replica-গুলোর একটা <span class="kw">leader</span>, বাকিরা <span class="kw">follower</span>। সব read/write leader-এর মাধ্যমে হয়; follower শুধু leader থেকে copy করে (replicate)।</p>
+<p><span class="kw">ISR (In-Sync Replicas)</span> হলো সেই follower-দের সেট যারা leader-এর সাথে "যথেষ্ট আপ-টু-ডেট"। leader down হলে শুধু ISR থেকেই নতুন leader হয় (default-এ)। বিস্তারিত Replication ট্যাবে।</p>
+
+<h3>Segment Files, Index Files, Log Storage</h3>
+<p>প্রতিটা partition disk-এ একটা directory। সেই directory-তে log ভাগ করা থাকে ছোট ছোট <span class="kw">segment file</span>-এ (default ~1GB বা <code>log.segment.bytes</code>)। প্রতিটা segment-এর সাথে থাকে <span class="kw">index file</span> (offset→physical position) আর <span class="kw">time index</span> (timestamp→offset)। এটা Storage ট্যাবে গভীরভাবে দেখানো হয়েছে।</p>
+
+<div class="callout best"><span class="tag">Production sizing example</span>
+একটা accounting system-এর জন্য: <code>orders</code> topic — partitions=12, replication.factor=3, min.insync.replicas=2, retention=7 days। এতে সর্বোচ্চ 12 consumer parallel পড়তে পারবে, আর ২টা broker fail করলেও data থাকবে।</div>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+<code>replication.factor=1</code> রাখা (এক কপি) — broker down হলেই data হারায়। Production-এ সবসময় ≥3 রাখুন এবং <code>min.insync.replicas=2</code>।</div>
+</template>
+
+<template data-page="internal">
+<h2 class="title">৩. Internal Working — end-to-end journey</h2>
+<p class="lead">Producer <code>send()</code> কল করা থেকে শুরু করে Consumer message process করা পর্যন্ত প্রতিটা step, প্রতিটা network call, প্রতিটা disk operation।</p>
+
+<figure class="viz">
+<svg viewBox="0 0 760 668" role="img" aria-label="End to end flow from producer send to consumer offset commit, in eleven steps grouped into producer, broker and consumer stages">
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa7b4"/></marker>
+  </defs>
+  <!-- zone bars -->
+  <rect x="26" y="48" width="8" height="200" rx="4" fill="#ff8c42"/>
+  <text x="18" y="148" fill="#ff8c42" font-size="13" font-weight="700" transform="rotate(-90 18 148)" text-anchor="middle">PRODUCER</text>
+  <rect x="26" y="268" width="8" height="200" rx="4" fill="#4aa3ff"/>
+  <text x="18" y="368" fill="#4aa3ff" font-size="13" font-weight="700" transform="rotate(-90 18 368)" text-anchor="middle">BROKER</text>
+  <rect x="26" y="488" width="8" height="148" rx="4" fill="#3fb950"/>
+  <text x="18" y="562" fill="#3fb950" font-size="13" font-weight="700" transform="rotate(-90 18 562)" text-anchor="middle">CONSUMER</text>
+  <!-- connector line -->
+  <line x1="390" y1="48" x2="390" y2="636" stroke="#2d333b" stroke-width="2"/>
+  <!-- step boxes: helper is manual -->
+  <!-- 1 -->
+  <rect x="90" y="48" width="600" height="44" rx="9" fill="rgba(255,140,66,.12)" stroke="#ff8c42"/>
+  <circle cx="122" cy="70" r="14" fill="#ff8c42"/><text x="122" y="75" text-anchor="middle" fill="#111" font-size="13" font-weight="700">1</text>
+  <text x="150" y="75" fill="#e6edf3" font-size="13.5">producer.send(record) — application message পাঠায়</text>
+  <!-- 2 -->
+  <rect x="90" y="100" width="600" height="44" rx="9" fill="rgba(255,140,66,.12)" stroke="#ff8c42"/>
+  <circle cx="122" cy="122" r="14" fill="#ff8c42"/><text x="122" y="127" text-anchor="middle" fill="#111" font-size="13" font-weight="700">2</text>
+  <text x="150" y="127" fill="#e6edf3" font-size="13.5">Serialization — key + value → bytes</text>
+  <!-- 3 -->
+  <rect x="90" y="152" width="600" height="44" rx="9" fill="rgba(255,140,66,.12)" stroke="#ff8c42"/>
+  <circle cx="122" cy="174" r="14" fill="#ff8c42"/><text x="122" y="179" text-anchor="middle" fill="#111" font-size="13" font-weight="700">3</text>
+  <text x="150" y="179" fill="#e6edf3" font-size="13.5">Partitioner — hash(key) % partitions → কোন partition</text>
+  <!-- 4 -->
+  <rect x="90" y="204" width="600" height="44" rx="9" fill="rgba(255,140,66,.12)" stroke="#ff8c42"/>
+  <circle cx="122" cy="226" r="14" fill="#ff8c42"/><text x="122" y="231" text-anchor="middle" fill="#111" font-size="13" font-weight="700">4</text>
+  <text x="150" y="231" fill="#e6edf3" font-size="13.5">RecordAccumulator — batch + buffer, Sender thread পাঠায়</text>
+  <!-- 5 -->
+  <rect x="90" y="268" width="600" height="44" rx="9" fill="rgba(74,163,255,.12)" stroke="#4aa3ff"/>
+  <circle cx="122" cy="290" r="14" fill="#4aa3ff"/><text x="122" y="295" text-anchor="middle" fill="#111" font-size="13" font-weight="700">5</text>
+  <text x="150" y="295" fill="#e6edf3" font-size="13.5">Leader broker — ProduceRequest → page cache এ append</text>
+  <!-- 6 -->
+  <rect x="90" y="320" width="600" height="44" rx="9" fill="rgba(74,163,255,.12)" stroke="#4aa3ff"/>
+  <circle cx="122" cy="342" r="14" fill="#4aa3ff"/><text x="122" y="347" text-anchor="middle" fill="#111" font-size="13" font-weight="700">6</text>
+  <text x="150" y="347" fill="#e6edf3" font-size="13.5">Followers leader থেকে FetchRequest — replication</text>
+  <!-- 7 -->
+  <rect x="90" y="372" width="600" height="44" rx="9" fill="rgba(74,163,255,.12)" stroke="#4aa3ff"/>
+  <circle cx="122" cy="394" r="14" fill="#4aa3ff"/><text x="122" y="399" text-anchor="middle" fill="#111" font-size="13" font-weight="700">7</text>
+  <text x="150" y="399" fill="#e6edf3" font-size="13.5">min.insync.replicas পূর্ণ → data durable (OS পরে flush)</text>
+  <!-- 8 -->
+  <rect x="90" y="424" width="600" height="44" rx="9" fill="rgba(74,163,255,.12)" stroke="#4aa3ff"/>
+  <circle cx="122" cy="446" r="14" fill="#4aa3ff"/><text x="122" y="451" text-anchor="middle" fill="#111" font-size="13" font-weight="700">8</text>
+  <text x="150" y="451" fill="#e6edf3" font-size="13.5">Acknowledgement → producer (acks=0 / 1 / all অনুযায়ী)</text>
+  <!-- 9 -->
+  <rect x="90" y="488" width="600" height="44" rx="9" fill="rgba(63,185,80,.12)" stroke="#3fb950"/>
+  <circle cx="122" cy="510" r="14" fill="#3fb950"/><text x="122" y="515" text-anchor="middle" fill="#111" font-size="13" font-weight="700">9</text>
+  <text x="150" y="515" fill="#e6edf3" font-size="13.5">Consumer poll() → leader এ FetchRequest (নিজের offset থেকে)</text>
+  <!-- 10 -->
+  <rect x="90" y="540" width="600" height="44" rx="9" fill="rgba(63,185,80,.12)" stroke="#3fb950"/>
+  <circle cx="122" cy="562" r="14" fill="#3fb950"/><text x="122" y="567" text-anchor="middle" fill="#111" font-size="13" font-weight="700">10</text>
+  <text x="150" y="567" fill="#e6edf3" font-size="13.5">Record process — business logic চালায়</text>
+  <!-- 11 -->
+  <rect x="90" y="592" width="600" height="44" rx="9" fill="rgba(63,185,80,.12)" stroke="#3fb950"/>
+  <circle cx="122" cy="614" r="14" fill="#3fb950"/><text x="122" y="619" text-anchor="middle" fill="#111" font-size="13" font-weight="700">11</text>
+  <text x="150" y="619" fill="#e6edf3" font-size="13.5">Offset commit → __consumer_offsets topic এ</text>
+</svg>
+<figcaption>একটা message এর সম্পূর্ণ যাত্রা: <span style="color:#ff8c42">Producer</span> → <span style="color:#4aa3ff">Broker (replication + durability)</span> → <span style="color:#3fb950">Consumer</span></figcaption>
+</figure>
+
+<h3>Step ১ — Serialization</h3>
+<p>Producer object (key, value) কে <span class="kw">serializer</span> দিয়ে <code>byte[]</code>-এ রূপান্তর করে। Kafka শুধু bytes বোঝে। Production-এ Avro/Protobuf + Schema Registry ব্যবহার হয় যাতে schema evolution safe থাকে।</p>
+
+<h3>Step ২ — Partition Selection</h3>
+<ul>
+<li>Key দিলে: <code>partition = hash(key) % numPartitions</code> → একই key সবসময় একই partition-এ (ordering guarantee)।</li>
+<li>Key না দিলে: sticky partitioner — একটা batch ভরা পর্যন্ত একটা partition-এই পাঠায় (batching efficient হয়)।</li>
+</ul>
+
+<h3>Step ৩ — Batching (RecordAccumulator)</h3>
+<p>Message সাথে সাথে যায় না। একটা in-memory buffer (<code>buffer.memory</code>)-এ per-partition batch জমা হয়। <code>batch.size</code> ভরলে অথবা <code>linger.ms</code> সময় হলে একটা background <span class="kw">Sender thread</span> সেই batch broker-এ পাঠায়। এতে network call কমে, throughput বাড়ে।</p>
+
+<h3>Step ৪–৫ — Leader broker-এ write</h3>
+<p>Sender thread partition-এর <b>leader</b> broker-এ <code>ProduceRequest</code> পাঠায়। Broker record-গুলো partition-এর active segment-এ append করে — আসলে প্রথমে <span class="kw">OS page cache</span>-এ লেখে (RAM), সরাসরি disk-এ flush নয়।</p>
+<div class="callout behind"><span class="tag">Behind the scenes</span>
+Kafka নিজে <code>fsync</code> জোর করে না প্রতি message-এ। এটা page cache-এ লিখে OS-কে flush-এর দায়িত্ব দেয়। Durability আসে <b>replication</b> থেকে — একাধিক broker-এর RAM/disk-এ থাকা থেকে — শুধু single disk flush থেকে নয়। এজন্যই এত দ্রুত।</div>
+
+<h3>Step ৬ — Replication</h3>
+<p>Follower broker-রা leader-এর কাছে নিজে থেকে <code>FetchRequest</code> পাঠিয়ে নতুন data টেনে নেয় (pull model)। যেসব follower up-to-date, তারা <span class="kw">ISR</span>-এ থাকে।</p>
+
+<h3>Step ৭–৮ — Acknowledgement (acks)</h3>
+<table>
+<tr><th>acks</th><th>কখন ack</th><th>Guarantee</th></tr>
+<tr><td><code>0</code></td><td>পাঠানোর সাথে সাথে (leader-ও confirm করে না)</td><td>data হারাতে পারে</td></tr>
+<tr><td><code>1</code></td><td>leader লিখলেই</td><td>leader crash হলে হারাতে পারে</td></tr>
+<tr><td><code>all</code>/<code>-1</code></td><td>সব ISR লিখলে</td><td>সবচেয়ে নিরাপদ (min.insync.replicas সহ)</td></tr>
+</table>
+
+<h3>Step ৯–১১ — Consumer side</h3>
+<p>Consumer <code>poll()</code> কল করলে assigned partition-এর leader থেকে <code>FetchRequest</code> দিয়ে batch টেনে আনে (নিজের offset থেকে)। Record process করার পর <span class="kw">offset commit</span> করে — এই offset জমা হয় internal <code>__consumer_offsets</code> topic-এ।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — এখানে কী fail করতে পারে</span>
+<ul style="margin:4px 0">
+<li>Process করার <b>আগেই</b> offset commit → crash হলে message হারায় (data loss)।</li>
+<li>Process করার পর commit-এর আগে crash → message আবার process হয় (duplicate)। এজন্য <b>idempotent consumer</b> দরকার (Production ট্যাব)।</li>
+</ul></div>
+</template>
+
+<template data-page="storage">
+<h2 class="title">৪. Storage Internals — Kafka এত দ্রুত কেন?</h2>
+<p class="lead">Kafka-র performance-এর মূল রহস্য এই অংশে। append-only log, segment, index, page cache — সব।</p>
+
+<h3>Disk নাকি RAM? — Kafka ঠিক কোথায় data রাখে</h3>
+<p>সরাসরি উত্তর: <b>Kafka সব data physical disk-এ (persistent log file-এ) রাখে — RAM-এ নয়।</b> এটা Redis-এর মতো কোনো in-memory store নয়; broker restart করলেও data থাকে, কারণ সেটা disk-এ লেখা। তাহলে "তবু এত দ্রুত কীভাবে?" — কারণ Kafka disk আর RAM-কে <b>একসাথে</b> চালাকির সাথে ব্যবহার করে: durability-র জন্য disk, আর গতির জন্য OS <span class="kw">page cache</span> (RAM)।</p>
+<div class="diagram"><pre>
+Producer ─write─►  OS Page Cache (RAM)  ─background flush─►  Physical Disk (.log segment)
+                        ▲                                     (source of truth, persistent)
+Consumer ─read──────────┘   ← সাম্প্রতিক data page cache থেকেই আসে (RAM speed, disk touch নয়)
+</pre></div>
+<p><b>Write যখন হয়:</b> producer-এর message broker প্রথমে OS page cache (RAM)-এ append করে — এটা প্রায় মুহূর্তেই "লেখা হয়েছে" হিসেবে ধরা হয়; তারপর OS নিজের সুবিধামতো background-এ physical disk-এ flush করে। অর্থাৎ write path-এ Kafka disk-এর জন্য বসে থাকে না।</p>
+<div class="callout why"><span class="tag">তাহলে durability আসে কোথা থেকে?</span>
+বেশিরভাগ database প্রতিটা write-এ <code>fsync</code> করে (disk-এ পাকাপাকি লেখা নিশ্চিত করতে) — যা ধীর। Kafka <b>প্রতি message-এ fsync করে না</b> (default)। বদলে durability আসে <span class="kw">replication</span> থেকে — message একাধিক broker-এ copy হয় (<code>acks=all</code>)। একটা broker crash করে তার page cache হারালেও অন্য replica-তে data আছে। এভাবে Kafka fsync-এর ধীরগতি এড়িয়েও data নিরাপদ রাখে — এটাই Kafka-র মূল design বাজি।</div>
+<p><b>Read যখন হয়:</b> consumer সাধারণত সবচেয়ে সাম্প্রতিক message পড়ে — যা এইমাত্র লেখা হয়েছে, তাই তখনও page cache (RAM)-এ "গরম"। ফলে read-ও RAM থেকে, কোনো disk seek ছাড়াই। শুধু অনেক পুরনো data (যা page cache থেকে evict হয়ে গেছে) চাইলে disk থেকে আসে — তাও sequential read, random seek নয়।</p>
+<table>
+<tr><th>অপারেশন</th><th>প্রথমে কোথায়</th><th>ফলাফল</th></tr>
+<tr><td>Write</td><td>OS page cache (RAM); পরে disk-এ flush</td><td>disk-এর জন্য অপেক্ষা নেই → দ্রুত</td></tr>
+<tr><td>Read (সাম্প্রতিক)</td><td>page cache (RAM) থেকেই — cache hit</td><td>disk touch করে না → RAM-speed</td></tr>
+<tr><td>Read (পুরনো)</td><td>disk থেকে (cache miss), কিন্তু sequential</td><td>seek নেই → তবুও দ্রুত</td></tr>
+<tr><td>Durability</td><td>disk + একাধিক broker-এ replication</td><td>crash-এও data টেকে</td></tr>
+</table>
+<div class="callout behind"><span class="tag">Behind the scenes — disk কেন bottleneck নয়</span>
+"Disk মানেই ধীর" — এটা শুধু <b>random</b> access-এর জন্য সত্য। Kafka append-only বলে সব I/O <b>sequential</b>, আর sequential disk throughput (HDD-তেও ~600 MB/s, SSD-তে আরও বেশি) network bandwidth-এর কাছাকাছি বা বেশি — তাই bottleneck সাধারণত disk নয়, বরং network/CPU। উপরন্তু read-এ <code>sendfile()</code> (zero-copy — Performance ট্যাব) data-কে page cache থেকে সরাসরি network socket-এ পাঠায়, application memory বা JVM heap ছোঁয়ও না।</div>
+
+<h3>কেন Append-only Log?</h3>
+<p>Kafka কখনো data-র মাঝখানে update/delete করে না — শুধু শেষে <span class="kw">append</span> করে। কারণ:</p>
+<ul>
+<li><b>Sequential write</b> — disk head একদিকে চলে, random seek নেই। HDD-তেও sequential write ~600MB/s, random write ~100KB/s। পার্থক্য ৬০০০ গুণ!</li>
+<li>Immutable data → concurrency সহজ, corruption কম।</li>
+<li>Consumer শুধু offset বাড়িয়ে পড়ে — pointer সরানোর মতো সহজ।</li>
+</ul>
+
+<h3>Segment Files</h3>
+<p>একটা partition-এর log এক ফাইলে থাকে না — ভাগ থাকে <span class="kw">segment</span>-এ। শুধু শেষেরটা "active" (এখানে append হয়)। পুরনো segment read-only।</p>
+<div class="diagram"><pre>
+/kafka-logs/orders-0/          ← partition 0 এর directory
+  00000000000000000000.log     ← segment (base offset 0)
+  00000000000000000000.index   ← offset index
+  00000000000000000000.timeindex← time index
+  00000000000000170520.log     ← পরের segment (base offset 170520)
+  00000000000000170520.index
+  00000000000000170520.timeindex
+  leader-epoch-checkpoint
+</pre></div>
+<div class="callout why"><span class="tag">Why segments?</span>
+পুরো log এক ফাইল হলে retention (পুরনো data delete) করতে গেলে ফাইলের শুরু থেকে কাটতে হতো — ব্যয়বহুল। Segment থাকায় পুরো পুরনো segment ফাইল <b>এক অপারেশনে delete</b> করা যায়। Log compaction-ও segment-ভিত্তিক।</div>
+
+<h3>Index Files — Offset Index ও Time Index</h3>
+<p>Consumer offset 170525 চাইলে পুরো log scan করা যাবে না। <span class="kw">Offset index</span> রাখে <code>(relative offset → physical byte position)</code> mapping — sparse (প্রতিটা নয়, কিছু কিছু entry)। Kafka index-এ binary search করে কাছের position পায়, তারপর সেখান থেকে scan করে।</p>
+<p><span class="kw">Time index</span> রাখে <code>(timestamp → offset)</code> — "গত ১ ঘণ্টার data দাও" ধরনের query আর retention-এর জন্য।</p>
+<figure class="viz">
+<svg viewBox="0 0 720 452" role="img" aria-label="Offset lookup: pick the segment, binary-search the sparse index to the largest offset not exceeding the target, seek to that byte position in the log, then scan forward to the target offset">
+  <defs>
+    <marker id="sl" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4aa3ff"/></marker>
+    <marker id="sg" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#3fb950"/></marker>
+  </defs>
+  <!-- target badge -->
+  <rect x="240" y="8" width="240" height="30" rx="15" fill="rgba(227,179,65,.14)" stroke="#e3b341"/>
+  <text x="360" y="28" text-anchor="middle" fill="#e3b341" font-size="13" font-weight="700">লক্ষ্য: offset 8 পড়তে হবে</text>
+
+  <!-- STEP 1: segment select -->
+  <text x="24" y="62" fill="#bc8cff" font-size="12.5" font-weight="700" class="bn">① কোন segment? — base offset দেখে</text>
+  <rect x="24" y="70" width="330" height="40" rx="8" fill="rgba(63,185,80,.14)" stroke="#3fb950"/>
+  <text x="40" y="95" fill="#e6edf3" font-size="12.5">00…0000.log · offset 0–170519</text>
+  <text x="340" y="95" text-anchor="end" fill="#3fb950" font-size="12.5" font-weight="700">✓</text>
+  <rect x="366" y="70" width="330" height="40" rx="8" fill="#161b22" stroke="#2d333b"/>
+  <text x="382" y="95" fill="#6e7681" font-size="12.5">00…170520.log · offset 170520+</text>
+  <text x="24" y="128" fill="#9aa7b4" font-size="11.5" class="bn">8 &lt; 170520 → প্রথম segment</text>
+
+  <!-- STEP 2: index -->
+  <rect x="24" y="150" width="300" height="228" rx="10" fill="#0b0f14" stroke="#2d333b"/>
+  <text x="40" y="174" fill="#4aa3ff" font-size="13" font-weight="700">② Offset Index (.index) — sparse</text>
+  <text x="70" y="200" fill="#898781" font-size="11" text-anchor="middle">rel. offset</text>
+  <text x="230" y="200" fill="#898781" font-size="11" text-anchor="middle">byte pos</text>
+  <!-- rows -->
+  <g font-size="13.5" fill="#e6edf3">
+    <rect x="44" y="210" width="256" height="34" rx="6" fill="#161b22" stroke="#2d333b"/><text x="70" y="232" text-anchor="middle">0</text><text x="230" y="232" text-anchor="middle">0</text>
+    <rect x="44" y="250" width="256" height="34" rx="6" fill="rgba(255,140,66,.18)" stroke="#ff8c42"/><text x="70" y="272" text-anchor="middle">5</text><text x="230" y="272" text-anchor="middle">1024</text>
+    <rect x="44" y="290" width="256" height="34" rx="6" fill="#161b22" stroke="#2d333b"/><text x="70" y="312" text-anchor="middle">11</text><text x="230" y="312" text-anchor="middle">2048</text>
+  </g>
+  <text x="40" y="352" fill="#ff8c42" font-size="11.5" class="bn">binary search → largest offset ≤ 8 = <tspan font-weight="700">offset 5 @ byte 1024</tspan></text>
+
+  <!-- STEP 3: log -->
+  <rect x="396" y="150" width="300" height="288" rx="10" fill="#0b0f14" stroke="#2d333b"/>
+  <text x="412" y="174" fill="#3fb950" font-size="13" font-weight="700">③ .log — seek 1024, তারপর scan</text>
+  <g font-size="12.5" fill="#e6edf3">
+    <rect x="416" y="186" width="260" height="30" rx="6" fill="#161b22" stroke="#2d333b"/><text x="432" y="206">byte 0 · offset 0</text>
+    <rect x="416" y="222" width="260" height="30" rx="6" fill="rgba(74,163,255,.20)" stroke="#4aa3ff"/><text x="432" y="242">byte 1024 · offset 5  ← seek</text>
+    <rect x="416" y="258" width="260" height="30" rx="6" fill="#161b22" stroke="#2d333b"/><text x="432" y="278">byte 1180 · offset 6</text>
+    <rect x="416" y="294" width="260" height="30" rx="6" fill="#161b22" stroke="#2d333b"/><text x="432" y="314">byte 1310 · offset 7</text>
+    <rect x="416" y="330" width="260" height="30" rx="6" fill="rgba(63,185,80,.22)" stroke="#3fb950"/><text x="432" y="350" font-weight="700">byte 1450 · offset 8  ✓ FOUND</text>
+    <rect x="416" y="366" width="260" height="30" rx="6" fill="#161b22" stroke="#2d333b"/><text x="432" y="386">byte 2048 · offset 11</text>
+  </g>
+  <!-- scan arrow down -->
+  <path d="M406 252 L406 340" stroke="#3fb950" stroke-width="2" marker-end="url(#sg)"/>
+  <text x="392" y="300" fill="#3fb950" font-size="10.5" transform="rotate(-90 392 300)" text-anchor="middle">sequential scan</text>
+  <!-- seek arrow index -> log -->
+  <path d="M300 267 C 350 267, 360 237, 414 237" fill="none" stroke="#4aa3ff" stroke-width="2" marker-end="url(#sl)"/>
+  <text x="358" y="222" text-anchor="middle" fill="#4aa3ff" font-size="10.5" font-weight="700">seek byte 1024</text>
+</svg>
+<div class="lgnd">
+  <span><i class="sw" style="background:#ff8c42"></i> Index এ binary search যেখানে থামে</span>
+  <span><i class="sw" style="background:#4aa3ff"></i> Log এ seek position</span>
+  <span><i class="sw" style="background:#3fb950"></i> Sequential scan → target</span>
+</div>
+<figcaption>Index sparse বলে সব offset থাকে না — Kafka largest offset ≤ target খুঁজে (binary search, O(log n)) সেই byte-এ লাফ দেয়, তারপর অল্প কয়েকটা record sequential scan করে target-এ পৌঁছায়। পুরো log কখনো scan করতে হয় না।</figcaption>
+</figure>
+
+<h3>Retention</h3>
+<p>ডেটা কতদিন রাখা হবে: <code>retention.ms</code> (সময়ভিত্তিক, default 7 দিন) বা <code>retention.bytes</code> (সাইজভিত্তিক)। মেয়াদ শেষ হলে পুরো segment delete।</p>
+<div class="callout"><b>Retention sizing উদাহরণ:</b> topic-এ ঢুকছে 5 MB/s, retention 7 দিন, replication.factor=3 →
+disk ≈ 5 MB/s × 604,800 s × 3 ≈ <b>~9 TB</b>। অর্থাৎ retention আর replication factor সরাসরি disk খরচ নির্ধারণ করে — planning-এ এই হিসাব করুন।</div>
+
+<h4>Tiered Storage (আধুনিক Kafka — 3.9/4.0)</h4>
+<p>দীর্ঘ retention (মাস/বছর) রাখতে গেলে broker-এর local disk ব্যয়বহুল হয়ে যায়। <span class="kw">Tiered Storage</span> (KIP-405) সাম্প্রতিক ("hot") segment broker-এর local disk-এ রাখে, আর পুরনো ("cold") segment স্বয়ংক্রিয়ভাবে সস্তা object storage (S3/GCS)-এ সরিয়ে দেয়। Consumer পুরনো data চাইলে Kafka transparently object storage থেকে এনে দেয়।</p>
+<div class="callout best"><span class="tag">কেন কাজের</span>
+Broker-এর disk ছোট রাখা যায় (দ্রুত recovery, সস্তা), অথচ compliance/audit-এর জন্য accounting event মাস-বছর ধরে সংরক্ষণ সম্ভব। আগে এর জন্য আলাদা data lake-এ dump করতে হতো; এখন Kafka নিজেই সামলায়।</div>
+
+<h3>Log Compaction</h3>
+<p>সময়ভিত্তিক delete-এর বিকল্প। <code>cleanup.policy=compact</code> দিলে Kafka প্রতিটা <b>key</b>-এর শুধু সর্বশেষ value রাখে, পুরনো duplicate key মুছে দেয়। "current state"-ধরনের topic-এর জন্য আদর্শ (যেমন user-profile, latest-balance)।</p>
+<figure class="viz">
+<svg viewBox="0 0 620 210" role="img" aria-label="Log compaction: before has five records with duplicate keys, after keeps only the latest value per key">
+  <defs><marker id="arc" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa7b4"/></marker></defs>
+  <text x="16" y="30" fill="#9aa7b4" font-size="13" font-weight="700" class="bn">Compaction এর আগে</text>
+  <g font-size="13" text-anchor="middle" fill="#e6edf3">
+    <rect x="16" y="42" width="86" height="46" rx="8" fill="rgba(74,163,255,.10)" stroke="#2d5170" opacity=".4"/><text x="59" y="70" opacity=".5">k1, v1</text>
+    <rect x="112" y="42" width="86" height="46" rx="8" fill="rgba(255,140,66,.10)" stroke="#5a3d24" opacity=".4"/><text x="155" y="70" opacity=".5">k2, v2</text>
+    <rect x="208" y="42" width="86" height="46" rx="8" fill="rgba(74,163,255,.18)" stroke="#4aa3ff"/><text x="251" y="70">k1, v3</text>
+    <rect x="304" y="42" width="86" height="46" rx="8" fill="rgba(63,185,80,.18)" stroke="#3fb950"/><text x="347" y="70">k3, v4</text>
+    <rect x="400" y="42" width="86" height="46" rx="8" fill="rgba(255,140,66,.18)" stroke="#ff8c42"/><text x="443" y="70">k2, v5</text>
+  </g>
+  <text x="150" y="106" fill="#f85149" font-size="11.5" class="bn">🗑 পুরনো duplicate key (k1,v1 · k2,v2) মুছে যায়</text>
+  <!-- arrow down -->
+  <path d="M300 118 L300 138" stroke="#9aa7b4" stroke-width="2" marker-end="url(#arc)"/>
+  <text x="16" y="150" fill="#9aa7b4" font-size="13" font-weight="700" class="bn">Compaction এর পরে</text>
+  <g font-size="13" text-anchor="middle" fill="#e6edf3">
+    <rect x="16" y="160" width="86" height="46" rx="8" fill="rgba(74,163,255,.18)" stroke="#4aa3ff"/><text x="59" y="188">k1, v3</text>
+    <rect x="112" y="160" width="86" height="46" rx="8" fill="rgba(63,185,80,.18)" stroke="#3fb950"/><text x="155" y="188">k3, v4</text>
+    <rect x="208" y="160" width="86" height="46" rx="8" fill="rgba(255,140,66,.18)" stroke="#ff8c42"/><text x="251" y="188">k2, v5</text>
+  </g>
+</svg>
+<figcaption>Log compaction প্রতিটা <b>key</b>-এর শুধু সর্বশেষ value রাখে — "current state" ধরনের topic (latest balance, user profile)-এর জন্য আদর্শ। রঙ = key (নীল k1, সবুজ k3, কমলা k2)।</figcaption>
+</figure>
+
+<h3>Page Cache ও Sequential Write — কেন দ্রুত</h3>
+<p>Kafka write সরাসরি disk-এ না গিয়ে যায় OS-এর <span class="kw">page cache</span> (RAM)-এ। Consumer সাধারণত সাম্প্রতিক data পড়ে, যা তখনও page cache-এ থাকে — ফলে read-ও RAM থেকে, disk touch করাই লাগে না।</p>
+<div class="callout behind"><span class="tag">Behind the scenes</span>
+Kafka JVM heap-এ data cache করে না — এটা OS page cache-এর উপর নির্ভর করে। ফলে ৬৪GB RAM-এর machine-এ Kafka JVM-কে মাত্র ~৫-৬GB heap দিলেই চলে, বাকিটা OS page cache হিসেবে data serve করে। GC pressure কম, RAM-এর সর্বোচ্চ ব্যবহার।</div>
+<div class="callout best"><span class="tag">Best practices</span>
+<ul style="margin:4px 0">
+<li>Kafka broker-এ heap ছোট রাখুন (~6GB), বাকি RAM OS-কে দিন page cache-এর জন্য।</li>
+<li>Broker-এ অন্য memory-heavy app চালাবেন না — page cache eviction হয়।</li>
+<li>SSD ভালো কিন্তু sequential access-এর কারণে ভালো HDD-ও কাজ চালায়।</li>
+</ul></div>
+</template>
+
+<template data-page="producer">
+<h2 class="title">৫. Producer Internals</h2>
+<p class="lead">একটা record কীভাবে producer-এর ভেতরে ভ্রমণ করে — serializer থেকে delivery guarantee পর্যন্ত।</p>
+
+<h3>একটা Record-এর গঠন (Anatomy)</h3>
+<p>Kafka-তে যা পাঠান সেটা শুধু "value" নয় — একটা <span class="kw">record</span>-এর কয়েকটা অংশ:</p>
+<div class="diagram"><pre>
+┌─────────────────────────────────────────────┐
+│ Kafka Record                                  │
+│  key        → partition ঠিক করে (ordering)    │
+│  value      → আসল payload (JSON/Avro bytes)   │
+│  headers    → metadata (traceId, source, …)   │  ← routing/tracing এ কাজে লাগে
+│  timestamp  → event time / ingest time        │
+│  ── broker যোগ করে ──                          │
+│  offset     → partition এ position             │
+│  partition  → কোন partition                    │
+└─────────────────────────────────────────────┘
+</pre></div>
+<p><b>Headers</b> খুব কাজের — যেমন distributed tracing-এর <code>traceId</code>, event schema version, বা source system। Value-তে না মিশিয়ে header-এ রাখলে consumer payload deserialize না করেও routing decision নিতে পারে।</p>
+
+<h3>Serializer</h3>
+<p>Key ও value কে bytes-এ রূপান্তর করে। <code>StringSerializer</code>, <code>ByteArraySerializer</code>, বা Avro/Protobuf/JSON serializer। Production-এ Schema Registry + Avro — backward/forward compatible schema evolution-এর জন্য (Ecosystem ট্যাব দেখুন)।</p>
+
+<h3>Partitioner</h3>
+<ul>
+<li>Key থাকলে: <code>murmur2(key) % partitions</code> → deterministic, একই key → একই partition।</li>
+<li>Key না থাকলে: <span class="kw">Sticky Partitioner</span> — একটা batch পূর্ণ না হওয়া পর্যন্ত একটাই partition ব্যবহার, তারপর পরের partition।</li>
+<li>Custom partitioner লেখা যায় (যেমন tenant-ভিত্তিক routing)।</li>
+</ul>
+
+<h4>Partition Key কীভাবে বাছবেন? — সবচেয়ে গুরুত্বপূর্ণ ডিজাইন সিদ্ধান্ত</h4>
+<p>Key বাছাই দুটো জিনিস একসাথে ঠিক করে: <b>(১) ordering</b> — একই key একই partition-এ যায়, তাই ঐ key-এর সব event ক্রম বজায় রাখে; আর <b>(২) load distribution</b> — key-গুলো partition-এ কতটা সমানভাবে ছড়ায়।</p>
+<p><b>Accounting উদাহরণ:</b> ধরুন প্রতি account-এর transaction event পাঠাচ্ছেন। Key = <code>account_id</code> রাখলে একটা account-এর deposit/withdraw সবসময় ক্রমে (একই partition-এ) process হবে — balance হিসাব ঠিক থাকবে। Key না দিলে round-robin হয়ে event এলোমেলো partition-এ ছড়াবে → একই account-এর withdraw, deposit-এর আগে process হয়ে balance ভুল হতে পারে।</p>
+<div class="callout mistake"><span class="tag">Hot Partition সমস্যা</span>
+Key খারাপ হলে একটা partition-এ অসম load পড়ে। যেমন key = <code>country</code> রাখলে "Bangladesh"-এর সব traffic একটা partition-এ — সেই partition/consumer overload, বাকিরা idle। অথবা একটা বিশাল corporate account পুরো traffic-এর ৮০% হলে সেই account-এর partition hot হবে।</div>
+<div class="callout best"><span class="tag">সমাধান ও নিয়ম</span>
+<ul style="margin:4px 0">
+<li>এমন key নিন যার <b>cardinality বেশি</b> ও distribution সমান — <code>account_id</code> ভালো, <code>country</code>/<code>status</code> খারাপ।</li>
+<li>Hot key থাকলে <b>composite key</b>: <code>account_id + "#" + (hash % 10)</code> — একই account ১০ partition-এ ছড়ায় (কিন্তু তখন per-account ordering হারায়, তাই sub-key ordering লাগলে সাবধান)।</li>
+<li>Ordering দরকার না হলে key = null রাখুন — sticky partitioner সবচেয়ে ভালো batching দেবে।</li>
+<li>মনে রাখুন: partition সংখ্যা পরে বাড়ালে <code>hash % N</code> বদলে যায় → একই key নতুন partition-এ যেতে পারে (Scaling ট্যাব দেখুন)।</li>
+</ul></div>
+
+<h3>Batching, Buffer Memory, Compression</h3>
+<table>
+<tr><th>Config</th><th>কাজ</th><th>Trade-off</th></tr>
+<tr><td><code>batch.size</code></td><td>প্রতি partition batch-এর সর্বোচ্চ bytes</td><td>বড় = throughput↑, latency↑</td></tr>
+<tr><td><code>linger.ms</code></td><td>batch ভরার জন্য কত ms অপেক্ষা</td><td>0 = low latency, বেশি = ভালো batching</td></tr>
+<tr><td><code>buffer.memory</code></td><td>মোট send buffer size</td><td>ভরে গেলে send() block করে</td></tr>
+<tr><td><code>compression.type</code></td><td>lz4/zstd/snappy/gzip</td><td>CPU↑ কিন্তু network+disk↓</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice</span>
+High-throughput-এ: <code>linger.ms=5-20</code>, <code>batch.size=32KB-64KB</code>, <code>compression.type=lz4</code> (বা zstd)। compression পুরো batch-এ হয় — তাই batch বড় হলে compression ratio ভালো।</div>
+
+<h3>Idempotent Producer</h3>
+<p><code>enable.idempotence=true</code> দিলে producer প্রতিটা message-এ একটা <span class="kw">sequence number</span> + <span class="kw">producer ID (PID)</span> যোগ করে। Broker duplicate sequence detect করে বাদ দেয়। ফলে retry হলেও একই message দুবার log-এ লেখা হয় না — <b>exactly-once per partition write</b>।</p>
+<div class="callout behind"><span class="tag">Behind the scenes</span>
+Retry ছাড়া: network glitch-এ ack হারালে producer আবার পাঠায় → duplicate। Idempotence-এ broker <code>(PID, partition, sequence)</code> মনে রাখে, একই sequence আবার এলে silently accept করে কিন্তু আবার লেখে না। Kafka 3.0+ এ এটা default।</div>
+<p><b>একটা concrete উদাহরণে দেখুন:</b> producer msg পাঠাল <code>seq=5</code>, broker লিখল কিন্তু ack ফেরার পথে network drop। producer ভাবল fail, আবার পাঠাল <code>seq=5</code>। idempotence না থাকলে দুবার লেখা হতো (duplicate)। idempotence থাকায় broker দেখে "seq=5 তো আগেই লিখেছি" → আবার না লিখে শুধু ack ফেরত দেয়।</p>
+<figure class="viz">
+<svg viewBox="0 0 700 258" role="img" aria-label="Idempotent producer: a retried message with the same sequence number is deduplicated by the broker instead of being written twice">
+  <defs><marker id="ip" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa7b4"/></marker></defs>
+  <!-- lanes -->
+  <text x="90" y="26" text-anchor="middle" fill="#ff8c42" font-size="13" font-weight="700">Producer</text>
+  <text x="610" y="26" text-anchor="middle" fill="#4aa3ff" font-size="13" font-weight="700">Broker (leader)</text>
+  <line x1="90" y1="36" x2="90" y2="238" stroke="#2d333b" stroke-width="1.5"/>
+  <line x1="610" y1="36" x2="610" y2="238" stroke="#2d333b" stroke-width="1.5"/>
+  <!-- 1 send seq5 -->
+  <path d="M92 62 L606 62" stroke="#9aa7b4" stroke-width="2" marker-end="url(#ip)"/>
+  <text x="350" y="54" text-anchor="middle" fill="#e6edf3" font-size="12.5">① send (PID=42, seq=5)</text>
+  <rect x="512" y="72" width="182" height="24" rx="5" fill="rgba(63,185,80,.16)" stroke="#3fb950"/>
+  <text x="603" y="89" text-anchor="middle" fill="#3fb950" font-size="11.5">log এ লেখা হলো ✓ (seq 5)</text>
+  <!-- 2 ack lost -->
+  <path d="M606 118 L300 118" stroke="#f85149" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#ip)"/>
+  <text x="360" y="110" text-anchor="middle" fill="#f85149" font-size="12.5">② ack ✗ network এ হারালো</text>
+  <!-- 3 retry seq5 -->
+  <path d="M92 158 L606 158" stroke="#e3b341" stroke-width="2" marker-end="url(#ip)"/>
+  <text x="350" y="150" text-anchor="middle" fill="#e3b341" font-size="12.5">③ retry — আবার (PID=42, seq=5)</text>
+  <rect x="470" y="168" width="224" height="24" rx="5" fill="rgba(227,179,65,.14)" stroke="#e3b341"/>
+  <text x="582" y="185" text-anchor="middle" fill="#e3b341" font-size="11.5">"seq 5 আগেই আছে" → লেখা হলো না</text>
+  <!-- 4 ack -->
+  <path d="M606 214 L94 214" stroke="#3fb950" stroke-width="2" marker-end="url(#ip)"/>
+  <text x="350" y="206" text-anchor="middle" fill="#3fb950" font-size="12.5">④ ack ✓ (কিন্তু duplicate লেখা হয়নি)</text>
+</svg>
+<figcaption>Broker প্রতি partition-এ <code>(PID, sequence)</code> track করে। Retry-তে একই seq এলে dedup করে — তাই retry নিরাপদ, log-এ কখনো duplicate নয়। এটাই <b>exactly-once per partition write</b>।</figcaption>
+</figure>
+
+<h3>Transactions</h3>
+<p>একাধিক partition/topic-এ atomic write-এর জন্য। <code>transactional.id</code> সেট করে <code>beginTransaction() → send()... → commitTransaction()</code>। হয় সব message commit হয়, নয় সব abort। <span class="kw">Consume-Transform-Produce</span> pattern-এ (read → process → write + offset commit একসাথে atomic) exactly-once দেয়।</p>
+
+<h3>Retry ও Delivery Guarantee</h3>
+<ul>
+<li><code>retries</code> + <code>delivery.timeout.ms</code> — কতক্ষণ/কতবার retry।</li>
+<li><code>max.in.flight.requests.per.connection</code> — idempotence ছাড়া >1 রাখলে retry-তে ordering ভাঙতে পারে; idempotence থাকলে ≤5 পর্যন্ত ordering safe।</li>
+<li>Delivery guarantee: acks + idempotence + retries মিলে ঠিক হয় (Reliability ট্যাব)।</li>
+</ul>
+
+<h3 id="prod-grade">Production-grade Producer — গভীরে</h3>
+<p class="lead">উপরের feature-গুলো জানার পর আসল প্রশ্ন: production-এ কোন config, কোন value, আর কেন? নিচে durability, timeout, tuning, error handling, shutdown ও monitoring — এক এক করে।</p>
+
+<h4>acks — durability-র মূল সুইচ</h4>
+<p><code>acks</code> ঠিক করে producer কখন একটা write-কে "সফল" ধরবে — এটাই latency বনাম data-safety-র সবচেয়ে বড় নির্ধারক।</p>
+<table>
+<tr><th><code>acks</code></th><th>কখন সফল ধরে</th><th>ঝুঁকি / ব্যবহার</th></tr>
+<tr><td><code>0</code></td><td>পাঠিয়েই "সফল" — কোনো confirm নয়</td><td>সবচেয়ে দ্রুত, কিন্তু broker না পেলেও জানবেন না → data loss। শুধু metric/log যেখানে কিছু হারালে চলে।</td></tr>
+<tr><td><code>1</code></td><td>শুধু <b>leader</b> লিখলেই</td><td>leader replicate-এর আগে crash করলে ঐ message হারায়। "মোটামুটি নিরাপদ" ভেবে ভুল ধরা হয় সবচেয়ে বেশি।</td></tr>
+<tr><td><code>all</code> (<code>-1</code>)</td><td>leader + সব <b>in-sync</b> replica লিখলে</td><td>সবচেয়ে নিরাপদ। <code>min.insync.replicas</code>-এর সাথে মিলে কাজ করে। Production default।</td></tr>
+</table>
+<div class="callout why"><span class="tag">acks=all একা যথেষ্ট নয়</span>
+<code>acks=all</code> মানে "সব ISR", কিন্তু ISR-এ যদি মাত্র ১টা replica থাকে (বাকিরা পিছিয়ে বাদ পড়েছে) তাহলে ঐ ১টাই যথেষ্ট ধরা হয় — আবার single point। তাই broker/topic-এ <code>min.insync.replicas=2</code> (RF=3-এ) সেট করুন: ISR ২-এর নিচে নামলে producer <code>NotEnoughReplicas</code> error পায় ও write আটকে যায় — নীরবে হারানোর চেয়ে জোরে fail করা ভালো (Replication ট্যাব)।</div>
+
+<h4>Timeout ও Retry-র hierarchy — কে কার ভেতরে</h4>
+<p>Production-এ সবচেয়ে বেশি বিভ্রান্তি এই timeout-গুলো নিয়ে। এরা nested — একটার ভেতর আরেকটা:</p>
+<div class="diagram"><pre>
+send() ───────────────────────────────────────────────► success / hard-fail
+   │
+   ├─ linger.ms .............. batch ভরার অপেক্ষা (throughput এর জন্য)
+   │
+   ├─ প্রতিটা attempt:
+   │     └─ request.timeout.ms .. এই একটা request এ broker response এর অপেক্ষা
+   │
+   ├─ attempt ব্যর্থ → retry.backoff.ms বিরতি → আবার attempt (retries যতবার)
+   │
+   └─ delivery.timeout.ms .... উপরের সব মিলিয়ে সর্বোচ্চ সময়;
+                               এটা পেরোলে আর retry নয় → হাতে error আসে
+</pre></div>
+<div class="callout behind"><span class="tag">Behind the scenes</span>
+<code>delivery.timeout.ms</code> হলো একমাত্র "সত্যিকারের deadline" — <code>send()</code> থেকে চূড়ান্ত সিদ্ধান্ত পর্যন্ত। <code>retries</code> কতবার তা এর ভেতরেই bound হয়, তাই <code>retries</code> বড় (এমনকি <code>int.MaxValue</code>) রেখে বাস্তব সীমা <code>delivery.timeout.ms</code> দিয়ে নিয়ন্ত্রণ করাই আধুনিক প্র্যাকটিস। নিয়ম: <code>delivery.timeout.ms ≥ linger.ms + request.timeout.ms</code>।</div>
+
+<h4>Production-grade Config — reference</h4>
+<p>একটা নিরাপদ, high-throughput producer-এর শুরু-বিন্দু (Kafka config নাম; বন্ধনীতে .NET/Confluent সমতুল্য):</p>
+<table>
+<tr><th>Config</th><th>Production মান</th><th>কেন</th></tr>
+<tr><td><code>acks</code> (<code>Acks</code>)</td><td><code>all</code></td><td>leader+ISR নিশ্চিত — durability</td></tr>
+<tr><td><code>enable.idempotence</code></td><td><code>true</code></td><td>retry-তে duplicate/reorder রোধ; নিচের কয়েকটা auto-tune করে</td></tr>
+<tr><td><code>min.insync.replicas</code> <span class="c">(broker/topic)</span></td><td><code>2</code> (RF=3)</td><td>ISR কমলে নীরবে না হারিয়ে write fail</td></tr>
+<tr><td><code>retries</code> (<code>MessageSendMaxRetries</code>)</td><td>বড় / <code>int.MaxValue</code></td><td>transient error auto-recover; সীমা delivery.timeout দেয়</td></tr>
+<tr><td><code>delivery.timeout.ms</code></td><td><code>120000</code></td><td>মোট চেষ্টার আসল deadline</td></tr>
+<tr><td><code>max.in.flight.requests.per.connection</code></td><td><code>5</code></td><td>idempotence-এ ordering safe রেখেও throughput</td></tr>
+<tr><td><code>linger.ms</code> (<code>LingerMs</code>)</td><td><code>5–20</code></td><td>batching → throughput↑, সামান্য latency</td></tr>
+<tr><td><code>batch.size</code></td><td><code>32–64 KB</code></td><td>বড় batch → ভালো compression ও কম request</td></tr>
+<tr><td><code>compression.type</code></td><td><code>lz4</code> / <code>zstd</code></td><td>network+disk↓ (CPU↑)</td></tr>
+<tr><td><code>buffer.memory</code></td><td><code>32–64 MB</code></td><td>traffic burst শোষণ করে</td></tr>
+<tr><td><code>max.block.ms</code></td><td><code>60000</code></td><td>buffer ভরে গেলে <code>send()</code> কতক্ষণ block করবে, তারপর throw</td></tr>
+<tr><td><code>request.timeout.ms</code></td><td><code>30000</code></td><td>প্রতি request-এ broker response অপেক্ষা</td></tr>
+<tr><td><code>client.id</code></td><td>অর্থপূর্ণ নাম</td><td>broker-side metrics, quota ও log এ চিহ্নিত করতে</td></tr>
+</table>
+<div class="callout best"><span class="tag">Idempotence যা free-তে ঠিক করে</span>
+<code>enable.idempotence=true</code> দিলে Kafka নিজেই <code>acks=all</code>, <code>retries&gt;0</code>, আর <code>max.in.flight≤5</code> নিশ্চিত করে — এগুলোর কোনোটা এর বিপরীতে সেট করলে producer শুরুতেই error দেয়। তাই idempotence অন রেখে বাকিগুলো নিয়ে আলাদা দুশ্চিন্তা কমে।</div>
+
+<h4>তিনটা tuning profile — কোন কাজে কোনটা</h4>
+<p>"সেরা config" বলে কিছু নেই — আপনার priority (latency / throughput / durability) অনুযায়ী বদলায়:</p>
+<table>
+<tr><th></th><th>Latency-first</th><th>Throughput-first</th><th>Durability-first</th></tr>
+<tr><td><code>acks</code></td><td><code>1</code> বা <code>all</code></td><td><code>all</code></td><td><code>all</code> + minISR=2</td></tr>
+<tr><td><code>linger.ms</code></td><td><code>0</code></td><td><code>20–50</code></td><td><code>10</code></td></tr>
+<tr><td><code>batch.size</code></td><td>ছোট</td><td><code>64–128 KB</code></td><td>মাঝারি</td></tr>
+<tr><td><code>compression</code></td><td>none / lz4</td><td><code>zstd</code></td><td><code>lz4</code></td></tr>
+<tr><td>idempotence / txn</td><td>idempotent</td><td>idempotent</td><td>idempotent + transaction</td></tr>
+<tr><td>উপযুক্ত</td><td>interactive / realtime API</td><td>log, clickstream, analytics ingest</td><td>payment, ledger, order</td></tr>
+</table>
+
+<h4>Error handling — retriable বনাম fatal, আর DLQ</h4>
+<p>সব error এক নয়; কোনটায় কী করবেন সেটাই production-quality কোডের পার্থক্য:</p>
+<table>
+<tr><th>ধরন</th><th>উদাহরণ</th><th>করণীয়</th></tr>
+<tr><td><span class="kw">Retriable</span> (transient)</td><td><code>LeaderNotAvailable</code>, <code>NotEnoughReplicas</code>, network/<code>RequestTimedOut</code></td><td>producer নিজেই retry করে (delivery.timeout-এর মধ্যে) — আপনার সাধারণত কিছু করার নেই</td></tr>
+<tr><td><span class="kw">Fatal</span> (non-retriable)</td><td><code>RecordTooLarge</code>, serialization fail, <code>AuthorizationFailed</code></td><td>retry অর্থহীন — catch করে DLQ + alert; message ঠিক করুন</td></tr>
+<tr><td><span class="kw">Producer-fenced</span></td><td><code>OutOfOrderSequence</code>, fencing (idempotence/txn)</td><td>এই producer instance আর ব্যবহারযোগ্য নয় → নতুন producer বানান</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+retries শেষ হলে বা fatal error-এ message নীরবে <b>drop</b> করা (বা শুধু log করে এগিয়ে যাওয়া)। Production-এ ব্যর্থ message + error metadata একটা <span class="kw">Dead Letter Queue</span> (<code>&lt;topic&gt;.DLQ</code>) topic-এ পাঠান — পরে reprocess/অডিট করা যায়। Silent drop = নীরব data loss।</div>
+
+<h4>Graceful shutdown ও Flush</h4>
+<p>Producer async — <code>ProduceAsync()</code>/<code>Produce()</code> সাথে সাথে পাঠায় না, buffer-এ জমিয়ে batch করে। তাই process হঠাৎ থামলে buffer-এ বসে থাকা (এখনো না-পাঠানো) message হারায়। Shutdown-এর আগে <code>Flush()</code> দিয়ে সব pending send সম্পূর্ণ করা <b>বাধ্যতামূলক</b>।</p>
+<pre>AppDomain.CurrentDomain.ProcessExit += (_, _) =&gt; {
+    producer.Flush(TimeSpan.FromSeconds(10));   <span class="c">// buffered সব message পাঠানো শেষ করো</span>
+};
+<span class="c">// SIGTERM (K8s pod stop) এলেও একইভাবে Flush → তারপর exit</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+K8s <code>SIGTERM</code>-এ Flush ছাড়া pod বন্ধ করা → shutdown-এর মুহূর্তে buffer-এ থাকা message হারায়, অথচ producer কখনো error দেয়নি। <code>terminationGracePeriodSeconds</code> Flush timeout-এর চেয়ে বড় রাখুন।</div>
+
+<h4>কী monitor করবেন — Producer metrics</h4>
+<table>
+<tr><th>Metric</th><th>কী বলে</th><th>Alarm কখন</th></tr>
+<tr><td><code>record-error-rate</code></td><td>delivery fail/sec</td><td>&gt; 0 হলেই তদন্ত</td></tr>
+<tr><td><code>record-retry-rate</code></td><td>retry/sec</td><td>বেড়ে গেলে → broker/network অসুস্থ</td></tr>
+<tr><td><code>request-latency-avg</code> / p99</td><td>broker round-trip</td><td>spike = broker overload</td></tr>
+<tr><td><code>buffer-available-bytes</code></td><td>ফাঁকা buffer</td><td>0-র দিকে নামলে → backpressure, <code>send()</code> block হবে</td></tr>
+<tr><td><code>batch-size-avg</code></td><td>গড় batch bytes</td><td>খুব ছোট = batching হচ্ছে না (throughput নষ্ট)</td></tr>
+<tr><td><code>compression-rate-avg</code></td><td>compression ratio</td><td>খারাপ হলে batch/codec পুনর্বিবেচনা</td></tr>
+</table>
+
+<h3>Code Example — Producer (.NET / Confluent.Kafka)</h3>
+<pre><span class="c">// dotnet add package Confluent.Kafka</span>
+var config = new ProducerConfig {
+    BootstrapServers      = "broker1:9092,broker2:9092,broker3:9092",
+    Acks                  = Acks.All,          <span class="c">// সব ISR confirm</span>
+    EnableIdempotence     = true,              <span class="c">// duplicate/reorder রোধ</span>
+    CompressionType       = CompressionType.Lz4,
+    LingerMs              = 10,                 <span class="c">// batching এর জন্য একটু অপেক্ষা</span>
+    MessageSendMaxRetries = int.MaxValue,
+};
+
+using var producer = new ProducerBuilder&lt;string, string&gt;(config).Build();
+
+var msg = new Message&lt;string, string&gt; {
+    Key     = invoiceId,                       <span class="c">// একই invoice → একই partition (ordering)</span>
+    Value   = JsonSerializer.Serialize(invoice),
+    Headers = new Headers { { "traceId", Encoding.UTF8.GetBytes(traceId) } }
+};
+
+try {
+    var dr = await producer.ProduceAsync("accounting.invoice.created", msg);
+    Console.WriteLine($"Delivered → {dr.TopicPartitionOffset}");  <span class="c">// topic-partition-offset</span>
+}
+catch (ProduceException&lt;string, string&gt; ex) {
+    Console.WriteLine($"Failed: {ex.Error.Reason}");  <span class="c">// error handle করুন, চেপে যাবেন না</span>
+}</pre>
+
+<div class="callout mistake"><span class="tag">Common mistakes</span>
+<ul style="margin:4px 0">
+<li><code>acks=1</code> রেখে "data হারাবে না" ধরে নেওয়া — leader crash হলে হারায়।</li>
+<li><code>retries</code> সেট কিন্তু idempotence off → duplicate + reordering।</li>
+<li><code>ProduceAsync()</code>-এর result/exception ignore করা — error চাপা পড়ে যায়। await/try-catch দিয়ে handle করুন।</li>
+<li>প্রতিটা message-এ নতুন producer তৈরি করা — producer heavyweight, একটাই বানিয়ে reuse করুন (thread-safe)।</li>
+</ul></div>
+</template>
+
+<template data-page="consumer">
+<h2 class="title">৬. Consumer Internals</h2>
+<p class="lead">Consumer group, offset, rebalance, heartbeat — real example সহ।</p>
+
+<h3>Consumer Group</h3>
+<p>একই <code>group.id</code>-র consumer-রা মিলে একটা <span class="kw">consumer group</span>। একটা partition group-এর <b>একটাই</b> consumer পড়ে (load balancing)। ভিন্ন group একই data স্বাধীনভাবে পড়তে পারে (fan-out)।</p>
+<figure class="viz">
+<svg viewBox="0 0 680 288" role="img" aria-label="Consumer group assignment: topic orders has four partitions, group billing has two consumers, each consumer owns two partitions">
+  <defs>
+    <marker id="ora" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ff8c42"/></marker>
+    <marker id="blu" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4aa3ff"/></marker>
+  </defs>
+  <text x="140" y="30" text-anchor="middle" fill="#9aa7b4" font-size="13" font-weight="700">Topic: orders (4 partitions)</text>
+  <text x="545" y="30" text-anchor="middle" fill="#9aa7b4" font-size="13" font-weight="700">Group: billing</text>
+  <!-- partitions -->
+  <g font-size="13.5" fill="#111" text-anchor="middle" font-weight="700">
+    <rect x="50" y="52" width="180" height="40" rx="8" fill="#ff8c42"/><text x="140" y="77">Partition 0</text>
+    <rect x="50" y="100" width="180" height="40" rx="8" fill="#ff8c42"/><text x="140" y="125">Partition 1</text>
+    <rect x="50" y="148" width="180" height="40" rx="8" fill="#4aa3ff"/><text x="140" y="173">Partition 2</text>
+    <rect x="50" y="196" width="180" height="40" rx="8" fill="#4aa3ff"/><text x="140" y="221">Partition 3</text>
+  </g>
+  <!-- consumers -->
+  <rect x="450" y="70" width="190" height="52" rx="10" fill="rgba(255,140,66,.14)" stroke="#ff8c42"/>
+  <text x="545" y="101" text-anchor="middle" fill="#e6edf3" font-size="14" font-weight="700">Consumer A</text>
+  <rect x="450" y="166" width="190" height="52" rx="10" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/>
+  <text x="545" y="197" text-anchor="middle" fill="#e6edf3" font-size="14" font-weight="700">Consumer B</text>
+  <!-- arrows P0,P1 -> A -->
+  <path d="M230 72 C 330 72, 350 90, 448 92" fill="none" stroke="#ff8c42" stroke-width="2" marker-end="url(#ora)"/>
+  <path d="M230 120 C 330 120, 350 100, 448 100" fill="none" stroke="#ff8c42" stroke-width="2" marker-end="url(#ora)"/>
+  <!-- arrows P2,P3 -> B -->
+  <path d="M230 168 C 330 168, 350 188, 448 190" fill="none" stroke="#4aa3ff" stroke-width="2" marker-end="url(#blu)"/>
+  <path d="M230 216 C 330 216, 350 198, 448 198" fill="none" stroke="#4aa3ff" stroke-width="2" marker-end="url(#blu)"/>
+  <text x="340" y="272" text-anchor="middle" fill="#e3b341" font-size="12.5" class="bn">⚠ Consumer সংখ্যা partition-এর বেশি হলে অতিরিক্ত consumer idle বসে থাকে</text>
+</svg>
+<figcaption>একটা partition group-এর ঠিক একটা consumer পড়ে (load ভাগ)। এখানে 4 partition ও 2 consumer — প্রতি consumer 2 partition। Consumer যোগ/বিদায় নিলে <b>rebalance</b> হয়ে এই mapping নতুন করে হয়।</figcaption>
+</figure>
+
+<h4>একটা group আসলে কোন সমস্যা সমাধান করে?</h4>
+<p>একটা topic-এ দিনে কোটি message এলে <b>একটা</b> consumer একা পড়তে গেলে দুটো সমস্যা: (১) throughput সীমিত — যত দ্রুত process করা যায় ততটুকুই, আর (২) ঐ consumer crash করলে পুরো pipeline থেমে যায় (single point of failure)। Consumer group একই কাজ একাধিক consumer-এ <b>ভাগ</b> করে দেয় — partition-গুলো members-দের মধ্যে বণ্টন হয়, ফলে <span class="kw">horizontal scaling</span> (consumer বাড়ালে throughput বাড়ে) আর <span class="kw">fault tolerance</span> (একটা মরলে তার partition অন্যরা নিয়ে নেয়) — দুটোই একসাথে পাওয়া যায়। এই দুটোই group abstraction-এর মূল কারণ।</p>
+
+<h4>Consumer ও Consumer Group কীভাবে define করবেন</h4>
+<p>মনে রাখার মতো ব্যাপার: consumer group আলাদা কোনো admin command দিয়ে "বানাতে" হয় না। আপনি শুধু একটা consumer-এ <code>group.id</code> সেট করেন — প্রথম <code>poll()</code>-এ সে coordinator-এ register হয় আর তখনই group-টা অস্তিত্বে আসে। একই <code>group.id</code>-তে আরও process চালালে তারা <b>একই</b> group-এ যোগ দেয় (কাজ ভাগ), ভিন্ন <code>group.id</code> দিলে <b>আলাদা</b> group (স্বাধীন copy)।</p>
+<pre>var config = new ConsumerConfig {
+    BootstrapServers = "broker:9092",
+    GroupId          = "billing-service",   <span class="c">// এই এক লাইনই group define করে</span>
+    AutoOffsetReset  = AutoOffsetReset.Earliest,
+    EnableAutoCommit = false,
+};
+using var consumer = new ConsumerBuilder&lt;string, string&gt;(config).Build();
+consumer.Subscribe("orders");   <span class="c">// group-managed: auto partition assignment</span>
+<span class="c">// এই instance এখন billing-service group এর সদস্য।</span>
+<span class="c">// একই GroupId দিয়ে আরও replica চালালে partition আপনাআপনি ভাগ হয়।</span></pre>
+<div class="callout behind"><span class="tag">Subscribe বনাম Assign</span>
+<code>Subscribe()</code> = group-managed — coordinator partition বণ্টন করে, rebalance হয়, offset <code>__consumer_offsets</code>-এ commit হয় (তাই <code>group.id</code> লাগে)। বিপরীতে <code>Assign()</code>-এ আপনি নিজে নির্দিষ্ট partition পিন করেন — কোনো group coordination বা rebalance নেই। এক consumer-কে সব partition পড়ানো বা ad-hoc debugging tool ছাড়া প্রায় সবসময় <code>Subscribe</code>।</div>
+
+<h4>Load balancing বনাম Fan-out — একই <code>group.id</code> নাকি ভিন্ন?</h4>
+<p>এই একটা পার্থক্য না বুঝলে বাকি সব ঘোলাটে লাগে:</p>
+<table>
+<tr><th>দৃশ্য</th><th><code>group.id</code></th><th>কে কোন message পায়</th></tr>
+<tr><td><span class="kw">Load balancing</span> (work sharing)</td><td>সব consumer-এ <b>একই</b></td><td>প্রতিটা message ঐ group-এর ঠিক <b>একটা</b> consumer পায় — কাজ ভাগ হয়</td></tr>
+<tr><td><span class="kw">Fan-out</span> (broadcast)</td><td>প্রতি ভোক্তা service-এ <b>আলাদা</b></td><td>প্রতিটা group আলাদাভাবে <b>সব</b> message পায় — একই data একাধিক কাজে</td></tr>
+</table>
+<p>বাস্তব উদাহরণ — একটাই <code>orders</code> topic, কিন্তু তিন রকম কাজ, তিনটা স্বাধীন group:</p>
+<figure class="viz">
+<svg viewBox="0 0 680 300" role="img" aria-label="Fan-out: one orders topic feeds three independent consumer groups, each receiving every message and tracking its own offset">
+  <defs>
+    <marker id="fa" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa7b4"/></marker>
+  </defs>
+  <!-- topic -->
+  <rect x="38" y="96" width="180" height="118" rx="10" fill="none" stroke="#4a5568" stroke-width="1.5"/>
+  <text x="128" y="86" text-anchor="middle" fill="#9aa7b4" font-size="13" font-weight="700">Topic: orders</text>
+  <g font-size="13" fill="#111" text-anchor="middle" font-weight="700">
+    <rect x="54" y="108" width="148" height="30" rx="7" fill="#4aa3ff"/><text x="128" y="128">Partition 0</text>
+    <rect x="54" y="142" width="148" height="30" rx="7" fill="#4aa3ff"/><text x="128" y="162">Partition 1</text>
+    <rect x="54" y="176" width="148" height="30" rx="7" fill="#4aa3ff"/><text x="128" y="196">Partition 2</text>
+  </g>
+  <!-- groups -->
+  <g>
+    <rect x="428" y="30" width="222" height="66" rx="10" fill="rgba(255,140,66,.12)" stroke="#ff8c42"/>
+    <text x="539" y="52" text-anchor="middle" fill="#ff8c42" font-size="13" font-weight="700">Group: billing</text>
+    <text x="539" y="74" text-anchor="middle" fill="#e6edf3" font-size="12.5" class="bn">invoice বানায় · own offset</text>
+  </g>
+  <g>
+    <rect x="428" y="122" width="222" height="66" rx="10" fill="rgba(74,163,255,.12)" stroke="#4aa3ff"/>
+    <text x="539" y="144" text-anchor="middle" fill="#4aa3ff" font-size="13" font-weight="700">Group: analytics</text>
+    <text x="539" y="166" text-anchor="middle" fill="#e6edf3" font-size="12.5" class="bn">metric গোনে · own offset</text>
+  </g>
+  <g>
+    <rect x="428" y="214" width="222" height="66" rx="10" fill="rgba(63,185,80,.12)" stroke="#3fb950"/>
+    <text x="539" y="236" text-anchor="middle" fill="#3fb950" font-size="13" font-weight="700">Group: audit</text>
+    <text x="539" y="258" text-anchor="middle" fill="#e6edf3" font-size="12.5" class="bn">লগ রাখে · own offset</text>
+  </g>
+  <!-- arrows: topic -> each group (each gets ALL) -->
+  <path d="M218 130 C 320 120, 340 70, 426 63"  fill="none" stroke="#9aa7b4" stroke-width="1.8" marker-end="url(#fa)"/>
+  <path d="M218 155 C 320 155, 340 155, 426 155" fill="none" stroke="#9aa7b4" stroke-width="1.8" marker-end="url(#fa)"/>
+  <path d="M218 180 C 320 190, 340 240, 426 247" fill="none" stroke="#9aa7b4" stroke-width="1.8" marker-end="url(#fa)"/>
+  <text x="322" y="292" text-anchor="middle" fill="#9aa7b4" font-size="12" class="bn">প্রতিটা group একই সব message পায়, কিন্তু নিজের offset আলাদা</text>
+</svg>
+<figcaption>Fan-out: এক topic → তিন স্বাধীন group। প্রতিটা group পুরো stream পায় এবং নিজের গতিতে এগোয়। ভেতরে প্রতিটা group আবার নিজের consumer-দের মধ্যে load balancing করে (উপরের প্রথম ছবির মতো)।</figcaption>
+</figure>
+
+<h4>কখন Group, কখন একটা Consumer যথেষ্ট — আর best option</h4>
+<p>মূল প্রশ্ন দুটো: "কতগুলো process একই কাজ ভাগ করবে?" আর "একই data কতজন স্বাধীনভাবে দরকার?" — উত্তর অনুযায়ী:</p>
+<table>
+<tr><th>যা দরকার</th><th>সমাধান</th><th>কীভাবে</th></tr>
+<tr><td>একাধিক instance-এ কাজ ভাগ করে throughput বাড়ানো</td><td>Group (একাধিক member)</td><td>একই <code>group.id</code> + বেশি partition</td></tr>
+<tr><td>Fault tolerance — একটা মরলে অন্যে দখল নিক</td><td>Group (২+ member/standby)</td><td>একই <code>group.id</code></td></tr>
+<tr><td>একই data একাধিক ভিন্ন কাজে</td><td>একাধিক group (fan-out)</td><td>প্রতি service আলাদা <code>group.id</code></td></tr>
+<tr><td>কম volume, এক process-ই যথেষ্ট</td><td>এক-সদস্যের group</td><td>একটা consumer + একটা <code>group.id</code></td></tr>
+<tr><td>প্রতিটা instance-কে <b>সব</b> message পেতে হবে (broadcast)</td><td>প্রতি instance আলাদা group</td><td><code>group.id = "cache-" + hostname</code></td></tr>
+<tr><td>এক reader সব partition পড়বে / ad-hoc tool</td><td>Group ছাড়া standalone</td><td><code>Assign()</code> manual partition</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best option</span>
+Production-এ প্রায় সবসময় <b>Subscribe + একটা <code>group.id</code></b> — এমনকি এখন একটাই consumer চললেও। কারণ group থাকলে offset persist হয় (restart-এ যেখানে ছিল সেখান থেকেই শুরু) আর পরে instance বাড়ালেই বিনা code-পরিবর্তনে scale + failover পাওয়া যায়। "একটাই consumer, group লাগবে না" ভেবে <code>Assign</code> দিয়ে শুরু করলে scaling-এ আটকে যাবেন — তাই <code>Assign</code> শুধু সত্যিকারের standalone দরকারে।</div>
+
+<h4>Real example — তিনটা বাস্তব সিদ্ধান্ত</h4>
+<p><b>১) Order / Billing service — group লাগবেই।</b> <code>orders</code> topic-এ সেকেন্ডে হাজারো order, invoice বানাতে হবে, service থামলে চলবে না। → <code>group.id=billing-service</code>, topic-এ 12 partition, Kubernetes-এ 6 replica। Load ভাগ হয়, একটা pod মরলে বাকিরা তার partition নিয়ে নেয়, peak-এ replica ১২ পর্যন্ত বাড়ানো যায়।</p>
+<p><b>২) একই order থেকে analytics + audit — fan-out, আলাদা group।</b> একই <code>orders</code> data billing invoice বানায়, analytics metric গোনে, audit লগ রাখে — কেউ কারো offset টানে না। → তিনটা আলাদা <code>group.id</code> (উপরের fan-out ছবি)।</p>
+<p><b>৩) Config / feature-flag broadcast — প্রতি instance আলাদা group।</b> একটা <code>feature-flags</code> (compacted) topic; প্রতিটা app instance-কে <b>সব</b> flag পেতে হবে যাতে নিজের in-memory cache আপডেট রাখতে পারে — load ভাগ করলে চলবে না। → প্রতিটা instance-এ unique <code>group.id</code> (যেমন <code>flags-&lt;hostname&gt;</code>), যাতে সবাই পুরো stream পায়।</p>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+Broadcast (সবাই সব চায়) দরকারে ভুল করে সব instance-কে <b>একই</b> <code>group.id</code> দেওয়া — তখন Kafka load-balance করে, প্রতিটা message মাত্র একটা instance পায়, বাকিদের cache পুরনো থেকে যায়। মনে রাখুন: broadcast = প্রতি consumer আলাদা group; work-share = একই group।</div>
+
+<h4>কে ও কীভাবে partition সংখ্যা ঠিক করে</h4>
+<p>জরুরি ব্যাপার: partition সংখ্যা <b>topic-এর property</b> — producer বা consumer এটা ঠিক করে না, তারা শুধু cluster metadata থেকে সংখ্যাটা <b>জেনে নেয়</b>। সংখ্যাটা নির্ধারণ করে <b>topic-এর owner</b> (সাধারণত platform/DevOps team), topic তৈরির সময়। Application developer কয়টা দরকার হিসাব করে দেয় (উপরের consumer-parallelism অনুযায়ী), আর platform team সেই topic provision করে।</p>
+<p><b>১) CLI দিয়ে (সবচেয়ে প্রচলিত):</b></p>
+<pre><span class="c"># তৈরির সময়ই partition সংখ্যা ঠিক হয়</span>
+kafka-topics --create --topic orders \
+  --partitions 12 --replication-factor 3 \
+  --bootstrap-server broker:9092</pre>
+<p><b>২) Admin API দিয়ে (কোড থেকে — .NET / Confluent.Kafka):</b></p>
+<pre>using var admin = new AdminClientBuilder(
+    new AdminClientConfig { BootstrapServers = "broker:9092" }).Build();
+
+await admin.CreateTopicsAsync(new[] {
+    new TopicSpecification {
+        Name              = "orders",
+        NumPartitions     = 12,      <span class="c">// এখানেই partition সংখ্যা</span>
+        ReplicationFactor = 3
+    }
+});</pre>
+<div class="callout behind"><span class="tag">Mental model</span>
+<code>Topic</code> → <b>N</b> partition (owner ঠিক করে, create-এর সময়)। <code>Producer</code> N জেনে <code>key % N</code>-এ partition বাছে। <code>Consumer group</code> N জেনে সেই N partition নিজেদের মধ্যে ভাগ করে। পরে <code>--alter --partitions</code> দিয়ে শুধু <b>বাড়ানো</b> যায় (কমানো যায় না), আর বাড়ালে <code>key → partition</code> mapping বদলে per-key ordering ভাঙে — তাই শুরুতেই ঠিকমতো নিন।</div>
+
+<h4>তাহলে কতগুলো partition বানাবো? — consumer-এর দৃষ্টিতে</h4>
+<p>যেহেতু একটা group-এ কার্যকর consumer-এর সর্বোচ্চ সংখ্যা = partition সংখ্যা, তাই partition কয়টা বানাবেন সেটা মূলত নির্ভর করে "সর্বোচ্চ কতজন consumer একসাথে parallel চালাতে হবে" তার ওপর। উল্টো দিক থেকে ভাবুন — <b>আগে consumer-এর দরকার হিসাব করুন, তারপর partition ঠিক ততগুলো</b> (বা সামান্য বেশি) রাখুন।</p>
+<p>দ্রুত হিসাব:</p>
+<div class="callout"><b>partition ≥ target throughput ÷ এক consumer যত process করতে পারে</b></div>
+<p>যেমন peak <code>60,000 msg/s</code>, আর একটা consumer (DB-write সহ) সামলায় <code>5,000 msg/s</code> → অন্তত <code>60000 ÷ 5000 = 12</code> consumer লাগবে → topic-এ অন্তত <b>12 partition</b> বানাতে হবে। (পূর্ণ formula ও trade-off Scaling ট্যাবে।)</p>
+<p>Consumer-দিক থেকে আরও দুটো বিবেচনা:</p>
+<ul>
+<li><b>Fan-out থাকলে সবচেয়ে ভারী group ধরে size করুন।</b> একই topic-এর <code>analytics</code> group যদি <code>billing</code>-এর চেয়ে ধীরে process করে ও বেশি consumer চায়, partition সংখ্যা সেই বড় চাহিদা মেটাতে হবে — কারণ প্রতিটা group একই partition সংখ্যায় bound।</li>
+<li><b>Headroom রাখুন।</b> partition শুধু <b>বাড়ানো</b> যায়, কমানো যায় না; আর বাড়ালে একই key নতুন partition-এ যেতে পারে → per-key ordering ভাঙে। তাই শুরুতেই ২–৩× ভবিষ্যৎ peak ধরে রাখুন।</li>
+</ul>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+"পরে consumer বাড়ালেই তো scale হবে" ভেবে topic-এ কম partition (যেমন 3) দিয়ে শুরু করা। পরে ১০টা consumer deploy করলেও মাত্র 3টা কাজ করবে, বাকি 7টা <b>idle</b> — throughput আর বাড়বে না। তখন partition বাড়াতে হবে, যা চলন্ত অবস্থায় ordering ঝুঁকিসহ। তাই partition সংখ্যা <b>আগেই</b> ঠিকমতো নিন।</div>
+
+<h4>DevOps নতুন instance deploy করলে কী ঘটে — scaling বাস্তবে</h4>
+<p><b>হ্যাঁ — আপনার বোঝা ঠিক।</b> DevOps যখন নতুন একটা consumer instance deploy করে আর তাতে <b>একই <code>group.id</code></b> সেট থাকে, সেই instance আপনাআপনি ঐ একই consumer group-এ যোগ দেয়। আলাদা কোনো "member যোগ করো" command লাগে না — process চালু হয়ে coordinator-কে <b>JoinGroup</b> পাঠালেই সে group-এর সদস্য। বাকি consumer-দের কোড বদলানো বা restart করাও লাগে না।</p>
+<p>ধাপে ধাপে:</p>
+<ol>
+<li>নতুন pod একই <code>group.id</code> নিয়ে চালু → প্রথম <code>poll()</code>-এ coordinator-কে <b>JoinGroup</b>।</li>
+<li>Coordinator একটা <span class="kw">rebalance</span> শুরু করে — partition-গুলো এখন পুরনো + নতুন সব member-এর মধ্যে নতুন করে ভাগ হয়।</li>
+<li>নতুন member কিছু partition পায়, প্রতি member-এর ভাগ কমে → মোট throughput বাড়ে।</li>
+</ol>
+<p>উদাহরণে (topic-এ 6 partition):</p>
+<table>
+<tr><th>অবস্থা</th><th>Member সংখ্যা</th><th>Partition বণ্টন</th></tr>
+<tr><td>Deploy-এর আগে</td><td>3 pod</td><td>প্রতি pod 2 (6 ÷ 3)</td></tr>
+<tr><td>নতুন 1টা pod deploy-এর পরে</td><td>4 pod</td><td>2, 2, 1, 1 (rebalance করে)</td></tr>
+<tr><td>আরও বাড়িয়ে</td><td>6 pod</td><td>প্রতি pod 1 — সর্বোচ্চ parallelism</td></tr>
+<tr><td>৭ম pod</td><td>7 pod</td><td>6টা কাজ করে, 1টা <b>idle</b> standby</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice</span>
+এই deploy-scaling মসৃণ রাখতে <code>CooperativeStickyAssignor</code> + static membership (নিচে দেখুন) ব্যবহার করুন — নাহলে প্রতিবার deploy-এ "stop-the-world" rebalance-এ কিছুক্ষণ পুরো group থমকে যায়। rolling deploy-এ একাধিক pod পরপর গেলে/এলে যেন rebalance storm না হয়, সেজন্যই static membership (স্থায়ী <code>group.instance.id</code>)।</div>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+নতুন instance-এ <code>group.id</code> <b>হুবহু</b> এক হতে হবে — extra space, typo, বা ভিন্ন environment variable থেকে অন্য value এলে সে আলাদা একটা group বানিয়ে ফেলবে। তখন load ভাগ না হয়ে ঐ instance <b>পুরো topic আবার শুরু থেকে</b> পড়া শুরু করবে (duplicate processing)। আর মনে রাখুন: instance সংখ্যা partition-এর বেশি দিলে extra-গুলো শুধু idle বসে থাকবে (Scaling ট্যাবও দেখুন)।</div>
+
+<h4>Offset কেন group-ভিত্তিক</h4>
+<p>Committed offset <code>__consumer_offsets</code> topic-এ জমা হয় <b>(group.id, topic, partition)</b> key-তে। তাই প্রতিটা group-এর অগ্রগতি সম্পূর্ণ স্বাধীন — <code>billing</code> group offset 5000-এ থাকলেও <code>analytics</code> group একই partition-এ 200-এ পিছিয়ে থাকতে পারে, কেউ কাউকে প্রভাবিত করে না। এজন্যই একটা group-এর offset reset (নিচের CLI ট্যাবে) করলে অন্য group অক্ষত থাকে, আর নতুন <code>group.id</code> দিলে সে <code>auto.offset.reset</code> অনুযায়ী শূন্য থেকে শুরু করে।</p>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+পুরনো data আবার process করতে বিদ্যমান group-এর offset reset না করে চট করে <code>group.id</code> বদলে ফেলা — এতে ঐ নতুন group-এর জন্য <code>__consumer_offsets</code>-এ কিছু থাকে না, তাই <code>auto.offset.reset</code>-এর ওপর নির্ভর করতে হয়; <code>latest</code> থাকলে পুরনো কিছুই আসবে না। ইচ্ছাকৃত reprocessing হলে বরং একই group-এ <code>--reset-offsets --to-earliest</code> ব্যবহার করুন।</div>
+
+<h3>Offset, Commit, Auto vs Manual</h3>
+<p><span class="kw">Offset</span> = consumer কোন position পর্যন্ত পড়েছে। এটা commit হয় <code>__consumer_offsets</code> topic-এ।</p>
+<table>
+<tr><th>Mode</th><th>কীভাবে</th><th>ঝুঁকি</th></tr>
+<tr><td><span class="kw">Auto commit</span></td><td><code>enable.auto.commit=true</code>, প্রতি <code>auto.commit.interval.ms</code></td><td>process-এর আগে commit হয়ে গেলে data loss / বা duplicate</td></tr>
+<tr><td><span class="kw">Manual sync</span></td><td><code>commitSync()</code> process-এর পর</td><td>নিরাপদ কিন্তু blocking</td></tr>
+<tr><td><span class="kw">Manual async</span></td><td><code>commitAsync()</code></td><td>দ্রুত কিন্তু retry নেই; শেষে sync দিন</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice</span>
+At-least-once চাইলে: <code>enable.auto.commit=false</code>, message <b>process করার পরে</b> <code>commitSync()</code>। তারপর consumer-কে idempotent বানান (Production ট্যাব)।</div>
+
+<h4>auto.offset.reset — প্রথমবার কোথা থেকে পড়বে?</h4>
+<p>যখন consumer group-এর কোনো committed offset <b>নেই</b> (একদম নতুন group), অথবা saved offset আর নেই (retention-এ মুছে গেছে), তখন কোথা থেকে শুরু করবে সেটা এই config ঠিক করে:</p>
+<table>
+<tr><th>মান</th><th>আচরণ</th><th>কখন</th></tr>
+<tr><td><code>earliest</code></td><td>partition-এর একদম শুরু থেকে সব পড়ে</td><td>পুরনো data-ও process করা দরকার (accounting reprocessing)</td></tr>
+<tr><td><code>latest</code> (default)</td><td>শুধু নতুন আসা message থেকে</td><td>শুধু "এখন থেকে" event দরকার</td></tr>
+<tr><td><code>none</code></td><td>offset না থাকলে error throw</td><td>কড়া control চাইলে</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+নতুন consumer group deploy করে <code>latest</code>-এ রেখে "কেন পুরনো message পাচ্ছি না?" — কারণ latest শুধু deploy-এর পরের message দেয়। পুরনো data চাইলে <code>earliest</code>।</div>
+
+<h3>poll() — heart of the consumer</h3>
+<p><code>poll(timeout)</code> শুধু data-ই আনে না — এটাই consumer-এর liveness signal, rebalance participation, heartbeat coordination সব চালায়। দুই <code>poll()</code>-এর মাঝে <code>max.poll.interval.ms</code>-এর বেশি সময় লাগলে consumer "dead" ধরে নেওয়া হয় → rebalance।</p>
+
+<h3>Rebalance, Heartbeat, Session Timeout</h3>
+<p>Consumer জোড়া/বিদায় নিলে বা crash করলে partition পুনর্বণ্টন হয় — এটাই <span class="kw">rebalance</span>। Consumer background-এ <span class="kw">heartbeat</span> পাঠায় (<code>heartbeat.interval.ms</code>) group coordinator-কে। <code>session.timeout.ms</code>-এর মধ্যে heartbeat না পেলে consumer dead ধরা হয়।</p>
+
+<h4>Eager vs Cooperative (Sticky) Rebalance</h4>
+<table>
+<tr><th></th><th>Eager (পুরনো)</th><th>Cooperative Sticky (নতুন)</th></tr>
+<tr><td>রীতি</td><td>সব consumer সব partition ছাড়ে ("stop-the-world"), তারপর নতুন করে বণ্টন</td><td>শুধু যেসব partition move হবে সেগুলোই ছাড়ে</td></tr>
+<tr><td>প্রভাব</td><td>পুরো group কিছুক্ষণ থেমে যায়</td><td>বাকি consumer কাজ চালিয়ে যায়</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice</span>
+<code>partition.assignment.strategy=CooperativeStickyAssignor</code> ব্যবহার করুন — rebalance-এ downtime অনেক কমে। <span class="kw">Sticky</span> assignment consumer-কে যতটা সম্ভব আগের partition-ই রাখতে চেষ্টা করে (state/cache নষ্ট হয় না)।</div>
+
+<h4>Static Membership — rolling restart-এ অপ্রয়োজনীয় rebalance ঠেকান</h4>
+<p>বাস্তব সমস্যা: Kubernetes-এ deploy করলে বা pod restart করলে প্রতিটা consumer কয়েক সেকেন্ডের জন্য চলে যায় আর ফেরে — প্রতিবার একটা করে rebalance ট্রিগার হয়। ১০টা consumer-এর rolling restart = ১০+ rebalance, প্রতিবার processing থমকে যায়।</p>
+<p><span class="kw">Static membership</span> এর সমাধান দেয়: প্রতিটা consumer-কে একটা স্থায়ী <code>group.instance.id</code> দিন (যেমন <code>billing-0</code>, <code>billing-1</code>)। তখন coordinator জানে "এই instance-টা ফিরে আসবে" — <code>session.timeout.ms</code>-এর মধ্যে ফিরলে <b>rebalance হয় না</b>, একই partition আবার পায়।</p>
+<pre><span class="c">// প্রতি pod এ আলাদা, কিন্তু restart এর পরও একই থাকতে হবে</span>
+GroupInstanceId = "billing-" + Environment.GetEnvironmentVariable("POD_ORDINAL"),
+SessionTimeoutMs = 45000,   <span class="c">// restart এর সময়ের চেয়ে বেশি রাখুন</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+সব pod-এ একই <code>group.instance.id</code> দেওয়া → coordinator বিভ্রান্ত হয় (duplicate instance), fencing error। প্রতিটা instance-এর id অবশ্যই unique <b>এবং</b> restart-এর পরও একই হতে হবে (তাই random GUID নয়, StatefulSet ordinal ব্যবহার করুন)।</div>
+
+<h3>Code Example — Consumer (.NET / Confluent.Kafka)</h3>
+<pre>var config = new ConsumerConfig {
+    BootstrapServers            = "broker1:9092,broker2:9092",
+    GroupId                     = "billing-service",   <span class="c">// একই group.id = load ভাগ</span>
+    EnableAutoCommit            = false,                <span class="c">// আমরা নিজে commit করব</span>
+    AutoOffsetReset             = AutoOffsetReset.Earliest,
+    IsolationLevel              = IsolationLevel.ReadCommitted,  <span class="c">// শুধু committed txn</span>
+    PartitionAssignmentStrategy = PartitionAssignmentStrategy.CooperativeSticky,
+    MaxPollIntervalMs           = 300000,
+};
+
+using var consumer = new ConsumerBuilder&lt;string, string&gt;(config).Build();
+consumer.Subscribe("accounting.invoice.created");
+
+while (!ct.IsCancellationRequested) {
+    var cr = consumer.Consume(ct);          <span class="c">// poll — data + heartbeat + rebalance</span>
+    try {
+        await HandleAsync(cr.Message);      <span class="c">// business logic (idempotent!)</span>
+        consumer.Commit(cr);                <span class="c">// process করার পরেই commit</span>
+    }
+    catch (TransientException) {
+        <span class="c">// commit করবেন না → পরের poll এ আবার এই offset আসবে (retry)</span>
+    }
+}
+consumer.Close();  <span class="c">// graceful — offset commit + পরিষ্কার rebalance</span></pre>
+
+<div class="callout mistake"><span class="tag">Common mistakes</span>
+<ul style="margin:4px 0">
+<li>poll loop-এ ভারী/ধীর কাজ করা → <code>max.poll.interval.ms</code> পার → বারবার rebalance ("rebalance storm")। সমাধান: <code>max.poll.records</code> কমান বা কাজ async করুন।</li>
+<li>Consumer সংখ্যা partition-এর বেশি রেখে "scale করছি" ভাবা — অতিরিক্তগুলো idle।</li>
+<li>Shutdown-এ <code>Close()</code> না করা → coordinator session timeout পর্যন্ত অপেক্ষা করে, rebalance দেরি হয়।</li>
+</ul></div>
+
+<h3>Dead Letter Queue (DLQ) — poison message সামলানো</h3>
+<p>কিছু message কখনোই সফলভাবে process হয় না — ভুল format, deserialize error, বা এমন business condition যা কোড হ্যান্ডল করতে পারে না। এদের বলে <span class="kw">poison message</span>। এদের নিয়ে আগে থেকে পরিকল্পনা না থাকলে বিপদ: consumer একই message-এ বারবার fail করে, offset commit হয় না, ঐ partition <b>আটকে</b> যায় — পেছনের সব ভালো message দাঁড়িয়ে থাকে (<span class="kw">head-of-line blocking</span>)। সমাধান: ব্যর্থ message-কে একটা আলাদা জায়গায় সরিয়ে দিন যাতে মূল প্রবাহ চলতে থাকে — এটাই <b>DLQ</b>।</p>
+
+<div class="callout behind"><span class="tag">Kafka-তে DLX নেই — শুধু DLQ (নিজে বানাতে হয়)</span>
+<b>Dead Letter Exchange (DLX)</b> আসলে <b>RabbitMQ</b>-র ধারণা — সেখানে message reject/expire/TTL শেষ হলে broker <b>স্বয়ংক্রিয়ভাবে</b> একটা DLX (আর তার পেছনের dead-letter queue)-এ পাঠিয়ে দেয়। Kafka-তে exchange বলে কিছু নেই, আর <b>কোনো built-in DLX/DLQ-ও নেই</b>। Kafka-তে DLQ মানে নিছক একটা <b>আলাদা topic</b> (যেমন <code>orders.DLQ</code>) — আপনার consumer কোড (বা framework) ব্যর্থ message সেখানে produce করে দেয়। অর্থাৎ Kafka-তে DLQ একটা <b>pattern</b>, feature নয়। (RabbitMQ ট্যাবে DLX আলাদাভাবে আসবে।)</div>
+
+<h4>প্রবাহ — retry, তারপর DLQ</h4>
+<div class="diagram"><pre>
+orders topic ─► Consumer ─try─► process ✅ ─► offset commit
+                   │
+                   └─ fail ─► কয়েকবার retry (transient হলে কেটে যায়)
+                                  │
+                              এখনো fail (poison)?
+                                  │
+                                  ▼
+                        orders.DLQ topic  ◄─ ব্যর্থ message + কারণ (headers)
+                                  │
+                                  ▼
+                        আলাদা করে দেখা / alert / fix করে replay
+</pre></div>
+<p>মূল ধারণা: <b>transient</b> error (যেমন DB সাময়িক down) হলে অল্প কয়েকবার retry করুন — কেটে যাবে। কিন্তু message নিজেই <b>খারাপ</b> হলে (retry-তে কখনো ঠিক হবে না) সেটাকে DLQ-তে সরিয়ে offset commit করে দিন — তাহলে মূল partition আর আটকাবে না।</p>
+
+<h4>DLQ message-এ কী কী রাখবেন</h4>
+<p>শুধু payload পাঠালে পরে debug করা কঠিন। ব্যর্থতার প্রসঙ্গ <b>header</b>-এ রাখুন:</p>
+<ul>
+<li>মূল <code>topic</code>, <code>partition</code>, <code>offset</code> — message কোথা থেকে এসেছিল।</li>
+<li>Exception টাইপ ও বার্তা — কেন fail করল।</li>
+<li>কতবার retry হয়েছিল, আর কখন fail করল (timestamp)।</li>
+<li>মূল key ও payload <b>অক্ষত</b> রাখুন — পরে replay করার জন্য।</li>
+</ul>
+
+<h4>Code — DLQ producer সহ consumer (.NET / Confluent.Kafka)</h4>
+<pre>using var dlq = new ProducerBuilder&lt;string, string&gt;(producerConfig).Build();
+
+while (!ct.IsCancellationRequested) {
+    var cr = consumer.Consume(ct);
+    try {
+        await HandleAsync(cr.Message);        <span class="c">// business logic</span>
+        consumer.Commit(cr);                  <span class="c">// সফল → এগিয়ে যাও</span>
+    }
+    catch (TransientException) {
+        <span class="c">// commit করবেন না → পরের poll এ আবার আসবে (retry)।</span>
+        <span class="c">// retry count সীমা পেরোলে একে poison ধরে নিচের DLQ পথে দিন।</span>
+    }
+    catch (Exception ex) {                     <span class="c">// poison — retry অর্থহীন</span>
+        var msg = new Message&lt;string, string&gt; {
+            Key     = cr.Message.Key,          <span class="c">// key + payload অক্ষত</span>
+            Value   = cr.Message.Value,
+            Headers = new Headers {
+                { "x-origin-topic",     Encoding.UTF8.GetBytes(cr.Topic) },
+                { "x-origin-partition", Encoding.UTF8.GetBytes(cr.Partition.Value.ToString()) },
+                { "x-origin-offset",    Encoding.UTF8.GetBytes(cr.Offset.Value.ToString()) },
+                { "x-error",            Encoding.UTF8.GetBytes(ex.Message) },
+                { "x-failed-at",        Encoding.UTF8.GetBytes(DateTimeOffset.UtcNow.ToString("o")) },
+            }
+        };
+        await dlq.ProduceAsync("orders.DLQ", msg);   <span class="c">// সরিয়ে দাও</span>
+        consumer.Commit(cr);                   <span class="c">// DLQ তে গেছে → offset এগিয়ে দাও (partition আর আটকাবে না)</span>
+    }
+}</pre>
+
+<div class="callout best"><span class="tag">Best practice</span>
+<ul style="margin:4px 0">
+<li><b>retry ও DLQ আলাদা রাখুন:</b> transient error → কয়েকবার retry (in-place বা আলাদা <code>orders.retry</code> topic-এ); শুধু permanent/poison → DLQ।</li>
+<li>Framework থাকলে হাতে না লিখে সেটাই ব্যবহার করুন: Kafka Connect-এ <code>errors.tolerance=all</code> + <code>errors.deadletterqueue.topic.name</code>; Spring Kafka-তে <code>DeadLetterPublishingRecoverer</code>।</li>
+<li>DLQ থেকে <b>replay</b> করার একটা flow/tool রাখুন — bug fix করার পর message আবার মূল topic-এ ফেরত পাঠানো।</li>
+<li>DLQ-তে message এলে <b>alert</b> দিন (যেমন DLQ lag &gt; 0)।</li>
+</ul></div>
+<div class="callout mistake"><span class="tag">Common mistakes</span>
+<ul style="margin:4px 0">
+<li>poison message-এ <b>অসীম retry</b> → partition চিরতরে আটকে, পেছনের সব message দাঁড়িয়ে থাকে।</li>
+<li>DLQ-তে ফেলে offset <b>commit না করা</b> → পরের poll-এ আবার সেই message → আবার DLQ → infinite loop (আর DLQ-তে duplicate)।</li>
+<li>DLQ-তে শুধু payload পাঠানো, কোনো error/origin metadata ছাড়া → পরে কেন fail করল বোঝা অসম্ভব।</li>
+<li>DLQ কখনো <b>monitor না করা</b> → নীরবে message জমে থাকা মানে নীরব data loss-এর সমান।</li>
+</ul></div>
+</template>
+
+<template data-page="replication">
+<h2 class="title">৭. Replication — গভীরভাবে</h2>
+<p class="lead">Leader, follower, ISR, high watermark, leader election — আর broker crash করলে ঠিক কী হয়।</p>
+
+<h3>Leader ও Follower</h3>
+<p>প্রতিটা partition-এর একটা replica <span class="kw">leader</span> — সব produce/consume এর মধ্য দিয়ে যায়। বাকি replica <span class="kw">follower</span>, যারা leader থেকে continuously fetch করে copy রাখে। Follower client-কে serve করে না (কিছু নতুন সংস্করণে follower-fetch আছে, তবে default leader থেকেই)।</p>
+
+<h3>ISR (In-Sync Replicas)</h3>
+<p>যেসব follower leader-এর সাথে <code>replica.lag.time.max.ms</code>-এর মধ্যে sync আছে, তারা ISR-এ। পিছিয়ে পড়লে ISR থেকে বাদ, আবার ধরে ফেললে ফিরে আসে।</p>
+
+<h3>High Watermark (HW)</h3>
+<p><span class="kw">High watermark</span> = সেই offset পর্যন্ত যা সব ISR-এ replicate হয়ে গেছে। Consumer শুধু HW পর্যন্তই পড়তে পারে — কারণ এর নিচের data নিশ্চিতভাবে durable। HW-এর উপরের (শুধু leader-এ আছে, follower-এ যায়নি) data consumer দেখতে পায় না।</p>
+<figure class="viz">
+<svg viewBox="0 0 640 296" role="img" aria-label="High watermark diagram: leader has offsets 0 to 5, followers lag behind, committed region is offsets 0 to 3">
+  <!-- committed region wash -->
+  <rect x="150" y="40" width="288" height="200" rx="6" fill="rgba(63,185,80,.07)"/>
+  <text x="294" y="34" text-anchor="middle" fill="#3fb950" font-size="12" class="bn">consumer এখানে পড়তে পারে (committed)</text>
+  <!-- row labels -->
+  <text x="20" y="82" fill="#4aa3ff" font-size="13" font-weight="700">Leader</text>
+  <text x="20" y="146" fill="#9aa7b4" font-size="13">Follower 1</text>
+  <text x="20" y="210" fill="#9aa7b4" font-size="13">Follower 2</text>
+  <!-- Leader cells 0..5 -->
+  <g font-size="14" text-anchor="middle">
+  <rect x="150" y="58" width="64" height="44" rx="6" fill="rgba(63,185,80,.20)" stroke="#3fb950"/><text x="182" y="86" fill="#e6edf3">0</text>
+  <rect x="222" y="58" width="64" height="44" rx="6" fill="rgba(63,185,80,.20)" stroke="#3fb950"/><text x="254" y="86" fill="#e6edf3">1</text>
+  <rect x="294" y="58" width="64" height="44" rx="6" fill="rgba(63,185,80,.20)" stroke="#3fb950"/><text x="326" y="86" fill="#e6edf3">2</text>
+  <rect x="366" y="58" width="64" height="44" rx="6" fill="rgba(63,185,80,.20)" stroke="#3fb950"/><text x="398" y="86" fill="#e6edf3">3</text>
+  <rect x="438" y="58" width="64" height="44" rx="6" fill="rgba(255,140,66,.18)" stroke="#ff8c42"/><text x="470" y="86" fill="#e6edf3">4</text>
+  <rect x="510" y="58" width="64" height="44" rx="6" fill="rgba(255,140,66,.18)" stroke="#ff8c42"/><text x="542" y="86" fill="#e6edf3">5</text>
+  <!-- Follower1 cells 0..4 -->
+  <rect x="150" y="122" width="64" height="44" rx="6" fill="rgba(63,185,80,.20)" stroke="#3fb950"/><text x="182" y="150" fill="#e6edf3">0</text>
+  <rect x="222" y="122" width="64" height="44" rx="6" fill="rgba(63,185,80,.20)" stroke="#3fb950"/><text x="254" y="150" fill="#e6edf3">1</text>
+  <rect x="294" y="122" width="64" height="44" rx="6" fill="rgba(63,185,80,.20)" stroke="#3fb950"/><text x="326" y="150" fill="#e6edf3">2</text>
+  <rect x="366" y="122" width="64" height="44" rx="6" fill="rgba(63,185,80,.20)" stroke="#3fb950"/><text x="398" y="150" fill="#e6edf3">3</text>
+  <rect x="438" y="122" width="64" height="44" rx="6" fill="rgba(255,140,66,.18)" stroke="#ff8c42"/><text x="470" y="150" fill="#e6edf3">4</text>
+  <rect x="510" y="122" width="64" height="44" rx="6" fill="none" stroke="#2d333b" stroke-dasharray="4 4"/>
+  <!-- Follower2 cells 0..3 -->
+  <rect x="150" y="186" width="64" height="44" rx="6" fill="rgba(63,185,80,.20)" stroke="#3fb950"/><text x="182" y="214" fill="#e6edf3">0</text>
+  <rect x="222" y="186" width="64" height="44" rx="6" fill="rgba(63,185,80,.20)" stroke="#3fb950"/><text x="254" y="214" fill="#e6edf3">1</text>
+  <rect x="294" y="186" width="64" height="44" rx="6" fill="rgba(63,185,80,.20)" stroke="#3fb950"/><text x="326" y="214" fill="#e6edf3">2</text>
+  <rect x="366" y="186" width="64" height="44" rx="6" fill="rgba(63,185,80,.20)" stroke="#3fb950"/><text x="398" y="214" fill="#e6edf3">3</text>
+  <rect x="438" y="186" width="64" height="44" rx="6" fill="none" stroke="#2d333b" stroke-dasharray="4 4"/>
+  <rect x="510" y="186" width="64" height="44" rx="6" fill="none" stroke="#2d333b" stroke-dasharray="4 4"/>
+  </g>
+  <!-- HW line -->
+  <line x1="434" y1="44" x2="434" y2="240" stroke="#e3b341" stroke-width="2.5" stroke-dasharray="6 4"/>
+  <text x="434" y="258" text-anchor="middle" fill="#e3b341" font-size="12.5" font-weight="700">High Watermark = 4</text>
+  <text x="600" y="86" fill="#9aa7b4" font-size="11">LEO=6</text>
+</svg>
+<div class="lgnd">
+  <span><i class="sw" style="background:rgba(63,185,80,.6)"></i> Committed (সব ISR এ আছে → readable)</span>
+  <span><i class="sw" style="background:rgba(255,140,66,.6)"></i> Uncommitted (এখনো সব ISR এ যায়নি)</span>
+  <span><i class="sw" style="background:transparent;border:1px dashed #2d333b"></i> এই follower এ এখনো পৌঁছায়নি</span>
+</div>
+<figcaption>High Watermark = সব ISR এ replicate হওয়া সর্বোচ্চ offset। Consumer শুধু HW এর নিচ পর্যন্ত (offset 0–3) পড়তে পারে — offset 4,5 leader এ থাকলেও এখনো "uncommitted"।</figcaption>
+</figure>
+
+<h3>min.insync.replicas</h3>
+<p><code>acks=all</code>-এর সাথে <code>min.insync.replicas=2</code> মানে: write সফল হতে হলে অন্তত ২টা replica (leader সহ) লিখতে হবে। ISR ২-এর নিচে নামলে producer <code>NotEnoughReplicas</code> error পায় — অর্থাৎ Kafka data হারানোর চেয়ে write reject করা পছন্দ করে।</p>
+<div class="callout why"><span class="tag">Why RF=3 + minISR=2 জনপ্রিয়</span>
+RF=3 হলে ১টা broker down হলেও minISR=2 পূর্ণ থাকে → write চলে + data safe। এটা availability আর durability-র মধ্যে সেরা ভারসাম্য।</div>
+
+<h3>Leader Election ও Unclean Leader Election</h3>
+<p>Leader broker down হলে Controller ISR থেকে একটা follower-কে নতুন leader বানায় (clean election — কোনো data loss নেই)।</p>
+<p><span class="kw">Unclean leader election</span>: যদি সব ISR-ও down থাকে এবং <code>unclean.leader.election.enable=true</code> হয়, তবে একটা out-of-sync replica-কে leader বানানো হয় — এতে availability ফেরে কিন্তু কিছু committed data হারাতে পারে।</p>
+<div class="callout best"><span class="tag">Best practice</span>
+Accounting/financial data-তে <code>unclean.leader.election.enable=false</code> রাখুন — availability-র চেয়ে durability গুরুত্বপূর্ণ। data হারানোর চেয়ে কিছুক্ষণ unavailable থাকা ভালো।</div>
+
+<h3>Replication Lag</h3>
+<p>Follower কতটা পিছিয়ে (offset difference বা time)। Lag বাড়লে follower ISR থেকে পড়ে যায় → availability ঝুঁকি। কারণ: slow disk, network, বা overloaded broker। Monitor করুন <code>UnderReplicatedPartitions</code> metric।</p>
+
+<h3>Broker crash করলে কী হয়? — step by step</h3>
+<ol>
+<li>Broker-এর heartbeat বন্ধ → Controller detect করে।</li>
+<li>সেই broker-এ থাকা যেসব partition <b>leader</b> ছিল, সেগুলোর জন্য ISR থেকে নতুন leader নির্বাচন।</li>
+<li>Producer/consumer metadata refresh করে নতুন leader-এর broker-এ redirect হয় (কয়েক সেকেন্ডের glitch)।</li>
+<li>Broker ফিরে এলে follower হিসেবে rejoin করে, পিছিয়ে থাকা data catch-up করে ISR-এ ফেরে।</li>
+<li>ঐচ্ছিকভাবে <code>preferred leader election</code>-এ leader ভারসাম্য ফেরানো হয়।</li>
+</ol>
+</template>
+
+<template data-page="performance">
+<h2 class="title">৮. Performance — Kafka কেন এত দ্রুত</h2>
+<p class="lead">Zero-copy, sendfile(), page cache, sequential write, batching — internally কী ঘটে।</p>
+
+<h3>Sequential Write (আবার, গুরুত্বপূর্ণ)</h3>
+<p>Append-only log মানে disk-এ পরপর লেখা — no random seek। এটাই সবচেয়ে বড় factor। (Storage ট্যাবে বিস্তারিত।) নিচের chart-এ দেখুন একই disk-এ sequential আর random access-এর গতির পার্থক্য কতটা ভয়ংকর:</p>
+<figure class="viz">
+<svg viewBox="0 0 640 214" role="img" aria-label="Bar chart comparing disk throughput: sequential write about 600 megabytes per second versus random write about 100 kilobytes per second, on a log scale">
+  <!-- gridlines (log scale, KB/s) -->
+  <g stroke="#2c2c2a" stroke-width="1">
+    <line x1="160" y1="40" x2="160" y2="150"/><line x1="248" y1="40" x2="248" y2="150"/>
+    <line x1="336" y1="40" x2="336" y2="150"/><line x1="424" y1="40" x2="424" y2="150"/>
+    <line x1="512" y1="40" x2="512" y2="150"/><line x1="600" y1="40" x2="600" y2="150"/>
+  </g>
+  <g fill="#898781" font-size="10.5" text-anchor="middle">
+    <text x="160" y="166">10</text><text x="248" y="166">100</text><text x="336" y="166">1K</text>
+    <text x="424" y="166">10K</text><text x="512" y="166">100K</text><text x="600" y="166">1M</text>
+    <text x="380" y="186" fill="#898781" font-size="11">throughput — KB/s (log scale, প্রতি gridline = 10×)</text>
+  </g>
+  <!-- Sequential bar: 600 MB/s = 600000 KB/s -> log10=5.778 -> x=160+(5.778-1)*88=160+420=580 -->
+  <rect x="160" y="52" width="420" height="34" rx="4" fill="#0ca30c"/>
+  <text x="150" y="74" text-anchor="end" fill="#c3c2b7" font-size="12.5">Sequential</text>
+  <text x="572" y="74" text-anchor="end" fill="#ffffff" font-size="12.5" font-weight="700">~600 MB/s</text>
+  <!-- Random bar: 100 KB/s -> log10=2 -> x=160+(2-1)*88=248 -->
+  <rect x="160" y="104" width="88" height="34" rx="4" fill="#d03b3b"/>
+  <text x="150" y="126" text-anchor="end" fill="#c3c2b7" font-size="12.5">Random</text>
+  <text x="258" y="126" fill="#e6edf3" font-size="12.5" font-weight="700">~100 KB/s</text>
+  <!-- ratio badge -->
+  <rect x="360" y="100" width="150" height="26" rx="13" fill="rgba(227,179,65,.14)" stroke="#e3b341"/>
+  <text x="435" y="117" text-anchor="middle" fill="#e3b341" font-size="12" font-weight="700">≈ 6000× দ্রুত</text>
+</svg>
+<div class="lgnd">
+  <span><i class="sw" style="background:#0ca30c"></i> Sequential access — Kafka এভাবে লেখে/পড়ে</span>
+  <span><i class="sw" style="background:#d03b3b"></i> Random access — traditional DB এর দুর্বলতা</span>
+</div>
+<figcaption>একই HDD, শুধু access pattern আলাদা। Kafka সব কিছু sequential রাখে বলেই সস্তা disk-এও এত দ্রুত। (আনুমানিক মান; log scale ব্যবহৃত কারণ পার্থক্য ~৬০০০ গুণ)</figcaption>
+</figure>
+
+<h3>Zero-Copy ও sendfile()</h3>
+<p>Consumer-কে data পাঠাতে সাধারণ app-এ ৪টা copy হয়: disk → kernel page cache → application buffer → socket buffer → NIC। Kafka <span class="kw">zero-copy</span> ব্যবহার করে Linux-এর <code>sendfile()</code> syscall দিয়ে — data সরাসরি page cache থেকে network socket-এ যায়, application memory (JVM heap) touch না করেই।</p>
+<figure class="viz">
+<svg viewBox="0 0 720 258" role="img" aria-label="Zero copy comparison: traditional path copies data four times through the application buffer; Kafka sendfile path skips the application buffer">
+  <defs>
+    <marker id="rd" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#f85149"/></marker>
+    <marker id="gr" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#3fb950"/></marker>
+  </defs>
+  <!-- TOP: traditional -->
+  <text x="16" y="30" fill="#f85149" font-size="13" font-weight="700" class="bn">সাধারণ পথ — 4 copy, বেশি context switch</text>
+  <g font-size="11" text-anchor="middle" fill="#e6edf3">
+    <rect x="16" y="46" width="118" height="42" rx="8" fill="#161b22" stroke="#3d4450"/><text x="75" y="72">Disk</text>
+    <rect x="166" y="46" width="118" height="42" rx="8" fill="#161b22" stroke="#3d4450"/><text x="225" y="72">Page cache</text>
+    <rect x="316" y="46" width="118" height="42" rx="8" fill="rgba(248,81,73,.15)" stroke="#f85149"/><text x="375" y="68">App (JVM)</text><text x="375" y="82" font-size="10" fill="#f85149">buffer</text>
+    <rect x="466" y="46" width="118" height="42" rx="8" fill="#161b22" stroke="#3d4450"/><text x="525" y="72">Socket buf</text>
+    <rect x="616" y="46" width="88" height="42" rx="8" fill="#161b22" stroke="#3d4450"/><text x="660" y="72">NIC</text>
+  </g>
+  <g stroke="#f85149" stroke-width="2" marker-end="url(#rd)">
+    <line x1="134" y1="67" x2="162" y2="67"/><line x1="284" y1="67" x2="312" y2="67"/>
+    <line x1="434" y1="67" x2="462" y2="67"/><line x1="584" y1="67" x2="612" y2="67"/>
+  </g>
+  <!-- divider -->
+  <line x1="16" y1="128" x2="704" y2="128" stroke="#2d333b" stroke-dasharray="4 4"/>
+  <!-- BOTTOM: zero-copy -->
+  <text x="16" y="158" fill="#3fb950" font-size="13" font-weight="700" class="bn">Kafka zero-copy (sendfile) — App buffer বাদ, কার্যত 0 app-copy</text>
+  <g font-size="11" text-anchor="middle" fill="#e6edf3">
+    <rect x="16" y="174" width="118" height="42" rx="8" fill="#161b22" stroke="#3d4450"/><text x="75" y="200">Disk</text>
+    <rect x="166" y="174" width="118" height="42" rx="8" fill="#161b22" stroke="#3d4450"/><text x="225" y="200">Page cache</text>
+    <rect x="316" y="174" width="118" height="42" rx="8" fill="none" stroke="#3d4450" stroke-dasharray="5 4"/><text x="375" y="196" fill="#6e7681">App buffer</text><text x="375" y="209" font-size="10" fill="#6e7681">(skipped)</text>
+    <rect x="466" y="174" width="118" height="42" rx="8" fill="#161b22" stroke="#3d4450"/><text x="525" y="200">Socket buf</text>
+    <rect x="616" y="174" width="88" height="42" rx="8" fill="#161b22" stroke="#3d4450"/><text x="660" y="200">NIC</text>
+  </g>
+  <g stroke="#3fb950" stroke-width="2" marker-end="url(#gr)">
+    <line x1="134" y1="195" x2="162" y2="195"/>
+    <line x1="584" y1="195" x2="612" y2="195"/>
+  </g>
+  <!-- big skipping arrow page cache -> socket -->
+  <path d="M284 188 C 360 240, 400 240, 462 202" fill="none" stroke="#3fb950" stroke-width="2.5" marker-end="url(#gr)"/>
+  <text x="373" y="252" text-anchor="middle" fill="#3fb950" font-size="11" font-weight="700">sendfile() — page cache → socket সরাসরি</text>
+</svg>
+<figcaption>Kafka data-কে transform না করে ঠিক যেভাবে disk-এ আছে সেভাবেই পাঠায়, তাই <code>sendfile()</code> দিয়ে page cache থেকে সরাসরি network — JVM heap ছোঁয় না। এজন্য SSL/compression broker-এ করলে এই সুবিধা আংশিক ভাঙে।</figcaption>
+</figure>
+<div class="callout behind"><span class="tag">Behind the scenes</span>
+Zero-copy কাজ করে কারণ Kafka data-কে bytes হিসেবেই disk-এ রাখে এবং consumer-কে ঠিক সেই bytes-ই পাঠায় — কোনো transform নেই। এজন্য broker-এ SSL/compression change করলে zero-copy আংশিক ভাঙে (কারণ তখন data transform করতে হয়)।</div>
+
+<h3>Page Cache</h3>
+<p>Read-write দুই-ই RAM (page cache) থেকে হয় বেশিরভাগ সময়। Recent data সবসময় cache-এ, তাই consumer disk hit করে না। (Storage ট্যাব দেখুন।)</p>
+
+<h3>Batching ও Compression</h3>
+<p>Producer batch করে network round-trip কমায়; compressed batch broker-এ compressed অবস্থায়ই থাকে, disk+network দুটোই বাঁচে; consumer নিজে decompress করে — broker CPU বাঁচে।</p>
+
+<h3>Partition Parallelism</h3>
+<p>Throughput scale করে partition দিয়ে। বেশি partition = বেশি parallel producer/consumer/disk। কিন্তু অতিরিক্ত partition = বেশি open file, বেশি metadata, ধীর leader election — তাই ভারসাম্য দরকার।</p>
+
+<h3>Network ও Memory Optimization</h3>
+<ul>
+<li><b>Long polling fetch:</b> consumer <code>fetch.min.bytes</code>/<code>fetch.max.wait.ms</code> দিয়ে ছোট ছোট request না পাঠিয়ে বড় batch আনে।</li>
+<li><b>Binary protocol:</b> কাস্টম efficient TCP protocol, কম overhead।</li>
+<li><b>Off-heap page cache:</b> JVM GC pressure কম (data heap-এ না থাকায়)।</li>
+</ul>
+<div class="callout best"><span class="tag">Tuning cheat-sheet</span>
+Throughput চাইলে: বড় <code>batch.size</code>, <code>linger.ms&gt;0</code>, <code>compression=lz4/zstd</code>, <code>fetch.min.bytes</code> বাড়ান, partition বাড়ান। Latency চাইলে: <code>linger.ms=0</code>, <code>fetch.min.bytes=1</code>, ছোট batch।</div>
+</template>
+
+<template data-page="reliability">
+<h2 class="title">৯. Reliability — Delivery Guarantees</h2>
+<p class="lead">At-most-once, at-least-once, exactly-once — Kafka internally কীভাবে অর্জন করে।</p>
+
+<h3>At-Most-Once</h3>
+<p>Message ০ বা ১ বার — কখনো duplicate না, কিন্তু হারাতে পারে।</p>
+<ul>
+<li><b>Producer:</b> <code>acks=0</code> বা <code>1</code>, retry কম/নেই।</li>
+<li><b>Consumer:</b> process-এর <b>আগে</b> offset commit → crash হলে message process ছাড়াই বাদ।</li>
+</ul>
+<p>ব্যবহার: metrics, log, যেখানে দু-একটা message হারালেও সমস্যা নেই।</p>
+
+<h3>At-Least-Once (সবচেয়ে বেশি ব্যবহৃত)</h3>
+<p>Message কমপক্ষে ১ বার — কখনো হারায় না, কিন্তু duplicate হতে পারে।</p>
+<ul>
+<li><b>Producer:</b> <code>acks=all</code> + retries।</li>
+<li><b>Consumer:</b> process-এর <b>পরে</b> offset commit → crash হলে reprocess (তাই duplicate)।</li>
+</ul>
+<div class="callout best"><span class="tag">সবচেয়ে practical পথ</span>
+At-least-once + <b>idempotent consumer</b> = কার্যত exactly-once effect, কিন্তু full Kafka transaction-এর জটিলতা ছাড়া। Accounting system-এ এটাই সাধারণত সেরা (Production ট্যাব দেখুন)।</div>
+
+<h3>Exactly-Once (EOS)</h3>
+<p>Message ঠিক ১ বার effect ফেলে — না হারায়, না duplicate। Kafka এটা অর্জন করে দুটো জিনিস দিয়ে:</p>
+<ol>
+<li><b>Idempotent producer</b> (<code>enable.idempotence=true</code>) — retry-তে broker duplicate write বাদ দেয়।</li>
+<li><b>Transactions</b> — read-process-write atomic। Consumer offset commit আর output produce একই transaction-এ। <code>isolation.level=read_committed</code> consumer শুধু committed message পড়ে।</li>
+</ol>
+<div class="diagram"><pre>
+Consume-Transform-Produce (Exactly-Once within Kafka):
+
+  producer.initTransactions()
+  while(true):
+    records = consumer.poll()
+    producer.beginTransaction()
+      process(records) → producer.send(outputTopic, result)
+      producer.sendOffsetsToTransaction(offsets, groupId)  ← offset ও output একসাথে
+    producer.commitTransaction()   // সব atomic — নয়তো abort
+</pre></div>
+<div class="callout mistake"><span class="tag">গুরুত্বপূর্ণ সীমাবদ্ধতা</span>
+Kafka-র exactly-once শুধু <b>Kafka-থেকে-Kafka</b> (Kafka Streams) ক্ষেত্রে পুরোপুরি কাজ করে। যদি output একটা <b>external system</b> (যেমন PostgreSQL) হয়, তাহলে Kafka transaction একা যথেষ্ট নয় — external side-এ idempotency (unique key) বা Inbox/Outbox pattern লাগবে। এটাই আপনার accounting integration-এর মূল বিষয়।</div>
+
+<table>
+<tr><th>Guarantee</th><th>Producer</th><th>Consumer</th><th>ব্যবহার</th></tr>
+<tr><td>At-most-once</td><td>acks=0/1</td><td>commit before process</td><td>metrics, logs</td></tr>
+<tr><td>At-least-once</td><td>acks=all + retries</td><td>commit after process</td><td>বেশিরভাগ business event</td></tr>
+<tr><td>Exactly-once</td><td>idempotent + txn</td><td>read_committed + txn offset</td><td>financial (Kafka-to-Kafka)</td></tr>
+</table>
+</template>
+
+<template data-page="scaling">
+<h2 class="title">১০. Scaling — Kafka কীভাবে বড় হয়</h2>
+<p class="lead">Broker, partition, producer, consumer যোগ করলে internally কী ঘটে।</p>
+
+<h3>Adding Brokers</h3>
+<p>নতুন broker cluster-এ join করলে সে খালি আসে — পুরনো partition আপনাআপনি তার উপর যায় না। <code>kafka-reassign-partitions</code> দিয়ে কিছু partition/replica নতুন broker-এ move করতে হয়। তখন সেই broker follower হয়ে data replicate করে নেয়, তারপর ভার ভাগ করে।</p>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+নতুন broker যোগ করে ভাবা যে load নিজে থেকেই ভাগ হবে — হয় না। Reassignment না করলে নতুন broker শুধু নতুন topic/partition-এর কাজ পাবে, পুরনো hot partition-এ কিছু হবে না।</div>
+
+<h3>Adding Partitions</h3>
+<p>Partition বাড়ানো যায় (<code>kafka-topics --alter --partitions</code>), কিন্তু:</p>
+<ul>
+<li>Partition <b>কমানো যায় না</b>।</li>
+<li>Partition বাড়ালে key→partition mapping (<code>hash%N</code>) বদলে যায় → একই key নতুন message-এ ভিন্ন partition-এ যেতে পারে → <b>ordering guarantee ভাঙে</b>।</li>
+</ul>
+<div class="callout best"><span class="tag">Best practice</span>
+শুরুতেই ভবিষ্যতের throughput ধরে বেশি partition রাখুন (over-provision), যাতে পরে বাড়াতে না হয়। ordering গুরুত্বপূর্ণ হলে partition count বদলানো এড়িয়ে চলুন।</div>
+
+<h4>কতগুলো Partition? — একটা কাজের formula</h4>
+<p>Partition count মূলত দুটো জিনিসের সর্বোচ্চটা দিয়ে ঠিক হয় — throughput চাহিদা আর দরকারি consumer parallelism:</p>
+<div class="callout"><b>Partitions ≈ max( T/p<sub>p</sub> , T/c<sub>p</sub> )</b><br>
+এখানে <code>T</code> = target throughput, <code>p<sub>p</sub></code> = একটা partition-এ producer যত দ্রুত লিখতে পারে, <code>c<sub>p</sub></code> = একটা consumer যত দ্রুত process করতে পারে।</div>
+<p><b>Worked example (accounting):</b> ধরুন target <code>T = 60,000 msg/s</code>। একটা consumer আপনার DB-write সহ process করতে পারে <code>c<sub>p</sub> = 5,000 msg/s</code>। তাহলে অন্তত <code>60,000 / 5,000 = 12</code> partition লাগবে (১২টা consumer parallel চালানোর জন্য)। ভবিষ্যতে ২× বৃদ্ধির কথা ভেবে <b>24</b> রাখা যুক্তিসঙ্গত।</p>
+<table>
+<tr><th>বিবেচ্য</th><th>নির্দেশনা</th></tr>
+<tr><td>খুব কম partition</td><td>consumer parallelism সীমিত → throughput আটকে যায়</td></tr>
+<tr><td>খুব বেশি partition</td><td>বেশি open file/memory, ধীর leader election, বেশি end-to-end latency, বড় rebalance</td></tr>
+<tr><td>বাস্তব সীমা</td><td>প্রতি broker কয়েক হাজার partition পর্যন্ত ঠিক (KRaft-এ আরও বেশি); cluster-wide lakhs সম্ভব</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+"যত বেশি partition তত ভালো" ভাবা। অতিরিক্ত partition end-to-end latency বাড়ায় (প্রতিটার replication/flush overhead) আর broker fail হলে recovery ধীর করে। প্রয়োজনের চেয়ে সামান্য বেশি রাখুন, অগণিত নয়।</div>
+
+<h3>Consumer Scaling</h3>
+<p>একই group-এ consumer বাড়িয়ে parallel processing scale করা যায় — সর্বোচ্চ partition সংখ্যা পর্যন্ত। এর বেশি consumer idle। তাই effective consumer parallelism = partition count।</p>
+
+<h3>Producer Scaling</h3>
+<p>Producer stateless-ish, অনেকগুলো instance একসাথে চালানো যায়। Broker leader-ভিত্তিক load ভাগ হয় partition দিয়ে। Producer scale করতে সাধারণত partition যথেষ্ট থাকলেই হয়।</p>
+
+<h3>Rebalancing (scaling-এর সময়)</h3>
+<p>Consumer add/remove করলে rebalance হয়ে partition পুনর্বণ্টন হয়। Cooperative Sticky Assignor ব্যবহার করলে এই rebalance-এ downtime কম (Consumer ট্যাব দেখুন)।</p>
+
+<div class="diagram"><pre>
+Scaling summary:
+  বেশি throughput?   → বেশি partition + বেশি consumer (group-এ)
+  বেশি storage/HA?   → বেশি broker + reassignment
+  Hot partition?     → key design বদলান বা partition বাড়ান (ordering trade-off সহ)
+</pre></div>
+</template>
+
+<template data-page="failure">
+<h2 class="title">১১. Failure Scenarios — internally কী ঘটে</h2>
+<p class="lead">প্রতিটা failure-এ Kafka ঠিক কী করে, আর কীভাবে recover করে।</p>
+
+<h3>Producer crash করলে</h3>
+<p>In-flight, un-acked message হারাতে পারে। Idempotent producer + <code>acks=all</code> থাকলে যেগুলো ack পেয়েছে সেগুলো durable। App restart হলে আবার শুরু করে। Transaction চললে incomplete transaction abort হয়।</p>
+
+<h3>Broker crash করলে</h3>
+<p>সেই broker-এর leader partition-গুলোর জন্য ISR থেকে নতুন leader (Replication ট্যাবে বিস্তারিত)। <code>UnderReplicatedPartitions</code> বাড়ে যতক্ষণ না broker ফিরে catch-up করে। RF≥3 + minISR=2 থাকলে service চলতে থাকে।</p>
+
+<h3>Consumer crash করলে</h3>
+<p><code>session.timeout.ms</code>-এর মধ্যে heartbeat না পেলে coordinator তাকে dead ধরে rebalance ট্রিগার করে — তার partition বাকি consumer-দের মধ্যে ভাগ হয়। শেষ commit করা offset থেকে নতুন consumer শুরু করে (তাই at-least-once-এ কিছু reprocess হতে পারে)।</p>
+
+<h3>Leader crash করলে</h3>
+<p>Controller তাৎক্ষণিক ISR থেকে নতুন leader করে। HW-এর নিচের data safe। HW-এর উপরের (uncommitted) data হারাতে পারে — কিন্তু consumer সেগুলো কখনো দেখেইনি, তাই consistency ভাঙে না।</p>
+
+<h3>Network partition (split-brain ঝুঁকি)</h3>
+<p>Controller quorum (KRaft) majority ধরে রাখা অংশ কাজ চালায়; minority অংশ leader হতে পারে না। ISR shrink হয়; minISR পূর্ণ না হলে সেই partition-এ write reject। এতে দুই দিকে দুই leader (split-brain) হওয়া ঠেকানো হয়।</p>
+
+<h3>Disk full হলে</h3>
+<p>Broker সেই log directory-তে write করতে পারে না → সেই disk-এর partition offline। ISR থেকে বাদ, অন্য broker-এ leader shift। প্রতিরোধ: retention ঠিক রাখা, disk usage alert, একাধিক log dir।</p>
+
+<h3>Broker restart হলে</h3>
+<p>Broker উঠে log recovery করে (শেষ segment-এর integrity check, unflushed data verify)। তারপর follower হিসেবে rejoin, catch-up, ISR-এ ফেরে। Graceful shutdown হলে leadership আগেই সরিয়ে নেওয়া হয় (কম disruption)।</p>
+
+<h3>ISR minimum-এর নিচে নামলে — write blocked (কিন্তু read চলে)</h3>
+<p>যথেষ্ট broker down হয়ে ISR যদি <code>min.insync.replicas</code>-এর নিচে নামে (যেমন RF=3, minISR=2, কিন্তু ২টা broker down → ISR=1), তখন <code>acks=all</code> producer <code>NotEnoughReplicasException</code> পায় — <b>write আটকে যায়</b>। কিন্তু consumer পড়তে পারে (partition readable)। এটা ইচ্ছাকৃত ডিজাইন: Kafka data হারানোর চেয়ে write থামানো পছন্দ করে। Recovery: broker ফিরে ISR পূর্ণ হলে write আবার চালু।</p>
+
+<h3>Consumer offset out of range — data মেয়াদ শেষে হারানো</h3>
+<p>Consumer অনেকক্ষণ down থাকলে বা এত পিছিয়ে পড়লে যে তার next offset-এর data ইতিমধ্যে retention-এ মুছে গেছে — তখন সে <code>OffsetOutOfRangeException</code> পায়। এরপর <code>auto.offset.reset</code> ঠিক করে কী হবে: <code>latest</code> হলে মাঝের সব unconsumed data <b>skip</b> (নীরব data loss!), <code>earliest</code> হলে একদম শুরু থেকে (বিশাল reprocess)।</p>
+<div class="callout mistake"><span class="tag">নীরব data loss</span>
+Retention &lt; consumer এর সম্ভাব্য downtime হলে data চুপচাপ হারায়। প্রতিরোধ: consumer lag monitor + alert (Operations ট্যাব), retention যথেষ্ট বড় রাখা, দীর্ঘ downtime এড়ানো।</div>
+
+<h3>Coordinator failure (group / transaction)</h3>
+<p>প্রতিটা consumer group-এর একটা broker <span class="kw">group coordinator</span> — যে broker ঐ group-এর <code>__consumer_offsets</code> partition-এর leader। সেই broker down হলে offset commit সাময়িক ব্যর্থ হয়, নতুন coordinator নির্বাচিত হওয়া পর্যন্ত (কয়েক সেকেন্ড)। একইভাবে transaction-এর <span class="kw">transaction coordinator</span> (<code>__transaction_state</code>)। Recovery স্বয়ংক্রিয় — client metadata refresh করে নতুন coordinator খুঁজে নেয়।</p>
+
+<h3>Producer buffer full — backpressure</h3>
+<p>Broker ধীর বা down হলে producer-এর <code>buffer.memory</code> ভরে যায়। তখন <code>send()</code> <code>max.block.ms</code> পর্যন্ত block করে, এরপর <code>TimeoutException</code> throw করে। এটা backpressure signal — broker আপনার produce rate ধরতে পারছে না। সমাধান: capacity বাড়ান (partition/broker) বা producer rate কমান/retry-backoff দিন।</p>
+
+<h3>Message too large</h3>
+<p>Message client-এর <code>max.request.size</code> বা topic-এর <code>max.message.bytes</code>-এর বেশি হলে <code>RecordTooLargeException</code> — reject। বড় payload (file/image/big JSON) Kafka-তে সরাসরি পাঠাবেন না; object storage (S3)-এ রেখে শুধু reference/URL পাঠান — এটাই <span class="kw">claim-check pattern</span>।</p>
+
+<h3>Poison message — partition আটকে যাওয়া (head-of-line blocking)</h3>
+<p>একটা message বারবার process fail করলে (bad schema, business rule violation) consumer যদি offset commit না করে অসীম retry করে, তাহলে সেই partition-এর পেছনের <b>সব</b> message আটকে থাকে — একটা খারাপ message পুরো partition থামিয়ে দেয়। সমাধান: নির্দিষ্টবার retry-র পর message DLQ-তে পাঠিয়ে offset এগিয়ে নিন (Production ট্যাব দেখুন)।</p>
+
+<h3>Producer retries exhausted → message dropped</h3>
+<p><code>delivery.timeout.ms</code>-এর মধ্যে retry-র পরও ack না এলে producer message drop করে delivery callback-এ error দেয়। এই error ignore করলে <b>নীরব data loss</b>। সবসময় callback/exception handle করুন — DLQ বা local persist করে পরে re-send করুন।</p>
+
+<h3>পুরো Zone / Cluster outage — Disaster Recovery</h3>
+<p>একটা broker নয়, পুরো availability zone বা data center down হলে?</p>
+<ul>
+<li><b>Rack awareness</b> (<code>broker.rack</code>): Kafka replica-গুলো আলাদা rack/AZ-তে ছড়ায়, যাতে এক AZ down হলেও প্রতিটা partition-এর অন্তত এক replica বাঁচে। Multi-AZ cluster-এ এটা must।</li>
+<li><b>Multi-region DR</b>: <span class="kw">MirrorMaker 2</span> (বা Confluent Replicator) দিয়ে অন্য region-এ async replicate করুন — primary region হারালে DR region-এ failover।</li>
+</ul>
+<div class="callout best"><span class="tag">Financial-এ RPO/RTO</span>
+ঠিক করুন কতটা data হারানো সহনীয় (<b>RPO</b>) আর কত দ্রুত ফিরতে হবে (<b>RTO</b>)। Accounting-এ সাধারণত multi-AZ minimum; critical ledger data হলে multi-region async replication + নিয়মিত DR drill।</div>
+
+<h3>Controller quorum loss (KRaft)</h3>
+<p>KRaft-এ controller quorum majority হারালে (যেমন ৩ controller-এর ২টা down) কোনো <b>metadata পরিবর্তন</b> সম্ভব নয় — leader election, topic create, config change থেমে যায় (control plane freeze)। তবে existing leader-রা data serve করতে থাকে (data plane চলে)। Recovery: controller quorum majority ফিরলে স্বাভাবিক। প্রতিরোধ: controller-দের আলাদা AZ-তে রাখুন।</p>
+
+<h3>Rebalance storm</h3>
+<p>Consumer বারবার <code>max.poll.interval.ms</code> পার করলে (ধীর processing) coordinator তাকে বারবার remove করে → অবিরাম rebalance, group কার্যত থমকে যায়। সমাধান: <code>max.poll.records</code> কমান, processing দ্রুত/async করুন, CooperativeStickyAssignor + static membership ব্যবহার করুন (Consumer ট্যাব)।</p>
+
+<h3>সারসংক্ষেপ</h3>
+<table>
+<tr><th>Failure</th><th>প্রভাব</th><th>Recovery / প্রতিরোধ</th></tr>
+<tr><td>Producer crash</td><td>un-acked হারাতে পারে</td><td>restart + idempotence</td></tr>
+<tr><td>Broker crash</td><td>leader shift, under-replicated</td><td>ISR election, catch-up</td></tr>
+<tr><td>Consumer crash</td><td>rebalance, কিছু reprocess</td><td>last committed offset থেকে</td></tr>
+<tr><td>Leader crash</td><td>uncommitted হারাতে পারে</td><td>ISR থেকে নতুন leader</td></tr>
+<tr><td>Network partition</td><td>minority-তে write reject</td><td>quorum-ভিত্তিক, split-brain রোধ</td></tr>
+<tr><td>Disk full</td><td>partition offline</td><td>disk clear + rejoin</td></tr>
+<tr><td>ISR &lt; minISR</td><td>write blocked (read চলে)</td><td>broker ফিরে ISR পূর্ণ হলে</td></tr>
+<tr><td>Offset out of range</td><td>নীরব data loss / massive replay</td><td>lag monitor + বড় retention</td></tr>
+<tr><td>Coordinator failure</td><td>commit সাময়িক ব্যর্থ</td><td>স্বয়ংক্রিয় re-election</td></tr>
+<tr><td>Producer buffer full</td><td>send() block → timeout</td><td>capacity বাড়ান / rate কমান</td></tr>
+<tr><td>Message too large</td><td>reject</td><td>claim-check (object storage)</td></tr>
+<tr><td>Poison message</td><td>partition আটকে যায়</td><td>retry limit + DLQ</td></tr>
+<tr><td>Retries exhausted</td><td>নীরব data loss (callback ignore করলে)</td><td>callback handle + DLQ</td></tr>
+<tr><td>Zone/cluster outage</td><td>বড় unavailability</td><td>rack awareness + MirrorMaker DR</td></tr>
+<tr><td>Controller quorum loss</td><td>control plane freeze</td><td>quorum ফিরলে; controllers আলাদা AZ</td></tr>
+<tr><td>Rebalance storm</td><td>group থমকে যায়</td><td>poll tune + static membership</td></tr>
+</table>
+</template>
+
+<template data-page="ecosystem">
+<h2 class="title">১২. Ecosystem — Kafka শুধু broker নয়</h2>
+<p class="lead">Kafka Connect, Debezium/CDC, Kafka Streams, ksqlDB, আর Schema Registry — production-এ এগুলোই Kafka-কে সম্পূর্ণ করে। আপনার DB-driven accounting-এর জন্য বিশেষভাবে প্রাসঙ্গিক।</p>
+
+<h3>Kafka Connect</h3>
+<p><span class="kw">Kafka Connect</span> হলো external system-এর সাথে Kafka যুক্ত করার একটা framework — কোড না লিখেই। দুই ধরনের connector:</p>
+<ul>
+<li><b>Source connector:</b> external system → Kafka (যেমন PostgreSQL → topic)।</li>
+<li><b>Sink connector:</b> Kafka → external system (যেমন topic → Elasticsearch/S3/DB)।</li>
+</ul>
+<div class="callout why"><span class="tag">কেন কোডের বদলে Connect?</span>
+Scaling, offset management, retry, fault tolerance, schema handling — সব Connect framework সামলায় (distributed worker mode)। নিজে producer/consumer লিখলে এগুলো বারবার নিজে করতে হয়। তবে custom business logic দরকার হলে নিজের consumer-ই ভালো।</div>
+
+<h3>Debezium ও CDC (Change Data Capture)</h3>
+<p><span class="kw">CDC</span> মানে database-এর প্রতিটা row change (insert/update/delete) ধরে event বানানো। <span class="kw">Debezium</span> একটা জনপ্রিয় source connector যা PostgreSQL-এর <span class="kw">WAL (Write-Ahead Log)</span> পড়ে প্রতিটা DB change-কে Kafka topic-এ পাঠায় — <b>polling ছাড়াই, near real-time</b>।</p>
+<div class="diagram"><pre>
+PostgreSQL  ──WAL──►  Debezium (Kafka Connect source)  ──►  Kafka topic
+ (ledger table)         (logical replication slot)          (dbserver.public.ledger)
+
+আপনার app শুধু DB-তে লেখে; event stream আপনাআপনি তৈরি হয়।
+</pre></div>
+<div class="callout best"><span class="tag">Accounting-এ CDC কেন গুরুত্বপূর্ণ</span>
+Dual-write সমস্যা (DB + Kafka দুটোতে আলাদা লেখা) এড়ানোর একটা উপায় — শুধু DB-তে লিখুন, Debezium সেটা থেকে event বানাবে। এটাই Outbox pattern-এর ভিত্তি (Production ট্যাবে বিস্তারিত)।</div>
+
+<h3>Schema Registry</h3>
+<p>Producer আর consumer message format নিয়ে একমত থাকা দরকার। <span class="kw">Schema Registry</span> (Confluent) Avro/Protobuf/JSON schema কেন্দ্রীয়ভাবে রাখে; message-এ পুরো schema না পাঠিয়ে শুধু একটা ছোট <b>schema ID</b> পাঠানো হয়।</p>
+<h4>Compatibility modes — schema evolution</h4>
+<table>
+<tr><th>Mode</th><th>মানে</th><th>নিরাপদ পরিবর্তন</th></tr>
+<tr><td><code>BACKWARD</code></td><td>নতুন schema দিয়ে পুরনো data পড়া যায়</td><td>field বাদ, optional field যোগ</td></tr>
+<tr><td><code>FORWARD</code></td><td>পুরনো schema দিয়ে নতুন data পড়া যায়</td><td>field যোগ, optional field বাদ</td></tr>
+<tr><td><code>FULL</code></td><td>দুই দিকেই compatible</td><td>শুধু optional field যোগ/বাদ</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+Schema Registry ছাড়া JSON string পাঠানো, তারপর producer field-এর নাম বদলালে সব consumer ভেঙে যায়। Financial data-তে <code>FULL</code> বা <code>BACKWARD</code> compatibility enforce করুন।</div>
+
+<h3>Kafka Streams</h3>
+<p><span class="kw">Kafka Streams</span> একটা Java library — Kafka-থেকে-Kafka stream processing-এর জন্য (filter, join, aggregate, windowing)। এটা আলাদা cluster লাগে না, আপনার app-এর ভেতরেই চলে। stateful operation-এর জন্য <span class="kw">state store</span> (RocksDB) + changelog topic ব্যবহার করে, আর exactly-once (EOS) সমর্থন করে।</p>
+<p>উদাহরণ: প্রতি account-এর running balance real-time হিসাব করা, বা fraud detection window। <b>নোট:</b> এটা JVM-কেন্দ্রিক; .NET-এ সরাসরি নেই — .NET-এ সাধারণত নিজের consumer + DB দিয়ে aggregation করা হয়।</p>
+
+<h3>ksqlDB</h3>
+<p><span class="kw">ksqlDB</span> দিয়ে SQL-এর মতো ভাষায় stream processing করা যায় — <code>CREATE STREAM ... SELECT ... FROM ... WHERE ...</code>। Kafka Streams-এর উপরে বসা একটা layer, দ্রুত prototyping-এর জন্য ভালো।</p>
+
+<div class="diagram"><pre>
+পুরো ছবিতে Kafka ecosystem:
+
+  [DB/App]──Connect(source)──►[ KAFKA ]──Connect(sink)──►[Warehouse/ES/DB]
+                                  │
+                         Streams / ksqlDB (process, join, aggregate)
+                                  │
+                          Schema Registry (format contract)
+</pre></div>
+</template>
+
+<template data-page="security">
+<h2 class="title">১৩. Security — financial data-র জন্য অপরিহার্য</h2>
+<p class="lead">Security একটা স্তর নয় — <b>defense in depth</b>: network → transport → authentication → authorization → encryption at rest → payload encryption → governance। Financial/accounting data-তে প্রতিটা স্তর দরকার, কারণ যেকোনো একটা স্তর বাদ পড়লে data উন্মুক্ত।</p>
+
+<h3>Defense in Depth — স্তরে স্তরে সুরক্ষা</h3>
+<p>নিচের diagram-এ দেখুন প্রতিটা control কোন স্তরে বসে। বাইরের স্তরগুলো (network, TLS) সাধারণ; কিন্তু ভেতরের স্তর — বিশেষ করে <b>payload (field-level) encryption</b> — প্রায়ই বাদ পড়ে, অথচ এটাই broker/insider থেকে সবচেয়ে বড় সুরক্ষা।</p>
+<figure class="viz">
+<svg viewBox="0 0 720 384" role="img" aria-label="Defense in depth layers wrapping sensitive data: network, transport TLS, authentication, authorization plus quotas, encryption at rest, and field-level payload encryption">
+  <rect x="40" y="30" width="640" height="324" rx="14" fill="rgba(74,163,255,.04)" stroke="#4a5568"/>
+  <text x="56" y="50" fill="#7d8da3" font-size="12" font-weight="700">① Network — VPC / firewall / private listener</text>
+  <rect x="78" y="62" width="564" height="270" rx="12" fill="rgba(74,163,255,.05)" stroke="#4aa3ff"/>
+  <text x="94" y="82" fill="#4aa3ff" font-size="12" font-weight="700">② In transit — TLS / SSL (client + inter-broker)</text>
+  <rect x="116" y="94" width="488" height="216" rx="11" fill="rgba(63,185,80,.05)" stroke="#3fb950"/>
+  <text x="132" y="114" fill="#3fb950" font-size="12" font-weight="700">③ Authentication — SASL / mTLS</text>
+  <rect x="154" y="126" width="412" height="162" rx="10" fill="rgba(227,179,65,.05)" stroke="#e3b341"/>
+  <text x="170" y="146" fill="#e3b341" font-size="12" font-weight="700">④ Authorization — ACL / RBAC + Quotas</text>
+  <rect x="192" y="158" width="336" height="108" rx="9" fill="rgba(188,140,255,.07)" stroke="#bc8cff"/>
+  <text x="208" y="178" fill="#bc8cff" font-size="12" font-weight="700">⑤ At rest — disk / volume encryption</text>
+  <rect x="230" y="190" width="260" height="56" rx="8" fill="rgba(255,140,66,.09)" stroke="#ff8c42"/>
+  <text x="246" y="208" fill="#ff8c42" font-size="12" font-weight="700">⑥ Payload — field-level encryption</text>
+  <rect x="285" y="214" width="150" height="24" rx="6" fill="rgba(248,81,73,.16)" stroke="#f85149"/>
+  <text x="360" y="230" text-anchor="middle" fill="#f85149" font-size="11.5" font-weight="700">sensitive DATA</text>
+</svg>
+<figcaption>প্রতিটা স্তর একটা করে control। বাইরের স্তর ভাঙলেও ভেতরের স্তর data রক্ষা করে। ⑥ field-level encryption থাকলে broker compromise হলেও attacker শুধু ciphertext পায়।</figcaption>
+</figure>
+
+<h3>১. Encryption in Transit — SSL/TLS</h3>
+<p>Default-এ Kafka traffic plaintext — কেউ network-এ আড়ি পাতলে সব transaction দেখতে পারবে। <span class="kw">SSL/TLS</span> চালু করলে broker ও client-এর মধ্যে সব যোগাযোগ encrypted। এটা on-wire encryption; disk-এ data encrypt করে না (তার জন্য disk-level encryption যেমন LUKS/dm-crypt লাগবে)।</p>
+
+<h3>২. Authentication — কে সংযোগ করছে?</h3>
+<table>
+<tr><th>পদ্ধতি</th><th>বিবরণ</th><th>কখন</th></tr>
+<tr><td><span class="kw">SASL/SCRAM</span></td><td>username/password (salted, hashed)</td><td>বেশিরভাগ setup-এ ভালো ডিফল্ট</td></tr>
+<tr><td><span class="kw">mTLS</span> (SSL auth)</td><td>client certificate দিয়ে পরিচয়</td><td>service-to-service, কড়া নিরাপত্তা</td></tr>
+<tr><td><span class="kw">SASL/GSSAPI</span></td><td>Kerberos</td><td>enterprise/AD পরিবেশে</td></tr>
+<tr><td><span class="kw">SASL/OAUTHBEARER</span></td><td>OAuth2 token</td><td>modern token-based auth</td></tr>
+<tr><td><code>SASL/PLAIN</code></td><td>plain username/password</td><td>শুধু TLS-এর সাথে (নাহলে অরক্ষিত)</td></tr>
+</table>
+
+<h3>৩. Authorization — কে কী করতে পারবে? (ACL)</h3>
+<p><span class="kw">ACL (Access Control List)</span> দিয়ে ঠিক করা হয় কোন principal কোন topic-এ read/write/create করতে পারবে। যেমন: <code>billing-service</code> শুধু <code>accounting.*</code> topic পড়তে পারবে, লিখতে পারবে না।</p>
+<pre><span class="c"># উদাহরণ ACL: শুধু read অনুমতি</span>
+kafka-acls --add \
+  --allow-principal User:billing-service \
+  --operation Read --topic accounting.invoice.created \
+  --group billing-service</pre>
+
+<h3>৪. Encryption at Rest</h3>
+<p>Kafka নিজে disk-এ data encrypt করে না — broker-এর log segment plaintext bytes হিসেবে থাকে। সমাধান <span class="kw">volume/disk-level encryption</span>: LUKS/dm-crypt, অথবা cloud-এ AWS EBS encryption / GCP CMEK / Azure disk encryption। এতে disk চুরি হলে, snapshot leak হলে, বা hardware decommission হলে data অরক্ষিত থাকে না।</p>
+<div class="callout mistake"><span class="tag">গুরুত্বপূর্ণ সীমাবদ্ধতা</span>
+Volume encryption broker process-এর কাছে <b>transparent</b> — অর্থাৎ broker (ও যার broker/OS access আছে: ops, cloud admin, বা broker compromise করা attacker) তখনও plaintext দেখে। এটা "disk চুরি" ঠেকায়, কিন্তু insider বা compromised broker ঠেকায় না। সেজন্য পরের স্তর দরকার।</div>
+
+<h3>৫. Field-level / End-to-End Encryption — সবচেয়ে গুরুত্বপূর্ণ (প্রায়ই বাদ পড়ে)</h3>
+<p>TLS (in transit) + volume encryption (at rest) — দুটোই থাকলেও data broker-এর RAM (page cache) আর log-এ <b>plaintext</b>। যার broker/disk access আছে, সে account number, PII পড়তে পারে। PCI-DSS/PII compliance-এ এটা যথেষ্ট নয়।</p>
+<p>সমাধান: sensitive field গুলো <b>producer-এ encrypt</b> করে পাঠান, <b>consumer-এ decrypt</b> করুন — broker মাঝখানে শুধু ciphertext দেখে (true end-to-end)।</p>
+<div class="diagram"><pre>
+Producer: encrypt(account_no) ─► [ Broker শুধু ciphertext দেখে ] ─► Consumer: decrypt(account_no)
+                    ▲                                                          ▲
+              data key (per-message)  ◄──── KMS master key দিয়ে wrap/unwrap ───►
+              (envelope encryption)          (AWS KMS / Vault / GCP KMS)
+</pre></div>
+<p><span class="kw">Envelope encryption</span>: প্রতি message-এর জন্য একটা data key দিয়ে field encrypt করা হয়, সেই data key আবার KMS-এর master key দিয়ে wrap করে message-এর সাথে পাঠানো হয়। Consumer KMS থেকে master key দিয়ে data key unwrap করে decrypt করে।</p>
+<div class="callout best"><span class="tag">Best practice</span>
+<ul style="margin:4px 0">
+<li>পুরো payload নয় — শুধু sensitive field (account no, card, NID) encrypt করুন, যাতে routing/analytics-এর জন্য বাকি field ব্যবহারযোগ্য থাকে।</li>
+<li>.NET-এ AES-GCM (authenticated encryption) + AWS KMS/Azure Key Vault দিয়ে নিজে করা যায়; Confluent-এ built-in <span class="kw">CSFLE (Client-Side Field Level Encryption)</span> আছে।</li>
+<li>Key rotation policy রাখুন; কখনো encryption key কোডে/repo-তে রাখবেন না।</li>
+</ul></div>
+
+<h3>৬. Inter-broker ও Component Security</h3>
+<p>Client↔broker secure করাই যথেষ্ট নয় — কয়েকটা প্রায়ই ভুলে যাওয়া পথ:</p>
+<ul>
+<li><b>Broker↔broker replication:</b> follower একই sensitive data টেনে নেয়। <code>security.inter.broker.protocol=SSL</code> (বা SASL_SSL) সেট করুন।</li>
+<li><b>KRaft controller quorum:</b> controller traffic-ও secure listener-এ রাখুন।</li>
+<li><b>Schema Registry / Kafka Connect / REST Proxy:</b> প্রতিটার নিজস্ব TLS + auth দরকার — এগুলোও data দেখে/সরায়।</li>
+<li><b>Connect secrets:</b> connector config-এ password থাকে — <code>config.providers</code> দিয়ে externalize করুন (Vault/env), plaintext config-এ নয়।</li>
+</ul>
+
+<h3>৭. Client Quotas — abuse ও DoS ঠেকান</h3>
+<p>একটা rogue বা buggy client পুরো cluster saturate করে বাকিদের starve করতে পারে — availability-ও security-র অংশ। <span class="kw">Quota</span> দিয়ে per-principal produce/fetch/request rate সীমিত করুন।</p>
+<pre><span class="c"># billing-service কে সর্বোচ্চ 10 MB/s produce + 10 MB/s fetch এ সীমাবদ্ধ</span>
+kafka-configs --alter --add-config \
+  'producer_byte_rate=10485760,consumer_byte_rate=10485760' \
+  --entity-type clients --entity-name billing-service --bootstrap-server broker:9092</pre>
+
+<h3>৮. Data Governance ও Compliance (GDPR / PII)</h3>
+<p>Kafka append-only ও immutable — তাই একজন ব্যক্তির data "মুছে ফেলা" (GDPR right to be forgotten) কঠিন। কৌশল:</p>
+<table>
+<tr><th>কৌশল</th><th>কীভাবে</th></tr>
+<tr><td>কম retention</td><td>PII topic-এ retention ছোট রাখুন — নিজে থেকেই মুছে যায়</td></tr>
+<tr><td>Tombstone + compaction</td><td>key-ভিত্তিক compacted topic-এ ঐ key-তে <code>null</code> value পাঠান → key মুছে যায়</td></tr>
+<tr><td><span class="kw">Crypto-shredding</span></td><td>প্রতি subject/user-এর data আলাদা key দিয়ে encrypt; delete করতে হলে সেই key মুছুন → ciphertext চিরতরে অপাঠ্য (immutable log-এও কার্যকর "delete")</td></tr>
+<tr><td>Data classification</td><td>কোন topic-এ PII/financial data আছে ট্যাগ করুন, সেই অনুযায়ী control প্রয়োগ করুন</td></tr>
+</table>
+<div class="callout best"><span class="tag">Accounting-এ</span>
+Audit/ledger data প্রায়ই regulatory কারণে বছরের পর বছর রাখতে হয় — কিন্তু তার মধ্যে থাকা PII আলাদা key দিয়ে encrypt করুন, যাতে দরকারে crypto-shred করা যায় অথচ financial record অক্ষত থাকে।</div>
+
+<h3>৯. Network Segmentation ও Listeners</h3>
+<p>Broker-কে private subnet/VPC-তে রাখুন — public internet-এ কখনো expose করবেন না। Internal (inter-broker) আর external (client) traffic-এর জন্য আলাদা <code>listeners</code> (আলাদা port + protocol) ব্যবহার করুন, আর firewall/security group দিয়ে শুধু পরিচিত client CIDR allow করুন।</p>
+
+<h3>Client config উদাহরণ (SASL/SCRAM + TLS, .NET)</h3>
+<pre>var config = new ConsumerConfig {
+    BootstrapServers = "broker:9093",
+    SecurityProtocol = SecurityProtocol.SaslSsl,   <span class="c">// TLS + SASL</span>
+    SaslMechanism    = SaslMechanism.ScramSha512,
+    SaslUsername     = "billing-service",
+    SaslPassword     = Environment.GetEnvironmentVariable("KAFKA_PASSWORD"),
+    SslCaLocation    = "/etc/kafka/ca.pem",
+    GroupId          = "billing-service",
+};</pre>
+
+<div class="callout best"><span class="tag">Financial-grade best practices</span>
+<ul style="margin:4px 0">
+<li>সবসময় <code>SASL_SSL</code> — TLS ছাড়া SASL/PLAIN কখনো নয়; inter-broker traffic-ও secure করুন।</li>
+<li>প্রতি service-এর আলাদা principal + least-privilege ACL (শুধু যা দরকার) + quota।</li>
+<li>Password/secret কোডে নয় — env var / secret manager (Vault, AWS Secrets Manager); Connect-এ config providers।</li>
+<li>Sensitive field (PII, account number) <b>field-level encrypt</b> করুন — broker যেন শুধু ciphertext দেখে।</li>
+<li>Audit log রাখুন — কে কখন কোন topic access করল (authorizer log)।</li>
+<li>TLS certificate rotation policy রাখুন (expiry monitor + auto-renew); mTLS-এ short-lived cert ভালো।</li>
+<li>PII-এর জন্য crypto-shredding-এর সুযোগ রাখুন (per-subject key), যাতে GDPR delete সম্ভব হয়।</li>
+</ul></div>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+Dev-এ security ছাড়া চালিয়ে production-এ deploy করে ভুলে যাওয়া। Financial system-এ open (PLAINTEXT) broker মানে যে কেউ সব transaction পড়তে/লিখতে পারবে।</div>
+</template>
+
+<template data-page="operations">
+<h2 class="title">১৪. Operations & Monitoring</h2>
+<p class="lead">Production Kafka চালানো মানে monitor করা — বিশেষ করে consumer lag আর replication health। কোন metric দেখবেন, কোন CLI লাগবে।</p>
+
+<h3>Consumer Lag — সবচেয়ে গুরুত্বপূর্ণ metric</h3>
+<p><span class="kw">Consumer lag</span> = (partition-এর latest offset) − (consumer-এর committed offset)। অর্থাৎ consumer কতগুলো message পিছিয়ে আছে।</p>
+<p style="margin:6px 0"><code>Lag = LogEndOffset − CommittedOffset</code> — যেমন LEO 1,000,000 আর committed 999,200 হলে lag = 800 message পিছিয়ে।</p>
+<figure class="viz">
+<svg viewBox="0 0 640 268" role="img" aria-label="Line chart of consumer lag over time: a healthy consumer stays flat near zero, a lagging consumer climbs steadily past the alert threshold">
+  <!-- gridlines + y labels -->
+  <g stroke="#2c2c2a" stroke-width="1">
+    <line x1="70" y1="40" x2="600" y2="40"/><line x1="70" y1="76" x2="600" y2="76"/>
+    <line x1="70" y1="112" x2="600" y2="112"/><line x1="70" y1="148" x2="600" y2="148"/>
+    <line x1="70" y1="184" x2="600" y2="184"/><line x1="70" y1="220" x2="600" y2="220"/>
+  </g>
+  <g fill="#898781" font-size="10.5" text-anchor="end">
+    <text x="60" y="44">5K</text><text x="60" y="80">4K</text><text x="60" y="116">3K</text>
+    <text x="60" y="152">2K</text><text x="60" y="188">1K</text><text x="60" y="224">0</text>
+  </g>
+  <!-- x labels -->
+  <g fill="#898781" font-size="10.5" text-anchor="middle">
+    <text x="70" y="240">0</text><text x="176" y="240">2</text><text x="282" y="240">4</text>
+    <text x="388" y="240">6</text><text x="494" y="240">8</text><text x="600" y="240">10</text>
+    <text x="335" y="258" font-size="11">সময় (মিনিট) →</text>
+  </g>
+  <!-- alert threshold at 3000 (y=112) -->
+  <line x1="70" y1="112" x2="600" y2="112" stroke="#e3b341" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="76" y="107" fill="#e3b341" font-size="10.5">alert threshold</text>
+  <!-- lagging (critical) -->
+  <polyline points="70,215 123,206 176,191 229,173 282,152 335,130 388,112 441,94 494,78 547,65 600,54"
+    fill="none" stroke="#d03b3b" stroke-width="2.5"/>
+  <circle cx="600" cy="54" r="4" fill="#d03b3b"/>
+  <!-- healthy (good) -->
+  <polyline points="70,216 123,217 176,215 229,216 282,215 335,217 388,215 441,216 494,217 547,216 600,216"
+    fill="none" stroke="#0ca30c" stroke-width="2.5"/>
+  <circle cx="600" cy="216" r="4" fill="#0ca30c"/>
+  <!-- direct labels -->
+  <text x="596" y="48" text-anchor="end" fill="#e66767" font-size="11.5" font-weight="700">Lagging consumer</text>
+  <text x="470" y="210" fill="#3fb950" font-size="11.5" font-weight="700">Healthy consumer</text>
+</svg>
+<div class="lgnd">
+  <span><i class="sw" style="background:#0ca30c"></i> Healthy — lag শূন্যের কাছে স্থির</span>
+  <span><i class="sw" style="background:#d03b3b"></i> Lagging — producer-এর গতি ধরতে পারছে না</span>
+</div>
+<figcaption>Lag ক্রমাগত বাড়া মানে consumer পিছিয়ে পড়ছে — partition/consumer বাড়িয়ে scale করুন। Accounting-এ এটা ledger update দেরির সরাসরি সংকেত, তাই threshold-এ alert বসান।</figcaption>
+</figure>
+<pre><span class="c"># consumer group ও lag দেখা</span>
+kafka-consumer-groups --bootstrap-server broker:9092 \
+  --describe --group billing-service
+
+<span class="c"># TOPIC  PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG  ...</span></pre>
+<div class="callout best"><span class="tag">Best practice</span>
+Lag-এর উপর alert বসান (যেমন lag > 10,000 হলে PagerDuty)। Accounting-এ lag মানে ledger update দেরি হচ্ছে — ব্যবসায়িক প্রভাব আছে।</div>
+
+<h3>যে key metric গুলো দেখবেন (JMX)</h3>
+<table>
+<tr><th>Metric</th><th>মানে</th><th>Alert কখন</th></tr>
+<tr><td><code>UnderReplicatedPartitions</code></td><td>ISR পূর্ণ নয় এমন partition</td><td>&gt; 0 (replication পিছিয়ে/broker down)</td></tr>
+<tr><td><code>OfflinePartitionsCount</code></td><td>কোনো leader নেই এমন partition</td><td>&gt; 0 (data unavailable — জরুরি)</td></tr>
+<tr><td><code>ActiveControllerCount</code></td><td>cluster-এ controller সংখ্যা</td><td>≠ 1 (0 বা 2 = সমস্যা)</td></tr>
+<tr><td>Consumer lag</td><td>consumer কত পিছিয়ে</td><td>বাড়তে থাকলে</td></tr>
+<tr><td>Request/produce latency (p99)</td><td>latency</td><td>SLA-র বেশি হলে</td></tr>
+<tr><td>Disk usage</td><td>log dir কতটা ভরা</td><td>&gt; 80%</td></tr>
+<tr><td>ISR shrink/expand rate</td><td>replica sync অস্থিরতা</td><td>ঘন ঘন হলে</td></tr>
+</table>
+
+<h3>Tooling stack</h3>
+<ul>
+<li><b>Metrics:</b> JMX → Prometheus (JMX Exporter) → Grafana dashboard।</li>
+<li><b>Cluster balance:</b> LinkedIn Cruise Control — automatic partition rebalancing।</li>
+<li><b>UI:</b> Confluent Control Center, AKHQ, Redpanda Console, Kafdrop।</li>
+<li><b>CLI:</b> <code>kafka-topics</code>, <code>kafka-consumer-groups</code>, <code>kafka-configs</code>, <code>kafka-reassign-partitions</code>।</li>
+</ul>
+
+<h3>দরকারি CLI commands</h3>
+<pre><span class="c"># topic তৈরি</span>
+kafka-topics --create --topic accounting.invoice.created \
+  --partitions 12 --replication-factor 3 \
+  --config min.insync.replicas=2 --bootstrap-server broker:9092
+
+<span class="c"># topic এর বিস্তারিত (partition, leader, ISR)</span>
+kafka-topics --describe --topic accounting.invoice.created --bootstrap-server broker:9092
+
+<span class="c"># partition বাড়ানো (কমানো যায় না!)</span>
+kafka-topics --alter --topic accounting.invoice.created --partitions 24 --bootstrap-server broker:9092
+
+<span class="c"># consumer group offset reset (সাবধানে!) — reprocessing এর জন্য</span>
+kafka-consumer-groups --reset-offsets --to-earliest \
+  --group billing-service --topic accounting.invoice.created --execute --bootstrap-server broker:9092</pre>
+
+<div class="callout mistake"><span class="tag">Common mistakes</span>
+<ul style="margin:4px 0">
+<li>Monitoring ছাড়া চালানো — consumer lag চুপচাপ বাড়ে, কেউ টের পায় না যতক্ষণ না ব্যবসা ভাঙে।</li>
+<li>Disk usage alert না রাখা → disk full → partition offline (Failure ট্যাব)।</li>
+<li>Production-এ ভুলে <code>--reset-offsets --execute</code> চালানো — সব message আবার process হবে; idempotency না থাকলে বিপর্যয়।</li>
+</ul></div>
+</template>
+
+<template data-page="production">
+<h2 class="title">১৫. Production-Grade Accounting Integration (.NET + PostgreSQL)</h2>
+<p class="lead">আপনার background (.NET, PostgreSQL, event-driven accounting) ধরে — একটা reliable Kafka integration কীভাবে ডিজাইন করবেন: Inbox Pattern, idempotency, retry, DLQ, offset management।</p>
+
+<h3>মূল সমস্যা: dual-write</h3>
+<p>Accounting-এ আপনি প্রায়ই Kafka থেকে event পড়ে PostgreSQL-এ ledger/transaction লেখেন। বিপদ: "DB-তে লিখলাম কিন্তু offset commit হলো না" (→ duplicate) বা "offset commit হলো কিন্তু DB লেখা fail" (→ data loss)। দুটো আলাদা system atomic-ভাবে update করা যায় না।</p>
+
+<h3>সমাধান: Inbox Pattern + Idempotency</h3>
+<div class="diagram"><pre>
+Consumer flow (at-least-once + idempotent):
+
+ Kafka poll(record with unique event_id / key)
+        │
+        ▼
+ BEGIN TRANSACTION (PostgreSQL)
+   ① INSERT INTO inbox(event_id) -- PRIMARY KEY / UNIQUE
+        │
+        ├─ conflict (already exists)? → duplicate, skip business logic
+        │
+   ② business logic: INSERT INTO ledger / update balance
+ COMMIT TRANSACTION
+        │
+        ▼
+ commitSync(offset)  -- DB commit হওয়ার পরেই
+</pre></div>
+<p>মূল ধারণা: প্রতিটা event-এর একটা <b>unique key</b> (event_id) থাকে। সেটা <code>inbox</code> table-এ PRIMARY KEY। একই event দুবার এলে দ্বিতীয়বার <code>INSERT</code> conflict করবে → আপনি জানেন এটা duplicate, business logic skip করবেন। এভাবে at-least-once delivery-ও <b>effectively exactly-once</b> হয়ে যায় DB-র দিক থেকে।</p>
+
+<div class="callout best"><span class="tag">কেন Inbox, Kafka transaction নয়?</span>
+Kafka-র exactly-once transaction PostgreSQL-এ পৌঁছায় না (external system)। DB-তে unique-key idempotency অনেক সহজ, debuggable, এবং আপনার existing PostgreSQL transaction-এর সাথেই atomic। এটাই accounting-এ standard।</div>
+
+<h4>Code — Idempotent Inbox Consumer (.NET + PostgreSQL)</h4>
+<pre>while (!ct.IsCancellationRequested) {
+    var cr = consumer.Consume(ct);
+    var eventId = cr.Message.Key;                 <span class="c">// unique event id</span>
+
+    await using var tx = await conn.BeginTransactionAsync(ct);
+
+    <span class="c">// ① idempotency guard — একই event আগে এলে rowsAffected = 0</span>
+    var rows = await conn.ExecuteAsync(
+        "INSERT INTO inbox(event_id, processed_at) VALUES(@id, now()) " +
+        "ON CONFLICT (event_id) DO NOTHING",
+        new { id = eventId }, tx);
+
+    if (rows == 1) {                              <span class="c">// নতুন event — business logic চালাও</span>
+        var invoice = JsonSerializer.Deserialize&lt;Invoice&gt;(cr.Message.Value);
+        await ApplyToLedgerAsync(invoice, conn, tx);
+    }
+    <span class="c">// rows == 0 → duplicate, skip (নিরাপদে)</span>
+
+    await tx.CommitAsync(ct);                      <span class="c">// DB atomic commit</span>
+    consumer.Commit(cr);                           <span class="c">// তারপরেই offset commit</span>
+}</pre>
+<div class="callout behind"><span class="tag">Crash হলে কী হয়</span>
+DB commit হয়েছে কিন্তু <code>consumer.Commit()</code>-এর আগে crash → পরের বার একই message আসবে → কিন্তু <code>inbox</code>-এ <code>event_id</code> আগে থেকেই আছে → <code>rows = 0</code> → business logic skip। ফলে ledger-এ double-entry হয় না। এটাই at-least-once-কে effectively exactly-once বানায়।</div>
+
+<h3>Offset Management — সঠিক ক্রম</h3>
+<ol>
+<li><code>enable.auto.commit=false</code> — কখনো auto-commit নয় financial-এ।</li>
+<li>DB transaction <b>COMMIT সফল হওয়ার পরে</b> <code>commitSync()</code>।</li>
+<li>DB commit ও offset commit-এর মাঝে crash হলে? → message reprocess হবে, কিন্তু inbox unique-key তা duplicate হিসেবে ধরে skip করবে। নিরাপদ।</li>
+</ol>
+
+<h3>Outbox Pattern — event <b>publish</b> করার নিরাপদ উপায়</h3>
+<p>Inbox pattern হলো <b>consume</b> করার সময় idempotency-র জন্য। এর উল্টোটা — যখন আপনার accounting service নিজে event <b>publish</b> করে (যেমন "invoice paid") — তখন আসে সেই dual-write সমস্যাই: "DB-তে ledger লিখলাম কিন্তু Kafka-তে publish fail" বা উল্টো। <span class="kw">Outbox pattern</span> এটা সমাধান করে।</p>
+<div class="diagram"><pre>
+এক-ই PostgreSQL transaction এর ভেতরে:
+
+ BEGIN TRANSACTION
+   ① INSERT INTO ledger(...)             -- business data
+   ② INSERT INTO outbox(id, topic, key, payload, created_at)  -- event ও একই txn এ
+ COMMIT                                   -- দুটো একসাথে atomic (একই DB)
+
+ তারপর আলাদা relay:
+   Debezium (CDC) / polling publisher  outbox row পড়ে ──► Kafka topic
+                                        ──► published হলে row delete/mark
+</pre></div>
+<div class="callout why"><span class="tag">কেন কাজ করে</span>
+Business data আর event একই DB transaction-এ যায় — হয় দুটোই commit, নয় দুটোই rollback। কখনো "DB আছে কিন্তু event নেই" হয় না। এরপর relay (Debezium বা একটা background publisher) outbox থেকে Kafka-তে at-least-once পাঠায়। Consumer-এর দিকে Inbox/idempotency থাকায় duplicate নিরাপদ। <b>Outbox (publish) + Inbox (consume) = পুরো chain-এ zero data loss।</b></div>
+
+<h3>Retry Strategy</h3>
+<ul>
+<li><b>Transient error</b> (DB deadlock, temporary network): কয়েকবার in-place retry (exponential backoff)।</li>
+<li><b>Non-transient / poison message</b> (bad schema, business rule fail): infinite retry করবেন না — নাহলে পুরো partition আটকে যাবে ("head-of-line blocking")।</li>
+<li>Pattern: <b>retry topic</b> — fail হলে message একটা <code>orders.retry</code> topic-এ পাঠান, delay দিয়ে আবার চেষ্টা; নির্দিষ্ট বার fail করলে DLQ-তে।</li>
+</ul>
+
+<h3>Dead Letter Queue (DLQ)</h3>
+<p>যে message নির্দিষ্টবার retry-র পরও process হয় না, সেটা একটা <code>orders.dlq</code> topic-এ পাঠান — original payload + error reason + stack trace + timestamp সহ। এতে main flow আটকায় না, আর আপনি পরে DLQ inspect/replay করতে পারেন।</p>
+<div class="diagram"><pre>
+ orders ──poll──► process
+                    │ fail (transient)
+                    ├──────────────► orders.retry (delay, backoff) ──► আবার process
+                    │ fail (retries exhausted / poison)
+                    └──────────────► orders.dlq (manual review + replay)
+</pre></div>
+
+<h3>Recommended Config (financial-grade)</h3>
+<pre><span class="c"># Producer (যদি আপনি event publish-ও করেন)</span>
+acks=all
+enable.idempotence=true
+retries=Integer.MAX
+max.in.flight.requests.per.connection=5
+compression.type=lz4
+
+<span class="c"># Topic</span>
+replication.factor=3
+min.insync.replicas=2
+unclean.leader.election.enable=false   <span class="c"># durability &gt; availability</span>
+
+<span class="c"># Consumer</span>
+enable.auto.commit=false
+isolation.level=read_committed
+partition.assignment.strategy=CooperativeStickyAssignor
+max.poll.records=100                    <span class="c"># DB batch এর সাথে মানানসই</span></pre>
+
+<h3>.NET-নির্দিষ্ট টিপস</h3>
+<ul>
+<li>Client: <b>Confluent.Kafka</b> (librdkafka-based) — production-ready, .NET-এ standard।</li>
+<li>Consume loop-এ DB write আর <code>consumer.Commit(offset)</code> নিজে হাতে করুন (manual)।</li>
+<li>Idempotency store: PostgreSQL <code>inbox</code> table + <code>INSERT ... ON CONFLICT DO NOTHING</code> দিয়ে duplicate detection।</li>
+<li>Graceful shutdown: <code>SIGTERM</code>-এ চলমান batch শেষ করে, offset commit করে, তারপর <code>consumer.Close()</code> — যাতে rebalance পরিষ্কার হয়।</li>
+</ul>
+
+<div class="callout why"><span class="tag">শেখার ক্রম (আপনার জন্য সাজানো)</span>
+<ol style="margin:6px 0">
+<li>Fundamentals + Architecture (ট্যাব ১–২)</li>
+<li>Producer internals (ট্যাব ৫)</li>
+<li>Broker + Log Storage (ট্যাব ৪)</li>
+<li>Consumer + Consumer groups (ট্যাব ৬)</li>
+<li>Replication + leader election + fault tolerance (ট্যাব ৭, ১১)</li>
+<li>Performance (batching, page cache, zero-copy) (ট্যাব ৮)</li>
+<li>Delivery guarantees (ট্যাব ৯)</li>
+<li>Ecosystem — Connect, Debezium/CDC, Schema Registry (ট্যাব ১২)</li>
+<li>Security ও Operations/Monitoring (ট্যাব ১৩, ১৪) — production-এ ছাড়ার আগে অপরিহার্য</li>
+<li>এই production integration ডিজাইন (এই ট্যাব) — Inbox + Outbox, idempotency, retry, DLQ, offset</li>
+</ol>
+এই ক্রমে গেলে concept-এর ভিত মজবুত হয়ে তারপর সেটা আপনার real accounting system-এ প্রয়োগ হবে।</div>
+</template>
+
+<script>
+// ================= RENDER =================
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  // build nav + pages
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    // footer nav
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    main.scrollTo?main.scrollTo(0,0):null;
+    window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  // open from hash
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>

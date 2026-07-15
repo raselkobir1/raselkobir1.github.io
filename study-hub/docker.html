@@ -1,0 +1,974 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Docker Mastery — Bangla (Beginner → Advanced, .NET focus)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#4aa3ff; --accent2:#59d0ff;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff;
+    --code-bg:#0b0f14; --kw:#79c0ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(74,163,255,.22),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#08111f}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--accent2)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--accent2)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#8fd0ff}
+  .viz{background:var(--code-bg); border:1px solid var(--border); border-radius:12px; padding:20px 18px 12px; margin:18px 0}
+  .viz svg{width:100%; height:auto; display:block; overflow:visible}
+  .viz figcaption{color:var(--muted); font-size:13px; margin-top:10px; text-align:center; line-height:1.5}
+  .viz text{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .viz .bn{font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla",sans-serif}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🐳 Docker Mastery</h1>
+      <p>Beginner → Advanced • .NET focus • বাংলায়</p>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",   icon:"🐳", title:"Foundation — Docker কী?"},
+  {id:"images",       icon:"📦", title:"Images · Layers · OverlayFS"},
+  {id:"dockerfile",   icon:"📝", title:"Dockerfile · Build · Multi-stage"},
+  {id:"instructions", icon:"🔧", title:"Dockerfile Instructions"},
+  {id:"containers",   icon:"🚢", title:"Containers · Lifecycle · Logs"},
+  {id:"storage",      icon:"💾", title:"Volumes · Bind · tmpfs"},
+  {id:"network",      icon:"🌐", title:"Networking · DNS · Ports"},
+  {id:"security",     icon:"🔐", title:"Config · Secrets · Security"},
+  {id:"registry",     icon:"🗄️", title:"Registry · Hub · Push/Pull"},
+  {id:"compose",      icon:"🧩", title:"Docker Compose"},
+  {id:"dotnet",       icon:"💜", title:"Docker for .NET"},
+  {id:"prod",         icon:"🏦", title:"Troubleshooting · Best Practices"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Foundation — Docker কী?</h2>
+<p class="lead">এক লাইনে: Docker আপনার application-কে তার সব dependency সহ একটা হালকা, পোর্টেবল <span class="kw">container</span>-এ প্যাক করে — যা dev, test, production সব জায়গায় হুবহু একইভাবে চলে।</p>
+
+<h3>কোন সমস্যা সমাধান করে?</h3>
+<p>"আমার machine-এ তো চলছিল!" — এই চিরন্তন সমস্যা Docker শেষ করে। আপনার .NET app হয়তো আপনার laptop-এ চলে, কিন্তু server-এ .NET version, environment variable, বা OS library ভিন্ন হলে ভাঙে। Docker app + runtime + dependency + config সব একটা <b>image</b>-এ বেঁধে দেয় — যেখানেই চালান, একই পরিবেশ।</p>
+
+<h3>Container বনাম Virtual Machine</h3>
+<table>
+<tr><th></th><th>Container</th><th>Virtual Machine</th></tr>
+<tr><td>OS</td><td>Host-এর kernel <b>share</b> করে</td><td>প্রতিটার নিজের সম্পূর্ণ OS</td></tr>
+<tr><td>আকার</td><td>MB (হালকা)</td><td>GB (ভারী)</td></tr>
+<tr><td>Startup</td><td>মিলিসেকেন্ড/সেকেন্ড</td><td>মিনিট</td></tr>
+<tr><td>Isolation</td><td>Process-level (namespace + cgroup)</td><td>Hardware-level (শক্তিশালী)</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন এত হালকা</span>
+Container আলাদা OS boot করে না — এটা host Linux kernel-ই ব্যবহার করে, শুধু <span class="kw">namespace</span> (isolation) আর <span class="kw">cgroup</span> (resource limit) দিয়ে আলাদা করা প্রক্রিয়া। তাই VM-এর মতো ভারী নয়, অথচ যথেষ্ট isolation দেয়।</div>
+
+<h3>Docker Architecture</h3>
+<p>Docker একটা <b>client-server</b> স্থাপত্য: আপনি <code>docker</code> CLI দিয়ে command দেন → সেটা <span class="kw">Docker daemon</span> (<code>dockerd</code>)-এ REST API-তে যায় → daemon image build/run, container চালানো, registry থেকে pull সব করে।</p>
+<figure class="viz">
+<svg viewBox="0 0 720 290" role="img" aria-label="Docker architecture: the docker CLI client talks to the Docker daemon over a REST API; the daemon manages images and containers and pulls or pushes images to a registry">
+  <defs><marker id="da" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa7b4"/></marker></defs>
+  <rect x="20" y="112" width="150" height="66" rx="10" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/>
+  <text x="95" y="140" text-anchor="middle" fill="#e6edf3" font-size="13.5" font-weight="700">docker CLI</text>
+  <text x="95" y="160" text-anchor="middle" fill="#9aa7b4" font-size="11">(client)</text>
+
+  <rect x="248" y="44" width="234" height="202" rx="12" fill="rgba(74,163,255,.06)" stroke="#4aa3ff"/>
+  <text x="365" y="34" text-anchor="middle" fill="#4aa3ff" font-size="13" font-weight="700">Docker Daemon (dockerd)</text>
+  <g font-size="12.5" fill="#e6edf3" text-anchor="middle">
+    <rect x="266" y="60" width="198" height="42" rx="8" fill="rgba(63,185,80,.12)" stroke="#3fb950"/><text x="365" y="86">Images (read-only)</text>
+    <rect x="266" y="112" width="198" height="42" rx="8" fill="rgba(255,140,66,.12)" stroke="#ff8c42"/><text x="365" y="138">Containers (running)</text>
+    <rect x="266" y="164" width="198" height="42" rx="8" fill="#161b22" stroke="#2d333b"/><text x="365" y="190" fill="#9aa7b4">containerd + runc</text>
+  </g>
+
+  <rect x="558" y="112" width="142" height="66" rx="10" fill="rgba(63,185,80,.14)" stroke="#3fb950"/>
+  <text x="629" y="140" text-anchor="middle" fill="#e6edf3" font-size="13" font-weight="700">Registry</text>
+  <text x="629" y="160" text-anchor="middle" fill="#9aa7b4" font-size="11">(Docker Hub)</text>
+
+  <path d="M170 145 L246 145" fill="none" stroke="#9aa7b4" stroke-width="2" marker-end="url(#da)"/>
+  <text x="208" y="135" text-anchor="middle" fill="#9aa7b4" font-size="10">REST API</text>
+  <path d="M482 145 L556 145" fill="none" stroke="#9aa7b4" stroke-width="2" marker-end="url(#da)"/>
+  <text x="519" y="135" text-anchor="middle" fill="#9aa7b4" font-size="10">pull / push</text>
+</svg>
+<figcaption>CLI → daemon (REST API) → images/containers পরিচালনা + registry থেকে pull/push। আপনি যা টাইপ করেন তা daemon বাস্তবায়ন করে।</figcaption>
+</figure>
+
+<h3>মূল উপাদানগুলো</h3>
+<table>
+<tr><th>উপাদান</th><th>কাজ</th></tr>
+<tr><td><span class="kw">Docker Engine</span></td><td>পুরো runtime — daemon (<code>dockerd</code>) + REST API + CLI। ভেতরে <code>containerd</code> ও <code>runc</code> আসল container চালায়।</td></tr>
+<tr><td><span class="kw">Docker CLI</span></td><td><code>docker</code> command — build, run, ps, logs ইত্যাদি (daemon-কে নির্দেশ দেয়)।</td></tr>
+<tr><td><span class="kw">Docker Desktop</span></td><td>Mac/Windows-এ GUI + Engine (ভেতরে একটা Linux VM চালায়, কারণ container-এর Linux kernel লাগে)। সাথে Compose ও ঐচ্ছিক Kubernetes।</td></tr>
+</table>
+<div class="callout best"><span class="tag">.NET engineer হিসেবে</span>
+আপনার লক্ষ্য: ASP.NET Core API + PostgreSQL + Redis + RabbitMQ/Kafka — সবগুলো container-এ চালিয়ে এক command-এ পুরো stack দাঁড় করানো (Compose ট্যাব)। এই কোর্স সেই পথেই এগোবে।</div>
+</template>
+
+<template data-page="images">
+<h2 class="title">২. Images · Layers · Union File System</h2>
+<p class="lead">Image হলো blueprint, container হলো তার চলন্ত রূপ। মাঝখানে layer আর OverlayFS-এর জাদু — যা Docker-কে দ্রুত ও efficient করে।</p>
+
+<h3>Image বনাম Container</h3>
+<p><span class="kw">Image</span> = read-only template (app + dependency + config-এর snapshot)। <span class="kw">Container</span> = সেই image থেকে চালু হওয়া একটা জীবন্ত instance। একই image থেকে অনেক container চালানো যায়।</p>
+<div class="callout why"><span class="tag">Class vs Object</span>
+সহজ উপমা: image হলো <b>class</b>, container হলো তার <b>object</b>। Image একবার build হয়, তারপর সেটা থেকে যতবার খুশি container চালান — প্রতিটা container image-এর ওপর নিজের একটা পাতলা writable layer পায়।</div>
+
+<h3>Layers — image কীভাবে গড়ে ওঠে</h3>
+<p>একটা image অনেকগুলো <span class="kw">layer</span>-এর স্তূপ। Dockerfile-এর প্রায় প্রতিটা instruction (<code>FROM</code>, <code>RUN</code>, <code>COPY</code>…) একটা করে read-only layer তৈরি করে। Layer গুলো <b>cache</b> হয় ও image-এর মধ্যে <b>share</b> হয় — তাই একই base layer বারবার download/store হয় না।</p>
+
+<h3>Union File System (OverlayFS)</h3>
+<p>Docker <span class="kw">OverlayFS</span> দিয়ে সব read-only layer-কে একসাথে স্তূপ করে একটাই filesystem হিসেবে দেখায়, আর সবার ওপরে container-এর একটা পাতলা <b>writable layer</b> বসায়। Container যা লেখে সব ওই top layer-এ যায় — নিচের image layer অপরিবর্তিত থাকে (<span class="kw">copy-on-write</span>)।</p>
+<figure class="viz">
+<svg viewBox="0 0 520 320" role="img" aria-label="OverlayFS: read-only image layers stacked at the bottom with a thin writable container layer on top; writes use copy-on-write">
+  <g text-anchor="middle" font-size="12.5" fill="#e6edf3">
+    <rect x="110" y="34" width="300" height="46" rx="8" fill="rgba(63,185,80,.18)" stroke="#3fb950"/><text x="260" y="62" font-weight="700">Container Writable Layer (R/W)</text>
+    <rect x="110" y="92" width="300" height="40" rx="8" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/><text x="260" y="117">Layer: COPY . (app files)</text>
+    <rect x="110" y="138" width="300" height="40" rx="8" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/><text x="260" y="163">Layer: RUN dotnet publish</text>
+    <rect x="110" y="184" width="300" height="40" rx="8" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/><text x="260" y="209">Layer: COPY *.csproj + restore</text>
+    <rect x="110" y="230" width="300" height="40" rx="8" fill="rgba(255,140,66,.14)" stroke="#ff8c42"/><text x="260" y="255">Layer: FROM aspnet:8.0 (base)</text>
+  </g>
+  <text x="470" y="118" fill="#9aa7b4" font-size="11" transform="rotate(90 470 118)" text-anchor="middle" class="bn">read-only image layers</text>
+  <line x1="440" y1="92" x2="440" y2="270" stroke="#4aa3ff" stroke-width="1.5"/>
+  <text x="260" y="296" text-anchor="middle" fill="#9aa7b4" font-size="11" class="bn">container যা লেখে → শুধু উপরের writable layer-এ (copy-on-write)</text>
+</svg>
+<figcaption>নিচে অপরিবর্তনীয় image layer-এর স্তূপ, ওপরে container-এর writable layer। এজন্য একই image থেকে ১০টা container চালালেও image একবারই disk-এ থাকে — প্রতিটা container শুধু নিজের ছোট writable layer পায়।</figcaption>
+</figure>
+
+<h3>Base Images</h3>
+<p>প্রতিটা Dockerfile <code>FROM</code> দিয়ে একটা <span class="kw">base image</span>-এর ওপর দাঁড়ায়। কয়েক ধরন:</p>
+<table>
+<tr><th>Base</th><th>বৈশিষ্ট্য</th></tr>
+<tr><td><code>scratch</code></td><td>একদম খালি — কিছুই নেই (static binary-র জন্য)</td></tr>
+<tr><td><code>alpine</code></td><td>~5MB, খুব ছোট (musl libc)</td></tr>
+<tr><td><code>debian</code>/<code>ubuntu</code></td><td>পূর্ণ, বড়, সব tool আছে</td></tr>
+<tr><td><code>mcr.microsoft.com/dotnet/aspnet</code></td><td>ASP.NET Core runtime (.NET app চালানোর জন্য)</td></tr>
+<tr><td><code>mcr.microsoft.com/dotnet/sdk</code></td><td>.NET SDK (build করার জন্য — বড়)</td></tr>
+</table>
+
+<h4>Distroless Images</h4>
+<p><span class="kw">Distroless</span> image-এ শুধু আপনার app আর তার runtime থাকে — কোনো shell, package manager, বা বাড়তি OS tool নেই। ফলে image ছোট আর <b>attack surface কম</b> (হ্যাকার shell পায় না)। .NET-এ <code>mcr.microsoft.com/dotnet/aspnet:8.0-noble-chiseled</code> এই ধরনের (chiseled = distroless-সদৃশ)।</p>
+<div class="callout best"><span class="tag">Best practice</span>
+Build-এ SDK image, চালাতে ছোট runtime image (<code>aspnet</code>) বা chiseled/distroless। কখনো production container-এ পুরো SDK পাঠাবেন না — বড়, ধীর, বেশি vulnerability।</div>
+
+<h3>Image Tagging ও Versioning</h3>
+<p>Image-এর নাম: <code>repository:tag</code> (যেমন <code>myapi:1.4.2</code>)। tag না দিলে default <code>latest</code>।</p>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+Production-এ <code>:latest</code> ব্যবহার — "latest" আসলে একটা mutable label, আজ যেটা কাল সেটা নাও হতে পারে → কোন version চলছে বোঝা যায় না, rollback কঠিন। Production-এ <b>immutable version tag</b> (<code>myapi:1.4.2</code>) বা এমনকি digest pin (<code>myapi@sha256:...</code>) ব্যবহার করুন।</div>
+</template>
+
+<template data-page="dockerfile">
+<h2 class="title">৩. Dockerfile · Build · Multi-Stage</h2>
+<p class="lead">Dockerfile হলো image বানানোর রেসিপি। এখানে build কীভাবে কাজ করে, cache কীভাবে বাঁচে, আর multi-stage দিয়ে ছোট production image।</p>
+
+<h3>Dockerfile — একটা সাধারণ .NET উদাহরণ</h3>
+<pre>FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY bin/Release/net8.0/publish/ .
+EXPOSE 8080
+ENTRYPOINT ["dotnet", "MyApi.dll"]</pre>
+<p>প্রতিটা লাইন একটা instruction, আর (বেশিরভাগ) একটা layer তৈরি করে।</p>
+
+<h3>Image Build Process ও Build Context</h3>
+<p><code>docker build -t myapi:1.0 .</code> চালালে যা ঘটে:</p>
+<ol>
+<li>শেষের <code>.</code> = <span class="kw">build context</span> — ঐ directory-র সব ফাইল daemon-এ পাঠানো হয়।</li>
+<li>Daemon Dockerfile-এর instruction একে একে চালায়, প্রতিটার জন্য একটা layer বানায়।</li>
+<li>ফলাফল = একটা image, tag <code>myapi:1.0</code>।</li>
+</ol>
+<div class="callout mistake"><span class="tag">Common mistake — বিশাল build context</span>
+Context-এ <code>bin/</code>, <code>obj/</code>, <code>.git/</code>, <code>node_modules/</code> থাকলে সেগুলোও daemon-এ যায় → build ধীর, image নোংরা। এজন্যই <code>.dockerignore</code>।</div>
+
+<h3>.dockerignore</h3>
+<p><code>.gitignore</code>-এর মতো — build context থেকে অপ্রয়োজনীয় ফাইল বাদ দেয়:</p>
+<pre><span class="c"># .dockerignore</span>
+bin/
+obj/
+.git/
+.vs/
+**/node_modules
+Dockerfile
+docker-compose*.yml
+*.md</pre>
+
+<h3>Build Cache — দ্রুত rebuild-এর চাবি</h3>
+<p>Docker প্রতিটা layer cache করে। কোনো instruction ও তার input অপরিবর্তিত থাকলে Docker সেই layer আবার না চালিয়ে cache থেকে নেয়। কিন্তু একটা layer বদলালে তার <b>পরের সব layer</b> আবার চালাতে হয়।</p>
+<div class="callout best"><span class="tag">Dependency caching (.NET-এর জন্য গুরুত্বপূর্ণ)</span>
+আগে <code>.csproj</code> copy করে <code>dotnet restore</code>, <b>তারপর</b> বাকি source copy করুন। তাহলে শুধু code বদলালে (csproj নয়) restore layer cache থেকে আসে — build অনেক দ্রুত। উল্টো করলে প্রতিবার code বদলেই পুরো restore আবার হয়।</div>
+
+<h3>Multi-Stage Builds — ছোট, নিরাপদ image</h3>
+<p>এক Dockerfile-এ একাধিক <code>FROM</code> (stage)। এক stage-এ ভারী SDK দিয়ে build করুন, তারপর শুধু build artifact ছোট runtime stage-এ copy করুন — final image-এ SDK/source থাকে না।</p>
+<pre><span class="c"># ---- ১) build stage (ভারী SDK) ----</span>
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY *.csproj ./
+RUN dotnet restore                          <span class="c"># cache-friendly</span>
+COPY . .
+RUN dotnet publish -c Release -o /app/publish
+
+<span class="c"># ---- ২) runtime stage (ছোট) ----</span>
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+COPY --from=build /app/publish .            <span class="c"># শুধু artifact আনি</span>
+EXPOSE 8080
+USER app                                    <span class="c"># non-root (aspnet 8 এ built-in)</span>
+ENTRYPOINT ["dotnet", "MyApi.dll"]</pre>
+<div class="callout best"><span class="tag">ফলাফল</span>
+Final image-এ শুধু runtime + published DLL — SDK, source, restore cache কিছুই নেই। ফলে image ~200MB (SDK image হলে ~800MB+), দ্রুত pull, কম vulnerability।</div>
+
+<h3>BuildKit ও cache mount — আরও দ্রুত build</h3>
+<p>আধুনিক Docker-এ <span class="kw">BuildKit</span> default build engine (parallel, উন্নত cache)। এর <b>cache mount</b> দিয়ে NuGet package cache build-এর বাইরে ধরে রাখা যায় — layer invalidate হলেও package আবার download করতে হয় না:</p>
+<pre># syntax=docker/dockerfile:1
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY *.csproj ./
+RUN --mount=type=cache,target=/root/.nuget/packages \
+    dotnet restore
+COPY . .
+RUN --mount=type=cache,target=/root/.nuget/packages \
+    dotnet publish -c Release -o /app/publish</pre>
+<p>CI-তে এটা বড় সাশ্রয় (প্রতি build-এ NuGet পুরো টানতে হয় না)। build-time secret-ও নিরাপদে দেওয়া যায়: <code>--mount=type=secret</code> (secret image layer-এ থাকে না)।</p>
+
+<h3>Multi-arch build — Apple Silicon → x86 server</h3>
+<p>Mac (ARM64/Apple Silicon)-এ build করা image সরাসরি x86 (amd64) Linux server-এ না-ও চলতে পারে। <code>docker buildx</code> দিয়ে একাধিক architecture-এর image একসাথে বানান:</p>
+<pre>docker buildx build --platform linux/amd64,linux/arm64 \
+  -t rasel/myapi:1.0 --push .</pre>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+Apple Silicon-এ সাধারণ <code>docker build</code> করে সেই ARM image production x86 server-এ push করা → server-এ <b>"exec format error"</b>। হয় <code>--platform linux/amd64</code> দিয়ে build করুন, নয় buildx দিয়ে multi-arch push করুন।</div>
+</template>
+
+<template data-page="instructions">
+<h2 class="title">৪. Dockerfile Instructions</h2>
+<p class="lead">প্রতিটা Dockerfile instruction কী করে — বিশেষ করে যেগুলো নিয়ে সবচেয়ে বেশি ভুল হয় (CMD vs ENTRYPOINT, COPY vs ADD, ENV vs ARG)।</p>
+
+<h3>পূর্ণ তালিকা</h3>
+<table>
+<tr><th>Instruction</th><th>কাজ</th></tr>
+<tr><td><code>FROM</code></td><td>base image ঠিক করে (প্রতি stage-এর শুরু)</td></tr>
+<tr><td><code>RUN</code></td><td>build-এর সময় একটা command চালায় (নতুন layer)</td></tr>
+<tr><td><code>CMD</code></td><td>container চালু হলে default command (override করা যায়)</td></tr>
+<tr><td><code>ENTRYPOINT</code></td><td>container-এর মূল executable (সহজে override হয় না)</td></tr>
+<tr><td><code>COPY</code></td><td>host থেকে ফাইল image-এ copy</td></tr>
+<tr><td><code>ADD</code></td><td>COPY + URL download + auto-extract tar</td></tr>
+<tr><td><code>WORKDIR</code></td><td>পরের instruction-এর working directory</td></tr>
+<tr><td><code>ENV</code></td><td>environment variable (build ও runtime দুটোতেই)</td></tr>
+<tr><td><code>ARG</code></td><td>build-time variable (শুধু build-এ)</td></tr>
+<tr><td><code>EXPOSE</code></td><td>container কোন port-এ শোনে (documentation; auto-publish নয়)</td></tr>
+<tr><td><code>USER</code></td><td>পরের command ও container কোন user-এ চলবে</td></tr>
+<tr><td><code>HEALTHCHECK</code></td><td>container সুস্থ কি না যাচাইয়ের command</td></tr>
+<tr><td><code>LABEL</code></td><td>image-এ metadata (maintainer, version…)</td></tr>
+<tr><td><code>VOLUME</code></td><td>একটা mount point ঘোষণা (persistent data)</td></tr>
+</table>
+
+<h3>CMD বনাম ENTRYPOINT — সবচেয়ে বিভ্রান্তিকর</h3>
+<table>
+<tr><th></th><th>ENTRYPOINT</th><th>CMD</th></tr>
+<tr><td>ভূমিকা</td><td>container "কী executable" — স্থির</td><td>default argument/command — override সহজ</td></tr>
+<tr><td>Override</td><td><code>--entrypoint</code> দিয়ে (কঠিন)</td><td><code>docker run img &lt;নতুন cmd&gt;</code> দিলেই</td></tr>
+</table>
+<p>দুটো একসাথে ব্যবহার করলে ENTRYPOINT = executable, CMD = default argument:</p>
+<pre>ENTRYPOINT ["dotnet", "MyApi.dll"]
+CMD ["--environment=Production"]     <span class="c"># override করা যায়</span></pre>
+<div class="callout behind"><span class="tag">exec form vs shell form</span>
+<code>["dotnet","MyApi.dll"]</code> = <b>exec form</b> (সুপারিশ) — সরাসরি process চালায়, signal (SIGTERM) ঠিকমতো পৌঁছায় → graceful shutdown কাজ করে। <code>dotnet MyApi.dll</code> = <b>shell form</b> — <code>/bin/sh -c</code>-এর ভেতরে চলে, signal app পর্যন্ত না-ও পৌঁছাতে পারে।</div>
+
+<h3>COPY বনাম ADD</h3>
+<div class="callout why"><span class="tag">নিয়ম</span>
+প্রায় সবসময় <b>COPY</b> ব্যবহার করুন — এটা সরল ও predictable। <b>ADD</b> বাড়তি করে: remote URL download আর local tar auto-extract — এই দুটো সত্যিই দরকার হলে (কমই) তবেই ADD। ADD-এর জাদুকরী আচরণ প্রায়ই surprise তৈরি করে।</div>
+
+<h3>ENV বনাম ARG</h3>
+<pre>ARG BUILD_VERSION=1.0        <span class="c"># শুধু build এর সময়, image এ থাকে না</span>
+ENV ASPNETCORE_URLS=http://+:8080   <span class="c"># runtime এও থাকে, container এ পাওয়া যায়</span></pre>
+<p><code>ARG</code> build-time (<code>docker build --build-arg</code>); <code>ENV</code> runtime-এও বজায় থাকে (app পড়তে পারে)।</p>
+
+<h3>HEALTHCHECK, USER, LABEL</h3>
+<pre>LABEL maintainer="rasel@example.com" version="1.4.2"
+USER app                                        <span class="c"># non-root</span>
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1</pre>
+<p><code>HEALTHCHECK</code> থাকলে <code>docker ps</code>-এ container "healthy/unhealthy" দেখায়, আর Compose/orchestrator তার ওপর সিদ্ধান্ত নিতে পারে (<code>depends_on</code> condition)।</p>
+</template>
+
+<template data-page="containers">
+<h2 class="title">৫. Containers · Lifecycle · Logs</h2>
+<p class="lead">Container চালানো, দেখা, ভেতরে ঢোকা, resource বেঁধে দেওয়া, আর crash হলে কী করবে — দৈনন্দিন Docker।</p>
+
+<h3>Container Lifecycle</h3>
+<div class="diagram"><pre>
+docker create ─► [Created] ─ docker start ─► [Running] ─ docker stop ─► [Stopped/Exited]
+                                 │  ▲                                        │
+                     docker pause│  │docker unpause              docker start│ (আবার)
+                                 ▼  │                                        ▼
+                              [Paused]                              docker rm ─► [মুছে গেল]
+</pre></div>
+<p><code>docker run</code> = <code>create</code> + <code>start</code> একসাথে।</p>
+
+<h3>Run modes — Interactive, Detached</h3>
+<table>
+<tr><th>Flag</th><th>মানে</th></tr>
+<tr><td><code>-it</code></td><td><span class="kw">Interactive</span> + TTY — shell-এ ঢুকে কাজ (<code>docker run -it ubuntu bash</code>)</td></tr>
+<tr><td><code>-d</code></td><td><span class="kw">Detached</span> — background-এ চলে (server/service)</td></tr>
+<tr><td><code>--rm</code></td><td>থামলেই container auto-remove (একবারের কাজ)</td></tr>
+<tr><td><code>-p 8080:8080</code></td><td>port publish (Networking ট্যাব)</td></tr>
+<tr><td><code>--name api</code></td><td>container-এর নাম দেওয়া</td></tr>
+</table>
+
+<h3>Exec বনাম Attach</h3>
+<div class="callout why"><span class="tag">পার্থক্য</span>
+<code>docker exec -it api bash</code> — চলন্ত container-এ <b>নতুন একটা process</b> (shell) চালায় — debug করতে এটাই। <code>docker attach api</code> — container-এর <b>মূল process</b>-এর stdin/stdout-এ যুক্ত হয় (এখানে Ctrl-C দিলে main process মরে যেতে পারে — সাবধান)। debug-এ প্রায় সবসময় <code>exec</code>।</div>
+
+<h3>দেখা ও পর্যবেক্ষণ — Logs, Inspect, Stats, Events</h3>
+<pre>docker logs -f api            <span class="c"># container এর stdout/stderr (live)</span>
+docker inspect api            <span class="c"># সব বিস্তারিত JSON (IP, mount, env, state)</span>
+docker stats                  <span class="c"># live CPU/memory/network প্রতি container</span>
+docker events                 <span class="c"># daemon এর real-time event stream</span>
+docker top api                <span class="c"># container এর ভেতরের process</span></pre>
+
+<h3>Restart Policies</h3>
+<table>
+<tr><th>Policy</th><th>আচরণ</th></tr>
+<tr><td><code>no</code> (default)</td><td>কখনো auto-restart নয়</td></tr>
+<tr><td><code>on-failure[:n]</code></td><td>non-zero exit-এ restart (সর্বোচ্চ n বার)</td></tr>
+<tr><td><code>always</code></td><td>সবসময় restart (daemon restart-এও)</td></tr>
+<tr><td><code>unless-stopped</code></td><td>always, তবে আপনি নিজে stop করলে নয়</td></tr>
+</table>
+<pre>docker run -d --restart unless-stopped --name api myapi:1.0</pre>
+
+<h3>Resource Limits (CPU &amp; Memory)</h3>
+<pre>docker run -d --memory="512m" --cpus="1.5" --name api myapi:1.0</pre>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+Limit ছাড়া container চালানো — একটা memory leak বা runaway process পুরো host-এর RAM/CPU খেয়ে ফেলে, অন্য container-ও মরে। Production-এ সবসময় <code>--memory</code> ও <code>--cpus</code> (বা Compose-এ limit) দিন।</div>
+
+<h3>Logging Drivers</h3>
+<p>Container-এর log কোথায় যাবে তা <span class="kw">logging driver</span> ঠিক করে: <code>json-file</code> (default), <code>local</code>, <code>journald</code>, <code>syslog</code>, <code>fluentd</code>, ক্লাউড driver ইত্যাদি। Production-এ central logging (ELK/Loki)-তে পাঠাতে fluentd/syslog driver বা sidecar ব্যবহার হয়।</p>
+<div class="callout best"><span class="tag">Log rotation</span>
+Default <code>json-file</code> driver disk ভরিয়ে ফেলতে পারে। <code>--log-opt max-size=10m --log-opt max-file=3</code> দিয়ে rotation সেট করুন (বা daemon.json-এ globally)।</div>
+
+<h3>PID 1, signal ও graceful shutdown</h3>
+<p>Container-এর ভেতরে আপনার process চলে <b>PID 1</b> হিসেবে — যার দায়িত্ব signal handle করা ও child-এর zombie reap করা। <code>docker stop</code> প্রথমে <b>SIGTERM</b> পাঠায় (graceful), তারপর grace period (default ~১০s) পেরোলে <b>SIGKILL</b> (জোর করে)।</p>
+<ul>
+<li><b>exec form ব্যবহার করুন</b> (<code>ENTRYPOINT ["dotnet","App.dll"]</code>) — তাহলে SIGTERM সরাসরি app পায় → graceful shutdown। shell form-এ signal <code>sh</code>-এ আটকে যায়।</li>
+<li>App যদি child spawn করে বা signal handle না করে, <code>docker run --init</code> দিন — ছোট একটা init (tini) PID 1 হয়ে signal forward ও zombie reap করে।</li>
+</ul>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+<code>docker stop</code>-এ container ~১০s ঝুলে থেকে জোর করে kill হচ্ছে — মানে app SIGTERM ধরছে না (প্রায়ই shell-form ENTRYPOINT বা signal-অসচেতন app)। ফলে in-flight request কাটা পড়ে। exec form + app-এ SIGTERM handling দিয়ে ঠিক করুন; দরকারে grace বাড়ান (<code>docker stop -t 30</code> / Compose <code>stop_grace_period: 30s</code>)।</div>
+</template>
+
+<template data-page="storage">
+<h2 class="title">৬. Volumes · Bind Mounts · tmpfs</h2>
+<p class="lead">Container-এর filesystem ephemeral — remove করলেই data উধাও। স্থায়ী data রাখতে mount ব্যবহার করতে হয়।</p>
+
+<h3>কেন দরকার</h3>
+<p>Container মুছে ফেললে তার writable layer-ও মুছে যায় — মানে ভেতরে লেখা সব data হারায়। Database, upload করা ফাইল, log — এসব container-এর বাইরে persist করতে হয়। তিন ধরনের mount:</p>
+
+<h3>তিন ধরনের mount</h3>
+<table>
+<tr><th></th><th>Named Volume</th><th>Bind Mount</th><th>tmpfs</th></tr>
+<tr><td>কোথায়</td><td>Docker-পরিচালিত এলাকা (<code>/var/lib/docker/volumes</code>)</td><td>host-এর নির্দিষ্ট path</td><td>host-এর RAM (disk নয়)</td></tr>
+<tr><td>ব্যবহার</td><td>Production data (DB) — সুপারিশ</td><td>Dev-এ source code, config</td><td>ক্ষণস্থায়ী/sensitive data</td></tr>
+<tr><td>Persist?</td><td>হ্যাঁ</td><td>হ্যাঁ (host-এ)</td><td>না (container মরলে শেষ)</td></tr>
+<tr><td>পোর্টেবল?</td><td>বেশি (Docker manage করে)</td><td>কম (host path-নির্ভর)</td><td>—</td></tr>
+</table>
+<pre><span class="c"># Named volume — Docker manage করে (production DB)</span>
+docker volume create pgdata
+docker run -d -v pgdata:/var/lib/postgresql/data postgres:16
+
+<span class="c"># Bind mount — host path (dev এ live code)</span>
+docker run -d -v /home/rasel/app:/app myapi:1.0
+
+<span class="c"># tmpfs — RAM এ, disk এ কিছু লেখে না</span>
+docker run -d --tmpfs /tmp:size=64m myapi:1.0</pre>
+<div class="callout best"><span class="tag">Named volume বনাম bind mount</span>
+Production-এ database/persistent data-র জন্য <b>named volume</b> (Docker manage করে, পোর্টেবল, backup সহজ)। Development-এ code live reload-এর জন্য <b>bind mount</b> (host-এর ফাইল সরাসরি container-এ)।</div>
+
+<h3>Container Backup &amp; Restore</h3>
+<p>Volume backup করার সহজ কৌশল — একটা অস্থায়ী container দিয়ে volume-কে tar করা:</p>
+<pre><span class="c"># backup: pgdata volume কে tar এ</span>
+docker run --rm -v pgdata:/data -v $(pwd):/backup alpine \
+  tar czf /backup/pgdata.tar.gz -C /data .
+
+<span class="c"># restore: tar থেকে ফেরত</span>
+docker run --rm -v pgdata:/data -v $(pwd):/backup alpine \
+  tar xzf /backup/pgdata.tar.gz -C /data</pre>
+</template>
+
+<template data-page="network">
+<h2 class="title">৭. Networking · DNS · Ports</h2>
+<p class="lead">Container কীভাবে একে অপরের সাথে ও বাইরের জগতের সাথে কথা বলে — network driver, port mapping, আর নাম দিয়ে খুঁজে পাওয়া।</p>
+
+<h3>Network Drivers</h3>
+<table>
+<tr><th>Driver</th><th>কাজ</th></tr>
+<tr><td><span class="kw">bridge</span> (default)</td><td>একই host-এর container-দের জন্য private virtual network</td></tr>
+<tr><td><span class="kw">host</span></td><td>container সরাসরি host-এর network ব্যবহার করে (isolation নেই, দ্রুত)</td></tr>
+<tr><td><span class="kw">none</span></td><td>কোনো network নেই (সম্পূর্ণ isolated)</td></tr>
+<tr><td><span class="kw">overlay</span></td><td>একাধিক host জুড়ে container network (Swarm/multi-host) — concept</td></tr>
+</table>
+
+<h3>Bridge ও DNS / Service Discovery</h3>
+<p>Default bridge-এ container শুধু IP দিয়ে কথা বলতে পারে। কিন্তু নিজের একটা <b>user-defined bridge network</b> বানালে Docker সেখানে built-in <span class="kw">DNS</span> দেয় — container একে অপরকে <b>নাম দিয়ে</b> খুঁজে পায়।</p>
+<pre>docker network create appnet
+docker run -d --name db  --network appnet postgres:16
+docker run -d --name api --network appnet myapi:1.0
+<span class="c"># api এখন connection string এ শুধু "db" লিখলেই DB পাবে (DNS resolve)</span>
+<span class="c"># Host=db;Port=5432;...</span></pre>
+<div class="callout why"><span class="tag">এজন্যই Compose সহজ</span>
+Docker Compose প্রতিটা project-এর জন্য একটা user-defined network বানায়, তাই service-রা একে অপরকে service-নাম দিয়ে ডাকতে পারে (<code>db</code>, <code>redis</code>, <code>rabbitmq</code>) — কোনো IP মনে রাখতে হয় না।</div>
+
+<h3>Port Mapping</h3>
+<p>Container-এর port host-এ প্রকাশ করতে <code>-p host:container</code>:</p>
+<pre>docker run -d -p 8080:8080 myapi:1.0    <span class="c"># host:8080 → container:8080</span>
+docker run -d -p 5432:5432 postgres:16  <span class="c"># বাইরে থেকে DB access</span></pre>
+<div class="callout mistake"><span class="tag">EXPOSE ≠ publish</span>
+Dockerfile-এর <code>EXPOSE</code> শুধু documentation — এটা নিজে থেকে port খুলে দেয় না। বাইরে থেকে access পেতে <code>docker run -p</code> (বা Compose-এ <code>ports:</code>) লাগবেই।</div>
+</template>
+
+<template data-page="security">
+<h2 class="title">৮. Config · Secrets · Security</h2>
+<p class="lead">Environment variable দিয়ে config, secret নিরাপদে দেওয়া, container-কে non-root/read-only করা, আর image ছোট ও নিরাপদ রাখা।</p>
+
+<h3>Environment Variables</h3>
+<pre>docker run -d -e ASPNETCORE_ENVIRONMENT=Production \
+             -e ConnectionStrings__Db="Host=db;..." myapi:1.0
+docker run -d --env-file ./app.env myapi:1.0     <span class="c"># ফাইল থেকে</span></pre>
+<p>.NET-এ nested config-এ <code>__</code> (double underscore) = <code>:</code> — যেমন <code>ConnectionStrings__Db</code> → <code>ConnectionStrings:Db</code>।</p>
+
+<h3>Secrets (Docker Secrets — concept)</h3>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+Password/API key <code>ENV</code>-এ বা image-এ hardcode করা — <code>docker inspect</code> বা image history-তে যে কেউ দেখে ফেলে। Secret কখনো image-এ bake করবেন না।</div>
+<p>নিরাপদ উপায়: <span class="kw">Docker secrets</span> (Swarm/Compose) — secret একটা ফাইল হিসেবে container-এ <code>/run/secrets/&lt;name&gt;</code>-এ mount হয়, environment বা image-এ থাকে না। বাইরের secret manager (Vault, AWS Secrets Manager, Azure Key Vault) আরও ভালো।</p>
+<pre><span class="c"># compose.yaml (secret ফাইল হিসেবে mount)</span>
+services:
+  api:
+    image: myapi:1.0
+    secrets: [db_password]
+secrets:
+  db_password:
+    file: ./db_password.txt</pre>
+
+<h3>Security Best Practices</h3>
+<div class="callout best"><span class="tag">Checklist</span>
+<ul style="margin:4px 0">
+<li><b>Non-root:</b> <code>USER app</code> — root হিসেবে চালাবেন না (container escape ঝুঁকি কমে)।</li>
+<li><b>Read-only filesystem:</b> <code>docker run --read-only --tmpfs /tmp</code> — app যেন নিজের FS বদলাতে না পারে।</li>
+<li><b>Minimal base:</b> alpine/chiseled/distroless — কম tool = কম vulnerability।</li>
+<li><b>Image scanning:</b> <code>docker scout cves myapi:1.0</code> বা Trivy দিয়ে vulnerability scan (concept)।</li>
+<li>Secret env/image-এ নয়; capability drop; নির্দিষ্ট version tag (latest নয়)।</li>
+</ul></div>
+
+<h3>Image Optimization ও Size Reduction</h3>
+<table>
+<tr><th>কৌশল</th><th>প্রভাব</th></tr>
+<tr><td>Multi-stage build</td><td>SDK/source বাদ → বিশাল হ্রাস</td></tr>
+<tr><td>ছোট base (alpine/chiseled)</td><td>শত শত MB সাশ্রয়</td></tr>
+<tr><td><code>.dockerignore</code></td><td>context ছোট, নোংরা ফাইল বাদ</td></tr>
+<tr><td>RUN একত্রীকরণ (<code>&amp;&amp;</code>) + cache পরিষ্কার</td><td>কম layer, ছোট image</td></tr>
+<tr><td>নির্দিষ্ট COPY (পুরো <code>.</code> নয়)</td><td>অপ্রয়োজনীয় ফাইল বাদ</td></tr>
+</table>
+
+<h3>আরও hardening — privilege ও port exposure</h3>
+<pre>docker run -d \
+  --user 1000:1000 \                    <span class="c"># non-root user</span>
+  --read-only --tmpfs /tmp \            <span class="c"># read-only FS + লেখার জায়গা tmpfs</span>
+  --cap-drop ALL \                      <span class="c"># সব Linux capability বাদ</span>
+  --security-opt no-new-privileges \    <span class="c"># privilege escalation বন্ধ</span>
+  --memory 512m --cpus 1.5 \
+  myapi:1.0</pre>
+<div class="callout best"><span class="tag">Port exposure — শুধু যা দরকার</span>
+Database/internal service-এর port <b>পুরো network-এ খুলবেন না</b>। দরকার হলে শুধু localhost-এ bind করুন: <code>-p 127.0.0.1:5432:5432</code> — তাহলে শুধু host থেকেই access। <code>-p 5432:5432</code> (মানে <code>0.0.0.0</code>) দিলে DB বাইরের সবার কাছে খুলে যায় — production-এ বিপজ্জনক।</div>
+</template>
+
+<template data-page="registry">
+<h2 class="title">৯. Registry · Docker Hub · Push/Pull</h2>
+<p class="lead">Image তৈরির পর কোথায় রাখবেন, কীভাবে শেয়ার করবেন — registry-র কাজ।</p>
+
+<h3>Registry কী</h3>
+<p>একটা <span class="kw">registry</span> হলো image-এর ভাণ্ডার (store)। <code>docker pull</code>/<code>push</code> এখান থেকেই হয়।</p>
+<ul>
+<li><span class="kw">Docker Hub</span> — public default registry (<code>docker.io</code>)। official image (postgres, redis…) এখান থেকেই আসে।</li>
+<li><span class="kw">Private registry</span> — নিজের/কোম্পানির: self-hosted <code>registry:2</code>, বা cloud — Azure ACR, AWS ECR, Google GAR, GitHub GHCR।</li>
+</ul>
+
+<h3>Push &amp; Pull</h3>
+<pre>docker login                              <span class="c"># Docker Hub এ (বা registry URL সহ)</span>
+docker tag myapi:1.0 rasel/myapi:1.0      <span class="c"># registry/repo:tag আকারে নাম</span>
+docker push rasel/myapi:1.0               <span class="c"># upload</span>
+docker pull rasel/myapi:1.0               <span class="c"># download</span>
+
+<span class="c"># Private registry উদাহরণ (Azure ACR)</span>
+docker tag myapi:1.0 myreg.azurecr.io/myapi:1.0
+docker push myreg.azurecr.io/myapi:1.0</pre>
+<div class="callout best"><span class="tag">Best practice</span>
+CI pipeline-এ commit SHA বা semantic version দিয়ে tag করে push করুন (<code>myapi:1.4.2</code>, <code>myapi:git-a1b2c3</code>) — কখনো শুধু <code>latest</code> নয়, যাতে ঠিক কোন build production-এ আছে তা জানা যায়।</div>
+</template>
+
+<template data-page="compose">
+<h2 class="title">১০. Docker Compose</h2>
+<p class="lead">এক YAML ফাইলে পুরো multi-container stack সংজ্ঞায়িত করে এক command-এ চালানো — dev ও ছোট production-এ অপরিহার্য।</p>
+
+<h3>Compose কী</h3>
+<p><span class="kw">Docker Compose</span> দিয়ে একাধিক container (service), তাদের network, volume, config — সব একটা <code>compose.yaml</code>-এ লেখা যায়। তারপর <code>docker compose up</code> দিলেই পুরো stack দাঁড়িয়ে যায়।</p>
+
+<h3>একটা পূর্ণ compose.yaml (.NET API + PostgreSQL)</h3>
+<pre>services:
+  api:
+    build: .                          <span class="c"># Dockerfile থেকে build</span>
+    ports: ["8080:8080"]
+    env_file: .env                    <span class="c"># environment ফাইল</span>
+    environment:
+      ConnectionStrings__Db: "Host=db;Port=5432;Database=app;Username=app;Password=${DB_PASSWORD}"
+    depends_on:
+      db:
+        condition: service_healthy    <span class="c"># db healthy হলে তবেই api চালু</span>
+    networks: [appnet]
+    restart: unless-stopped
+
+  db:
+    image: postgres:16                <span class="c"># image টেনে আনে (build নয়)</span>
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: app
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [appnet]
+
+volumes:
+  pgdata:
+networks:
+  appnet:</pre>
+
+<h3>মূল ধারণাগুলো</h3>
+<table>
+<tr><th>ধারণা</th><th>মানে</th></tr>
+<tr><td><span class="kw">services</span></td><td>প্রতিটা container (api, db, redis…)</td></tr>
+<tr><td><span class="kw">build vs image</span></td><td><code>build:</code> = Dockerfile থেকে বানাও; <code>image:</code> = তৈরি image টানো</td></tr>
+<tr><td><span class="kw">networks</span></td><td>service-রা একই network-এ থাকলে নাম দিয়ে কথা বলে</td></tr>
+<tr><td><span class="kw">volumes</span></td><td>persistent data (named volume)</td></tr>
+<tr><td><span class="kw">.env</span> / <code>env_file</code></td><td>variable বাইরে রেখে <code>${VAR}</code> দিয়ে ব্যবহার</td></tr>
+<tr><td><span class="kw">healthcheck</span></td><td>service সুস্থ কি না</td></tr>
+<tr><td><span class="kw">depends_on</span></td><td>startup order (+ <code>condition: service_healthy</code>)</td></tr>
+<tr><td><span class="kw">profiles</span></td><td>নির্দিষ্ট service শুধু নির্দিষ্ট profile-এ চালু (যেমন <code>--profile debug</code>)</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">depends_on-এর ফাঁদ</span>
+সাধারণ <code>depends_on</code> শুধু container <b>start</b> হওয়ার order ঠিক করে — service <b>প্রস্তুত</b> কি না নয়। DB container চালু হয়েছে কিন্তু এখনো connection নিচ্ছে না — এমন হতে পারে। তাই <code>condition: service_healthy</code> + DB-তে healthcheck ব্যবহার করুন, নাহলে app-এ retry logic রাখুন।</div>
+
+<h3>প্রধান command</h3>
+<pre>docker compose up -d          <span class="c"># সব service background এ চালাও</span>
+docker compose ps             <span class="c"># status</span>
+docker compose logs -f api    <span class="c"># নির্দিষ্ট service এর log</span>
+docker compose down           <span class="c"># সব থামাও ও মুছো (-v দিলে volume ও)</span>
+docker compose up -d --build  <span class="c"># rebuild করে চালাও</span></pre>
+
+<h3>Compose Override File — environment অনুযায়ী আলাদা config</h3>
+<p>একটাই <code>compose.yaml</code> দিয়ে dev, staging, production সব সামলানো কঠিন — dev-এ চান bind-mount + hot reload + port খোলা, production-এ চান নির্দিষ্ট image tag + resource limit + কম exposure। <span class="kw">Override file</span> এই সমস্যা মেটায়: একটা <b>base</b> file-এ shared config, আর environment-ভিত্তিক পার্থক্য আলাদা file-এ — Compose দুটো <b>merge</b> করে চালায়।</p>
+
+<h4>দুইভাবে override হয়</h4>
+<table>
+<tr><th>উপায়</th><th>কীভাবে</th><th>কখন</th></tr>
+<tr><td><span class="kw">Automatic</span></td><td><code>compose.yaml</code> + <code>compose.override.yaml</code> — <code>docker compose up</code> নিজেই দুটো merge করে (override file লাগে না উল্লেখ করতে)</td><td>Local dev</td></tr>
+<tr><td><span class="kw">Explicit (multiple -f)</span></td><td><code>docker compose -f compose.yaml -f compose.prod.yaml up</code> — পরের file আগেরটাকে override করে</td><td>Staging / production / CI</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন — আর merge কীভাবে হয়</span>
+<b>কেন:</b> DRY — common সব base-এ একবার, শুধু যা environment-ভেদে বদলায় সেটুকু override-এ। ডুপ্লিকেট compose file রাখতে হয় না, ভুলের ঝুঁকি কমে, আর production-specific জিনিস (tag, limit) dev-এ ঢোকে না।<br>
+<b>Merge:</b> পরের file আগেরটার ওপর বসে — scalar মান (image, single value) <b>replace</b> হয়, map (environment, labels) <b>merge</b> হয়।</div>
+
+<h4>উদাহরণ — base + dev + prod</h4>
+<pre><span class="c"># compose.yaml — সবার common (base)</span>
+services:
+  api:
+    image: myapi:${TAG:-latest}
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+    networks: [appnet]
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    networks: [appnet]
+networks: { appnet: {} }</pre>
+<pre><span class="c"># compose.override.yaml — শুধু dev (docker compose up এ auto-merge)</span>
+services:
+  api:
+    build: .                       <span class="c"># dev এ Dockerfile থেকে build</span>
+    ports: ["8080:8080"]
+    volumes: ["./src:/app/src"]    <span class="c"># bind mount — live code</span>
+  db:
+    ports: ["5432:5432"]           <span class="c"># dev এ DB বাইরে থেকে দেখা</span></pre>
+<pre><span class="c"># compose.prod.yaml — production (explicit -f দিয়ে)</span>
+services:
+  api:
+    image: rasel/myapi:1.4.2       <span class="c"># নির্দিষ্ট tag, build নয়</span>
+    ports: ["127.0.0.1:8080:8080"] <span class="c"># শুধু localhost</span>
+    deploy:
+      replicas: 3
+      resources: { limits: { cpus: "1.5", memory: 512M } }
+    restart: unless-stopped</pre>
+<pre><span class="c"># চালানো</span>
+docker compose up -d                                        <span class="c"># base + override.yaml (dev)</span>
+docker compose -f compose.yaml -f compose.prod.yaml up -d   <span class="c"># base + prod</span>
+docker compose -f compose.yaml -f compose.prod.yaml config  <span class="c"># merge শেষে কী দাঁড়ালো দেখুন</span></pre>
+
+<h4>Environment variable — কোথা থেকে আসে, কে জেতে</h4>
+<p>Compose-এ <code>${VAR}</code> interpolation-এর মান নিচের ক্রমে খোঁজা হয় (উপরেরটা জেতে):</p>
+<ol>
+<li>Shell environment variable (<code>export DB_PASSWORD=... ; docker compose up</code>)</li>
+<li><code>--env-file</code> দিয়ে দেওয়া file</li>
+<li>Project directory-র <code>.env</code> file (auto-loaded)</li>
+<li>compose file-এ <code>${VAR:-default}</code>-এর default মান</li>
+</ol>
+<pre><span class="c"># .env (auto-load হয়; secret থাকলে .gitignore এ দিন)</span>
+TAG=1.4.2
+ASPNETCORE_ENVIRONMENT=Production
+DB_PASSWORD=supersecret</pre>
+<div class="callout best"><span class="tag">Benefit ও Best practice</span>
+<ul style="margin:4px 0">
+<li><b>Benefit:</b> এক codebase, এক base compose — অথচ প্রতি environment-এ সঠিক config, secret বাইরে (<code>.env</code>/shell), এবং production-এ <code>config</code> দিয়ে merge যাচাই করা যায়।</li>
+<li><code>${VAR:-default}</code> দিয়ে নিরাপদ default দিন — variable না থাকলেও ভাঙবে না।</li>
+<li>Environment-ভিত্তিক আলাদা <code>.env</code> (<code>.env.dev</code>, <code>.env.prod</code>) + <code>--env-file .env.prod</code>।</li>
+<li>আসল secret production-এ secret manager/Docker secrets দিয়ে (Security ট্যাব) — plain <code>.env</code> নয়।</li>
+</ul></div>
+<div class="callout mistake"><span class="tag">Common mistake — root <code>.env</code> vs service <code>env_file</code></span>
+দুটো আলাদা জিনিস গুলিয়ে ফেলা। Root <code>.env</code> শুধু compose file-এর <code>${...}</code> substitution-এ কাজে লাগে — এটা container-এর <b>ভেতরে যায় না</b>। container-এর app-কে variable দিতে হলে service-এ <code>environment:</code> বা <code>env_file:</code> ব্যবহার করতে হবে।</div>
+</template>
+
+<template data-page="dotnet">
+<h2 class="title">১১. Docker for .NET</h2>
+<p class="lead">আপনার আসল লক্ষ্য — ASP.NET Core API আর তার সহযোগী (PostgreSQL, Redis, RabbitMQ, Kafka) সব container-এ, এক Compose-এ।</p>
+
+<h3>ASP.NET Core — production Dockerfile</h3>
+<pre>FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY *.csproj ./
+RUN dotnet restore
+COPY . .
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+USER app
+HEALTHCHECK --interval=30s --timeout=3s CMD curl -f http://localhost:8080/health || exit 1
+ENTRYPOINT ["dotnet", "MyApi.dll"]</pre>
+<div class="callout best"><span class="tag">.NET 8+ tips</span>
+<code>aspnet:8.0</code> image-এ built-in non-root <code>app</code> user আছে ও default port 8080 (পুরনো 80 নয়)। আরও ছোট/নিরাপদ চাইলে <code>8.0-noble-chiseled</code> (distroless-সদৃশ)।</div>
+<div class="callout mistake"><span class="tag">HEALTHCHECK-এ curl নেই — সাবধান!</span>
+উপরের <code>HEALTHCHECK ... curl</code> একটা ফাঁদ: .NET runtime image-এ (আর chiseled/distroless-এ তো নিশ্চিতভাবেই) <b>curl বা shell থাকে না</b> — তাই ঐ healthcheck সবসময় fail করবে। উপায়: (১) সবচেয়ে ভালো — orchestrator/Compose-এর HTTP probe ব্যবহার করুন (container HEALTHCHECK নয়); (২) non-chiseled image-এ হলে Dockerfile-এ <code>curl</code>/<code>wget</code> install করে নিন; (৩) অথবা একটা ছোট .NET health-check entrypoint বানান। Chiseled-এ container HEALTHCHECK এড়িয়ে যান।</div>
+
+<h3>নির্ভরশীল service গুলো — একক run</h3>
+<pre><span class="c"># PostgreSQL</span>
+docker run -d --name db -e POSTGRES_PASSWORD=secret -p 5432:5432 \
+  -v pgdata:/var/lib/postgresql/data postgres:16
+
+<span class="c"># Redis</span>
+docker run -d --name cache -p 6379:6379 redis:7
+
+<span class="c"># RabbitMQ (management UI সহ)</span>
+docker run -d --name mq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+
+<span class="c"># Kafka (KRaft, single-node — official apache image)</span>
+docker run -d --name kafka -p 9092:9092 apache/kafka:latest</pre>
+
+<h3>Production Multi-Container Compose (পুরো stack)</h3>
+<pre>services:
+  api:
+    build: .
+    ports: ["8080:8080"]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Db: "Host=db;Port=5432;Database=app;Username=app;Password=${DB_PASSWORD}"
+      ConnectionStrings__Redis: "cache:6379"
+      Rabbit__Host: "mq"
+    depends_on:
+      db: { condition: service_healthy }
+      cache: { condition: service_started }
+      mq: { condition: service_started }
+    networks: [appnet]
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits: { cpus: "1.5", memory: 512M }
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: app
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app"]
+      interval: 10s
+      retries: 5
+    networks: [appnet]
+
+  cache:
+    image: redis:7
+    networks: [appnet]
+
+  mq:
+    image: rabbitmq:3-management
+    ports: ["15672:15672"]
+    networks: [appnet]
+
+volumes:
+  pgdata:
+networks:
+  appnet:</pre>
+<div class="callout behind"><span class="tag">কীভাবে সব যুক্ত</span>
+api তার connection string-এ host হিসেবে <b>service নাম</b> (<code>db</code>, <code>cache</code>, <code>mq</code>) ব্যবহার করে — Compose-এর DNS সেগুলো resolve করে। কোনো IP মনে রাখতে হয় না, আর পুরো stack এক <code>docker compose up -d</code>-তে দাঁড়িয়ে যায়।</div>
+
+<h3>EF Core migration container-এ কীভাবে চালাবেন</h3>
+<p>Container-এ DB migration চালানোর তিনটা প্রচলিত উপায় — প্রতিটার trade-off আছে:</p>
+<table>
+<tr><th>উপায়</th><th>কীভাবে</th><th>trade-off</th></tr>
+<tr><td>App startup-এ</td><td><code>db.Database.Migrate()</code> Program.cs-এ</td><td>সহজ; কিন্তু একাধিক replica একসাথে চালালে race, startup ধীর</td></tr>
+<tr><td>আলাদা migration job / init container</td><td>এক-shot container শুধু migrate চালায়, তারপর app</td><td>নিরাপদ — production-এ সুপারিশ; সামান্য বেশি setup</td></tr>
+<tr><td>Migration bundle</td><td><code>dotnet ef migrations bundle</code> → executable</td><td>SDK ছাড়াই চালানো যায়, CI/CD-বান্ধব</td></tr>
+</table>
+<pre><span class="c"># compose এ init container — app এর আগে migrate একবার চলে</span>
+services:
+  migrate:
+    image: myapi:1.0
+    entrypoint: ["dotnet", "MyApi.dll", "--migrate-only"]
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [appnet]
+  api:
+    depends_on:
+      migrate: { condition: service_completed_successfully }   <span class="c"># migrate শেষ হলে তবেই</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+৫টা api replica সবাই startup-এ <code>Migrate()</code> চালানো → একই migration parallel চলে DB lock/error। Migration <b>একবারই</b> চালান (init container/job), প্রতিটা replica-তে নয়।</div>
+
+<h3>Graceful shutdown ও .NET container-awareness</h3>
+<p><b>Graceful shutdown:</b> exec-form ENTRYPOINT থাকলে <code>docker stop</code>-এর SIGTERM .NET host পায় → ASP.NET Core নতুন request নেওয়া বন্ধ করে চলমান request শেষ করে (<code>IHostApplicationLifetime</code>)। ভারী কাজ থাকলে timeout বাড়ান এবং docker-এর grace period-এর সাথে মেলান:</p>
+<pre>builder.Services.Configure&lt;HostOptions&gt;(o =&gt;
+    o.ShutdownTimeout = TimeSpan.FromSeconds(30));   <span class="c">// docker stop -t 30 / stop_grace_period: 30s এর সাথে মেলান</span></pre>
+<div class="callout why"><span class="tag">.NET container-aware — GC ও thread pool</span>
+.NET (Core 3.0+) cgroup limit <b>নিজে পড়ে</b> — <code>--memory</code>/<code>--cpus</code> দিলে GC heap ও thread pool সেই অনুযায়ী adjust হয়। তাই limit দেওয়া শুধু নিরাপত্তা নয়, .NET runtime-কে সঠিকভাবে tune-ও করে। তবে খুব কম memory limit দিলে GC আক্রমণাত্মক হয়ে CPU বাড়ায় — বাস্তব workload মেপে সুষম limit দিন।</div>
+</template>
+
+<template data-page="prod">
+<h2 class="title">১২. Troubleshooting · Best Practices</h2>
+<p class="lead">যা ভাঙে, কেন ভাঙে, কীভাবে debug করবেন — আর production-এ নিরাপদ default। শেষে master checklist।</p>
+
+<h3>Troubleshooting — Containers</h3>
+<table>
+<tr><th>উপসর্গ</th><th>কারণ / সমাধান</th></tr>
+<tr><td>Container সাথে সাথেই exit</td><td>main process শেষ হয়ে গেছে/crash → <code>docker logs</code> দেখুন; ENTRYPOINT/CMD ঠিক আছে?</td></tr>
+<tr><td>"Exited (137)"</td><td>OOM (memory limit পার) বা SIGKILL → <code>--memory</code> বাড়ান/leak খুঁজুন</td></tr>
+<tr><td>Port লাগছে না</td><td><code>-p</code> দেননি, বা app <code>localhost</code>-এ bind (container-এ <code>0.0.0.0</code>/<code>+</code> লাগবে)</td></tr>
+<tr><td>পরিবর্তন দেখা যাচ্ছে না</td><td>rebuild করেননি / cache → <code>docker compose up --build</code></td></tr>
+</table>
+
+<h3>Troubleshooting — Networks &amp; Volumes</h3>
+<table>
+<tr><th>সমস্যা</th><th>সমাধান</th></tr>
+<tr><td>এক container আরেকটাকে পায় না</td><td>একই user-defined network-এ আছে? IP নয়, <b>service/container নাম</b> দিয়ে connect করুন</td></tr>
+<tr><td>DB data হারিয়ে গেছে</td><td>volume ছাড়া চালানো হয়েছিল → named volume mount করুন</td></tr>
+<tr><td>Permission denied (mount)</td><td>bind mount-এ host file ownership/UID mismatch → container user/permission মেলান</td></tr>
+</table>
+
+<h3>Debugging Containers</h3>
+<pre>docker logs -f --tail 100 api        <span class="c"># সাম্প্রতিক log</span>
+docker exec -it api sh               <span class="c"># ভেতরে shell (chiseled এ shell নেই!)</span>
+docker inspect api                   <span class="c"># config/state/mount/network</span>
+docker stats api                     <span class="c"># live resource</span>
+docker compose logs -f               <span class="c"># সব service একসাথে</span></pre>
+<div class="callout behind"><span class="tag">Distroless/chiseled-এ debug</span>
+Chiseled/distroless image-এ shell নেই, তাই <code>exec sh</code> চলবে না। Debug করতে হলে একটা "debug sidecar" container একই namespace-এ চালান, বা temporarily full image দিয়ে reproduce করুন।</div>
+
+<h3>Common Docker Commands (cheat sheet)</h3>
+<pre>docker build -t myapi:1.0 .          docker images
+docker run -d -p 8080:8080 myapi     docker ps        (-a সব)
+docker stop / start / restart api    docker rm api    (-f জোর করে)
+docker logs -f api                   docker rmi img
+docker exec -it api sh               docker pull/push repo:tag
+docker volume ls / prune             docker network ls
+docker system df                     docker system prune -a   (⚠ সব unused মুছবে)
+docker compose up -d / down          docker compose logs -f</pre>
+
+<h3>Production Best Practices</h3>
+<div class="callout best"><span class="tag">Checklist</span>
+<ul style="margin:4px 0">
+<li><b>Multi-stage build</b> + ছোট runtime/chiseled base; <code>.dockerignore</code>।</li>
+<li><b>Non-root</b> (<code>USER app</code>), <b>read-only</b> FS যেখানে সম্ভব, নির্দিষ্ট <b>version tag</b> (latest নয়)।</li>
+<li><b>Resource limits</b> (cpu/memory) + <b>restart policy</b> (<code>unless-stopped</code>) + <b>healthcheck</b>।</li>
+<li>Secret env/image-এ নয় — secret manager/Docker secrets; log rotation সেট করুন।</li>
+<li>Persistent data = <b>named volume</b>; regular backup।</li>
+<li>Image <b>scan</b> (Scout/Trivy); base image নিয়মিত update।</li>
+<li>Graceful shutdown — exec-form ENTRYPOINT যাতে SIGTERM পৌঁছায়; app SIGTERM handle করুক।</li>
+</ul></div>
+
+<h3>✅ Final Master Checklist</h3>
+<div class="card">
+<div class="grid2">
+<div>
+<p style="margin:4px 0"><b>Core &amp; Images</b></p>
+<ul style="margin:0">
+<li>✅ What is Docker / Architecture / Engine</li>
+<li>✅ Docker CLI / Desktop</li>
+<li>✅ Images · Containers · Layers</li>
+<li>✅ Union FS (OverlayFS)</li>
+<li>✅ Base / Distroless images</li>
+<li>✅ Tagging · Versioning</li>
+</ul>
+<p style="margin:10px 0 4px"><b>Build</b></p>
+<ul style="margin:0">
+<li>✅ Dockerfile · .dockerignore</li>
+<li>✅ Build process · context · cache</li>
+<li>✅ Multi-stage builds</li>
+<li>✅ Instructions (ENTRYPOINT/CMD/RUN/COPY/ADD/WORKDIR/ENV/ARG/EXPOSE/USER/HEALTHCHECK/LABEL)</li>
+</ul>
+</div>
+<div>
+<p style="margin:4px 0"><b>Runtime</b></p>
+<ul style="margin:0">
+<li>✅ Lifecycle · interactive · detached</li>
+<li>✅ Exec vs Attach · inspect · stats · events · logs</li>
+<li>✅ Restart policies · resource limits · logging drivers</li>
+<li>✅ Volumes · bind · named · tmpfs · backup</li>
+<li>✅ Networks (bridge/host/none/overlay) · ports · DNS</li>
+</ul>
+<p style="margin:10px 0 4px"><b>Ops &amp; .NET</b></p>
+<ul style="margin:0">
+<li>✅ Env vars · secrets · security · non-root · read-only · scanning</li>
+<li>✅ Image optimization</li>
+<li>✅ Registry · Hub · private · push/pull</li>
+<li>✅ Compose (services/networks/volumes/.env/healthcheck/depends_on/profiles)</li>
+<li>✅ .NET · ASP.NET · Postgres · Redis · RabbitMQ · Kafka · prod compose</li>
+<li>✅ Troubleshooting · debugging · best practices · commands</li>
+</ul>
+</div>
+</div>
+</div>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>

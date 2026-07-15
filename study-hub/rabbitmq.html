@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RabbitMQ Mastery — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#ff8c42; --accent2:#4aa3ff;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff;
+    --code-bg:#0b0f14; --kw:#79c0ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(255,140,66,.22),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#111}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--accent2)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--accent2)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#8fd0ff}
+  .viz{background:var(--code-bg); border:1px solid var(--border); border-radius:12px; padding:20px 18px 12px; margin:18px 0}
+  .viz svg{width:100%; height:auto; display:block; overflow:visible}
+  .viz figcaption{color:var(--muted); font-size:13px; margin-top:10px; text-align:center; line-height:1.5}
+  .viz .lgnd{display:flex; gap:18px; justify-content:center; flex-wrap:wrap; margin-top:12px; font-size:13px; color:var(--muted)}
+  .viz .lgnd span{display:inline-flex; align-items:center; gap:6px}
+  .viz .sw{width:13px; height:13px; border-radius:3px; display:inline-block}
+  .viz text{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .viz .bn{font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla",sans-serif}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🐰 RabbitMQ Mastery</h1>
+      <p>Beginner → Advanced • বাংলায় (keyword ইংরেজিতে)</p>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+// ================= NAV =================
+const pages = [
+  {id:"foundation", icon:"🐰", title:"Foundation — RabbitMQ কী?"},
+  {id:"amqp",       icon:"📜", title:"AMQP Protocol"},
+  {id:"connchan",   icon:"🔌", title:"Connections & Channels"},
+  {id:"model",      icon:"🔀", title:"Exchange · Queue · Binding · Routing"},
+  {id:"pubsub",     icon:"📬", title:"Producer · Consumer · Lifecycle"},
+  {id:"reliability",icon:"🛡️", title:"Confirms · Acks · Prefetch"},
+  {id:"dlx",        icon:"☠️", title:"DLX · DLQ · TTL · Retry"},
+  {id:"flow",       icon:"🌊", title:"Flow Control · Performance"},
+  {id:"ha",         icon:"🧱", title:"Clustering · Quorum · Federation"},
+  {id:"secmon",     icon:"🔐", title:"Security · Monitoring"},
+  {id:"dotnet",     icon:"💜", title:"RabbitMQ.Client (.NET)"},
+  {id:"prod",       icon:"🏦", title:"Troubleshooting · Best Practices"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Foundation — RabbitMQ কী?</h2>
+<p class="lead">এক লাইনে: RabbitMQ একটা <span class="kw">message broker</span> — দুই বা একাধিক service-এর মাঝখানে দাঁড়িয়ে message নিরাপদে এক দিক থেকে নিয়ে আরেক দিকে পৌঁছে দেয়, যাতে তারা সরাসরি একে অপরের ওপর নির্ভর না করে।</p>
+
+<h3>RabbitMQ ঠিক কী?</h3>
+<p>RabbitMQ একটা open-source, Erlang-এ লেখা message broker যা মূলত <span class="kw">AMQP 0-9-1</span> protocol বাস্তবায়ন করে (MQTT, STOMP plugin-ও আছে)। এর কাজ — producer-এর পাঠানো message গ্রহণ করা, নিয়ম অনুযায়ী সঠিক queue-তে <b>route</b> করা, আর consumer সেটা process না করা পর্যন্ত ধরে রাখা।</p>
+<div class="callout why"><span class="tag">Smart broker, dumb consumer</span>
+RabbitMQ-র দর্শন: <b>routing-এর বুদ্ধি broker-এর ভেতরে</b> — exchange, binding, routing key দিয়ে broker ঠিক করে কোন message কোথায় যাবে; consumer শুধু নিজের queue থেকে পড়ে। এটা Kafka-র উল্টো (Kafka = "dumb broker, smart consumer" — সেখানে consumer নিজে offset track করে, broker শুধু log রাখে)। তাই RabbitMQ complex routing/task-distribution-এ শক্তিশালী, Kafka high-throughput event-log-এ।</div>
+
+<h3>কেন দরকার? — কোন সমস্যা</h3>
+<ul>
+<li><b>Decoupling:</b> order-service সরাসরি email-service-কে না ডেকে একটা message পাঠায়; email-service down থাকলেও message queue-তে বসে থাকে।</li>
+<li><b>Async / load leveling:</b> ভারী কাজ (PDF তৈরি, email) সাথে সাথে না করে queue-তে রেখে background worker ধীরে ধীরে করে — traffic spike shock absorb হয়।</li>
+<li><b>Work distribution:</b> একটা queue-তে অনেক worker consumer বসিয়ে কাজ ভাগ করে দেওয়া যায় (competing consumers)।</li>
+<li><b>Routing:</b> একই message বিভিন্ন নিয়মে বিভিন্ন queue-তে পাঠানো (fanout/topic)।</li>
+</ul>
+
+<h3>মূল মানসিক ছবি — Producer কখনো সরাসরি Queue-তে পাঠায় না</h3>
+<p>RabbitMQ-র সবচেয়ে গুরুত্বপূর্ণ ধারণা: <b>producer message পাঠায় একটা <span class="kw">exchange</span>-এ, queue-তে নয়।</b> Exchange তার <span class="kw">binding</span> ও <span class="kw">routing key</span> দেখে ঠিক করে message কোন কোন queue-তে যাবে। এই indirection-ই RabbitMQ-কে নমনীয় করে।</p>
+<figure class="viz">
+<svg viewBox="0 0 760 300" role="img" aria-label="RabbitMQ core model: a producer publishes to an exchange, which routes messages via bindings into queues, and consumers read from those queues">
+  <defs>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa7b4"/></marker>
+  </defs>
+  <rect x="16" y="124" width="112" height="52" rx="10" fill="rgba(255,140,66,.14)" stroke="#ff8c42"/>
+  <text x="72" y="147" text-anchor="middle" fill="#e6edf3" font-size="13.5" font-weight="700">Producer</text>
+  <text x="72" y="165" text-anchor="middle" fill="#9aa7b4" font-size="11">publish</text>
+
+  <rect x="214" y="116" width="122" height="68" rx="10" fill="rgba(255,140,66,.10)" stroke="#ff8c42"/>
+  <text x="275" y="144" text-anchor="middle" fill="#ff8c42" font-size="13.5" font-weight="700">Exchange</text>
+  <text x="275" y="164" text-anchor="middle" fill="#9aa7b4" font-size="11">routing logic</text>
+
+  <rect x="430" y="56" width="120" height="48" rx="10" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/>
+  <text x="490" y="85" text-anchor="middle" fill="#e6edf3" font-size="13" font-weight="700">Queue A</text>
+  <rect x="430" y="196" width="120" height="48" rx="10" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/>
+  <text x="490" y="225" text-anchor="middle" fill="#e6edf3" font-size="13" font-weight="700">Queue B</text>
+
+  <rect x="630" y="56" width="114" height="48" rx="10" fill="rgba(63,185,80,.14)" stroke="#3fb950"/>
+  <text x="687" y="85" text-anchor="middle" fill="#e6edf3" font-size="12.5" font-weight="700">Consumer A</text>
+  <rect x="630" y="196" width="114" height="48" rx="10" fill="rgba(63,185,80,.14)" stroke="#3fb950"/>
+  <text x="687" y="225" text-anchor="middle" fill="#e6edf3" font-size="12.5" font-weight="700">Consumer B</text>
+
+  <path d="M128 150 L212 150" fill="none" stroke="#9aa7b4" stroke-width="2" marker-end="url(#ar)"/>
+  <path d="M336 140 C 390 120, 380 82, 428 80" fill="none" stroke="#9aa7b4" stroke-width="2" marker-end="url(#ar)"/>
+  <path d="M336 160 C 390 180, 380 218, 428 220" fill="none" stroke="#9aa7b4" stroke-width="2" marker-end="url(#ar)"/>
+  <path d="M550 80 L628 80" fill="none" stroke="#9aa7b4" stroke-width="2" marker-end="url(#ar)"/>
+  <path d="M550 220 L628 220" fill="none" stroke="#9aa7b4" stroke-width="2" marker-end="url(#ar)"/>
+
+  <text x="384" y="92" text-anchor="middle" fill="#e3b341" font-size="11" class="bn">binding</text>
+  <text x="384" y="210" text-anchor="middle" fill="#e3b341" font-size="11" class="bn">binding</text>
+</svg>
+<figcaption>RabbitMQ core model: Producer → Exchange → (binding + routing key) → Queue → Consumer। Producer জানেই না কোন queue আছে — সে শুধু exchange-এ পাঠায়; broker route করে।</figcaption>
+</figure>
+
+<h3>RabbitMQ vs Kafka — এক নজরে</h3>
+<table>
+<tr><th></th><th>RabbitMQ</th><th>Kafka</th></tr>
+<tr><td>মডেল</td><td>Message broker (queue-ভিত্তিক)</td><td>Distributed log (append-only)</td></tr>
+<tr><td>Routing বুদ্ধি</td><td>Broker-এ (exchange/binding)</td><td>Consumer-এ (offset/partition)</td></tr>
+<tr><td>Message পড়ার পর</td><td>ack হলে queue থেকে <b>মুছে যায়</b></td><td>retention পর্যন্ত <b>থেকে যায়</b> (replay সহজ)</td></tr>
+<tr><td>শক্তি</td><td>Complex routing, task queue, RPC, per-message TTL/priority</td><td>বিশাল throughput, event sourcing, stream</td></tr>
+<tr><td>Ordering</td><td>একক queue-তে FIFO</td><td>per-partition</td></tr>
+</table>
+<div class="callout best"><span class="tag">কখন RabbitMQ বাছবেন</span>
+জটিল routing, background job/task distribution, request-reply (RPC), অথবা per-message priority/TTL দরকার হলে RabbitMQ আদর্শ। বিশাল event stream/replay/log analytics দরকার হলে Kafka।</div>
+</template>
+
+<template data-page="amqp">
+<h2 class="title">২. AMQP Protocol</h2>
+<p class="lead">RabbitMQ যে ভাষায় কথা বলে — <span class="kw">AMQP 0-9-1</span> (Advanced Message Queuing Protocol)। এই protocol-ই exchange/queue/binding-এর ধারণা সংজ্ঞায়িত করে।</p>
+
+<h3>AMQP আসলে কী?</h3>
+<p>AMQP একটা <b>binary wire-level protocol</b> — অর্থাৎ client ও broker কীভাবে bytes আদান-প্রদান করবে তা নির্দিষ্ট করা আছে, তাই যেকোনো ভাষার client (.NET, Java, Python) একই RabbitMQ broker-এর সাথে কাজ করতে পারে। HTTP যেমন text-ভিত্তিক request/response, AMQP তেমন message-ভিত্তিক, কিন্তু binary ও অনেক efficient।</p>
+<p>গুরুত্বপূর্ণ: RabbitMQ মূলত <b>AMQP 0-9-1</b> ব্যবহার করে (AMQP 1.0 আলাদা protocol, plugin দিয়ে সমর্থিত)। এই কোর্সে "AMQP" মানে 0-9-1।</p>
+
+<h3>AMQP model — যে সত্তাগুলো protocol সংজ্ঞায়িত করে</h3>
+<table>
+<tr><th>সত্তা</th><th>কাজ</th></tr>
+<tr><td><span class="kw">Connection</span></td><td>Client ও broker-এর মাঝে একটা TCP সংযোগ</td></tr>
+<tr><td><span class="kw">Channel</span></td><td>Connection-এর ভেতরে virtual "sub-connection" (multiplexing)</td></tr>
+<tr><td><span class="kw">Exchange</span></td><td>Message গ্রহণ করে ও route করে</td></tr>
+<tr><td><span class="kw">Queue</span></td><td>Message জমা রাখে consume হওয়া পর্যন্ত</td></tr>
+<tr><td><span class="kw">Binding</span></td><td>Exchange → Queue সংযোগের নিয়ম</td></tr>
+<tr><td><span class="kw">Message</span></td><td>Payload (body) + properties (headers, delivery mode…)</td></tr>
+</table>
+
+<h3>Frames ও Methods (ভেতরের কথা)</h3>
+<p>AMQP-তে সব যোগাযোগ ছোট ছোট <span class="kw">frame</span>-এ ভাগ হয়: method frame (যেমন <code>basic.publish</code>, <code>queue.declare</code>), header frame (message properties + size), body frame (আসল payload, বড় হলে টুকরো টুকরো)। Client library এসব লুকিয়ে রাখে — আপনি শুধু <code>QueueDeclare()</code>, <code>BasicPublish()</code> ইত্যাদি call করেন।</p>
+<div class="diagram"><pre>
+AMQP method কয়েকটা উদাহরণ (client → broker):
+  connection.start / .open   — সংযোগ ও authenticate
+  channel.open               — channel খোলা
+  exchange.declare           — exchange তৈরি/নিশ্চিত
+  queue.declare / queue.bind — queue তৈরি ও binding
+  basic.publish              — message পাঠানো
+  basic.consume / basic.get  — message নেওয়া (push / pull)
+  basic.ack / .nack / .reject— acknowledgement
+</pre></div>
+
+<h3>Port ও নিরাপত্তা</h3>
+<table>
+<tr><th>Port</th><th>কী</th></tr>
+<tr><td><code>5672</code></td><td>AMQP (plaintext)</td></tr>
+<tr><td><code>5671</code></td><td>AMQPS — TLS সহ AMQP (production-এ এটাই)</td></tr>
+<tr><td><code>15672</code></td><td>Management UI + HTTP API (plugin)</td></tr>
+<tr><td><code>25672</code></td><td>Inter-node / cluster যোগাযোগ</td></tr>
+</table>
+<div class="callout behind"><span class="tag">Behind the scenes</span>
+একটা AMQP connection খোলার সময় protocol negotiation হয় (version, auth mechanism যেমন PLAIN, heartbeat interval, সর্বোচ্চ channel সংখ্যা, সর্বোচ্চ frame size)। এই <code>heartbeat</code> (default ~60s) দিয়ে broker ও client পরস্পরের জীবিত থাকা যাচাই করে — dead connection সময়মতো ধরা পড়ে।</div>
+</template>
+
+<template data-page="connchan">
+<h2 class="title">৩. Connections & Channels</h2>
+<p class="lead">RabbitMQ-তে দক্ষতার প্রথম পাঠ: <b>connection ব্যয়বহুল, channel সস্তা</b>। এই দুটো গুলিয়ে ফেললেই production-এ সমস্যা।</p>
+
+<h3>Connection</h3>
+<p>একটা <span class="kw">connection</span> = client আর broker-এর মধ্যে একটা <b>TCP সংযোগ</b> (TLS হলে handshake সহ)। এটা তৈরি করা তুলনামূলক খরচের — তাই application-এ অল্প কয়েকটা connection রাখাই নিয়ম, প্রতি operation-এ নতুন connection নয়।</p>
+
+<h3>Channel</h3>
+<p>একটা <span class="kw">channel</span> হলো একটা connection-এর ভেতরে চলা <b>lightweight virtual connection</b>। প্রায় সব AMQP কাজ (declare, publish, consume, ack) channel-এর ওপর হয়। একটা TCP connection-এর ভেতরে অনেকগুলো channel multiplex করা যায় — ফলে হাজারটা কাজের জন্য হাজারটা TCP socket খুলতে হয় না।</p>
+<figure class="viz">
+<svg viewBox="0 0 620 250" role="img" aria-label="One TCP connection multiplexes several lightweight channels, one channel per application thread">
+  <defs><marker id="cc" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa7b4"/></marker></defs>
+  <rect x="20" y="40" width="150" height="170" rx="12" fill="rgba(74,163,255,.10)" stroke="#4aa3ff"/>
+  <text x="95" y="30" text-anchor="middle" fill="#4aa3ff" font-size="12.5" font-weight="700">App (একাধিক thread)</text>
+  <g font-size="12" fill="#e6edf3" text-anchor="middle">
+    <rect x="36" y="56" width="118" height="34" rx="7" fill="#161b22" stroke="#2d333b"/><text x="95" y="78">Thread 1</text>
+    <rect x="36" y="106" width="118" height="34" rx="7" fill="#161b22" stroke="#2d333b"/><text x="95" y="128">Thread 2</text>
+    <rect x="36" y="156" width="118" height="34" rx="7" fill="#161b22" stroke="#2d333b"/><text x="95" y="178">Thread 3</text>
+  </g>
+  <!-- TCP pipe -->
+  <rect x="250" y="70" width="150" height="110" rx="12" fill="rgba(255,140,66,.08)" stroke="#ff8c42" stroke-dasharray="5 4"/>
+  <text x="325" y="60" text-anchor="middle" fill="#ff8c42" font-size="12.5" font-weight="700">1টি TCP Connection</text>
+  <g font-size="11.5" fill="#e6edf3" text-anchor="middle">
+    <rect x="262" y="84" width="126" height="24" rx="6" fill="rgba(63,185,80,.16)" stroke="#3fb950"/><text x="325" y="101">Channel 1</text>
+    <rect x="262" y="113" width="126" height="24" rx="6" fill="rgba(63,185,80,.16)" stroke="#3fb950"/><text x="325" y="130">Channel 2</text>
+    <rect x="262" y="142" width="126" height="24" rx="6" fill="rgba(63,185,80,.16)" stroke="#3fb950"/><text x="325" y="159">Channel 3</text>
+  </g>
+  <rect x="470" y="90" width="130" height="70" rx="12" fill="rgba(255,140,66,.14)" stroke="#ff8c42"/>
+  <text x="535" y="130" text-anchor="middle" fill="#e6edf3" font-size="13" font-weight="700">RabbitMQ</text>
+  <path d="M170 73 L260 96" stroke="#9aa7b4" stroke-width="1.6" marker-end="url(#cc)"/>
+  <path d="M170 123 L260 125" stroke="#9aa7b4" stroke-width="1.6" marker-end="url(#cc)"/>
+  <path d="M170 173 L260 154" stroke="#9aa7b4" stroke-width="1.6" marker-end="url(#cc)"/>
+  <path d="M400 125 L468 125" stroke="#ff8c42" stroke-width="2.4" marker-end="url(#cc)"/>
+</svg>
+<figcaption>প্রতি thread-এর জন্য একটা channel, কিন্তু সব channel একটাই TCP connection-এর ওপর দিয়ে যায়। ফলে কম socket, কম overhead।</figcaption>
+</figure>
+
+<h3>নিয়ম যা ভাঙলেই bug</h3>
+<div class="callout mistake"><span class="tag">Common mistakes</span>
+<ul style="margin:4px 0">
+<li><b>প্রতি message-এ নতুন connection</b> খোলা — ভয়ানক ধীর ও broker-এ file-descriptor শেষ। একটা connection বানিয়ে দীর্ঘ সময় ব্যবহার করুন।</li>
+<li><b>একটা channel একাধিক thread-এ share</b> করা — channel <b>thread-safe নয়</b>। প্রতি thread/worker-এর নিজের channel থাকুক।</li>
+<li>একটা channel দিয়ে হাজারটা কাজ — একটা channel-এ error হলে broker পুরো channel বন্ধ করে দেয়, তখন ওই channel-এর সব কাজ থামে।</li>
+</ul></div>
+<div class="callout best"><span class="tag">Best practice</span>
+<ul style="margin:4px 0">
+<li>Application-প্রতি অল্প connection (যেমন একটা publish-এর জন্য, একটা consume-এর জন্য)।</li>
+<li>Publish ও consume আলাদা connection-এ রাখুন — flow control-এ (নিচে) publisher block হলে consumer যেন না আটকায়।</li>
+<li><b>Automatic recovery</b> চালু রাখুন (.NET: <code>AutomaticRecoveryEnabled=true</code>) — network hiccup-এ client নিজে connection/channel/consumer পুনরায় জোড়া লাগায়।</li>
+</ul></div>
+</template>
+
+<template data-page="model">
+<h2 class="title">৪. Exchange · Queue · Binding · Routing Key</h2>
+<p class="lead">RabbitMQ-র হৃদয়। এই চারটা একসাথে ঠিক করে "কোন message কোন queue-তে যাবে"। এখানে সময় দিন — বাকি সব এর ওপর দাঁড়িয়ে।</p>
+
+<h3>Exchange — routing-এর মস্তিষ্ক</h3>
+<p>Producer সব message <span class="kw">exchange</span>-এ পাঠায়। Exchange নিজে message জমায় না — সে শুধু নিয়ম দেখে queue-তে <b>copy/route</b> করে দেয় (কোনো queue না মিললে message হারায় বা DLX-এ যায়)। Exchange-এর ধরন (type) ঠিক করে সে কীভাবে route করবে।</p>
+
+<h4>চার ধরনের Exchange</h4>
+<table>
+<tr><th>Type</th><th>routing নিয়ম</th><th>ব্যবহার</th></tr>
+<tr><td><span class="kw">direct</span></td><td>routing key == binding key হুবহু মিললে</td><td>নির্দিষ্ট queue-তে পাঠানো (log level, task type)</td></tr>
+<tr><td><span class="kw">fanout</span></td><td>routing key উপেক্ষা করে <b>সব</b> bound queue-তে</td><td>Broadcast (সবাইকে একই event)</td></tr>
+<tr><td><span class="kw">topic</span></td><td>routing key প্যাটার্ন মিলিয়ে (<code>*</code> / <code>#</code>)</td><td>নমনীয় routing (<code>order.created.eu</code>)</td></tr>
+<tr><td><span class="kw">headers</span></td><td>routing key নয়, message header মিলিয়ে</td><td>একাধিক attribute দিয়ে routing</td></tr>
+</table>
+<div class="callout behind"><span class="tag">Default exchange</span>
+প্রতিটা RabbitMQ-তে একটা নামহীন (<code>""</code>) default direct exchange থাকে — যার সাথে প্রতিটা queue তার নিজের নামে auto-bound। তাই <code>basic.publish("", "myqueue", ...)</code> দিলে সরাসরি <code>myqueue</code>-তে যায়। শেখার সময় সহজ, কিন্তু production-এ নিজের exchange বানানোই ভালো (নিয়ন্ত্রণ থাকে)।</div>
+
+<h4>Topic exchange — wildcard routing</h4>
+<p>Routing key কয়েকটা শব্দে ভাগ, <b>.</b> দিয়ে আলাদা (যেমন <code>order.created.eu</code>)। Binding key-তে দুটো wildcard:</p>
+<ul>
+<li><code>*</code> — ঠিক <b>একটা</b> শব্দ মেলে।</li>
+<li><code>#</code> — <b>শূন্য বা একাধিক</b> শব্দ মেলে।</li>
+</ul>
+<div class="diagram"><pre>
+Exchange type = topic;  message routing key = "order.created.eu"
+
+ binding key          মেলে?   কেন
+ ----------------------------------------------------------
+ order.created.eu     ✅       হুবহু
+ order.created.*      ✅       * = "eu" (এক শব্দ)
+ order.#              ✅       # = "created.eu" (একাধিক শব্দ)
+ order.*              ❌       * এক শব্দ, কিন্তু বাকি দুই শব্দ
+ *.created.*          ✅       তিন শব্দ, মাঝেরটা "created"
+ payment.#            ❌       প্রথম শব্দ মেলেনি
+</pre></div>
+
+<h3>Queue — message-এর ঘর</h3>
+<p><span class="kw">Queue</span> message জমা রাখে যতক্ষণ না consumer ack করে। কিছু গুরুত্বপূর্ণ property (queue declare-এর সময়):</p>
+<table>
+<tr><th>Property</th><th>মানে</th></tr>
+<tr><td><span class="kw">durable</span></td><td>broker restart-এ queue টিকে থাকে (message persistent হলে সেগুলোও)</td></tr>
+<tr><td><span class="kw">exclusive</span></td><td>শুধু যে connection বানিয়েছে তার জন্য; connection বন্ধ হলে queue মুছে যায়</td></tr>
+<tr><td><span class="kw">auto-delete</span></td><td>শেষ consumer চলে গেলে queue মুছে যায়</td></tr>
+<tr><td><code>x-message-ttl</code></td><td>message কতক্ষণ বাঁচবে (DLX ট্যাব)</td></tr>
+<tr><td><code>x-max-length</code></td><td>সর্বোচ্চ কত message; বেশি হলে পুরনো drop/DLX</td></tr>
+<tr><td><code>x-dead-letter-exchange</code></td><td>reject/expire হলে কোথায় পাঠাবে</td></tr>
+</table>
+
+<h3>Binding ও Routing Key — যোগসূত্র</h3>
+<p><span class="kw">Binding</span> হলো exchange আর queue-এর মধ্যে একটা "নিয়মের তার"। direct/topic exchange-এ binding-এর সাথে একটা <span class="kw">binding key</span> থাকে। Producer message-এ যে <span class="kw">routing key</span> দেয়, exchange সেটাকে binding key-এর সাথে মিলিয়ে সিদ্ধান্ত নেয়।</p>
+<div class="callout why"><span class="tag">Routing key vs binding key</span>
+<b>Routing key</b> — producer message পাঠানোর সময় দেয় ("এই message-এর ঠিকানা")। <b>Binding key</b> — queue যখন exchange-এ bind হয় তখন দেয় ("আমি এই ঠিকানার message চাই")। Exchange দুটো মিলিয়ে route করে। fanout exchange routing key উপেক্ষা করে, তাই সেখানে binding key অর্থহীন।</div>
+
+<h4>উদাহরণ — direct exchange দিয়ে log routing</h4>
+<div class="diagram"><pre>
+exchange "logs" (direct)
+   ├─ binding key "error" ──► queue: errors-only      (শুধু error)
+   ├─ binding key "info"  ──► queue: all-logs
+   └─ binding key "error" ──► queue: all-logs         (error-ও পায়)
+
+publish(routing key="error") → errors-only + all-logs দুটোতেই যায়
+publish(routing key="info")  → শুধু all-logs
+</pre></div>
+
+<h3>Unroutable message — কোনো queue না মিললে?</h3>
+<p>Exchange যদি routing key দেখে <b>কোনো</b> matching binding/queue না পায়, তাহলে default-এ message নীরবে <b>ফেলে দেওয়া হয়</b> (drop) — production-এ যা নীরব data loss। তিনভাবে এটা ধরা/সামলানো যায়:</p>
+<table>
+<tr><th>কৌশল</th><th>কীভাবে</th><th>ফল</th></tr>
+<tr><td><span class="kw">mandatory</span> flag</td><td>publish-এ <code>mandatory=true</code></td><td>route না হলে broker message publisher-কে <b>ফেরত</b> পাঠায় (<code>basic.return</code>)</td></tr>
+<tr><td><span class="kw">Alternate Exchange</span> (AE)</td><td>exchange arg <code>alternate-exchange</code></td><td>route না হওয়া message ঐ বিকল্প exchange-এ চলে যায়</td></tr>
+<tr><td>কিছুই না (default)</td><td>—</td><td>message নীরবে drop — ⚠ data loss</td></tr>
+</table>
+<p><b>mandatory + return:</b> publisher <code>BasicReturn</code> event handle করে জানে "এই message কোথাও গেল না" → log/alert/DLQ করা যায়। <b>Alternate Exchange</b> broker-side সমাধান: unmatched সব message একটা catch-all exchange→queue-তে জমে, publisher-কে কিছু করতে হয় না।</p>
+<pre><span class="c">// Alternate Exchange — unmatched message এখানে জমবে</span>
+var exArgs = new Dictionary&lt;string, object&gt; { { "alternate-exchange", "orders.unrouted" } };
+channel.ExchangeDeclare("orders", ExchangeType.Direct, durable:true, autoDelete:false, arguments:exArgs);
+
+<span class="c">// অথবা mandatory + return handler (publisher side)</span>
+channel.BasicReturn += (s, ea) =&gt;
+    Log($"unroutable: exchange={ea.Exchange} key={ea.RoutingKey} reason={ea.ReplyText}");
+channel.BasicPublish("orders", "no.match.key", mandatory:true, basicProperties:props, body:body);</pre>
+<div class="callout best"><span class="tag">Best practice</span>
+Production-এ প্রতিটা গুরুত্বপূর্ণ exchange-এ একটা <b>Alternate Exchange</b> (catch-all) রাখুন — routing key-তে typo বা binding মুছে গেলেও message হারাবে না, বরং unrouted queue-তে জমে alert দেবে।</div>
+</template>
+
+<template data-page="pubsub">
+<h2 class="title">৫. Producer · Consumer · Message Lifecycle</h2>
+<p class="lead">Message কীভাবে জন্মায়, ভ্রমণ করে, আর শেষ হয় — publish থেকে ack পর্যন্ত পুরো জীবনচক্র।</p>
+
+<h3>Producer (Publisher)</h3>
+<p>Producer-এর কাজ: connection → channel → exchange declare → <code>basic.publish</code> (exchange নাম + routing key + properties + body)। Producer জানে না কোন queue আছে — সে শুধু exchange আর routing key দেয়।</p>
+<p>গুরুত্বপূর্ণ message <span class="kw">properties</span>:</p>
+<table>
+<tr><th>Property</th><th>কাজ</th></tr>
+<tr><td><code>delivery_mode=2</code> (<span class="kw">persistent</span>)</td><td>message disk-এ লেখা হয় → broker restart-এ টেকে</td></tr>
+<tr><td><code>expiration</code></td><td>per-message TTL (ms)</td></tr>
+<tr><td><code>priority</code></td><td>priority queue-তে আগে delivery</td></tr>
+<tr><td><code>correlation_id</code> / <code>reply_to</code></td><td>RPC/request-reply pattern</td></tr>
+<tr><td><code>headers</code></td><td>custom metadata (headers exchange, tracing)</td></tr>
+<tr><td><code>message_id</code></td><td>idempotency/dedup-এর জন্য unique id</td></tr>
+</table>
+
+<h3>Consumer — Push বনাম Pull</h3>
+<table>
+<tr><th></th><th>Push (<code>basic.consume</code>)</th><th>Pull (<code>basic.get</code>)</th></tr>
+<tr><td>কীভাবে</td><td>Broker message এলেই consumer-কে ঠেলে দেয়</td><td>Consumer প্রতিবার একটা করে চেয়ে নেয়</td></tr>
+<tr><td>Throughput</td><td>উচ্চ — continuous stream</td><td>নিম্ন — প্রতি message-এ round-trip</td></tr>
+<tr><td>ব্যবহার</td><td>প্রায় সব ক্ষেত্রে <b>এটাই</b></td><td>কালেভদ্রে, একটা-দুটো message দরকার হলে</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+Loop-এ বারবার <code>basic.get</code> (polling) করে "consume" করা — ভয়ানক অদক্ষ (প্রতি call একটা network round-trip, queue খালি থাকলেও)। প্রায় সবসময় <code>basic.consume</code> (push) ব্যবহার করুন।</div>
+
+<h3>Message Lifecycle — পুরো যাত্রা</h3>
+<div class="diagram"><pre>
+① Producer  basic.publish(exchange, routing key, body, props)
+                │
+② Exchange   binding + routing key মিলিয়ে queue বাছে
+                │  (কোনো queue না মিললে → drop বা DLX/return)
+③ Queue      message জমা (persistent হলে disk-এ)
+                │
+④ Broker     consumer-কে push (prefetch সীমার মধ্যে)
+                │
+⑤ Consumer   process করে
+                │
+⑥ Ack        basic.ack → broker queue থেকে message মুছে দেয় ✅
+             basic.nack/reject(requeue=false) → DLX/drop ☠️
+             basic.nack(requeue=true) → আবার queue-তে (retry) 🔁
+</pre></div>
+<div class="callout behind"><span class="tag">Behind the scenes — message মুছে যায় কখন</span>
+Kafka-র মতো RabbitMQ message ধরে রাখে না। একবার consumer <b>ack</b> করলে broker সেই message queue থেকে <b>স্থায়ীভাবে মুছে</b> দেয় — replay করা যায় না। তাই ভুলে ack করার আগেই যদি process fail করে, message হারাতে পারে (এজন্যই manual ack — পরের ট্যাব)।</div>
+
+<h3>একটা সাধারণ প্রবাহ (pseudo)</h3>
+<div class="diagram"><pre>
+Producer:
+  channel.exchange_declare("orders", "direct", durable=true)
+  channel.publish("orders", key="invoice.created", body=json, persistent=true)
+
+Consumer:
+  channel.queue_declare("billing", durable=true)
+  channel.queue_bind("billing", "orders", key="invoice.created")
+  channel.basic_consume("billing", on_message, auto_ack=false)
+     → on_message: process(); channel.basic_ack(tag)
+</pre></div>
+
+<h3>Message ordering — গ্যারান্টি ও ফাঁদ</h3>
+<p>RabbitMQ একটা <b>একক queue</b>-তে message <span class="kw">FIFO</span> (যে ক্রমে ঢুকেছে সে ক্রমে) রাখে। কিন্তু এই ordering সহজেই ভাঙে:</p>
+<ul>
+<li><b>একাধিক consumer:</b> একই queue-তে দুই consumer parallel-এ process করে — সম্পূর্ণ order আর থাকে না।</li>
+<li><b>requeue / redelivery:</b> <code>nack(requeue=true)</code> করা message queue-র সামনে ফিরে আসে → ক্রম এলোমেলো।</li>
+<li><b>priority / TTL:</b> priority queue বা per-message expiry স্বাভাবিক ক্রম বদলে দেয়।</li>
+</ul>
+<h4>Single Active Consumer — কঠোর order দরকার হলে</h4>
+<p>একই queue-তে একাধিক consumer connect করলেও যদি চান একসাথে <b>শুধু একটা</b> active থাকুক (বাকিরা standby), তাহলে queue declare-এ <code>x-single-active-consumer=true</code> দিন। তখন এক consumer সব message ক্রমে পায়; সে মরলে broker স্বয়ংক্রিয়ভাবে পরের standby-কে active করে — <b>order + failover একসাথে</b>।</p>
+<div class="callout why"><span class="tag">Ordering বনাম throughput</span>
+কঠোর ordering আর parallelism পরস্পরবিরোধী — order দরকার হলে single active consumer (parallelism হারিয়ে), throughput দরকার হলে একাধিক consumer (order হারিয়ে)। মাঝামাঝি: <b>per-key order</b> যথেষ্ট হলে key অনুযায়ী আলাদা queue-তে routing করুন (consistent-hash exchange) — তখন প্রতি queue-তে order, queue-এর মধ্যে parallelism।</div>
+</template>
+
+<template data-page="reliability">
+<h2 class="title">৬. Publisher Confirms · Manual Acks · Prefetch (QoS)</h2>
+<p class="lead">"Message হারাবে না" নিশ্চিত করার তিন স্তম্ভ — publish দিক থেকে confirm, consume দিক থেকে ack, আর ন্যায্য বণ্টনের জন্য prefetch।</p>
+
+<h3>Publisher Confirms — broker কি সত্যিই পেয়েছে?</h3>
+<p>Default-এ <code>basic.publish</code> "fire and forget" — broker পেল কি না জানার উপায় নেই (message exchange-এ পৌঁছানোর আগেই connection মরলে নীরবে হারায়)। <span class="kw">Publisher confirms</span> চালু করলে (<code>confirm.select</code>) broker প্রতিটা message নিরাপদে গ্রহণ (persistent হলে disk-এ লেখা) করার পর publisher-কে একটা <b>ack</b> ফেরত দেয়।</p>
+<div class="diagram"><pre>
+Publisher ─publish(seq=1)─► Broker  ── queue-তে (ও persistent হলে disk-এ) ─► ✅ ack(1) ─► Publisher
+Publisher ─publish(seq=2)─► Broker  ── route করার queue নেই / error ────────► ✖ nack(2) ─► Publisher
+</pre></div>
+<div class="callout best"><span class="tag">কীভাবে ব্যবহার</span>
+Throughput ধরে রাখতে message-প্রতি অপেক্ষা না করে <b>batch</b> বা <b>async</b> confirm ব্যবহার করুন (একগুচ্ছ publish করে সব ack একসাথে যাচাই)। সবচেয়ে বিশ্বস্ত: async confirm + <code>message_id</code> track করে nack হলে ঐ message আবার পাঠানো।</div>
+
+<h3>Manual Acknowledgements — consume দিক</h3>
+<p>Consumer <code>autoAck</code> দুইভাবে:</p>
+<table>
+<tr><th>Mode</th><th>আচরণ</th><th>ঝুঁকি</th></tr>
+<tr><td><code>autoAck=true</code></td><td>broker push করেই "delivered" ধরে queue থেকে মুছে দেয়</td><td>process-এর আগে consumer crash → message হারায়</td></tr>
+<tr><td><code>autoAck=false</code> (manual)</td><td>consumer <b>process শেষে</b> নিজে <code>basic.ack</code> করে</td><td>নিরাপদ; ack না করলে message unacked থাকে</td></tr>
+</table>
+<p>Manual mode-এ তিনটা উত্তর:</p>
+<ul>
+<li><code>basic.ack</code> — সফল; queue থেকে মুছে দাও।</li>
+<li><code>basic.nack(requeue=true)</code> / <code>basic.reject(requeue=true)</code> — ব্যর্থ, আবার queue-তে দাও (retry)।</li>
+<li><code>basic.nack(requeue=false)</code> — ব্যর্থ, requeue নয় → DLX/drop (poison message)।</li>
+</ul>
+<div class="callout behind"><span class="tag">Unacked message</span>
+Consumer message পেয়েছে কিন্তু এখনো ack/nack করেনি — এটা <b>unacked</b> অবস্থা। Consumer crash বা connection বন্ধ হলে broker সেই unacked message আবার অন্য consumer-কে <b>redeliver</b> করে (তখন <code>redelivered=true</code> flag থাকে)। এভাবে "at-least-once" নিশ্চিত হয় — কিন্তু duplicate সম্ভব, তাই consumer idempotent বানান।</div>
+
+<h4>Consumer acknowledgement timeout — নীরব channel বন্ধ</h4>
+<p>একটা বাস্তব ফাঁদ: manual ack mode-এ consumer একটা message পেয়ে <b>বেশি সময় ধরে</b> ack/nack না করলে (default <code>consumer_timeout</code> ≈ ৩০ মিনিট), RabbitMQ ধরে নেয় consumer আটকে গেছে এবং পুরো <b>channel বন্ধ</b> করে দেয় — তখন সব unacked message redeliver হয়।</p>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+খুব দীর্ঘ কাজ (বড় ফাইল প্রসেস, বাইরের slow API) একটা message ধরে রেখে prefetch বেশি নিয়ে ফেলা → timeout পার → channel বন্ধ → কাজ আবার শুরু, কখনো শেষ হয় না। সমাধান: কাজ ছোট টুকরোয় ভাঙুন, prefetch কমান, অথবা broker-এ <code>consumer_timeout</code> বাড়ান।</div>
+
+<h3>Prefetch (QoS) — ন্যায্য বণ্টন</h3>
+<p>Default-এ broker unacked message-এর সীমা ছাড়াই consumer-কে ঠেলে দেয় — একটা দ্রুত-প্রেরণ কিন্তু ধীর-process করা consumer-এর memory ভরে যায়, আর কাজ অসমভাবে ভাগ হয়। <code>basic.qos(prefetchCount)</code> দিয়ে বলা যায়: "একসাথে সর্বোচ্চ N টা unacked message দাও; ack না করা পর্যন্ত আর নয়।"</p>
+<figure class="viz">
+<svg viewBox="0 0 660 250" role="img" aria-label="Prefetch: without QoS one consumer is flooded while another is idle; with prefetch equal to one, work is dispatched fairly to whichever consumer is free">
+  <defs><marker id="pf" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa7b4"/></marker></defs>
+  <text x="150" y="26" text-anchor="middle" fill="#f85149" font-size="12.5" font-weight="700" class="bn">prefetch নেই — অসম</text>
+  <rect x="40" y="44" width="90" height="40" rx="8" fill="rgba(255,140,66,.14)" stroke="#ff8c42"/><text x="85" y="69" text-anchor="middle" fill="#e6edf3" font-size="12">Queue</text>
+  <rect x="210" y="38" width="94" height="30" rx="7" fill="rgba(248,81,73,.16)" stroke="#f85149"/><text x="257" y="58" text-anchor="middle" fill="#e6edf3" font-size="11">C1 (ভরে গেছে)</text>
+  <rect x="210" y="76" width="94" height="30" rx="7" fill="rgba(110,118,129,.12)" stroke="#6e7681"/><text x="257" y="96" text-anchor="middle" fill="#9aa7b4" font-size="11">C2 (idle)</text>
+  <path d="M130 58 L208 53" stroke="#f85149" stroke-width="2.2" marker-end="url(#pf)"/>
+  <path d="M130 66 L208 60" stroke="#f85149" stroke-width="1.4" marker-end="url(#pf)"/>
+
+  <text x="510" y="26" text-anchor="middle" fill="#3fb950" font-size="12.5" font-weight="700" class="bn">prefetch=1 — ন্যায্য</text>
+  <rect x="400" y="44" width="90" height="40" rx="8" fill="rgba(255,140,66,.14)" stroke="#ff8c42"/><text x="445" y="69" text-anchor="middle" fill="#e6edf3" font-size="12">Queue</text>
+  <rect x="560" y="38" width="80" height="30" rx="7" fill="rgba(63,185,80,.16)" stroke="#3fb950"/><text x="600" y="58" text-anchor="middle" fill="#e6edf3" font-size="11">C1</text>
+  <rect x="560" y="76" width="80" height="30" rx="7" fill="rgba(63,185,80,.16)" stroke="#3fb950"/><text x="600" y="96" text-anchor="middle" fill="#e6edf3" font-size="11">C2</text>
+  <path d="M490 56 L558 53" stroke="#3fb950" stroke-width="2" marker-end="url(#pf)"/>
+  <path d="M490 74 L558 88" stroke="#3fb950" stroke-width="2" marker-end="url(#pf)"/>
+  <text x="330" y="150" text-anchor="middle" fill="#9aa7b4" font-size="12" class="bn">prefetch=1 → যে consumer ফাঁকা, পরের message সে-ই পায় (fair dispatch)</text>
+</svg>
+<figcaption>prefetch ছাড়া broker round-robin-এ আগেই সব বিলি করে দেয় (ধীর consumer উপচে পড়ে)। prefetch দিলে unacked সীমিত থাকে → কাজ যে ফাঁকা তার কাছে যায়।</figcaption>
+</figure>
+<div class="callout best"><span class="tag">prefetch কত রাখব</span>
+<ul style="margin:4px 0">
+<li><b>ভারী/দীর্ঘ কাজ</b> (প্রতি message সেকেন্ড লাগে): <code>prefetch=1</code> — ন্যায্য বণ্টন, কেউ overload হয় না।</li>
+<li><b>হালকা/দ্রুত কাজ</b> (হাজারে হাজার small message): বড় prefetch (যেমন 50–300) — round-trip কমে throughput বাড়ে।</li>
+<li>শুরুর নিরাপদ মান ~<b>20–50</b>, তারপর latency/throughput দেখে সমন্বয়।</li>
+</ul></div>
+</template>
+
+<template data-page="dlx">
+<h2 class="title">৭. DLX · DLQ · TTL · Retry Patterns</h2>
+<p class="lead">ব্যর্থ, মেয়াদোত্তীর্ণ, বা reject হওয়া message কোথায় যাবে — আর কীভাবে নিরাপদে retry করবেন। RabbitMQ-র সবচেয়ে ব্যবহারিক অংশ।</p>
+
+<h3>Dead Letter Exchange (DLX)</h3>
+<p><span class="kw">DLX</span> হলো একটা সাধারণ exchange, যেখানে একটা queue-এর message স্বয়ংক্রিয়ভাবে "dead-letter" হয়ে চলে যায় — তিনটা কারণে:</p>
+<ul>
+<li>Consumer <code>basic.nack</code>/<code>basic.reject</code> করেছে <b>requeue=false</b> সহ (poison message)।</li>
+<li>Message-এর <b>TTL শেষ</b> (কেউ সময়মতো consume করেনি)।</li>
+<li>Queue-এর <b>length limit</b> (<code>x-max-length</code>) পার — পুরনো message বেরিয়ে যায়।</li>
+</ul>
+<p>Queue declare করার সময় <code>x-dead-letter-exchange</code> (ও ঐচ্ছিক <code>x-dead-letter-routing-key</code>) দিয়ে DLX ঠিক করা হয়। DLX RabbitMQ-র <b>built-in feature</b> (Kafka-তে এমন কিছু নেই — সেখানে DLQ নিজে বানাতে হয়)।</p>
+
+<h3>Dead Letter Queue (DLQ)</h3>
+<p><span class="kw">DLQ</span> হলো DLX-এর সাথে bind করা queue — যেখানে dead-lettered message এসে জমে। এখানে আলাদা করে সেগুলো পরীক্ষা, alert, বা fix করে replay করা হয়।</p>
+<figure class="viz">
+<svg viewBox="0 0 720 250" role="img" aria-label="Dead lettering: a rejected or expired message leaves the main queue via the dead letter exchange into the dead letter queue for inspection">
+  <defs><marker id="dl" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa7b4"/></marker></defs>
+  <rect x="20" y="96" width="120" height="52" rx="10" fill="rgba(255,140,66,.14)" stroke="#ff8c42"/><text x="80" y="127" text-anchor="middle" fill="#e6edf3" font-size="12.5" font-weight="700">orders (queue)</text>
+  <rect x="210" y="96" width="110" height="52" rx="10" fill="rgba(63,185,80,.14)" stroke="#3fb950"/><text x="265" y="120" text-anchor="middle" fill="#e6edf3" font-size="12">Consumer</text><text x="265" y="138" text-anchor="middle" fill="#9aa7b4" font-size="10.5">process</text>
+  <rect x="420" y="96" width="120" height="52" rx="10" fill="rgba(188,140,255,.12)" stroke="#bc8cff"/><text x="480" y="120" text-anchor="middle" fill="#bc8cff" font-size="12.5" font-weight="700">DLX</text><text x="480" y="138" text-anchor="middle" fill="#9aa7b4" font-size="10.5">exchange</text>
+  <rect x="600" y="96" width="110" height="52" rx="10" fill="rgba(248,81,73,.14)" stroke="#f85149"/><text x="655" y="127" text-anchor="middle" fill="#e6edf3" font-size="12.5" font-weight="700">orders.dlq</text>
+  <path d="M140 122 L208 122" stroke="#9aa7b4" stroke-width="2" marker-end="url(#dl)"/>
+  <path d="M320 122 L418 122" stroke="#f85149" stroke-width="2" marker-end="url(#dl)" stroke-dasharray="5 4"/>
+  <text x="368" y="112" text-anchor="middle" fill="#f85149" font-size="10.5" class="bn">nack(requeue=false) / TTL শেষ</text>
+  <path d="M540 122 L598 122" stroke="#9aa7b4" stroke-width="2" marker-end="url(#dl)"/>
+  <text x="655" y="170" text-anchor="middle" fill="#9aa7b4" font-size="10.5" class="bn">inspect · alert · replay</text>
+</svg>
+<figcaption>reject/expire হলে message মূল queue ছেড়ে DLX হয়ে DLQ-তে যায় — মূল প্রবাহ আটকায় না, আর ব্যর্থ message হারায়ও না।</figcaption>
+</figure>
+
+<h3>TTL & Expiration</h3>
+<table>
+<tr><th>ধরন</th><th>কীভাবে</th><th>কাজ</th></tr>
+<tr><td>Per-message TTL</td><td>message property <code>expiration</code> (ms)</td><td>নির্দিষ্ট message কতক্ষণ বাঁচবে</td></tr>
+<tr><td>Per-queue TTL</td><td>queue arg <code>x-message-ttl</code></td><td>ঐ queue-এর সব message-এর আয়ু</td></tr>
+<tr><td>Queue expiry</td><td>queue arg <code>x-expires</code></td><td>queue নিজে কতক্ষণ ব্যবহার না হলে মুছে যাবে</td></tr>
+</table>
+<p>TTL শেষ হলে message drop হয় — কিন্তু DLX সেট থাকলে drop না হয়ে DLX-এ যায়। এই সমন্বয়ই <b>delayed retry</b>-র ভিত্তি।</p>
+
+<h3>Retry Patterns — নিরাপদে আবার চেষ্টা</h3>
+<h4>১) সরল requeue (সাবধান!)</h4>
+<p><code>nack(requeue=true)</code> সাথে সাথে message-কে queue-এর সামনে ফেরত দেয় → consumer আবার সাথে সাথে fail → <b>busy loop</b>। শুধু সত্যিকারের transient error-এ, সীমিতভাবে ব্যবহার করুন।</p>
+<h4>২) DLX + TTL দিয়ে delayed retry (ক্লাসিক)</h4>
+<div class="diagram"><pre>
+main queue ──nack(requeue=false)──► retry.dlx ──► wait queue (x-message-ttl=30s,
+                                                       DLX = main exchange)
+                                                          │  30s পরে TTL শেষ
+                                                          ▼
+                                              আবার main queue-তে ফিরে আসে → পুনরায় চেষ্টা
+</pre></div>
+<p>অর্থাৎ ব্যর্থ message একটা "wait" queue-তে গিয়ে TTL সময় বসে থাকে, তারপর dead-letter হয়ে মূল queue-তে ফিরে আসে — এভাবে <b>delay সহ retry</b> পাওয়া যায় (immediate busy-loop ছাড়া)।</p>
+<h4>৩) Retry count সীমা + parking lot</h4>
+<p>Message header-এ <code>x-death</code> (broker স্বয়ংক্রিয় রাখে) বা নিজের <code>x-retry-count</code> দেখে গুনুন। নির্দিষ্ট সংখ্যক (যেমন ৫) retry-র পরও fail করলে আর retry নয় — একটা <b>final DLQ / parking-lot</b> queue-তে পাঠিয়ে দিন এবং alert করুন (মানুষ দেখবে)।</p>
+<h4>৪) Delayed Message plugin</h4>
+<p><code>rabbitmq_delayed_message_exchange</code> plugin দিয়ে সরাসরি "X সেকেন্ড পরে deliver করো" ধরনের delay দেওয়া যায় — TTL+DLX গিমিক ছাড়াই। Plugin install দরকার।</p>
+<h4>৫) Quorum queue delivery-limit (আধুনিক, সবচেয়ে সহজ)</h4>
+<p>নিজে header গুনে retry সীমা রাখার বদলে <b>quorum queue</b>-তে <code>x-delivery-limit</code> সেট করুন। Message যতবার redeliver হয় broker গোনে; সীমা (যেমন ৫) পেরোলে broker নিজেই সেটাকে <b>dead-letter</b> করে দেয় (DLX-এ) — কোনো manual counting দরকার নেই।</p>
+<pre>var args = new Dictionary&lt;string, object&gt; {
+    { "x-queue-type", "quorum" },
+    { "x-delivery-limit", 5 },                      <span class="c">// ৫ বার fail → auto dead-letter</span>
+    { "x-dead-letter-exchange", "orders.dlx" },
+};
+channel.QueueDeclare("billing", durable:true, exclusive:false, autoDelete:false, arguments:args);</pre>
+<div class="callout best"><span class="tag">Best practice</span>
+নতুন system-এ এটাই সুপারিশ — <b>quorum queue + <code>x-delivery-limit</code> + DLX</b>। poison message নির্দিষ্ট বার চেষ্টার পর আপনাআপনি DLQ-তে যায়, infinite requeue-র ঝুঁকি নেই, আর কোড সরল থাকে।</div>
+<div class="callout mistake"><span class="tag">Common mistakes</span>
+<ul style="margin:4px 0">
+<li>DLX ছাড়া <code>nack(requeue=false)</code> — message নীরবে <b>হারায়</b>।</li>
+<li>Infinite requeue — poison message-এ retry সীমা না রাখা → CPU 100%, queue জ্যাম।</li>
+<li>DLQ কখনো না দেখা — ব্যর্থতা জমতে থাকে, কেউ টের পায় না।</li>
+<li>Retry delay ছাড়া (immediate) — dependency সাময়িক down থাকলে আরও চাপ পড়ে।</li>
+</ul></div>
+</template>
+
+<template data-page="flow">
+<h2 class="title">৮. Flow Control · Performance Tuning</h2>
+<p class="lead">RabbitMQ চাপে পড়লে নিজেকে বাঁচাতে কী করে (flow control), আর আপনি কীভাবে throughput বাড়াবেন।</p>
+
+<h3>Flow Control — broker-এর আত্মরক্ষা</h3>
+<p>Producer যদি consumer-এর চেয়ে দ্রুত পাঠায়, message জমতে জমতে broker-এর <b>memory/disk</b> ভরে যায়। RabbitMQ তখন <span class="kw">flow control</span> প্রয়োগ করে — দ্রুত publisher-দের <b>ধীর/থামিয়ে</b> দেয় (backpressure), যাতে broker ক্র্যাশ না করে।</p>
+<table>
+<tr><th>প্রক্রিয়া</th><th>কী ঘটে</th></tr>
+<tr><td><span class="kw">Memory high watermark</span> (<code>vm_memory_high_watermark</code>, ~40% RAM)</td><td>অতিক্রম করলে broker publisher-দের block করে (<code>connection.blocked</code>)</td></tr>
+<tr><td><span class="kw">Disk free limit</span> (<code>disk_free_limit</code>)</td><td>disk কমে গেলে persistent publish block</td></tr>
+<tr><td>Credit-based flow control</td><td>ভেতরে দ্রুত প্রক্রিয়া দ্রুত-প্রেরণকারীকে ধীর করে</td></tr>
+</table>
+<div class="callout behind"><span class="tag">connection.blocked</span>
+Publisher block হলে .NET client-এ <code>ConnectionBlocked</code> event আসে। এজন্য <b>publish ও consume আলাদা connection-এ</b> রাখা জরুরি — নাহলে publisher block হলে একই connection-এর consumer-ও আটকে যায়, আর queue কখনো খালি হয় না (deadlock-সদৃশ)।</div>
+
+<h3>Performance Tuning — throughput বাড়ানোর নিয়ম</h3>
+<table>
+<tr><th>কৌশল</th><th>কেন</th></tr>
+<tr><td>Prefetch ঠিকমতো সেট করুন</td><td>খুব ছোট = consumer অভুক্ত; খুব বড় = অসম বণ্টন/memory</td></tr>
+<tr><td>Queue <b>ছোট</b> রাখুন</td><td>খালি/ছোট queue দ্রুত; message জমলে (backlog) সব ধীর হয়</td></tr>
+<tr><td>একাধিক consumer / channel</td><td>parallelism বাড়ে (competing consumers)</td></tr>
+<tr><td>Connection/channel reuse</td><td>প্রতি operation-এ নতুন খোলা মহাব্যয়বহুল</td></tr>
+<tr><td>Publisher confirm — batch/async</td><td>প্রতি message-এ sync অপেক্ষা throughput মেরে ফেলে</td></tr>
+<tr><td>Persistent শুধু যেখানে দরকার</td><td>persistent = disk write; সব message-এ দরকার নেই</td></tr>
+<tr><td>Lazy/quorum queue বড় backlog-এ</td><td>message disk-এ রাখে → RAM চাপ কম (quorum queue default lazy-সদৃশ)</td></tr>
+<tr><td><code>basic.get</code> polling এড়ান</td><td>push (consume) অনেক বেশি efficient</td></tr>
+</table>
+<div class="callout best"><span class="tag">সোনালি নিয়ম</span>
+"Queue সবসময় প্রায় খালি থাকা উচিত।" Queue যদি বড় হতে থাকে, সেটা মানে consumer পিছিয়ে — consumer/prefetch বাড়ান বা কাজ optimize করুন। Queue-কে dump/buffer হিসেবে ব্যবহার করবেন না।</div>
+</template>
+
+<template data-page="ha">
+<h2 class="title">৯. Clustering · Quorum Queues · Federation & Shovel</h2>
+<p class="lead">একটা node যথেষ্ট নয় — একাধিক node কীভাবে মিলে high-availability দেয়, আর ভৌগোলিকভাবে দূরের broker কীভাবে যুক্ত হয়।</p>
+
+<h3>Clustering</h3>
+<p>একাধিক RabbitMQ node মিলে একটা <span class="kw">cluster</span> — তারা metadata (exchange, binding, user, vhost সংজ্ঞা) শেয়ার করে ও একটাই logical broker হিসেবে দেখা যায়। Client যেকোনো node-এ connect করে যেকোনো queue-তে পৌঁছাতে পারে। Node-রা একই <b>Erlang cookie</b> দিয়ে পরস্পরকে বিশ্বাস করে।</p>
+<div class="callout behind"><span class="tag">Queue কোথায় থাকে</span>
+Classic queue-এর ডেটা <b>একটা</b> node-এ থাকে (যদিও metadata সব node জানে)। ঐ node down হলে classic (non-replicated) queue unavailable। এজন্যই HA দরকার হলে <b>quorum queue</b> (নিচে)। Cluster নিজে HA দেয় না — শুধু scale ও একক-প্রবেশদ্বার দেয়।</div>
+
+<h3>Quorum Queues — আধুনিক HA</h3>
+<p><span class="kw">Quorum queue</span> হলো <b>Raft consensus</b>-ভিত্তিক replicated queue — একটা leader ও কয়েকটা follower একাধিক node-এ। Message তখনই confirmed যখন সংখ্যাগরিষ্ঠ (quorum) replica লিখেছে। Leader-এর node down হলে follower থেকে নতুন leader নির্বাচিত হয় — queue চালু থাকে, data নিরাপদ।</p>
+<table>
+<tr><th></th><th>Classic queue</th><th>Quorum queue</th></tr>
+<tr><td>Replication</td><td>না (একটা node)</td><td>হ্যাঁ (Raft, majority)</td></tr>
+<tr><td>Node fail-এ</td><td>queue হারাতে/থামতে পারে</td><td>টিকে থাকে (failover)</td></tr>
+<tr><td>Data safety</td><td>দুর্বল</td><td>শক্তিশালী</td></tr>
+<tr><td>সুপারিশ</td><td>ক্ষণস্থায়ী/অগুরুত্বপূর্ণ</td><td><b>Production default</b></td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice</span>
+নতুন production system-এ গুরুত্বপূর্ণ queue-এর জন্য <b>quorum queue</b> ব্যবহার করুন (বিজোড় সংখ্যক replica, যেমন 3 বা 5)। পুরনো <b>classic mirrored queue deprecated</b> — quorum তার আধুনিক প্রতিস্থাপন।</div>
+
+<h3>Federation ও Shovel — দূরত্ব পেরোনো</h3>
+<p>Cluster একই datacenter-এর low-latency network ধরে নেয়। ভিন্ন datacenter/region-এর broker যুক্ত করতে:</p>
+<table>
+<tr><th></th><th><span class="kw">Federation</span></th><th><span class="kw">Shovel</span></th></tr>
+<tr><td>কী করে</td><td>দূরের exchange/queue থেকে message "টেনে" আনে (loosely coupled link)</td><td>এক broker/queue থেকে আরেকটিতে message সরায় (নির্দিষ্ট, একমুখী)</td></tr>
+<tr><td>Config</td><td>Declarative, উভয় প্রান্তে policy</td><td>Point-to-point, সহজ, নির্দিষ্ট source→dest</td></tr>
+<tr><td>ব্যবহার</td><td>Multi-region fan-out, WAN-এ exchange ভাগ করা</td><td>এক জায়গার message আরেক জায়গায় নেওয়া, migration, bridging</td></tr>
+<tr><td>Coupling</td><td>আলগা, অনেক node</td><td>দৃঢ়, নির্দিষ্ট দুই প্রান্ত</td></tr>
+</table>
+<div class="diagram"><pre>
+Federation:  [EU broker] ⇄ (federated exchange) ⇄ [US broker]   — WAN, আলগা যুক্ত
+Shovel:      [old broker] ──(shovel)──► [new broker]             — নির্দিষ্ট, একমুখী
+</pre></div>
+</template>
+
+<template data-page="secmon">
+<h2 class="title">১০. Security · Monitoring</h2>
+<p class="lead">Production RabbitMQ মানে দুটো জিনিস অবহেলা করা যাবে না — কে access পাবে (security), আর ভেতরে কী ঘটছে (monitoring)।</p>
+
+<h3>Security</h3>
+<h4>Transport — TLS</h4>
+<p>Plaintext (5672) production-এ নয়। <span class="kw">TLS</span> (5671) দিয়ে wire encrypt করুন; চাইলে <b>mTLS</b> (client certificate) দিয়ে client-ও যাচাই করুন।</p>
+<h4>Authentication</h4>
+<p>Username/password (default <code>guest/guest</code> শুধু localhost-এ, production-এ মুছে দিন), অথবা x509 certificate, LDAP, OAuth2 plugin।</p>
+<h4>Authorization — vhost ও permission</h4>
+<p><span class="kw">Virtual host (vhost)</span> হলো broker-এর ভেতরে আলাদা namespace — এক vhost-এর exchange/queue অন্যটা থেকে সম্পূর্ণ বিচ্ছিন্ন (multi-tenant isolation)। প্রতি user-কে vhost-প্রতি তিন ধরনের permission দেওয়া যায়:</p>
+<table>
+<tr><th>Permission</th><th>মানে</th></tr>
+<tr><td><code>configure</code></td><td>exchange/queue তৈরি বা মুছতে পারা</td></tr>
+<tr><td><code>write</code></td><td>publish করা (exchange-এ)</td></tr>
+<tr><td><code>read</code></td><td>consume করা (queue থেকে)</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice</span>
+<ul style="margin:4px 0">
+<li>প্রতি service-এর আলাদা user + least-privilege permission (শুধু যা দরকার)।</li>
+<li>Password কোডে নয় — secret manager/env var।</li>
+<li>Environment/tenant আলাদা করতে আলাদা <b>vhost</b>।</li>
+<li><code>guest</code> user মুছুন বা restrict করুন।</li>
+</ul></div>
+
+<h3>Monitoring</h3>
+<p>দুই স্তর: <b>Management plugin</b> (<code>rabbitmq_management</code>) — port 15672-এ web UI + HTTP API; আর production-এ <b>Prometheus plugin + Grafana</b>।</p>
+<table>
+<tr><th>Metric</th><th>মানে</th><th>Alert কখন</th></tr>
+<tr><td>Queue depth (ready messages)</td><td>consume-এর অপেক্ষায় কত</td><td>ক্রমাগত বাড়লে (consumer পিছিয়ে)</td></tr>
+<tr><td>Unacked messages</td><td>delivered কিন্তু ack হয়নি</td><td>জমে থাকলে (consumer আটকে/prefetch বেশি)</td></tr>
+<tr><td>Publish / deliver rate</td><td>message throughput</td><td>হঠাৎ পতন/spike</td></tr>
+<tr><td>Consumer count</td><td>queue-তে কত consumer</td><td>0 হলে (কেউ পড়ছে না)</td></tr>
+<tr><td>Memory / disk alarm</td><td>flow control চালু কি না</td><td>alarm true = publisher blocked</td></tr>
+<tr><td>Connections / channels</td><td>churn / leak</td><td>অস্বাভাবিক বৃদ্ধি</td></tr>
+<tr><td>Unroutable / DLQ depth</td><td>route না হওয়া / dead-lettered</td><td>&gt; 0 হলে তদন্ত</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+শুধু "up/down" monitor করা। আসল বিপদ চুপচাপ আসে — queue depth বা unacked ধীরে বাড়ে, memory alarm ট্রিগার হয়ে publisher block হয়, অথচ কেউ দেখছে না। এগুলোতেই alert বসান।</div>
+</template>
+
+<template data-page="dotnet">
+<h2 class="title">১১. RabbitMQ.Client (.NET)</h2>
+<p class="lead">আপনার background (.NET) ধরে — official <code>RabbitMQ.Client</code> দিয়ে reliable publish ও consume, confirms, manual ack, prefetch ও DLX সহ।</p>
+
+<div class="callout behind"><span class="tag">সংস্করণ নোট</span>
+নিচের উদাহরণ classic <code>IModel</code> API (v6.x) — স্থিতিশীল ও ব্যাপক। RabbitMQ.Client <b>v7+</b> সম্পূর্ণ <b>async</b> (<code>IChannel</code>, <code>CreateConnectionAsync</code>, <code>BasicPublishAsync</code>, <code>AsyncEventingBasicConsumer</code>)। ধারণাগুলো একই — শুধু method-এ <code>Async</code> ও <code>await</code> যোগ হয়।</div>
+
+<h3>সংযোগ ও channel</h3>
+<pre><span class="c">// dotnet add package RabbitMQ.Client</span>
+var factory = new ConnectionFactory {
+    HostName                 = "localhost",
+    UserName                 = "app",
+    Password                 = "secret",
+    VirtualHost              = "/",
+    Port                     = 5672,               <span class="c">// TLS হলে 5671 + Ssl সেট</span>
+    AutomaticRecoveryEnabled = true,               <span class="c">// network hiccup এ নিজে জোড়া লাগায়</span>
+    TopologyRecoveryEnabled  = true,
+};
+using var conn    = factory.CreateConnection();    <span class="c">// ব্যয়বহুল — reuse করুন</span>
+using var channel = conn.CreateModel();            <span class="c">// প্রতি thread এ আলাদা channel</span></pre>
+
+<h3>Producer — durable + persistent + publisher confirms</h3>
+<pre>channel.ExchangeDeclare("orders", ExchangeType.Direct, durable:true);
+channel.ConfirmSelect();                            <span class="c">// publisher confirms চালু</span>
+
+var body  = Encoding.UTF8.GetBytes(json);
+var props = channel.CreateBasicProperties();
+props.Persistent = true;                            <span class="c">// delivery_mode = 2 (disk এ টেকে)</span>
+props.MessageId  = eventId;                         <span class="c">// idempotency এর জন্য</span>
+
+channel.BasicPublish("orders", routingKey:"invoice.created", basicProperties:props, body:body);
+
+if (!channel.WaitForConfirms(TimeSpan.FromSeconds(5)))   <span class="c">// broker সত্যিই পেল?</span>
+    throw new Exception("publish confirm পাওয়া যায়নি — আবার চেষ্টা করুন");</pre>
+
+<h3>Consumer — prefetch + manual ack + DLX</h3>
+<pre><span class="c">// DLX সহ queue declare</span>
+var args = new Dictionary&lt;string, object&gt; {
+    { "x-dead-letter-exchange", "orders.dlx" },     <span class="c">// reject/expire → এখানে</span>
+    { "x-message-ttl", 3_600_000 },                 <span class="c">// 1 ঘণ্টা TTL</span>
+};
+channel.ExchangeDeclare("orders.dlx", ExchangeType.Fanout, durable:true);
+channel.QueueDeclare("orders.dlq", durable:true, exclusive:false, autoDelete:false);
+channel.QueueBind("orders.dlq", "orders.dlx", routingKey:"");
+
+channel.QueueDeclare("billing", durable:true, exclusive:false, autoDelete:false, arguments:args);
+channel.QueueBind("billing", "orders", routingKey:"invoice.created");
+
+channel.BasicQos(prefetchSize:0, prefetchCount:20, global:false);   <span class="c">// QoS / prefetch</span>
+
+var consumer = new EventingBasicConsumer(channel);
+consumer.Received += (sender, ea) =&gt; {
+    try {
+        var msg = Encoding.UTF8.GetString(ea.Body.ToArray());
+        Handle(msg);                                <span class="c">// business logic (idempotent!)</span>
+        channel.BasicAck(ea.DeliveryTag, multiple:false);            <span class="c">// সফল</span>
+    }
+    catch (TransientException) {
+        channel.BasicNack(ea.DeliveryTag, multiple:false, requeue:true);   <span class="c">// আবার চেষ্টা</span>
+    }
+    catch {
+        channel.BasicNack(ea.DeliveryTag, multiple:false, requeue:false);  <span class="c">// poison → DLX</span>
+    }
+};
+channel.BasicConsume("billing", autoAck:false, consumer);           <span class="c">// autoAck=false জরুরি</span></pre>
+
+<div class="callout mistake"><span class="tag">Common mistakes (.NET)</span>
+<ul style="margin:4px 0">
+<li>একটা <code>IModel</code>/channel একাধিক thread-এ ব্যবহার — thread-safe নয়, corruption/exception।</li>
+<li><code>autoAck:true</code> রেখে "নিরাপদ" ভাবা — process fail-এ message হারায়।</li>
+<li>Publisher confirm ছাড়া "publish হয়েছে" ধরে নেওয়া।</li>
+<li>Consumer-এ exception চেপে যাওয়া (ack-ও না, nack-ও না) → message চিরকাল unacked।</li>
+</ul></div>
+</template>
+
+<template data-page="prod">
+<h2 class="title">১২. Troubleshooting · Production Best Practices</h2>
+<p class="lead">বাস্তবে যা ভাঙে, কেন ভাঙে, আর কীভাবে ঠেকাবেন — শেষে একটা master checklist।</p>
+
+<h3>Troubleshooting — উপসর্গ → কারণ → সমাধান</h3>
+<table>
+<tr><th>উপসর্গ</th><th>সম্ভাব্য কারণ</th><th>সমাধান</th></tr>
+<tr><td>Queue ক্রমাগত বাড়ছে</td><td>consumer ধীর/কম/বন্ধ</td><td>consumer বাড়ান, prefetch বাড়ান, কাজ optimize</td></tr>
+<tr><td>Unacked message জমছে</td><td>consumer process-এ আটকে, বা ack ভুলে গেছে</td><td>prefetch কমান, ack নিশ্চিত করুন, timeout দিন</td></tr>
+<tr><td>Publisher hang/slow</td><td>memory/disk alarm → flow control block</td><td>consume গতি বাড়ান, RAM/disk বাড়ান, publish-consume আলাদা connection</td></tr>
+<tr><td>একই message বারবার</td><td>redelivery (ack হারানো)</td><td>consumer idempotent বানান (message_id/dedup)</td></tr>
+<tr><td>Message নীরবে হারায়</td><td>non-durable queue / non-persistent / confirm নেই</td><td>durable + persistent + publisher confirms</td></tr>
+<tr><td>CPU 100%, queue জ্যাম</td><td>poison message-এ infinite requeue</td><td>retry সীমা + DLX/parking-lot</td></tr>
+<tr><td>Connection churn / leak</td><td>প্রতি operation-এ নতুন connection</td><td>connection/channel reuse</td></tr>
+<tr><td>Cluster split-brain</td><td>network partition</td><td><code>pause_minority</code> partition handling + quorum queue</td></tr>
+</table>
+
+<h3>Production Best Practices — নিরাপদ default</h3>
+<div class="callout best"><span class="tag">Reliability</span>
+<ul style="margin:4px 0">
+<li><b>Durable</b> exchange + queue, <b>persistent</b> message, <b>publisher confirms</b> — তিনটা একসাথে না হলে "নিরাপদ" নয়।</li>
+<li>Consumer-এ <b>manual ack</b> (autoAck=false) + <b>idempotent</b> handler।</li>
+<li>গুরুত্বপূর্ণ queue = <b>quorum queue</b> (replicated)।</li>
+<li>প্রতিটা কাজের queue-তে <b>DLX + DLQ</b> + retry সীমা।</li>
+</ul></div>
+<div class="callout best"><span class="tag">Performance ও Ops</span>
+<ul style="margin:4px 0">
+<li><b>Prefetch</b> কাজের ধরন অনুযায়ী টিউন করুন; queue প্রায় খালি রাখুন।</li>
+<li>Publish ও consume <b>আলাদা connection</b>; connection/channel reuse; channel-প্রতি এক thread।</li>
+<li><b>TLS</b> + least-privilege user + vhost isolation।</li>
+<li>Queue depth, unacked, memory/disk alarm, DLQ depth-এ <b>alert</b>।</li>
+<li>Graceful shutdown — in-flight message ack শেষ করে channel/connection বন্ধ।</li>
+</ul></div>
+
+<h3>✅ Final Master Checklist</h3>
+<div class="card">
+<div class="grid2">
+<div>
+<p style="margin:4px 0"><b>Core</b></p>
+<ul style="margin:0">
+<li>✅ AMQP Protocol</li>
+<li>✅ Connections &amp; Channels</li>
+<li>✅ Exchanges</li>
+<li>✅ Queues</li>
+<li>✅ Bindings</li>
+<li>✅ Routing Keys</li>
+<li>✅ Producers</li>
+<li>✅ Consumers</li>
+<li>✅ Message Lifecycle</li>
+</ul>
+</div>
+<div>
+<p style="margin:4px 0"><b>Reliability</b></p>
+<ul style="margin:0">
+<li>✅ Publisher Confirms</li>
+<li>✅ Manual Acknowledgements</li>
+<li>✅ Prefetch (QoS)</li>
+<li>✅ Dead Letter Exchange (DLX)</li>
+<li>✅ Dead Letter Queue (DLQ)</li>
+<li>✅ TTL &amp; Expiration</li>
+<li>✅ Retry Patterns</li>
+<li>✅ Flow Control</li>
+</ul>
+</div>
+<div>
+<p style="margin:4px 0"><b>Scale &amp; HA</b></p>
+<ul style="margin:0">
+<li>✅ Performance Tuning</li>
+<li>✅ Clustering</li>
+<li>✅ Quorum Queues</li>
+<li>✅ Federation &amp; Shovel</li>
+</ul>
+</div>
+<div>
+<p style="margin:4px 0"><b>Ops &amp; Code</b></p>
+<ul style="margin:0">
+<li>✅ Security</li>
+<li>✅ Monitoring</li>
+<li>✅ RabbitMQ.Client (.NET)</li>
+<li>✅ Troubleshooting</li>
+<li>✅ Production Best Practices</li>
+</ul>
+</div>
+</div>
+</div>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>

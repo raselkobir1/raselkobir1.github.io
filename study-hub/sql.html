@@ -1,0 +1,1550 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SQL Mastery — Bangla (PostgreSQL + SQL Server)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#2dd4bf; --accent2:#7cead9;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --blue:#4aa3ff;
+    --code-bg:#0b0f14; --kw:#79c0ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px; -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:310px; flex:0 0 310px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:9px 12px; border-radius:9px; font-size:13.5px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(45,212,191,.22),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#08211d}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  pre .k{color:#ff7b72}
+  .kw{color:var(--accent); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px;vertical-align:middle}
+  .pg{background:rgba(74,163,255,.15);color:#7cc0ff;border:1px solid rgba(74,163,255,.4)}
+  .ms{background:rgba(248,81,73,.14);color:#ff8a84;border:1px solid rgba(248,81,73,.4)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--blue)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--blue)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#8fd0ff}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🗄️ SQL Mastery</h1>
+      <p>Portable SQL + <span style="color:#7cc0ff">PostgreSQL</span> + <span style="color:#ff8a84">SQL Server</span> • বাংলায়</p>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"fundamentals", icon:"🗄️", title:"1. Fundamentals"},
+  {id:"ddldml",       icon:"🏗️", title:"2. DDL & DML"},
+  {id:"query",        icon:"🔍", title:"3. Querying & Filtering"},
+  {id:"joins",        icon:"🔗", title:"4. Joins"},
+  {id:"agg",          icon:"📊", title:"5. Aggregation & Set Ops"},
+  {id:"subquery",     icon:"📦", title:"6. Subqueries & CTE"},
+  {id:"window",       icon:"🪟", title:"7. Window Functions"},
+  {id:"views",        icon:"👁️", title:"8. Views & Constraints"},
+  {id:"tx",           icon:"🔒", title:"9. Transactions & Concurrency"},
+  {id:"index",        icon:"⚡", title:"10. Indexing & Optimization"},
+  {id:"perf",         icon:"🚀", title:"11. Performance · Security · Backup"},
+  {id:"pg1",          icon:"🐘", title:"12. PostgreSQL — Types & Features"},
+  {id:"pg2",          icon:"🐘", title:"13. PostgreSQL — Perf & Internals"},
+  {id:"mssql1",       icon:"🟦", title:"14. SQL Server — Features & Indexes"},
+  {id:"mssql2",       icon:"🟦", title:"15. SQL Server — Perf & Internals"},
+  {id:"interview",    icon:"🎯", title:"16. Important Interview Queries"},
+  {id:"progobj",      icon:"⚙️", title:"17. Functions · Procedures · Triggers · Views"},
+  {id:"optimize",     icon:"🚀", title:"18. Query Optimization Process"},
+  {id:"replcdc",      icon:"🔄", title:"19. Replication & CDC"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="fundamentals">
+<h2 class="title">১. SQL Fundamentals</h2>
+<p class="lead">প্রথমে portable SQL — যা PostgreSQL ও SQL Server দুটোতেই চলে। এই ভিত্তি পোক্ত হলে পরে platform-specific অংশ সহজ। <span class="pill pg">PG</span> = PostgreSQL, <span class="pill ms">MS</span> = SQL Server।</p>
+
+<h3>মূল ধারণা</h3>
+<table>
+<tr><th>ধারণা</th><th>মানে</th></tr>
+<tr><td><span class="kw">Database</span></td><td>সম্পর্কিত table/object-এর সংগ্রহ</td></tr>
+<tr><td><span class="kw">Schema</span></td><td>Database-এর ভেতরে namespace (object group করে, যেমন <code>sales.orders</code>)</td></tr>
+<tr><td><span class="kw">Table</span></td><td>row ও column-এ সাজানো data (একটা entity — যেমন <code>users</code>)</td></tr>
+<tr><td><span class="kw">Column</span></td><td>একটা attribute + তার data type (<code>email VARCHAR</code>)</td></tr>
+<tr><td><span class="kw">Row</span></td><td>একটা record (একজন user-এর পূর্ণ তথ্য)</td></tr>
+</table>
+
+<h3>Data Types (common)</h3>
+<table>
+<tr><th>ধরন</th><th>PostgreSQL</th><th>SQL Server</th></tr>
+<tr><td>পূর্ণসংখ্যা</td><td><code>INT</code>, <code>BIGINT</code>, <code>SMALLINT</code></td><td>একই</td></tr>
+<tr><td>দশমিক (নির্ভুল)</td><td><code>NUMERIC(p,s)</code>/<code>DECIMAL</code></td><td><code>DECIMAL(p,s)</code></td></tr>
+<tr><td>টেক্সট</td><td><code>VARCHAR(n)</code>, <code>TEXT</code></td><td><code>VARCHAR(n)</code>, <code>NVARCHAR</code> (unicode)</td></tr>
+<tr><td>বুলিয়ান</td><td><code>BOOLEAN</code></td><td><code>BIT</code></td></tr>
+<tr><td>তারিখ/সময়</td><td><code>DATE</code>, <code>TIMESTAMP</code>, <code>TIMESTAMPTZ</code></td><td><code>DATE</code>, <code>DATETIME2</code>, <code>DATETIMEOFFSET</code></td></tr>
+</table>
+<div class="callout best"><span class="tag">অর্থ (money) কখনো float নয়</span>
+টাকাপয়সা সবসময় <code>NUMERIC/DECIMAL</code>-এ রাখুন, <code>FLOAT</code>/<code>REAL</code>-এ নয় — float rounding error-এ accounting ভেঙে যায় (0.1 + 0.2 ≠ 0.3)।</div>
+<div class="callout behind"><span class="tag">timestamptz বনাম timestamp (গুরুত্বপূর্ণ)</span>
+PostgreSQL-এ <code>TIMESTAMP</code> (without time zone) কোনো timezone মনে রাখে না — শুধু "wall clock"। <code>TIMESTAMPTZ</code> মানটাকে UTC-তে রাখে ও client timezone অনুযায়ী দেখায়। multi-timezone/DST bug এড়াতে প্রায় সবসময় <b>TIMESTAMPTZ</b> ব্যবহার করুন। (SQL Server-এ সমতুল্য <code>DATETIMEOFFSET</code>; সাধারণ <code>DATETIME2</code>-তে timezone নেই।)</div>
+
+<h3>NULL — "মান নেই"</h3>
+<p><span class="kw">NULL</span> মানে অজানা/অনুপস্থিত মান — এটা 0 বা খালি string নয়। NULL-এর সাথে যেকোনো তুলনা <b>UNKNOWN</b> দেয় (true/false নয়)।</p>
+<pre><span class="k">SELECT</span> * <span class="k">FROM</span> users <span class="k">WHERE</span> phone = <span class="k">NULL</span>;   <span class="c">-- ❌ কখনো row দেবে না!</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> users <span class="k">WHERE</span> phone <span class="k">IS NULL</span>; <span class="c">-- ✅ সঠিক</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+<code>= NULL</code> বা <code>&lt;&gt; NULL</code> লেখা — এগুলো সবসময় UNKNOWN, তাই কোনো row মেলে না। NULL পরীক্ষা করতে <b>সবসময়</b> <code>IS NULL</code> / <code>IS NOT NULL</code>। মনে রাখুন aggregate (COUNT/SUM)-ও NULL উপেক্ষা করে।</div>
+
+<h3>Constraints (পরিচিতি)</h3>
+<p>Data-র নিয়ম enforce করে: <code>PRIMARY KEY</code>, <code>FOREIGN KEY</code>, <code>UNIQUE</code>, <code>CHECK</code>, <code>NOT NULL</code>, <code>DEFAULT</code> — বিস্তারিত অধ্যায় ৮-এ।</p>
+
+<h3>PostgreSQL না SQL Server — কোনটা বাছবেন?</h3>
+<p>দুটোই শক্তিশালী, mature, ACID-compliant relational database, আর portable SQL প্রায় একই। পার্থক্য মূলত license, ecosystem ও কিছু feature-এ।</p>
+<h4>মূল পার্থক্য</h4>
+<table>
+<tr><th></th><th><span class="pill pg">PostgreSQL</span></th><th><span class="pill ms">SQL Server</span></th></tr>
+<tr><td>License / খরচ</td><td>Free, open-source (কোনো fee নেই)</td><td>Commercial — per-core license (Express/Developer edition সীমিত free)</td></tr>
+<tr><td>Platform</td><td>Linux/Windows/Mac/container — সর্বত্র</td><td>Windows/Azure-এ সেরা; Linux/container-ও চলে</td></tr>
+<tr><td>Ecosystem</td><td>Open-source, cloud-native</td><td>Microsoft — .NET, Azure, SSMS, Active Directory, Power BI</td></tr>
+<tr><td>Extensibility</td><td>বিশাল — PostGIS, pgvector, TimescaleDB, FDW, custom type</td><td>কম extensible, কিন্তু rich built-in</td></tr>
+<tr><td>Concurrency</td><td>MVCC default (reader-writer block করে না)</td><td>Lock default; RCSI চালু করলে MVCC-সদৃশ</td></tr>
+<tr><td>JSON</td><td>JSONB — native ও indexable (best-in-class)</td><td>function-ভিত্তিক JSON (কম native)</td></tr>
+<tr><td>Tooling</td><td>psql, pgAdmin, DBeaver</td><td>SSMS (চমৎকার GUI), Azure Data Studio</td></tr>
+<tr><td>BI / HA</td><td>streaming/logical replication, Patroni</td><td>SSRS/SSAS/Power BI, Always On AG (enterprise-grade)</td></tr>
+</table>
+<h4>কখন SQL Server (PG-র বদলে)</h4>
+<ul>
+<li>ভারী <b>Microsoft/.NET/Azure</b> ecosystem; enterprise support contract দরকার।</li>
+<li>Integrated <b>BI</b> (SSRS/SSAS/Power BI) বা enterprise <b>HA</b> (Always On AG)।</li>
+<li>Team already <b>T-SQL/SSMS</b>-এ দক্ষ; Windows/Active Directory-কেন্দ্রিক।</li>
+<li>Built-in <b>temporal table</b>, in-memory OLTP, columnstore analytics দরকার।</li>
+</ul>
+<h4>কখন PostgreSQL (MS-র বদলে)</h4>
+<ul>
+<li><b>খরচ</b> কমাতে চান — license fee নেই, যেকোনো scale-এ free।</li>
+<li>Cross-platform, container, যেকোনো cloud (RDS, Cloud SQL, Azure DB for PostgreSQL) — <b>vendor lock-in নেই</b>।</li>
+<li>Rich data type — <b>JSONB</b>, array, range, geo (<b>PostGIS</b>), AI embedding (<b>pgvector</b>)।</li>
+<li>Extensibility, open-source নমনীয়তা; modern microservice/startup।</li>
+</ul>
+<div class="callout best"><span class="tag">সংক্ষেপে — কে বেশি সুবিধা?</span>
+<b>PostgreSQL:</b> free, extensible, standards-compliant, দুর্দান্ত JSON/geo/vector, MVCC, no lock-in। <b>SQL Server:</b> enterprise tooling (SSMS), .NET/Azure/BI-এর সাথে গভীর integration, mature HA, বাণিজ্যিক support। "সেরা" বলে কিছু নেই — context (খরচ, team skill, ecosystem, feature) অনুযায়ী বাছুন। <b>.NET-এ দুটোই দারুণ চলে</b> (EF Core দুটোকেই সমান সমর্থন করে) — তাই অনেক .NET দল খরচ/নমনীয়তায় এখন PostgreSQL নেয়, Microsoft-ভারী enterprise SQL Server-এ থাকে।</div>
+</template>
+
+<template data-page="ddldml">
+<h2 class="title">২. DDL & DML</h2>
+<p class="lead">DDL structure তৈরি/বদলায় (CREATE/ALTER/DROP…), DML data নিয়ে কাজ করে (INSERT/UPDATE/DELETE…)।</p>
+
+<h3>DDL — Data Definition Language</h3>
+<pre><span class="k">CREATE TABLE</span> orders (
+    id          <span class="k">BIGINT</span> <span class="k">PRIMARY KEY</span>,
+    customer_id <span class="k">BIGINT</span> <span class="k">NOT NULL</span>,
+    amount      <span class="k">NUMERIC</span>(12,2) <span class="k">NOT NULL</span> <span class="k">DEFAULT</span> 0,
+    status      <span class="k">VARCHAR</span>(20) <span class="k">NOT NULL</span>,
+    created_at  <span class="k">TIMESTAMP</span> <span class="k">NOT NULL</span>
+);
+
+<span class="k">ALTER TABLE</span> orders <span class="k">ADD COLUMN</span> note <span class="k">VARCHAR</span>(200);  <span class="c">-- column যোগ</span>
+<span class="k">ALTER TABLE</span> orders <span class="k">ALTER COLUMN</span> status <span class="k">TYPE</span> <span class="k">VARCHAR</span>(30);  <span class="c">-- PG</span>
+<span class="k">DROP TABLE</span> orders;         <span class="c">-- পুরো table মুছে দেয় (structure + data)</span></pre>
+<table>
+<tr><th>Command</th><th>কাজ</th></tr>
+<tr><td><code>CREATE</code></td><td>নতুন table/index/view তৈরি</td></tr>
+<tr><td><code>ALTER</code></td><td>বিদ্যমান object পরিবর্তন</td></tr>
+<tr><td><code>DROP</code></td><td>object সম্পূর্ণ মুছে ফেলা</td></tr>
+<tr><td><code>TRUNCATE</code></td><td>সব row দ্রুত মুছে (structure রেখে)</td></tr>
+<tr><td><code>RENAME</code></td><td>নাম বদলানো (<span class="pill pg">PG</span> <code>ALTER TABLE ... RENAME TO</code>; <span class="pill ms">MS</span> <code>sp_rename</code>)</td></tr>
+</table>
+<div class="callout why"><span class="tag">TRUNCATE বনাম DELETE</span>
+<code>DELETE FROM t</code> প্রতিটা row আলাদা করে মোছে (WHERE দেওয়া যায়, logged, ধীর, trigger চলে)। <code>TRUNCATE t</code> পুরো table এক ধাক্কায় খালি করে (WHERE নেই, খুব দ্রুত, minimal logging, identity reset)। সব row মুছতে TRUNCATE দ্রুত; কিন্তু rollback/trigger/শর্ত দরকার হলে DELETE।</div>
+
+<h3>DML — Data Manipulation Language</h3>
+<pre><span class="k">INSERT INTO</span> orders (id, customer_id, amount, status, created_at)
+<span class="k">VALUES</span> (1, 100, 500.00, <span class="k">'PENDING'</span>, <span class="k">NOW</span>());
+
+<span class="k">UPDATE</span> orders <span class="k">SET</span> status = <span class="k">'PAID'</span> <span class="k">WHERE</span> id = 1;
+
+<span class="k">DELETE FROM</span> orders <span class="k">WHERE</span> status = <span class="k">'CANCELLED'</span> <span class="k">AND</span> created_at &lt; <span class="k">'2025-01-01'</span>;</pre>
+<div class="callout mistake"><span class="tag">Common mistake — WHERE ভুলে যাওয়া</span>
+<code>UPDATE orders SET status='PAID';</code> — WHERE ছাড়া <b>সব</b> row আপডেট হয়ে যাবে! সবসময় আগে <code>SELECT ... WHERE</code> দিয়ে যাচাই করুন কোন row প্রভাবিত হবে, তারপর UPDATE/DELETE চালান (transaction-এর ভেতরে হলে আরও নিরাপদ)।</div>
+
+<h3>MERGE / UPSERT — "থাকলে update, নাহলে insert"</h3>
+<pre><span class="c">-- PostgreSQL: ON CONFLICT</span>
+<span class="k">INSERT INTO</span> inventory (sku, qty) <span class="k">VALUES</span> (<span class="k">'A1'</span>, 10)
+<span class="k">ON CONFLICT</span> (sku) <span class="k">DO UPDATE SET</span> qty = inventory.qty + <span class="k">EXCLUDED</span>.qty;
+
+<span class="c">-- SQL Server: MERGE</span>
+<span class="k">MERGE</span> inventory <span class="k">AS</span> t
+<span class="k">USING</span> (<span class="k">SELECT</span> <span class="k">'A1'</span> sku, 10 qty) <span class="k">AS</span> s <span class="k">ON</span> t.sku = s.sku
+<span class="k">WHEN MATCHED THEN UPDATE SET</span> t.qty = t.qty + s.qty
+<span class="k">WHEN NOT MATCHED THEN INSERT</span> (sku, qty) <span class="k">VALUES</span> (s.sku, s.qty);</pre>
+<div class="callout best"><span class="tag">UPSERT — কোনটা</span>
+PostgreSQL-এ <code>INSERT ... ON CONFLICT</code> সরল ও নিরাপদ (concurrency-safe)। SQL Server-এ <code>MERGE</code> শক্তিশালী কিন্তু কিছু edge-case bug-এর ইতিহাস আছে — সরল upsert-এ অনেকে <code>MERGE</code>-এর বদলে conditional <code>UPDATE ... IF @@ROWCOUNT=0 INSERT</code> (transaction সহ) ব্যবহার করেন।</div>
+</template>
+
+<template data-page="query">
+<h2 class="title">৩. Querying & Filtering</h2>
+<p class="lead">SELECT-ই SQL-এর হৃদয়। এখানে row বাছা, সাজানো, সীমিত করা আর filter করা।</p>
+
+<h3>SELECT-এর গঠন ও যৌক্তিক ক্রম</h3>
+<div class="diagram"><pre>
+লেখার ক্রম:      SELECT → FROM → WHERE → GROUP BY → HAVING → ORDER BY → LIMIT
+বাস্তব execution: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY → LIMIT
+</pre></div>
+<p>এই কারণেই <code>WHERE</code>-এ column alias (যা SELECT-এ বানানো) ব্যবহার করা যায় না — WHERE আগে চলে, SELECT পরে।</p>
+<pre><span class="k">SELECT DISTINCT</span> status <span class="k">FROM</span> orders
+<span class="k">WHERE</span> amount &gt; 100
+<span class="k">ORDER BY</span> status <span class="k">ASC</span>;</pre>
+
+<h3>LIMIT / TOP / OFFSET / FETCH — pagination</h3>
+<pre><span class="c">-- PostgreSQL</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> orders <span class="k">ORDER BY</span> id <span class="k">LIMIT</span> 10 <span class="k">OFFSET</span> 20;
+
+<span class="c">-- SQL Server (TOP)</span>
+<span class="k">SELECT TOP</span> 10 * <span class="k">FROM</span> orders <span class="k">ORDER BY</span> id;
+
+<span class="c">-- ANSI standard (দুটোতেই চলে)</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> orders <span class="k">ORDER BY</span> id
+<span class="k">OFFSET</span> 20 <span class="k">ROWS FETCH NEXT</span> 10 <span class="k">ROWS ONLY</span>;</pre>
+<div class="callout mistake"><span class="tag">OFFSET ছাড়া ORDER BY নয়</span>
+LIMIT/OFFSET/TOP-এর সাথে <b>ORDER BY অবশ্যই</b> দিন — নাহলে কোন ১০টা row আসবে তার কোনো নিশ্চয়তা নেই (order অনির্ধারিত)। আর বড় OFFSET ধীর (Performance ট্যাবে keyset pagination দেখুন)।</div>
+
+<h3>Filtering — WHERE-এর operator</h3>
+<table>
+<tr><th>ধরন</th><th>উদাহরণ</th></tr>
+<tr><td>Comparison</td><td><code>=</code>, <code>&lt;&gt;</code> (বা <code>!=</code>), <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code></td></tr>
+<tr><td>Logical</td><td><code>AND</code>, <code>OR</code>, <code>NOT</code></td></tr>
+<tr><td>Range</td><td><code>amount BETWEEN 100 AND 500</code></td></tr>
+<tr><td>List</td><td><code>status IN ('PAID','SHIPPED')</code></td></tr>
+<tr><td>Pattern</td><td><code>name LIKE 'Ras%'</code> (<code>%</code>=যেকোনো, <code>_</code>=একটি char)</td></tr>
+<tr><td>NULL</td><td><code>phone IS NULL</code> / <code>IS NOT NULL</code></td></tr>
+<tr><td>Existence</td><td><code>EXISTS (subquery)</code></td></tr>
+</table>
+<pre><span class="k">SELECT</span> * <span class="k">FROM</span> orders
+<span class="k">WHERE</span> amount <span class="k">BETWEEN</span> 100 <span class="k">AND</span> 500
+  <span class="k">AND</span> status <span class="k">IN</span> (<span class="k">'PAID'</span>, <span class="k">'SHIPPED'</span>)
+  <span class="k">AND</span> created_at &gt;= <span class="k">'2026-01-01'</span>;</pre>
+<div class="callout behind"><span class="tag">LIKE ও case-sensitivity</span>
+<span class="pill pg">PG</span> <code>LIKE</code> case-sensitive; case-insensitive চাইলে <code>ILIKE</code>। <span class="pill ms">MS</span>-এ case-sensitivity নির্ভর করে column-এর <b>collation</b>-এর ওপর। শুরুতে wildcard (<code>LIKE '%x'</code>) দিলে index ব্যবহার হয় না — ধীর।</div>
+
+<h3>CASE · COALESCE · NULLIF — conditional expression</h3>
+<p><code>CASE</code> হলো SQL-এর if/else — প্রতিটা row-তে শর্ত অনুযায়ী মান দেয়:</p>
+<pre><span class="k">SELECT</span> name, salary,
+  <span class="k">CASE</span>
+    <span class="k">WHEN</span> salary &gt;= 100000 <span class="k">THEN</span> <span class="k">'High'</span>
+    <span class="k">WHEN</span> salary &gt;= 50000  <span class="k">THEN</span> <span class="k">'Mid'</span>
+    <span class="k">ELSE</span> <span class="k">'Low'</span>
+  <span class="k">END</span> <span class="k">AS</span> band
+<span class="k">FROM</span> employees;</pre>
+<table>
+<tr><th>Function</th><th>কাজ</th></tr>
+<tr><td><code>COALESCE(a, b, c)</code></td><td>প্রথম non-NULL মান ফেরে (NULL হলে default দিতে)</td></tr>
+<tr><td><code>NULLIF(a, b)</code></td><td>a = b হলে NULL, নাহলে a — divide-by-zero এড়াতে <code>NULLIF(x, 0)</code></td></tr>
+</table>
+<pre><span class="k">SELECT</span> <span class="k">COALESCE</span>(phone, <span class="k">'N/A'</span>) <span class="k">FROM</span> customers;    <span class="c">-- NULL হলে 'N/A'</span>
+<span class="k">SELECT</span> total / <span class="k">NULLIF</span>(cnt, 0) <span class="k">FROM</span> stats;      <span class="c">-- cnt=0 হলে NULL (crash নয়)</span></pre>
+<div class="callout best"><span class="tag">CASE-এর ব্যবহার</span>
+CASE শুধু SELECT-এ নয় — <code>ORDER BY</code> (custom sort), <code>WHERE</code>, আর বিশেষভাবে <b>conditional aggregation/pivot</b>-এ (অধ্যায় ১৬)। <code>SUM(CASE WHEN ... THEN 1 ELSE 0 END)</code> = শর্ত-ভিত্তিক count।</div>
+
+<h3>Built-in Functions — String ও Date (dialect পার্থক্য সহ)</h3>
+<h4>String functions</h4>
+<table>
+<tr><th>কাজ</th><th><span class="pill pg">PostgreSQL</span></th><th><span class="pill ms">SQL Server</span></th></tr>
+<tr><td>Concat</td><td><code>a || b</code> বা <code>CONCAT(a,b)</code></td><td><code>a + b</code> বা <code>CONCAT(a,b)</code></td></tr>
+<tr><td>দৈর্ঘ্য</td><td><code>LENGTH(s)</code></td><td><code>LEN(s)</code></td></tr>
+<tr><td>অংশ (substring)</td><td><code>SUBSTRING(s FROM 1 FOR 3)</code></td><td><code>SUBSTRING(s, 1, 3)</code></td></tr>
+<tr><td>Case পরিবর্তন</td><td><code>UPPER</code> / <code>LOWER</code></td><td>একই</td></tr>
+<tr><td>Trim / Replace</td><td><code>TRIM(s)</code>, <code>REPLACE(s,a,b)</code></td><td>একই</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Concat-এ NULL-এর ফাঁদ</span>
+PG-তে <code>'a' || NULL</code> = <b>NULL</b> (পুরোটা NULL হয়ে যায়!); কিন্তু <code>CONCAT()</code> NULL-কে খালি string ধরে। SQL Server-এও <code>+</code>-এ NULL ছড়ায়। নিরাপদে <code>CONCAT()</code> ব্যবহার করুন।</div>
+<h4>Date functions</h4>
+<table>
+<tr><th>কাজ</th><th><span class="pill pg">PostgreSQL</span></th><th><span class="pill ms">SQL Server</span></th></tr>
+<tr><td>এখন</td><td><code>NOW()</code> / <code>CURRENT_TIMESTAMP</code></td><td><code>SYSUTCDATETIME()</code> / <code>GETDATE()</code></td></tr>
+<tr><td>অংশ বের করা</td><td><code>EXTRACT(YEAR FROM d)</code></td><td><code>DATEPART(YEAR, d)</code> / <code>YEAR(d)</code></td></tr>
+<tr><td>যোগ/বিয়োগ</td><td><code>d + INTERVAL '1 day'</code></td><td><code>DATEADD(DAY, 1, d)</code></td></tr>
+<tr><td>পার্থক্য</td><td><code>d1 - d2</code> (interval)</td><td><code>DATEDIFF(DAY, d2, d1)</code></td></tr>
+<tr><td>Truncate</td><td><code>date_trunc('month', d)</code></td><td><code>DATETRUNC(month, d)</code> (2022+)</td></tr>
+</table>
+</template>
+
+<template data-page="joins">
+<h2 class="title">৪. Joins</h2>
+<p class="lead">একাধিক table-এর row মেলানো — relational database-এর মূল শক্তি।</p>
+
+<h3>Join-এর ধরন</h3>
+<div class="diagram"><pre>
+A = orders,  B = customers   (o.customer_id = c.id দিয়ে join)
+
+INNER JOIN  → দুই table-এ মিল আছে এমন row-ই (∩)
+LEFT  JOIN  → A-এর সব row + B-এর মিল (না মিললে B side NULL)
+RIGHT JOIN  → B-এর সব row + A-এর মিল
+FULL  JOIN  → দুই দিকের সব row (মিল না থাকলে অপর side NULL)
+CROSS JOIN  → প্রতিটা A × প্রতিটা B (Cartesian product)
+SELF  JOIN  → একটা table নিজের সাথে join (employee → manager)
+</pre></div>
+<pre><span class="k">SELECT</span> o.id, o.amount, c.name
+<span class="k">FROM</span> orders o
+<span class="k">INNER JOIN</span> customers c <span class="k">ON</span> o.customer_id = c.id;
+
+<span class="c">-- LEFT JOIN: order নেই এমন customer-ও দেখাও (o.* NULL হবে)</span>
+<span class="k">SELECT</span> c.name, o.id
+<span class="k">FROM</span> customers c
+<span class="k">LEFT JOIN</span> orders o <span class="k">ON</span> o.customer_id = c.id;
+
+<span class="c">-- SELF JOIN: প্রতি employee ও তার manager</span>
+<span class="k">SELECT</span> e.name <span class="k">AS</span> employee, m.name <span class="k">AS</span> manager
+<span class="k">FROM</span> employees e
+<span class="k">LEFT JOIN</span> employees m <span class="k">ON</span> e.manager_id = m.id;</pre>
+<div class="callout mistake"><span class="tag">Common mistakes</span>
+<ul style="margin:4px 0">
+<li>Join condition ভুলে গিয়ে দুই table লেখা → accidental <b>CROSS JOIN</b> (লাখো row-এর বিস্ফোরণ)।</li>
+<li>LEFT JOIN-এর পর ডান table-এর column-এ <code>WHERE b.x = 5</code> দেওয়া → এটা কার্যত INNER JOIN বানিয়ে ফেলে (NULL row বাদ পড়ে)। শর্ত <code>ON</code>-এ দিন বা <code>b.x = 5 OR b.x IS NULL</code>।</li>
+</ul></div>
+
+<h3>LATERAL / APPLY — row-এর জন্য subquery</h3>
+<p>প্রতিটা বাইরের row-এর জন্য একটা subquery চালিয়ে (row-এর column ব্যবহার করে) — যেমন "প্রতি customer-এর সর্বশেষ ৩টা order"।</p>
+<pre><span class="c">-- PostgreSQL: LATERAL</span>
+<span class="k">SELECT</span> c.name, o.*
+<span class="k">FROM</span> customers c
+<span class="k">CROSS JOIN LATERAL</span> (
+    <span class="k">SELECT</span> * <span class="k">FROM</span> orders o
+    <span class="k">WHERE</span> o.customer_id = c.id
+    <span class="k">ORDER BY</span> o.created_at <span class="k">DESC</span> <span class="k">LIMIT</span> 3
+) o;
+
+<span class="c">-- SQL Server: CROSS APPLY (একই ধারণা)</span>
+<span class="k">SELECT</span> c.name, o.*
+<span class="k">FROM</span> customers c
+<span class="k">CROSS APPLY</span> (
+    <span class="k">SELECT TOP</span> 3 * <span class="k">FROM</span> orders o
+    <span class="k">WHERE</span> o.customer_id = c.id <span class="k">ORDER BY</span> o.created_at <span class="k">DESC</span>
+) o;</pre>
+</template>
+
+<template data-page="agg">
+<h2 class="title">৫. Aggregation & Set Operators</h2>
+<p class="lead">অনেক row থেকে একটা সারসংক্ষেপ (SUM, COUNT…), আর একাধিক result set জোড়া দেওয়া।</p>
+
+<h3>Aggregate + GROUP BY + HAVING</h3>
+<pre><span class="k">SELECT</span> status, <span class="k">COUNT</span>(*) <span class="k">AS</span> cnt, <span class="k">SUM</span>(amount) <span class="k">AS</span> total, <span class="k">AVG</span>(amount) <span class="k">AS</span> avg_amt
+<span class="k">FROM</span> orders
+<span class="k">WHERE</span> created_at &gt;= <span class="k">'2026-01-01'</span>   <span class="c">-- row filter (group-এর আগে)</span>
+<span class="k">GROUP BY</span> status
+<span class="k">HAVING</span> <span class="k">SUM</span>(amount) &gt; 10000       <span class="c">-- group filter (aggregate-এর পরে)</span>
+<span class="k">ORDER BY</span> total <span class="k">DESC</span>;</pre>
+<table>
+<tr><th>Function</th><th>কাজ</th></tr>
+<tr><td><code>COUNT(*)</code></td><td>সব row গোনে</td></tr>
+<tr><td><code>COUNT(col)</code></td><td>NULL বাদে গোনে</td></tr>
+<tr><td><code>SUM/AVG/MIN/MAX</code></td><td>যোগফল/গড়/সর্বনিম্ন/সর্বোচ্চ</td></tr>
+</table>
+<div class="callout why"><span class="tag">WHERE বনাম HAVING</span>
+<b>WHERE</b> individual row filter করে (grouping-এর <b>আগে</b>), তাই aggregate ব্যবহার করা যায় না। <b>HAVING</b> group-এর ওপর filter করে (grouping-এর <b>পরে</b>), তাই <code>HAVING SUM(amount) &gt; 10000</code> চলে। যেটুকু WHERE-এ করা যায় তা WHERE-এই করুন (আগে filter হলে দ্রুত)।</div>
+
+<h3>Set Operators</h3>
+<table>
+<tr><th>Operator</th><th>ফল</th></tr>
+<tr><td><code>UNION</code></td><td>দুই query-র row একত্র, <b>duplicate বাদ</b> (ধীর — sort করে)</td></tr>
+<tr><td><code>UNION ALL</code></td><td>একত্র, duplicate সহ (দ্রুত)</td></tr>
+<tr><td><code>INTERSECT</code></td><td>দুটোতেই আছে এমন row</td></tr>
+<tr><td><code>EXCEPT</code></td><td>প্রথমটায় আছে কিন্তু দ্বিতীয়টায় নেই</td></tr>
+</table>
+<pre><span class="k">SELECT</span> email <span class="k">FROM</span> customers
+<span class="k">EXCEPT</span>
+<span class="k">SELECT</span> email <span class="k">FROM</span> unsubscribed;   <span class="c">-- subscribe আছে, unsub নেই</span></pre>
+<div class="callout best"><span class="tag">UNION vs UNION ALL</span>
+Duplicate সম্ভব না জানলে বা duplicate-এ সমস্যা না থাকলে <code>UNION ALL</code> ব্যবহার করুন — <code>UNION</code> অকারণে dedup করতে সব row sort করে, যা বড় data-তে ব্যয়বহুল।</div>
+
+<h3>GROUP BY extension — ROLLUP · CUBE · GROUPING SETS</h3>
+<p>একই query-তে একাধিক স্তরের subtotal ও grand total — report-এ খুব কাজের:</p>
+<pre><span class="k">SELECT</span> region, product, <span class="k">SUM</span>(amount) <span class="k">AS</span> total
+<span class="k">FROM</span> sales
+<span class="k">GROUP BY ROLLUP</span> (region, product);</pre>
+<table>
+<tr><th>Extension</th><th>কী দেয়</th></tr>
+<tr><td><code>ROLLUP(a,b)</code></td><td>hierarchical subtotal: (a,b) → (a) → () grand total</td></tr>
+<tr><td><code>CUBE(a,b)</code></td><td>সব combination-এর subtotal: (a,b), (a), (b), ()</td></tr>
+<tr><td><code>GROUPING SETS(...)</code></td><td>ঠিক যেসব grouping চান তা নির্দিষ্ট করা</td></tr>
+</table>
+<p><b>ব্যাখ্যা:</b> <code>ROLLUP(region, product)</code> প্রতি region-এর subtotal + সব মিলিয়ে grand total এক query-তেই দেয় — আলাদা <code>UNION</code> query লিখতে হয় না। দুটো DB-তেই আছে।</p>
+</template>
+
+<template data-page="subquery">
+<h2 class="title">৬. Subqueries & CTE</h2>
+<p class="lead">Query-র ভেতরে query — আর CTE দিয়ে সেগুলো পঠনযোগ্য করা।</p>
+
+<h3>Subquery-এর ধরন</h3>
+<pre><span class="c">-- Scalar subquery: একটা মান ফেরে</span>
+<span class="k">SELECT</span> name, (<span class="k">SELECT</span> <span class="k">COUNT</span>(*) <span class="k">FROM</span> orders o <span class="k">WHERE</span> o.customer_id = c.id) <span class="k">AS</span> order_count
+<span class="k">FROM</span> customers c;
+
+<span class="c">-- Correlated subquery: বাইরের row-এর ওপর নির্ভর করে</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> orders o
+<span class="k">WHERE</span> amount &gt; (<span class="k">SELECT</span> <span class="k">AVG</span>(amount) <span class="k">FROM</span> orders x <span class="k">WHERE</span> x.customer_id = o.customer_id);
+
+<span class="c">-- EXISTS / NOT EXISTS: আছে কি নেই (দ্রুত, প্রথম মিলেই থামে)</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> customers c
+<span class="k">WHERE EXISTS</span> (<span class="k">SELECT</span> 1 <span class="k">FROM</span> orders o <span class="k">WHERE</span> o.customer_id = c.id);
+
+<span class="k">SELECT</span> * <span class="k">FROM</span> customers c
+<span class="k">WHERE NOT EXISTS</span> (<span class="k">SELECT</span> 1 <span class="k">FROM</span> orders o <span class="k">WHERE</span> o.customer_id = c.id);  <span class="c">-- order নেই</span></pre>
+<div class="callout why"><span class="tag">EXISTS বনাম IN</span>
+বড় subquery-তে <code>EXISTS</code> সাধারণত <code>IN</code>-এর চেয়ে ভালো — প্রথম মিল পেলেই থামে। আর <code>NOT IN</code> বিপজ্জনক: subquery-তে একটা NULL থাকলে <code>NOT IN</code> কোনো row-ই দেয় না (three-valued logic)! নিরাপদে <code>NOT EXISTS</code> ব্যবহার করুন।</div>
+
+<h3>CTE — Common Table Expression</h3>
+<p><code>WITH</code> দিয়ে একটা named অস্থায়ী result — জটিল query-কে ধাপে ভেঙে পঠনযোগ্য করে।</p>
+<pre><span class="k">WITH</span> monthly <span class="k">AS</span> (
+    <span class="k">SELECT</span> customer_id, <span class="k">SUM</span>(amount) <span class="k">AS</span> total
+    <span class="k">FROM</span> orders <span class="k">GROUP BY</span> customer_id
+)
+<span class="k">SELECT</span> c.name, m.total
+<span class="k">FROM</span> monthly m <span class="k">JOIN</span> customers c <span class="k">ON</span> c.id = m.customer_id
+<span class="k">WHERE</span> m.total &gt; 5000;</pre>
+
+<h3>Recursive CTE — hierarchy/tree</h3>
+<pre><span class="k">WITH RECURSIVE</span> subordinates <span class="k">AS</span> (
+    <span class="k">SELECT</span> id, name, manager_id <span class="k">FROM</span> employees <span class="k">WHERE</span> id = 1   <span class="c">-- anchor (top boss)</span>
+    <span class="k">UNION ALL</span>
+    <span class="k">SELECT</span> e.id, e.name, e.manager_id
+    <span class="k">FROM</span> employees e
+    <span class="k">JOIN</span> subordinates s <span class="k">ON</span> e.manager_id = s.id       <span class="c">-- recursive step</span>
+)
+<span class="k">SELECT</span> * <span class="k">FROM</span> subordinates;</pre>
+<div class="callout behind"><span class="tag">দ্রষ্টব্য</span>
+<span class="pill ms">MS</span>-এ <code>WITH</code> (RECURSIVE keyword ছাড়া, recursion আপনাআপনি detect হয়)। Org chart, category tree, bill-of-materials — এসবে recursive CTE আদর্শ। Infinite loop এড়াতে data ঠিক রাখুন বা depth সীমা দিন।</div>
+</template>
+
+<template data-page="window">
+<h2 class="title">৭. Window Functions</h2>
+<p class="lead">GROUP BY row কমিয়ে ফেলে, কিন্তু window function প্রতিটা row রেখেই তার পাশে একটা "গণনা করা" column যোগ করে — ranking, running total, আগের/পরের row।</p>
+
+<h3>OVER() ও PARTITION BY</h3>
+<p><code>OVER()</code> একটা "window" (row-এর সেট) সংজ্ঞায়িত করে। <code>PARTITION BY</code> সেই window-কে group-এ ভাগ করে, <code>ORDER BY</code> ভেতরে ক্রম দেয়।</p>
+<pre><span class="c">-- প্রতি customer-এর order গুলো amount অনুযায়ী rank</span>
+<span class="k">SELECT</span> customer_id, id, amount,
+       <span class="k">ROW_NUMBER</span>() <span class="k">OVER</span> (<span class="k">PARTITION BY</span> customer_id <span class="k">ORDER BY</span> amount <span class="k">DESC</span>) <span class="k">AS</span> rn,
+       <span class="k">RANK</span>()       <span class="k">OVER</span> (<span class="k">PARTITION BY</span> customer_id <span class="k">ORDER BY</span> amount <span class="k">DESC</span>) <span class="k">AS</span> rnk,
+       <span class="k">SUM</span>(amount) <span class="k">OVER</span> (<span class="k">PARTITION BY</span> customer_id)                    <span class="k">AS</span> cust_total
+<span class="k">FROM</span> orders;</pre>
+
+<h3>মূল window function</h3>
+<table>
+<tr><th>Function</th><th>কাজ</th></tr>
+<tr><td><code>ROW_NUMBER()</code></td><td>ক্রমিক নম্বর (১,২,৩… — tie-তেও unique)</td></tr>
+<tr><td><code>RANK()</code></td><td>rank, tie হলে একই rank কিন্তু পরের নম্বর <b>skip</b> (1,1,3)</td></tr>
+<tr><td><code>DENSE_RANK()</code></td><td>rank, tie হলে skip <b>নয়</b> (1,1,2)</td></tr>
+<tr><td><code>NTILE(n)</code></td><td>row-গুলোকে n সমান bucket-এ ভাগ (quartile)</td></tr>
+<tr><td><code>LEAD()/LAG()</code></td><td>পরের/আগের row-এর মান (দুই তারিখের পার্থক্য)</td></tr>
+<tr><td><code>FIRST_VALUE()/LAST_VALUE()</code></td><td>window-এর প্রথম/শেষ মান</td></tr>
+</table>
+
+<h3>বাস্তব ব্যবহার</h3>
+<pre><span class="c">-- প্রতি group-এ top-1 (deduplication / latest per key)</span>
+<span class="k">WITH</span> ranked <span class="k">AS</span> (
+  <span class="k">SELECT</span> *, <span class="k">ROW_NUMBER</span>() <span class="k">OVER</span> (<span class="k">PARTITION BY</span> customer_id <span class="k">ORDER BY</span> created_at <span class="k">DESC</span>) rn
+  <span class="k">FROM</span> orders
+)
+<span class="k">SELECT</span> * <span class="k">FROM</span> ranked <span class="k">WHERE</span> rn = 1;   <span class="c">-- প্রতি customer-এর সর্বশেষ order</span>
+
+<span class="c">-- আগের row-এর সাথে পার্থক্য (day-over-day)</span>
+<span class="k">SELECT</span> day, revenue,
+       revenue - <span class="k">LAG</span>(revenue) <span class="k">OVER</span> (<span class="k">ORDER BY</span> day) <span class="k">AS</span> change
+<span class="k">FROM</span> daily_sales;</pre>
+<div class="callout mistake"><span class="tag">LAST_VALUE-এর ফাঁদ</span>
+<code>LAST_VALUE()</code> default window frame ("current row পর্যন্ত") ব্যবহার করায় প্রায়ই current row-ই ফেরত দেয়, প্রকৃত শেষ মান নয়। ঠিক করতে frame স্পষ্ট করুন: <code>ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING</code>।</div>
+</template>
+
+<template data-page="views">
+<h2 class="title">৮. Views & Constraints</h2>
+<p class="lead">View জটিল query-কে নাম দেয়; constraint data-র সততা রক্ষা করে।</p>
+
+<h3>View</h3>
+<p>একটা <span class="kw">view</span> হলো সংরক্ষিত query — টেবিলের মতো ব্যবহার করা যায়, কিন্তু data রাখে না (প্রতিবার underlying query চলে)।</p>
+<pre><span class="k">CREATE VIEW</span> active_customers <span class="k">AS</span>
+<span class="k">SELECT</span> c.id, c.name, <span class="k">COUNT</span>(o.id) <span class="k">AS</span> orders
+<span class="k">FROM</span> customers c <span class="k">LEFT JOIN</span> orders o <span class="k">ON</span> o.customer_id = c.id
+<span class="k">GROUP BY</span> c.id, c.name;
+
+<span class="k">SELECT</span> * <span class="k">FROM</span> active_customers <span class="k">WHERE</span> orders &gt; 5;</pre>
+<div class="callout why"><span class="tag">View বনাম Materialized View</span>
+সাধারণ <b>View</b> — কোনো data জমায় না, প্রতিবার query চলে (সবসময় fresh, কিন্তু ভারী হলে ধীর)। <b>Materialized View</b> — ফলাফল disk-এ জমিয়ে রাখে (দ্রুত read, কিন্তু <code>REFRESH</code> না করলে stale)। <span class="pill pg">PG</span>-তে native <code>MATERIALIZED VIEW</code>; <span class="pill ms">MS</span>-এ সমতুল্য "indexed view" (schema-bound, কড়া নিয়ম)।</div>
+
+<h3>Constraints — data integrity</h3>
+<table>
+<tr><th>Constraint</th><th>কাজ</th></tr>
+<tr><td><span class="kw">PRIMARY KEY</span></td><td>প্রতিটা row-কে unique-ভাবে চেনায় (unique + not null)</td></tr>
+<tr><td><span class="kw">FOREIGN KEY</span></td><td>অন্য table-এর PK-কে reference করে (relationship, referential integrity)</td></tr>
+<tr><td><span class="kw">UNIQUE</span></td><td>column-এ duplicate নিষেধ</td></tr>
+<tr><td><span class="kw">CHECK</span></td><td>শর্ত enforce (<code>amount &gt;= 0</code>)</td></tr>
+<tr><td><span class="kw">DEFAULT</span></td><td>মান না দিলে default বসে</td></tr>
+<tr><td><span class="kw">NOT NULL</span></td><td>NULL নিষেধ</td></tr>
+</table>
+<pre><span class="k">CREATE TABLE</span> order_items (
+    id         <span class="k">BIGINT</span> <span class="k">PRIMARY KEY</span>,
+    order_id   <span class="k">BIGINT</span> <span class="k">NOT NULL</span> <span class="k">REFERENCES</span> orders(id) <span class="k">ON DELETE CASCADE</span>,
+    qty        <span class="k">INT</span> <span class="k">NOT NULL</span> <span class="k">CHECK</span> (qty &gt; 0),
+    price      <span class="k">NUMERIC</span>(12,2) <span class="k">NOT NULL</span> <span class="k">CHECK</span> (price &gt;= 0),
+    status     <span class="k">VARCHAR</span>(20) <span class="k">NOT NULL</span> <span class="k">DEFAULT</span> <span class="k">'NEW'</span>,
+    <span class="k">UNIQUE</span> (order_id, id)
+);</pre>
+<div class="callout best"><span class="tag">Best practice</span>
+Constraint database-এই enforce করুন, শুধু application কোডে ভরসা করবেন না — একাধিক service/manual query থেকেও data ঢোকে; database হলো integrity-র শেষ প্রহরী। FK-তে <code>ON DELETE CASCADE</code>/<code>SET NULL</code> ভেবে বেছে নিন।</div>
+
+<h3>Normalization — table design-এর ভিত্তি</h3>
+<p><span class="kw">Normalization</span> = redundancy কমাতে ও data anomaly এড়াতে table-কে নিয়ম মেনে ভাগ করা। মূল তিন স্তর:</p>
+<table>
+<tr><th>Form</th><th>নিয়ম</th></tr>
+<tr><td><span class="kw">1NF</span></td><td>প্রতিটা column atomic (এক cell-এ list/একাধিক মান নয়), প্রতিটা row unique</td></tr>
+<tr><td><span class="kw">2NF</span></td><td>1NF + প্রতিটা non-key column পুরো primary key-এর ওপর নির্ভরশীল (partial dependency নেই)</td></tr>
+<tr><td><span class="kw">3NF</span></td><td>2NF + non-key column অন্য non-key column-এর ওপর নির্ভর করে না (transitive dependency নেই)</td></tr>
+</table>
+<p><b>উদাহরণ:</b> <code>orders</code> table-এ customer-এর নাম/ঠিকানা বারবার রাখলে (redundancy) — customer ঠিকানা বদলালে সব row update করতে হয় (anomaly)। 3NF অনুযায়ী customer আলাদা table-এ, আর orders শুধু <code>customer_id</code> (FK) রাখে।</p>
+<div class="callout why"><span class="tag">Denormalization — কখন উল্টো পথে</span>
+Normalization redundancy কমায় কিন্তু বেশি JOIN লাগে (read ধীর হতে পারে)। <b>Denormalization</b> = ইচ্ছাকৃতভাবে কিছু data duplicate/precompute রাখা read দ্রুত করতে — যেমন report table, cached count, বা analytics warehouse। নিয়ম: <b>OLTP</b> (transaction) system normalize করুন (integrity); <b>read-heavy/analytics</b>-এ প্রয়োজনে denormalize করুন (performance)। ভারসাম্যটাই design।</div>
+</template>
+
+<template data-page="tx">
+<h2 class="title">৯. Transactions & Concurrency</h2>
+<p class="lead">একাধিক statement-কে "সব-নয়তো-কিছুই-না" একক বানানো, আর একসাথে অনেক user কাজ করলে data ঠিক রাখা।</p>
+
+<h3>Transaction ও ACID</h3>
+<pre><span class="k">BEGIN</span>;                                        <span class="c">-- transaction শুরু</span>
+  <span class="k">UPDATE</span> accounts <span class="k">SET</span> balance = balance - 100 <span class="k">WHERE</span> id = 1;
+  <span class="k">SAVEPOINT</span> after_debit;                       <span class="c">-- আংশিক rollback point</span>
+  <span class="k">UPDATE</span> accounts <span class="k">SET</span> balance = balance + 100 <span class="k">WHERE</span> id = 2;
+<span class="k">COMMIT</span>;                                       <span class="c">-- স্থায়ী করো (বা ROLLBACK দিয়ে বাতিল)</span></pre>
+<table>
+<tr><th>ACID</th><th>মানে</th></tr>
+<tr><td><span class="kw">Atomicity</span></td><td>সব statement একসাথে সফল, নয়তো কিছুই না (rollback)</td></tr>
+<tr><td><span class="kw">Consistency</span></td><td>constraint সবসময় বজায় থাকে</td></tr>
+<tr><td><span class="kw">Isolation</span></td><td>সমান্তরাল transaction একে অপরকে বিঘ্নিত করে না</td></tr>
+<tr><td><span class="kw">Durability</span></td><td>commit হলে crash-এও data টেকে (WAL/log)</td></tr>
+</table>
+
+<h4>ACID কীভাবে অর্জিত হয় — ভেতরের কথা</h4>
+<p><b>উদাহরণ ধরুন:</b> account 1 থেকে account 2-তে 100 টাকা transfer — debit ও credit দুটো একসাথে হতে হবে।</p>
+<ul>
+<li><b>Atomicity (সব-নয়তো-কিছুই-না):</b> debit সফল কিন্তু credit-এ crash হলে engine <b>rollback</b> করে debit-ও undo করে। কীভাবে? প্রতিটা পরিবর্তন data-তে লেখার <b>আগে</b> একটা <span class="kw">transaction log</span>-এ (undo তথ্য সহ) লেখা হয় — rollback মানে সেই undo প্রয়োগ।</li>
+<li><b>Consistency (বৈধ → বৈধ state):</b> transaction শেষে সব constraint (PK, FK, CHECK, NOT NULL) বজায় থাকে; নিয়ম ভাঙলে পুরো transaction fail। কখনো "অর্ধেক valid" state দৃশ্যমান হয় না। (constraint + application logic-এর যৌথ দায়িত্ব।)</li>
+<li><b>Isolation (একে অপরকে দেখে না):</b> একই সময়ে দুটো transfer চললে একটা আরেকটার অসম্পূর্ণ অবস্থা দেখবে না। engine এটা করে <b>lock</b> (pessimistic) বা <b>MVCC/row-version</b> (PG, SQL Server RCSI) দিয়ে; isolation level ঠিক করে কতটা কঠোর (নিচের matrix)।</li>
+<li><b>Durability (commit = স্থায়ী):</b> <code>COMMIT</code> সফল বলার <b>আগে</b> engine পরিবর্তনটা <span class="kw">WAL/transaction log</span>-এ disk-এ <b>fsync</b> করে। তাই commit-এর ঠিক পরেই power চলে গেলেও restart-এ log থেকে redo করে data ফিরে আসে।</li>
+</ul>
+<div class="callout behind"><span class="tag">WAL — Atomicity ও Durability-র একই ইঞ্জিন</span>
+<span class="kw">Write-Ahead Logging (WAL)</span>: data page বদলানোর <b>আগেই</b> "কী বদলাচ্ছি" log-এ লেখা হয়, তারপর data। এই এক কৌশলেই দুটো নিশ্চিত হয় — crash-এর পর engine log পড়ে <b>committed</b> transaction <b>redo</b> করে (durability) আর <b>uncommitted</b> গুলো <b>undo</b> করে (atomicity)। PG-তে এটা WAL, SQL Server-এ transaction log — একই ধারণা।</div>
+
+<h3>Read phenomena ও Isolation Levels</h3>
+<p>দুটো transaction একসাথে চললে যে সমস্যাগুলো হতে পারে, আর কোন isolation level কোনটা ঠেকায়:</p>
+<table>
+<tr><th>Isolation Level</th><th>Dirty Read</th><th>Non-Repeatable Read</th><th>Phantom Read</th></tr>
+<tr><td>READ UNCOMMITTED</td><td>সম্ভব</td><td>সম্ভব</td><td>সম্ভব</td></tr>
+<tr><td>READ COMMITTED <span class="pill pg">PG default</span></td><td>না</td><td>সম্ভব</td><td>সম্ভব</td></tr>
+<tr><td>REPEATABLE READ</td><td>না</td><td>না</td><td>সম্ভব*</td></tr>
+<tr><td>SERIALIZABLE</td><td>না</td><td>না</td><td>না</td></tr>
+</table>
+<ul>
+<li><b>Dirty read:</b> অন্যের uncommitted (হয়তো rollback হবে) data পড়া।</li>
+<li><b>Non-repeatable read:</b> একই row দুবার পড়লে ভিন্ন মান (মাঝে অন্যে commit করেছে)।</li>
+<li><b>Phantom read:</b> একই query দুবার চালালে নতুন row চলে এসেছে। (*PG-র REPEATABLE READ = snapshot, phantom-ও ঠেকায়।)</li>
+</ul>
+<div class="callout behind"><span class="tag">Default আলাদা!</span>
+<span class="pill pg">PG</span>-র default <code>READ COMMITTED</code>। <span class="pill ms">MS</span>-এরও default <code>READ COMMITTED</code>, কিন্তু classic lock-ভিত্তিক (reader-writer একে অপরকে block করে) — যদি না <b>Read Committed Snapshot Isolation (RCSI)</b> চালু থাকে (তখন PG-র মতো row-version ব্যবহার করে, block কম)। Production SQL Server-এ প্রায়ই RCSI চালু করা হয়।</div>
+
+<h3>Locks, Deadlock, Optimistic vs Pessimistic</h3>
+<p>Concurrent write-এর সময় engine <span class="kw">lock</span> নেয়। দুটো transaction পরস্পরের lock-এর জন্য অপেক্ষা করলে <span class="kw">deadlock</span> — engine একটাকে victim বানিয়ে rollback করে।</p>
+<table>
+<tr><th></th><th>Pessimistic</th><th>Optimistic</th></tr>
+<tr><td>ধারণা</td><td>আগেই lock নাও (<code>SELECT ... FOR UPDATE</code>)</td><td>lock নয় — version/timestamp দিয়ে commit-এ conflict চেক</td></tr>
+<tr><td>ভালো যখন</td><td>conflict বেশি, contention বেশি</td><td>conflict কম (বেশিরভাগ read)</td></tr>
+<tr><td>দাম</td><td>lock wait, deadlock ঝুঁকি</td><td>conflict হলে retry দরকার</td></tr>
+</table>
+<div class="callout best"><span class="tag">Deadlock কমানো</span>
+সব transaction-এ resource একই <b>ক্রমে</b> lock করুন (যেমন সবসময় account id ছোট থেকে বড়), transaction ছোট রাখুন, আর deadlock হলে retry logic রাখুন। .NET/EF Core-এ optimistic concurrency (<code>rowversion</code>/<code>xmin</code>) খুব প্রচলিত।</div>
+</template>
+
+<template data-page="index">
+<h2 class="title">১০. Indexing & Query Optimization</h2>
+<p class="lead">Index ছাড়া বড় table-এ query মানে full scan। সঠিক index-ই performance-এর #১ চাবি — কিন্তু ভুল/অতিরিক্ত index write ধীর করে।</p>
+
+<h3>Index কীভাবে কাজ করে</h3>
+<p>Index (সাধারণত <span class="kw">B-Tree</span>) একটা sorted lookup structure — column-এর মান দিয়ে row-এর অবস্থান দ্রুত খুঁজে দেয়, পুরো table না পড়ে। বইয়ের index-এর মতো।</p>
+<div class="diagram"><pre>
+Index Seek  → index দিয়ে সরাসরি অল্প কিছু row-এ লাফ (দ্রুত, কম কাজ) ✅
+Index Scan  → পুরো index পড়া (seek-এর চেয়ে বেশি কাজ)
+Table/Seq Scan → পুরো table পড়া (index নেই/অকেজো — বড় table-এ ধীর) ⚠
+</pre></div>
+
+<h3>Index-এর ধরন</h3>
+<table>
+<tr><th>ধরন</th><th>কী</th></tr>
+<tr><td><span class="kw">Clustered</span> <span class="pill ms">MS</span></td><td>table-এর row <b>physically</b> এই index-এর ক্রমে সাজানো — প্রতি table-এ একটাই (SQL Server-এ PK default clustered)</td></tr>
+<tr><td><span class="kw">Non-clustered</span></td><td>আলাদা structure, row-এর pointer রাখে — একাধিক হতে পারে</td></tr>
+<tr><td><span class="kw">Composite</span></td><td>একাধিক column-এ (<code>(customer_id, created_at)</code>) — ক্রম গুরুত্বপূর্ণ</td></tr>
+<tr><td><span class="kw">Covering</span></td><td>query-র সব column index-এই আছে → table ছোঁয়াই লাগে না (<span class="pill ms">MS</span> <code>INCLUDE</code>)</td></tr>
+<tr><td><span class="kw">Unique</span></td><td>uniqueness enforce + index দুটোই</td></tr>
+</table>
+<pre><span class="c">-- composite + covering</span>
+<span class="k">CREATE INDEX</span> ix_orders_cust <span class="k">ON</span> orders (customer_id, created_at);
+<span class="c">-- SQL Server covering (INCLUDE non-key column)</span>
+<span class="k">CREATE INDEX</span> ix_orders_cover <span class="k">ON</span> orders (customer_id) <span class="k">INCLUDE</span> (amount, status);</pre>
+<div class="callout behind"><span class="tag">PG-তে clustered নেই</span>
+<span class="pill pg">PG</span>-তে table হলো "heap" — সব index secondary (SQL Server-এর clustered-এর সরাসরি সমতুল্য নেই)। <code>CLUSTER</code> command এককালীন physically sort করে কিন্তু maintain করে না। তাই SQL Server-এর clustered-index চিন্তা PG-তে সরাসরি খাটে না।</div>
+
+<h4>B-Tree কীভাবে এত দ্রুত খোঁজে</h4>
+<p>বেশিরভাগ index একটা <span class="kw">B-Tree</span> — balanced, sorted tree। খোঁজা root থেকে শুরু হয়ে branch হয়ে leaf-এ নামে, প্রতি ধাপে বড় একটা অংশ বাদ পড়ে — তাই ১০ কোটি row-এও মাত্র ৩-৪ ধাপ (<code>O(log n)</code>)।</p>
+<div class="diagram"><pre>
+খুঁজছি: id = 57
+                 [ 40 | 80 ]                ← root
+                /     |     \
+        [10|25]   [50|65]   [85|95]         ← branch  (57 → 50-65 এর দিকে)
+                    |
+              ...[50 55 57 60 65]...        ← leaf    (57 পাওয়া গেল)
+</pre></div>
+<p>Leaf-গুলো sorted ও পরস্পর linked বলে <b>range query</b> (<code>BETWEEN</code>, <code>&gt;</code>, <code>ORDER BY</code>)-ও দ্রুত — একটা মান খুঁজে পাশ দিয়ে scan করলেই হয়। এজন্যই B-Tree equality ও range দুটোতেই ভালো (Hash index শুধু equality)।</p>
+
+<h4>Composite index — column-এর ক্রম (leftmost prefix)</h4>
+<p>Composite index <code>(a, b, c)</code> মানে data আগে <code>a</code>, তারপর <code>b</code>, তারপর <code>c</code> দিয়ে sorted। তাই এটা শুধু ঐ prefix-ক্রম অনুযায়ী কাজে লাগে:</p>
+<table>
+<tr><th>Query filter</th><th>index (a,b,c) কাজে লাগে?</th></tr>
+<tr><td><code>WHERE a = ?</code></td><td>✅ হ্যাঁ</td></tr>
+<tr><td><code>WHERE a = ? AND b = ?</code></td><td>✅ হ্যাঁ</td></tr>
+<tr><td><code>WHERE a = ? AND b = ? AND c = ?</code></td><td>✅ পুরোপুরি</td></tr>
+<tr><td><code>WHERE b = ?</code> (a ছাড়া)</td><td>❌ না (leftmost <code>a</code> নেই)</td></tr>
+<tr><td><code>WHERE c = ?</code></td><td>❌ না</td></tr>
+</table>
+<div class="callout best"><span class="tag">Column order নিয়ম</span>
+Composite index-এ equality-filter হওয়া column আগে, range column শেষে দিন। <code>(customer_id, created_at)</code> → <code>WHERE customer_id = ? AND created_at &gt; ?</code>-এ নিখুঁত; কিন্তু শুধু <code>created_at</code> filter করলে অকেজো। অর্থাৎ column order = আপনার query pattern।</div>
+
+<h4>Selectivity — সব column-এ index লাভজনক নয়</h4>
+<p>Index তখনই সাহায্য করে যখন সেটা result-কে <b>অল্প</b> row-এ নামায় (high selectivity)। <code>email</code>-এর মতো প্রায়-unique column-এ index দারুণ। কিন্তু <code>gender</code>/<code>is_active</code>-এর মতো low-cardinality column-এ (মাত্র ২-৩ রকম মান) index প্রায়ই অকেজো — engine দেখে অর্ধেক table-ই মেলে, তাই index না নিয়ে সরাসরি scan সস্তা মনে করে।</p>
+
+<h4>Index কখন ক্ষতি করে</h4>
+<div class="callout mistake"><span class="tag">"সব column-এ index" = ভুল</span>
+প্রতিটা index <b>write ধীর করে</b> — প্রতিটা INSERT/UPDATE/DELETE-এ সংশ্লিষ্ট সব index-ও update করতে হয়, আর প্রতিটা index storage নেয়। ১০টা index-এর table-এ write ভয়ানক ধীর হতে পারে। নিয়ম: শুধু যেসব column আসলে WHERE/JOIN/ORDER BY-তে লাগে সেখানে index দিন; কাজে-না-লাগা index খুঁজে (<code>pg_stat_user_indexes</code> / SQL Server DMV) বাদ দিন।</div>
+
+<h3>PostgreSQL বনাম SQL Server — index পার্থক্য</h3>
+<p>দুটোতেই B-Tree মূল index, কিন্তু কয়েকটা মৌলিক পার্থক্য আছে — সবচেয়ে বড়টা table storage model নিয়ে।</p>
+
+<h4>১) Heap বনাম Clustered (সবচেয়ে বড় পার্থক্য)</h4>
+<ul>
+<li><b><span class="pill ms">MS</span> SQL Server:</b> table সাধারণত একটা <b>clustered index</b>-এ physically sorted থাকে (PK default-এ clustered) — clustered index-এর leaf level-ই আসল data row। প্রতি table-এ <b>একটাই</b> clustered index; না থাকলে table একটা "heap"।</li>
+<li><b><span class="pill pg">PG</span> PostgreSQL:</b> table <b>সবসময় heap</b> (row unordered)। কোনো true clustered index নেই — <b>সব index secondary</b>, প্রতিটা index entry row-এর physical অবস্থান (<code>ctid</code>) point করে। <code>CLUSTER</code> command এককালীন physically sort করে কিন্তু তা maintain করে না।</li>
+</ul>
+<div class="callout why"><span class="tag">এর ফল কী</span>
+SQL Server-এ nonclustered index থেকে পুরো row পেতে <b>key lookup</b> লাগে (clustered key দিয়ে আসল row খোঁজা) — তাই clustered key ছোট রাখা ও covering index গুরুত্বপূর্ণ। PostgreSQL-এ index → <code>ctid</code> → heap থেকে row আনে (index-only scan হলে heap ছোঁয়াও লাগে না)। SQL Server থেকে আসা dev-রা PG-তে "clustered index কই?" খোঁজেন — উত্তর: নেই, PG heap-ভিত্তিক, তাই সঠিক secondary index-ই ভরসা।</div>
+
+<h4>২) Index type-এর বৈচিত্র্য</h4>
+<table>
+<tr><th></th><th><span class="pill pg">PostgreSQL</span></th><th><span class="pill ms">SQL Server</span></th></tr>
+<tr><td>সাধারণ</td><td>B-Tree, Hash</td><td>B-Tree (rowstore) clustered/nonclustered</td></tr>
+<tr><td>বিশেষ</td><td><b>GIN, GiST, SP-GiST, BRIN</b> — JSONB, array, full-text, geo, বিশাল sorted table</td><td><b>Columnstore</b> (analytics), full-text, spatial, XML index</td></tr>
+<tr><td>Memory-optimized</td><td>—</td><td>Hash index (memory-optimized table-এ)</td></tr>
+</table>
+<p>PostgreSQL-এর GIN/GiST-এর সরাসরি সমতুল্য SQL Server-এ নেই; SQL Server-এ JSON index করতে computed column + সাধারণ index লাগে।</p>
+
+<h4>৩) Syntax ও feature — মিল ও অমিল</h4>
+<table>
+<tr><th>Feature</th><th><span class="pill pg">PostgreSQL</span></th><th><span class="pill ms">SQL Server</span></th></tr>
+<tr><td>Partial / Filtered</td><td>Partial index <code>WHERE</code> — নমনীয় (যেকোনো expression)</td><td>Filtered index <code>WHERE</code> — কিছু সীমাবদ্ধতা</td></tr>
+<tr><td>Covering</td><td><code>INCLUDE</code> (PG 11+)</td><td><code>INCLUDE</code></td></tr>
+<tr><td>Expression index</td><td>সরাসরি <code>(LOWER(email))</code></td><td>আগে computed column বানিয়ে তারপর index</td></tr>
+<tr><td>Index-only scan</td><td>হ্যাঁ (visibility map-নির্ভর)</td><td>covering index → key lookup এড়ায়</td></tr>
+</table>
+
+<h4>৪) Maintenance</h4>
+<ul>
+<li><b><span class="pill pg">PG</span>:</b> MVCC → dead tuple → index <b>bloat</b>; নিয়মিত <code>VACUUM</code>, মাঝে মাঝে <code>REINDEX</code>। index-only scan visibility map-এর ওপর নির্ভরশীল।</li>
+<li><b><span class="pill ms">MS</span>:</b> সময়ের সাথে <b>fragmentation</b> → <code>REBUILD</code>/<code>REORGANIZE</code>; <code>FILLFACTOR</code> সেট করে page-এ ফাঁকা রাখা।</li>
+</ul>
+
+<h3>Execution Plan ও SARGable query</h3>
+<p><span class="kw">Execution plan</span> দেখায় engine কীভাবে query চালাবে (seek না scan, কোন join, cost কত)। <span class="pill pg">PG</span>: <code>EXPLAIN ANALYZE</code>; <span class="pill ms">MS</span>: actual execution plan / <code>SET STATISTICS IO, TIME ON</code>।</p>
+<div class="callout mistake"><span class="tag">SARGable — index ভাঙার #১ কারণ</span>
+Indexed column-এর ওপর function/গণনা লাগালে index <b>ব্যবহার হয় না</b> (non-SARGable):
+<pre style="margin:8px 0"><span class="c">-- ❌ index অকেজো (column-এ function)</span>
+<span class="k">WHERE</span> <span class="k">YEAR</span>(created_at) = 2026
+<span class="c">-- ✅ SARGable (range — index seek)</span>
+<span class="k">WHERE</span> created_at &gt;= <span class="k">'2026-01-01'</span> <span class="k">AND</span> created_at &lt; <span class="k">'2027-01-01'</span></pre>
+একইভাবে <code>WHERE amount * 2 &gt; 100</code>-এর বদলে <code>amount &gt; 50</code>। column-কে "খালি" রাখুন, রূপান্তর ডান পাশে।</div>
+<div class="callout behind"><span class="tag">Statistics ও Parameter Sniffing</span>
+Engine <b>statistics</b> (data distribution) দেখে plan বানায় — পুরনো statistics = খারাপ plan। <b>Parameter sniffing</b> <span class="pill ms">MS</span>: প্রথমবার যে parameter-এ compile হয়, সেই plan পরের ভিন্ন parameter-এও ব্যবহার হয় — কখনো খারাপ হয়। উপায়: <code>OPTION (RECOMPILE)</code>, <code>OPTIMIZE FOR</code>, বা statistics update।</div>
+</template>
+
+<template data-page="perf">
+<h2 class="title">১১. Performance · Security · Backup</h2>
+<p class="lead">দ্রুত query, নিরাপদ access, আর data সুরক্ষা — production DB চালানোর দৈনন্দিন।</p>
+
+<h3>Pagination — OFFSET বনাম Keyset</h3>
+<pre><span class="c">-- ❌ ধীর: বড় OFFSET মানে আগের সব row skip করতে পড়তে হয়</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> orders <span class="k">ORDER BY</span> id <span class="k">LIMIT</span> 20 <span class="k">OFFSET</span> 100000;
+
+<span class="c">-- ✅ দ্রুত: keyset (seek) — শেষ দেখা id-র পর থেকে</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> orders <span class="k">WHERE</span> id &gt; 100000 <span class="k">ORDER BY</span> id <span class="k">LIMIT</span> 20;</pre>
+<div class="callout best"><span class="tag">Keyset pagination</span>
+"পরের পাতা" ধরনের infinite scroll-এ OFFSET নয়, <b>keyset</b> ব্যবহার করুন — শেষ row-এর key মনে রেখে <code>WHERE key &gt; :last</code>। index-এ seek করে, তাই পাতা যত গভীরই হোক গতি একই থাকে।</div>
+
+<h3>Batch, Bulk Insert, Query Tuning</h3>
+<ul>
+<li><b>Batch operations:</b> লাখো row একসাথে না করে batch-এ (যেমন 1000/বার) — lock/log/memory চাপ কমে।</li>
+<li><b>Bulk insert:</b> <span class="pill pg">PG</span> <code>COPY</code> (হাজার গুণ দ্রুত row-by-row INSERT-এর চেয়ে); <span class="pill ms">MS</span> <code>BULK INSERT</code>/<code>bcp</code>/<code>SqlBulkCopy</code>।</li>
+<li><b>Query tuning:</b> execution plan দেখুন → seek না scan; দরকারি index দিন; শুধু দরকারি column নিন (<code>SELECT *</code> নয়); N+1 query এড়ান (join/batch)।</li>
+</ul>
+
+<h3>Security — Users, Roles, Permissions</h3>
+<pre><span class="k">CREATE ROLE</span> readonly;
+<span class="k">GRANT SELECT</span> <span class="k">ON ALL TABLES IN SCHEMA</span> public <span class="k">TO</span> readonly;   <span class="c">-- PG</span>
+<span class="k">GRANT INSERT</span>, <span class="k">UPDATE</span> <span class="k">ON</span> orders <span class="k">TO</span> app_user;
+<span class="k">REVOKE DELETE</span> <span class="k">ON</span> orders <span class="k">FROM</span> app_user;</pre>
+<div class="callout best"><span class="tag">Least privilege</span>
+প্রতিটা app/service-কে শুধু যা দরকার তার permission দিন (role-এর মাধ্যমে, সরাসরি user-এ নয়)। App কখনো DB superuser/<code>sa</code> দিয়ে connect করবে না। sensitive column-এ আলাদা permission/masking বিবেচনা করুন।</div>
+
+<h3>Backup & Maintenance</h3>
+<table>
+<tr><th>কাজ</th><th>PostgreSQL</th><th>SQL Server</th></tr>
+<tr><td>Backup</td><td><code>pg_dump</code> / <code>pg_basebackup</code></td><td><code>BACKUP DATABASE</code></td></tr>
+<tr><td>Restore</td><td><code>pg_restore</code> / <code>psql</code></td><td><code>RESTORE DATABASE</code></td></tr>
+<tr><td>Statistics update</td><td><code>ANALYZE</code></td><td><code>UPDATE STATISTICS</code></td></tr>
+<tr><td>Index maintenance</td><td><code>REINDEX</code> / VACUUM</td><td>Rebuild / Reorganize</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+Backup আছে কিন্তু কখনো <b>restore test</b> করা হয়নি — বিপর্যয়ের দিন জানা যায় backup অকেজো। নিয়মিত restore drill করুন। আর point-in-time recovery-র জন্য WAL/transaction-log backup রাখুন, শুধু full backup নয়।</div>
+</template>
+
+<template data-page="pg1">
+<h2 class="title">১২. PostgreSQL — Types & Features</h2>
+<p class="lead">Portable SQL শেখা হলো — এবার PostgreSQL-এর নিজস্ব শক্তি: rich data type, feature ও index।</p>
+
+<h3>Architecture</h3>
+<table>
+<tr><th>স্তর</th><th>মানে</th></tr>
+<tr><td><span class="kw">Cluster</span></td><td>একটা PG instance (একটা data directory) — একাধিক database ধরে</td></tr>
+<tr><td><span class="kw">Database</span></td><td>cluster-এর ভেতরে একটা database</td></tr>
+<tr><td><span class="kw">Schema</span></td><td>database-এর ভেতরে namespace (default <code>public</code>)</td></tr>
+<tr><td><span class="kw">Tablespace</span></td><td>data physically কোন disk location-এ থাকবে</td></tr>
+</table>
+
+<h3>Data Types</h3>
+<table>
+<tr><th>Type</th><th>ব্যবহার</th></tr>
+<tr><td><code>UUID</code></td><td>distributed unique id (<code>gen_random_uuid()</code>)</td></tr>
+<tr><td><code>JSON</code> vs <code>JSONB</code></td><td>JSON = হুবহু text; <b>JSONB</b> = binary, indexable, দ্রুত — প্রায় সবসময় JSONB</td></tr>
+<tr><td><code>ARRAY</code></td><td>একটা column-এ array (<code>tags TEXT[]</code>)</td></tr>
+<tr><td><code>ENUM</code></td><td>নির্দিষ্ট মানের সেট (<code>status</code>)</td></tr>
+<tr><td><code>BYTEA</code></td><td>binary data</td></tr>
+</table>
+<pre><span class="k">SELECT</span> data-&gt;&gt;<span class="k">'name'</span> <span class="k">AS</span> name          <span class="c">-- JSONB থেকে text field</span>
+<span class="k">FROM</span> events <span class="k">WHERE</span> data @&gt; <span class="k">'{"type":"login"}'</span>;  <span class="c">-- JSONB contains (GIN index)</span>
+
+<span class="k">SELECT</span> * <span class="k">FROM</span> posts <span class="k">WHERE</span> <span class="k">'redis'</span> = <span class="k">ANY</span>(tags);  <span class="c">-- array membership</span></pre>
+
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>কাজ</th></tr>
+<tr><td><code>SERIAL</code> / <code>IDENTITY</code></td><td>auto-increment (আধুনিকে <code>GENERATED ALWAYS AS IDENTITY</code> সুপারিশ)</td></tr>
+<tr><td><code>RETURNING</code></td><td>INSERT/UPDATE/DELETE থেকে সরাসরি row ফেরত</td></tr>
+<tr><td><code>ON CONFLICT</code></td><td>UPSERT (অধ্যায় ২)</td></tr>
+<tr><td><code>COPY</code></td><td>দ্রুত bulk load/export</td></tr>
+<tr><td><code>GENERATED</code> column</td><td>অন্য column থেকে computed (stored)</td></tr>
+</table>
+<pre><span class="k">INSERT INTO</span> orders (customer_id, amount) <span class="k">VALUES</span> (100, 500)
+<span class="k">RETURNING</span> id, created_at;    <span class="c">-- নতুন id সাথে সাথে পাওয়া (extra SELECT লাগে না)</span>
+
+<span class="k">CREATE TABLE</span> items (
+  price   <span class="k">NUMERIC</span>, qty <span class="k">INT</span>,
+  total   <span class="k">NUMERIC</span> <span class="k">GENERATED ALWAYS AS</span> (price * qty) <span class="k">STORED</span>
+);</pre>
+
+<h3>Indexes — B-Tree ছাড়াও অনেক</h3>
+<table>
+<tr><th>Index</th><th>কখন</th></tr>
+<tr><td><span class="kw">B-Tree</span></td><td>default — equality/range (<code>=</code>, <code>&lt;</code>, <code>&gt;</code>, ORDER BY)</td></tr>
+<tr><td><span class="kw">Hash</span></td><td>শুধু equality (<code>=</code>)</td></tr>
+<tr><td><span class="kw">GIN</span></td><td>JSONB, array, full-text — "একটা মানে অনেক key"</td></tr>
+<tr><td><span class="kw">GiST</span></td><td>geometric, range, nearest-neighbor</td></tr>
+<tr><td><span class="kw">BRIN</span></td><td>বিশাল, physically-sorted table (time-series) — খুব ছোট index</td></tr>
+<tr><td><span class="kw">Partial</span></td><td>row-এর subset-এ (<code>WHERE status='ACTIVE'</code>) — ছোট, দ্রুত</td></tr>
+<tr><td><span class="kw">Expression</span></td><td>expression-এর ওপর (<code>LOWER(email)</code>) — function query SARGable করে</td></tr>
+</table>
+<pre><span class="k">CREATE INDEX</span> ix_events_data <span class="k">ON</span> events <span class="k">USING GIN</span> (data);          <span class="c">-- JSONB</span>
+<span class="k">CREATE INDEX</span> ix_active <span class="k">ON</span> orders (created_at) <span class="k">WHERE</span> status = <span class="k">'ACTIVE'</span>;  <span class="c">-- partial</span>
+<span class="k">CREATE INDEX</span> ix_email_lower <span class="k">ON</span> users (<span class="k">LOWER</span>(email));           <span class="c">-- expression</span></pre>
+</template>
+
+<template data-page="pg2">
+<h2 class="title">১৩. PostgreSQL — Performance & Internals</h2>
+<p class="lead">MVCC, VACUUM, EXPLAIN, locking, partitioning ও advanced object — PG production-এ যা জানতেই হয়।</p>
+
+<h3>MVCC — কেন VACUUM দরকার</h3>
+<p>PG <span class="kw">MVCC</span> (Multi-Version Concurrency Control) ব্যবহার করে: row update/delete করলে পুরনো version সাথে সাথে মোছে না — নতুন version বানায়, পুরনোটা "dead tuple" হয়ে থাকে (যাতে চলমান transaction তার snapshot দেখতে পায়)। এজন্যই <b>reader কখনো writer-কে block করে না</b> (আর উল্টোটাও)।</p>
+<div class="callout why"><span class="tag">এজন্যই VACUUM</span>
+Dead tuple জমতে থাকলে table ফুলে যায় (bloat) ও ধীর হয়। <code>VACUUM</code> সেই dead tuple-এর জায়গা পুনর্ব্যবহারযোগ্য করে; <code>AUTOVACUUM</code> এটা background-এ স্বয়ংক্রিয়ভাবে করে। <code>VACUUM FULL</code> table সম্পূর্ণ rewrite করে জায়গা OS-কে ফেরত দেয় — কিন্তু exclusive lock নেয় (production-এ সাবধান)। <code>ANALYZE</code> planner-এর statistics update করে।</div>
+
+<h3>EXPLAIN — plan পড়া</h3>
+<pre><span class="k">EXPLAIN ANALYZE</span> <span class="k">SELECT</span> * <span class="k">FROM</span> orders <span class="k">WHERE</span> customer_id = 100;
+<span class="c">-- Seq Scan দেখলে → index নেই/অকেজো; Index Scan/Index Only Scan → ভালো</span>
+<span class="c">-- ANALYZE আসল সময় ও প্রকৃত row count দেখায় (estimated vs actual মেলে?)</span></pre>
+
+<h3>Concurrency — Row locking</h3>
+<table>
+<tr><th>Clause</th><th>কাজ</th></tr>
+<tr><td><code>FOR UPDATE</code></td><td>নির্বাচিত row lock — অন্যে update/lock করতে পারবে না</td></tr>
+<tr><td><code>FOR SHARE</code></td><td>share lock — অন্যে পড়তে পারবে, update নয়</td></tr>
+<tr><td><code>SKIP LOCKED</code></td><td>lock করা row বাদ দিয়ে এগোও (job queue-তে সোনা!)</td></tr>
+<tr><td><code>NOWAIT</code></td><td>lock না পেলে অপেক্ষা না করে error</td></tr>
+</table>
+<pre><span class="c">-- Postgres দিয়ে reliable job queue (একই job দুই worker নেবে না)</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> jobs
+<span class="k">WHERE</span> status = <span class="k">'PENDING'</span>
+<span class="k">ORDER BY</span> created_at
+<span class="k">FOR UPDATE SKIP LOCKED</span> <span class="k">LIMIT</span> 1;</pre>
+<div class="callout best"><span class="tag">SKIP LOCKED = queue superpower</span>
+একাধিক worker একই <code>jobs</code> table থেকে <code>FOR UPDATE SKIP LOCKED</code> দিয়ে টানলে প্রত্যেকে ভিন্ন row পায় (locked গুলো skip করে) — কোনো job দুবার process হয় না, আলাদা queue system ছাড়াই।</div>
+
+<h3>Partitioning</h3>
+<p>বিশাল table-কে ছোট physical অংশে ভাগ — query শুধু প্রাসঙ্গিক partition পড়ে (partition pruning), maintenance সহজ।</p>
+<pre><span class="k">CREATE TABLE</span> orders (id <span class="k">BIGINT</span>, created_at <span class="k">DATE</span>) <span class="k">PARTITION BY RANGE</span> (created_at);
+<span class="k">CREATE TABLE</span> orders_2026 <span class="k">PARTITION OF</span> orders
+    <span class="k">FOR VALUES FROM</span> (<span class="k">'2026-01-01'</span>) <span class="k">TO</span> (<span class="k">'2027-01-01'</span>);</pre>
+<p>ধরন: <b>Range</b> (তারিখ/সংখ্যা পরিসর), <b>List</b> (নির্দিষ্ট মান — region), <b>Hash</b> (সমান বণ্টন)।</p>
+
+<h4>কেন partition — আসল সুবিধা</h4>
+<ul>
+<li><b>Maintenance:</b> পুরনো data মুছতে ধীর <code>DELETE</code>-এর বদলে পুরো একটা partition <b>এক নিমেষে DROP</b> (যেমন গত বছরের <code>orders_2025</code> partition drop — instant)।</li>
+<li><b>Query performance — partition pruning:</b> planner query-র শর্ত দেখে <b>শুধু প্রাসঙ্গিক partition</b> scan করে, বাকিগুলো সম্পূর্ণ বাদ দেয়। যেমন <code>WHERE created_at = '2026-07-01'</code> শুধু <code>orders_2026</code> partition পড়ে — এটাই মূল গতি-সুবিধা।</li>
+<li><b>ছোট index ও parallel:</b> প্রতি partition-এর নিজস্ব ছোট index — দ্রুত maintenance ও scan; একাধিক partition parallel-এ পড়া যায়।</li>
+</ul>
+<div class="callout mistake"><span class="tag">Partitioning-এর ফাঁদ</span>
+<ul style="margin:4px 0">
+<li>Query-তে <b>partition key না থাকলে</b> pruning হয় না → সব partition scan (উল্টো ধীর)। partition key প্রায় সব query-তে থাকা উচিত।</li>
+<li>অতিরিক্ত partition (হাজারো) planning overhead বাড়ায়।</li>
+<li>Unique constraint / PK-তে partition key <b>অন্তর্ভুক্ত</b> করতে হয়।</li>
+</ul></div>
+<div class="callout why"><span class="tag">Partition বনাম Index বনাম Sharding</span>
+<b>Index</b> = table-এর ভেতরে দ্রুত lookup (fine-grained)। <b>Partition</b> = এক server-এ table-কে বড় physical টুকরোয় ভাগ (coarse — সাধারণত index-এর <b>সাথে</b>, বিকল্প নয়)। <b>Sharding</b> = একাধিক <b>server</b>-এ data ভাগ (horizontal scale)। Partition এক মেশিনের বিশাল table সামলায়; shard মেশিনের সীমা পেরোয়। SQL Server-এও partitioned table আছে (partition function + scheme)।</div>
+
+<h3>Advanced</h3>
+<ul>
+<li><b>Materialized View</b> — <code>CREATE MATERIALIZED VIEW</code> + <code>REFRESH MATERIALIZED VIEW CONCURRENTLY</code>।</li>
+<li><b>Functions / Procedures</b> — <code>CREATE FUNCTION</code> (মান ফেরে, query-তে ব্যবহার) vs <code>CREATE PROCEDURE</code> (transaction control সহ, <code>CALL</code>)।</li>
+<li><b>Triggers</b> — INSERT/UPDATE/DELETE-এ স্বয়ংক্রিয় function চালানো (audit log)।</li>
+<li><b>Extensions</b> — <code>CREATE EXTENSION</code>: <code>pgcrypto</code>, <code>uuid-ossp</code>, <code>postgis</code>, <code>pg_trgm</code>।</li>
+<li><b>pg_stat_statements</b> — কোন query সবচেয়ে বেশি সময়/call নিচ্ছে তার aggregate — tuning-এর #১ tool।</li>
+</ul>
+<div class="callout best"><span class="tag">pg_stat_statements দিয়ে শুরু</span>
+Performance সমস্যায় অনুমান না করে <code>pg_stat_statements</code> দেখুন — total time অনুযায়ী top query বের করে সেগুলোই আগে tune করুন (সবচেয়ে বেশি ROI)।</div>
+</template>
+
+<template data-page="mssql1">
+<h2 class="title">১৪. SQL Server — Features & Indexes</h2>
+<p class="lead">SQL Server-এর নিজস্ব architecture, feature ও index — .NET stack-এ সবচেয়ে প্রচলিত।</p>
+
+<h3>Architecture</h3>
+<table>
+<tr><th>ধারণা</th><th>মানে</th></tr>
+<tr><td><span class="kw">Database</span></td><td>একটা instance-এ একাধিক database</td></tr>
+<tr><td><span class="kw">Schema</span></td><td>object namespace (<code>dbo</code> default, <code>sales.orders</code>)</td></tr>
+<tr><td><span class="kw">Filegroup</span></td><td>data ফাইলের যৌক্তিক group — I/O ছড়ানো ও management</td></tr>
+<tr><td><span class="kw">TempDB</span></td><td>system database — temp table, sort, version store; সবাই ভাগ করে (bottleneck হতে পারে)</td></tr>
+</table>
+
+<h3>Features</h3>
+<table>
+<tr><th>Feature</th><th>কাজ</th></tr>
+<tr><td><code>IDENTITY</code></td><td>column-level auto-increment (<code>IDENTITY(1,1)</code>)</td></tr>
+<tr><td><code>SEQUENCE</code></td><td>স্বাধীন number generator (একাধিক table জুড়ে শেয়ার করা যায়)</td></tr>
+<tr><td><code>OUTPUT</code></td><td>PG-র <code>RETURNING</code>-এর মতো — affected row ফেরত</td></tr>
+<tr><td><code>MERGE</code></td><td>UPSERT (অধ্যায় ২)</td></tr>
+<tr><td>Table Variable <code>@t</code></td><td>ছোট in-memory-ish set (scope: batch)</td></tr>
+<tr><td>Temp Table <code>#t</code></td><td>TempDB-তে অস্থায়ী table (index দেওয়া যায়, statistics আছে)</td></tr>
+</table>
+<pre><span class="k">INSERT INTO</span> orders (customer_id, amount)
+<span class="k">OUTPUT</span> inserted.id, inserted.created_at    <span class="c">-- নতুন row ফেরত</span>
+<span class="k">VALUES</span> (100, 500);
+
+<span class="k">CREATE TABLE</span> #recent (id <span class="k">BIGINT</span>, amount <span class="k">DECIMAL</span>(12,2));  <span class="c"># = temp table</span></pre>
+<div class="callout behind"><span class="tag">Table variable বনাম temp table</span>
+<code>@table</code> variable ছোট data-তে ঠিক, কিন্তু statistics নেই → planner প্রায়ই ১ row ধরে নেয় (বড় হলে খারাপ plan)। বড়/অনিশ্চিত row হলে <code>#temp</code> table (statistics + index) ব্যবহার করুন।</div>
+
+<h3>Indexes</h3>
+<table>
+<tr><th>Index</th><th>কী</th></tr>
+<tr><td><span class="kw">Clustered</span></td><td>row physically এই ক্রমে সাজানো; প্রতি table একটাই (PK default)</td></tr>
+<tr><td><span class="kw">Nonclustered</span></td><td>আলাদা structure + row pointer; একাধিক</td></tr>
+<tr><td><span class="kw">Filtered</span></td><td>row-এর subset-এ (PG-র partial-এর মতো) — <code>WHERE status='ACTIVE'</code></td></tr>
+<tr><td><span class="kw">Included column</span></td><td><code>INCLUDE</code> দিয়ে covering index (key নয়, শুধু ফেরত দিতে)</td></tr>
+<tr><td><span class="kw">Columnstore</span></td><td>column-oriented, compressed — analytics/aggregate-এ বিশাল দ্রুত (concept)</td></tr>
+</table>
+<pre><span class="k">CREATE NONCLUSTERED INDEX</span> ix_orders_cust
+<span class="k">ON</span> orders (customer_id) <span class="k">INCLUDE</span> (amount, status)
+<span class="k">WHERE</span> status = <span class="k">'ACTIVE'</span>;   <span class="c">-- nonclustered + covering + filtered একসাথে</span></pre>
+</template>
+
+<template data-page="mssql2">
+<h2 class="title">১৫. SQL Server — Performance & Internals</h2>
+<p class="lead">Execution plan পড়া, concurrency নিয়ন্ত্রণ, আর programmable object — SQL Server production-এ।</p>
+
+<h3>Execution Plan ও পরিমাপ</h3>
+<table>
+<tr><th>Tool</th><th>কাজ</th></tr>
+<tr><td>Estimated plan</td><td>না চালিয়ে planner কী ভাবছে (statistics-ভিত্তিক অনুমান)</td></tr>
+<tr><td>Actual plan</td><td>চালিয়ে প্রকৃত row count + সময় (estimated-এর সাথে মেলে?)</td></tr>
+<tr><td><code>SET STATISTICS IO ON</code></td><td>কত logical/physical page read (I/O) হলো</td></tr>
+<tr><td><code>SET STATISTICS TIME ON</code></td><td>CPU ও elapsed time</td></tr>
+<tr><td><span class="kw">Query Store</span></td><td>সময়ের সাথে plan ও performance track করে — regression ধরে, plan force করা যায়</td></tr>
+</table>
+<div class="callout why"><span class="tag">Estimated vs Actual-এর ফারাক</span>
+Actual plan-এ estimated ও actual row count অনেক ভিন্ন দেখলে — statistics পুরনো বা parameter sniffing সমস্যা। এটাই খারাপ plan (ভুল join type, memory grant) ধরার সবচেয়ে বড় সূত্র।</div>
+
+<h3>Concurrency — Locking ও Isolation</h3>
+<table>
+<tr><th>ধারণা</th><th>মানে</th></tr>
+<tr><td>Row / Page / Table lock</td><td>lock-এর granularity — যত মোটা (table) তত কম concurrency</td></tr>
+<tr><td><span class="kw">Lock escalation</span></td><td>অনেক row/page lock জমলে engine একটা table lock-এ "উন্নীত" করে (concurrency কমে)</td></tr>
+<tr><td><span class="kw">Snapshot Isolation</span> / RCSI</td><td>row-versioning (tempdb-তে) — reader-writer একে অপরকে block করে না (PG-সদৃশ)</td></tr>
+</table>
+<div class="callout best"><span class="tag">RCSI চালু করুন</span>
+Classic READ COMMITTED-এ SQL Server reader-writer block করে → blocking chain। <code>ALTER DATABASE ... SET READ_COMMITTED_SNAPSHOT ON</code> দিলে read row-version থেকে আসে, blocking নাটকীয়ভাবে কমে। বেশিরভাগ OLTP system-এ সুপারিশকৃত (tempdb capacity বিবেচনা করে)।</div>
+<div class="callout mistake"><span class="tag">NOLOCK-এর ফাঁদ</span>
+Blocking এড়াতে সবখানে <code>WITH (NOLOCK)</code> (= READ UNCOMMITTED) দেওয়া — এতে <b>dirty read</b>, এমনকি duplicate/missing row আসতে পারে। RCSI-ই সঠিক সমাধান, NOLOCK নয়।</div>
+
+<h3>Programmable objects</h3>
+<ul>
+<li><b>Stored Procedure</b> — <code>CREATE PROCEDURE</code>; compiled plan reuse, complex logic, security boundary।</li>
+<li><b>Functions</b> — scalar / table-valued (TVF)। <span class="kw">সতর্কতা:</span> scalar UDF প্রতি row-এ চলে → ধীর (আধুনিক SQL Server কিছু inline করে); inline TVF ভালো।</li>
+<li><b>Triggers</b> — DML event-এ auto logic (audit); <code>inserted</code>/<code>deleted</code> pseudo-table।</li>
+<li><b>SQL Agent</b> — scheduled job (backup, maintenance) — concept।</li>
+<li><b>Extended Events</b> — হালকা diagnostic/trace framework (পুরনো SQL Profiler-এর আধুনিক প্রতিস্থাপন) — concept।</li>
+</ul>
+
+<h3>✅ SQL Master Checklist</h3>
+<div class="card">
+<div class="grid2">
+<div>
+<p style="margin:4px 0"><b>Portable SQL</b></p>
+<ul style="margin:0">
+<li>✅ Fundamentals · types · NULL · constraints</li>
+<li>✅ DDL · DML · MERGE/UPSERT</li>
+<li>✅ SELECT · filtering · pagination</li>
+<li>✅ Joins (+ LATERAL/APPLY)</li>
+<li>✅ Aggregation · GROUP BY/HAVING · set ops</li>
+<li>✅ Subqueries · EXISTS · CTE · recursive</li>
+<li>✅ Window functions</li>
+<li>✅ Views · constraints</li>
+<li>✅ Transactions · ACID · isolation · locks</li>
+<li>✅ Indexing · execution plan · SARGable</li>
+<li>✅ Performance · security · backup</li>
+</ul>
+</div>
+<div>
+<p style="margin:4px 0"><b>PostgreSQL</b></p>
+<ul style="margin:0">
+<li>✅ Architecture · JSONB · array · UUID</li>
+<li>✅ RETURNING · ON CONFLICT · COPY · GENERATED</li>
+<li>✅ GIN/GiST/BRIN/partial/expression index</li>
+<li>✅ MVCC · VACUUM · EXPLAIN</li>
+<li>✅ FOR UPDATE · SKIP LOCKED · partitioning</li>
+<li>✅ MatView · functions · triggers · pg_stat_statements</li>
+</ul>
+<p style="margin:10px 0 4px"><b>SQL Server</b></p>
+<ul style="margin:0">
+<li>✅ Filegroups · TempDB · SEQUENCE · OUTPUT</li>
+<li>✅ Temp table vs table variable</li>
+<li>✅ Clustered/filtered/included/columnstore index</li>
+<li>✅ Plan (est vs actual) · Query Store · STATISTICS IO/TIME</li>
+<li>✅ Locking · escalation · Snapshot/RCSI</li>
+<li>✅ Procedures · functions · triggers · Agent · XEvents</li>
+</ul>
+</div>
+</div>
+</div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৬. Important Interview Queries</h2>
+<p class="lead">Interview-এ বারবার ঘুরেফিরে আসা SQL প্রশ্ন — প্রতিটার query + বাংলায় ধাপে ধাপে ব্যাখ্যা "কীভাবে ও কেন কাজ করে"। এগুলো মুখস্থ নয়, <b>বুঝে</b> রাখুন।</p>
+<div class="callout behind"><span class="tag">নমুনা schema (উদাহরণে ব্যবহৃত)</span>
+<code>employees(id, name, salary, department_id, manager_id)</code> · <code>departments(id, name)</code> · <code>customers(id, name)</code> · <code>orders(id, customer_id, amount, created_at)</code>।</div>
+
+<h3>১) N-তম সর্বোচ্চ salary (2nd highest)</h3>
+<pre><span class="c">-- পদ্ধতি ১: DENSE_RANK (সুপারিশ — tie ঠিকভাবে সামলায়)</span>
+<span class="k">WITH</span> r <span class="k">AS</span> (
+  <span class="k">SELECT</span> salary, <span class="k">DENSE_RANK</span>() <span class="k">OVER</span> (<span class="k">ORDER BY</span> salary <span class="k">DESC</span>) <span class="k">AS</span> rnk
+  <span class="k">FROM</span> employees
+)
+<span class="k">SELECT DISTINCT</span> salary <span class="k">FROM</span> r <span class="k">WHERE</span> rnk = 2;   <span class="c">-- N চাইলে rnk = N</span>
+
+<span class="c">-- পদ্ধতি ২: subquery (window ছাড়া, শুধু 2nd)</span>
+<span class="k">SELECT MAX</span>(salary) <span class="k">FROM</span> employees
+<span class="k">WHERE</span> salary &lt; (<span class="k">SELECT MAX</span>(salary) <span class="k">FROM</span> employees);</pre>
+<p><b>ব্যাখ্যা:</b> <code>DENSE_RANK</code> প্রতিটা distinct salary-কে rank দেয় — tie হলে একই rank, আর পরের নম্বর skip করে না। তাই <code>rnk = 2</code> মানে দ্বিতীয় সর্বোচ্চ salary (একাধিক জন একই সর্বোচ্চ salary পেলেও ঠিক কাজ করে)। পদ্ধতি ২-এ: সর্বোচ্চ salary-র <b>চেয়ে ছোট</b> salary-গুলোর মধ্যে সর্বোচ্চটাই দ্বিতীয় সর্বোচ্চ।</p>
+
+<h3>২) Duplicate row খুঁজে বের করা</h3>
+<pre><span class="k">SELECT</span> email, <span class="k">COUNT</span>(*) <span class="k">AS</span> cnt
+<span class="k">FROM</span> users
+<span class="k">GROUP BY</span> email
+<span class="k">HAVING</span> <span class="k">COUNT</span>(*) &gt; 1;</pre>
+<p><b>ব্যাখ্যা:</b> <code>email</code> দিয়ে group করে প্রতিটা group-এ কতটা row আছে গুনি। <code>HAVING COUNT(*) &gt; 1</code> মানে যেসব email একাধিকবার আছে — সেগুলোই duplicate। (WHERE নয়, HAVING — কারণ filter-টা aggregate-এর ওপর।)</p>
+
+<h3>৩) Duplicate মুছে একটা রেখে দেওয়া</h3>
+<pre><span class="k">WITH</span> d <span class="k">AS</span> (
+  <span class="k">SELECT</span> id, <span class="k">ROW_NUMBER</span>() <span class="k">OVER</span> (<span class="k">PARTITION BY</span> email <span class="k">ORDER BY</span> id) <span class="k">AS</span> rn
+  <span class="k">FROM</span> users
+)
+<span class="k">DELETE FROM</span> users <span class="k">WHERE</span> id <span class="k">IN</span> (<span class="k">SELECT</span> id <span class="k">FROM</span> d <span class="k">WHERE</span> rn &gt; 1);</pre>
+<p><b>ব্যাখ্যা:</b> প্রতিটা <code>email</code> group-এ <code>ROW_NUMBER</code> দিই (id ছোট থেকে বড়) — group-এর প্রথম row পায় <code>rn = 1</code> (এটা রাখব), বাকি copy গুলো পায় <code>rn &gt; 1</code> (এগুলো duplicate, মুছব)। ফলে প্রতিটা email-এর একটা (সবচেয়ে ছোট id) টিকে থাকে।</p>
+
+<h3>৪) প্রতি group-এ Top-N (প্রতি department-এ top 2 earner)</h3>
+<pre><span class="k">WITH</span> r <span class="k">AS</span> (
+  <span class="k">SELECT</span> *, <span class="k">DENSE_RANK</span>() <span class="k">OVER</span> (<span class="k">PARTITION BY</span> department_id <span class="k">ORDER BY</span> salary <span class="k">DESC</span>) <span class="k">AS</span> rnk
+  <span class="k">FROM</span> employees
+)
+<span class="k">SELECT</span> * <span class="k">FROM</span> r <span class="k">WHERE</span> rnk &lt;= 2;</pre>
+<p><b>ব্যাখ্যা:</b> <code>PARTITION BY department_id</code> প্রতিটা department-কে আলাদা window বানায়; ভেতরে salary অনুযায়ী rank হয়। <code>rnk &lt;= 2</code> নিলে প্রতি department-এর top 2 পাওয়া যায় (একটার top অন্যটার top-কে প্রভাবিত করে না)। "প্রতি X-এ top N" — এই pattern interview-এর সবচেয়ে সাধারণ window প্রশ্ন।</p>
+
+<h3>৫) নিজের manager-এর চেয়ে বেশি salary (Self Join)</h3>
+<pre><span class="k">SELECT</span> e.name <span class="k">AS</span> employee, e.salary, m.name <span class="k">AS</span> manager, m.salary <span class="k">AS</span> mgr_salary
+<span class="k">FROM</span> employees e
+<span class="k">JOIN</span> employees m <span class="k">ON</span> e.manager_id = m.id
+<span class="k">WHERE</span> e.salary &gt; m.salary;</pre>
+<p><b>ব্যাখ্যা:</b> একটাই <code>employees</code> table-কে দুটো alias-এ (<code>e</code> = কর্মী, <code>m</code> = manager) নিজের সাথে join করি — <code>e.manager_id = m.id</code> দিয়ে প্রতিটা কর্মীর পাশে তার manager-এর তথ্য বসে। তারপর <code>e.salary &gt; m.salary</code> দিয়ে যাদের salary manager-এর চেয়ে বেশি তাদের বাছি।</p>
+
+<h3>৬) Department গড়ের চেয়ে বেশি salary</h3>
+<pre><span class="c">-- correlated subquery</span>
+<span class="k">SELECT</span> e.* <span class="k">FROM</span> employees e
+<span class="k">WHERE</span> e.salary &gt; (
+  <span class="k">SELECT</span> <span class="k">AVG</span>(x.salary) <span class="k">FROM</span> employees x <span class="k">WHERE</span> x.department_id = e.department_id
+);
+
+<span class="c">-- window (সাধারণত দ্রুত — একবার scan)</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> (
+  <span class="k">SELECT</span> *, <span class="k">AVG</span>(salary) <span class="k">OVER</span> (<span class="k">PARTITION BY</span> department_id) <span class="k">AS</span> dept_avg
+  <span class="k">FROM</span> employees
+) t <span class="k">WHERE</span> salary &gt; dept_avg;</pre>
+<p><b>ব্যাখ্যা:</b> correlated subquery প্রতিটা কর্মীর জন্য তার <b>নিজের</b> department-এর গড় salary বের করে তুলনা করে (বাইরের <code>e.department_id</code> ভেতরে ব্যবহৃত)। window version প্রতিটা row-এর পাশে <code>dept_avg</code> বসিয়ে তারপর filter করে — table একবার পড়ে বলে সাধারণত efficient।</p>
+
+<h3>৭) যে customer-এর কোনো order নেই (Anti-Join)</h3>
+<pre><span class="c">-- NOT EXISTS (সুপারিশ — NULL-নিরাপদ, পঠনযোগ্য)</span>
+<span class="k">SELECT</span> c.* <span class="k">FROM</span> customers c
+<span class="k">WHERE NOT EXISTS</span> (<span class="k">SELECT</span> 1 <span class="k">FROM</span> orders o <span class="k">WHERE</span> o.customer_id = c.id);
+
+<span class="c">-- LEFT JOIN ... IS NULL</span>
+<span class="k">SELECT</span> c.* <span class="k">FROM</span> customers c
+<span class="k">LEFT JOIN</span> orders o <span class="k">ON</span> o.customer_id = c.id
+<span class="k">WHERE</span> o.id <span class="k">IS NULL</span>;</pre>
+<p><b>ব্যাখ্যা:</b> দুটোই "যেসব customer-এর কোনো order নেই" বের করে। LEFT JOIN সব customer আনে; order না থাকলে order-এর column গুলো NULL হয় — তাই <code>o.id IS NULL</code> দিয়ে সেই order-বিহীন customer ধরি। <code>NOT EXISTS</code> বেশি পঠনযোগ্য এবং <code>NOT IN</code>-এর NULL-ফাঁদ এড়ায়।</p>
+
+<h3>৮) Running Total (ক্রমযোজিত যোগফল)</h3>
+<pre><span class="k">SELECT</span> day, revenue,
+       <span class="k">SUM</span>(revenue) <span class="k">OVER</span> (<span class="k">ORDER BY</span> day
+              <span class="k">ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</span>) <span class="k">AS</span> running_total
+<span class="k">FROM</span> daily_sales;</pre>
+<p><b>ব্যাখ্যা:</b> <code>SUM() OVER (ORDER BY day)</code> প্রতিটা row পর্যন্ত (শুরু থেকে current row) সব revenue যোগ করে — অর্থাৎ চলমান মোট। frame স্পষ্ট করা (<code>UNBOUNDED PRECEDING → CURRENT ROW</code>) নিশ্চিত করে ঠিক "এই row পর্যন্ত" যোগ হচ্ছে।</p>
+
+<h3>৯) মোটের শতকরা (Percentage of Total)</h3>
+<pre><span class="k">SELECT</span> category, amount,
+       <span class="k">ROUND</span>(100.0 * amount / <span class="k">SUM</span>(amount) <span class="k">OVER</span> (), 2) <span class="k">AS</span> pct
+<span class="k">FROM</span> sales;</pre>
+<p><b>ব্যাখ্যা:</b> খালি <code>OVER ()</code> মানে পুরো result set-এর window — তাই <code>SUM(amount) OVER ()</code> সব row-এর মোট যোগফল (প্রতিটা row-এর পাশে একই মান)। প্রতিটা amount-কে সেই মোট দিয়ে ভাগ করে × 100 = শতকরা। <code>100.0</code> (দশমিক) রাখায় integer division-এ ফলাফল 0 হয়ে যায় না।</p>
+
+<h3>১০) Row → Column ঘোরানো (Pivot / Conditional Aggregation)</h3>
+<pre><span class="c">-- portable (PG + SQL Server): CASE</span>
+<span class="k">SELECT</span> department_id,
+  <span class="k">SUM</span>(<span class="k">CASE WHEN</span> status = <span class="k">'ACTIVE'</span>   <span class="k">THEN</span> 1 <span class="k">ELSE</span> 0 <span class="k">END</span>) <span class="k">AS</span> active,
+  <span class="k">SUM</span>(<span class="k">CASE WHEN</span> status = <span class="k">'INACTIVE'</span> <span class="k">THEN</span> 1 <span class="k">ELSE</span> 0 <span class="k">END</span>) <span class="k">AS</span> inactive
+<span class="k">FROM</span> employees <span class="k">GROUP BY</span> department_id;
+
+<span class="c">-- PostgreSQL সংক্ষিপ্ত রূপ: FILTER</span>
+<span class="k">SELECT</span> department_id,
+  <span class="k">COUNT</span>(*) <span class="k">FILTER</span> (<span class="k">WHERE</span> status = <span class="k">'ACTIVE'</span>)   <span class="k">AS</span> active,
+  <span class="k">COUNT</span>(*) <span class="k">FILTER</span> (<span class="k">WHERE</span> status = <span class="k">'INACTIVE'</span>) <span class="k">AS</span> inactive
+<span class="k">FROM</span> employees <span class="k">GROUP BY</span> department_id;</pre>
+<p><b>ব্যাখ্যা:</b> প্রতিটা category-র জন্য একটা করে column বানাই — <code>CASE WHEN</code> দিয়ে শুধু ঐ status-এর row-কে 1 (নাহলে 0) ধরে <code>SUM</code> করি, ফলে ঐ category-র count। এভাবে "status" নামের row-ভিত্তিক মানগুলো আলাদা column-এ ঘুরে যায় (pivot) — কোনো special <code>PIVOT</code> syntax ছাড়াই। PG-তে <code>FILTER</code> এর আরও পরিষ্কার রূপ।</p>
+
+<h3>১১) Sequence-এ ফাঁক খোঁজা (LAG)</h3>
+<pre><span class="k">WITH</span> t <span class="k">AS</span> (
+  <span class="k">SELECT</span> id, <span class="k">LAG</span>(id) <span class="k">OVER</span> (<span class="k">ORDER BY</span> id) <span class="k">AS</span> prev_id <span class="k">FROM</span> tickets
+)
+<span class="k">SELECT</span> prev_id + 1 <span class="k">AS</span> gap_start, id - 1 <span class="k">AS</span> gap_end
+<span class="k">FROM</span> t <span class="k">WHERE</span> id - prev_id &gt; 1;</pre>
+<p><b>ব্যাখ্যা:</b> <code>LAG(id)</code> প্রতিটা row-এর ঠিক <b>আগের</b> id দেয়। বর্তমান id আর আগের id-র পার্থক্য যদি 1-এর বেশি হয়, মাঝে কিছু id অনুপস্থিত — সেটাই gap। <code>prev_id + 1</code> থেকে <code>id - 1</code> পর্যন্ত হলো হারানো range। (LEAD দিলে পরের row দেখা যায়।)</p>
+
+<h3>১২) Median (মধ্যমা)</h3>
+<pre><span class="k">SELECT</span> <span class="k">PERCENTILE_CONT</span>(0.5) <span class="k">WITHIN GROUP</span> (<span class="k">ORDER BY</span> salary) <span class="k">AS</span> median_salary
+<span class="k">FROM</span> employees;</pre>
+<p><b>ব্যাখ্যা:</b> <code>PERCENTILE_CONT(0.5)</code> = ৫০তম percentile = median। <code>WITHIN GROUP (ORDER BY salary)</code> salary-কে sort করে ধরে মাঝের মানটা বের করে (জোড় সংখ্যক হলে দুই মাঝের গড়)। PG ও SQL Server (2012+) দুটোতেই আছে — AVG-এর চেয়ে outlier-এ কম প্রভাবিত।</p>
+
+<h3>১৩) মাস অনুযায়ী report (date grouping)</h3>
+<pre><span class="c">-- PostgreSQL</span>
+<span class="k">SELECT</span> <span class="k">date_trunc</span>(<span class="k">'month'</span>, created_at) <span class="k">AS</span> month,
+       <span class="k">COUNT</span>(*) <span class="k">AS</span> orders, <span class="k">SUM</span>(amount) <span class="k">AS</span> revenue
+<span class="k">FROM</span> orders <span class="k">GROUP BY</span> 1 <span class="k">ORDER BY</span> 1;
+
+<span class="c">-- SQL Server</span>
+<span class="k">SELECT</span> <span class="k">FORMAT</span>(created_at, <span class="k">'yyyy-MM'</span>) <span class="k">AS</span> month,
+       <span class="k">COUNT</span>(*) <span class="k">AS</span> orders, <span class="k">SUM</span>(amount) <span class="k">AS</span> revenue
+<span class="k">FROM</span> orders <span class="k">GROUP BY</span> <span class="k">FORMAT</span>(created_at, <span class="k">'yyyy-MM'</span>) <span class="k">ORDER BY</span> month;</pre>
+<p><b>ব্যাখ্যা:</b> তারিখকে মাসের শুরুতে "কেটে" (<code>date_trunc</code>) বা <code>'yyyy-MM'</code> format-এ রূপান্তর করে সেই মাস দিয়ে group করি — ফলে প্রতিটা মাসের order সংখ্যা ও মোট revenue পাওয়া যায় (monthly report)।</p>
+
+<div class="callout best"><span class="tag">Interview-এ সোনালি টিপ</span>
+<ul style="margin:4px 0">
+<li>"প্রতি group-এ top/latest N" শুনলেই → <b>window function</b> (<code>ROW_NUMBER/DENSE_RANK OVER PARTITION BY</code>) ভাবুন।</li>
+<li>"যাদের X নেই" → <b>NOT EXISTS</b> / LEFT JOIN IS NULL (anti-join)।</li>
+<li>"চলমান/ক্রমযোজিত/আগের-পরের" → <b>SUM/LAG/LEAD OVER</b>।</li>
+<li>Duplicate-এ → GROUP BY HAVING (খোঁজা), ROW_NUMBER (মোছা)।</li>
+<li>উত্তরের আগে সবসময় <b>edge case</b> বলুন: NULL, tie, খালি group — interviewer এটাই দেখতে চায়।</li>
+</ul></div>
+</template>
+
+<template data-page="progobj">
+<h2 class="title">১৭. Functions · Procedures · Triggers · Views (গভীরে)</h2>
+<p class="lead">Database-এর ভেতরে reusable logic — কোনটা কী, কখন কোনটা, আর PostgreSQL ও SQL Server-এ কীভাবে লিখবেন (ব্যাখ্যা সহ)।</p>
+
+<h3>Function বনাম Procedure — মূল পার্থক্য</h3>
+<table>
+<tr><th></th><th>Function</th><th>Procedure</th></tr>
+<tr><td>ফেরত দেয়</td><td>একটা মান বা table (return বাধ্যতামূলক)</td><td>ঐচ্ছিক (OUT param / result set)</td></tr>
+<tr><td>কল করা</td><td><code>SELECT fn(...)</code> — query-র ভেতরে</td><td><code>CALL</code> (PG) / <code>EXEC</code> (MS)</td></tr>
+<tr><td>Query-তে ব্যবহার</td><td>হ্যাঁ (SELECT/WHERE/FROM)</td><td>না</td></tr>
+<tr><td>Transaction control</td><td>সাধারণত না</td><td>হ্যাঁ (COMMIT/ROLLBACK করতে পারে)</td></tr>
+<tr><td>উদ্দেশ্য</td><td>মান হিসাব (pure-ish)</td><td>multi-step কাজ (side-effect)</td></tr>
+</table>
+
+<h3>Scalar Function — একটা মান ফেরে</h3>
+<pre><span class="c">-- PostgreSQL</span>
+<span class="k">CREATE FUNCTION</span> order_total(p_order_id <span class="k">BIGINT</span>)
+<span class="k">RETURNS</span> <span class="k">NUMERIC</span> <span class="k">AS</span> $$
+  <span class="k">SELECT</span> <span class="k">COALESCE</span>(<span class="k">SUM</span>(qty * price), 0)
+  <span class="k">FROM</span> order_items <span class="k">WHERE</span> order_id = p_order_id;
+$$ <span class="k">LANGUAGE</span> sql;
+
+<span class="k">SELECT</span> order_total(5);          <span class="c">-- query-তে ব্যবহার</span>
+
+<span class="c">-- SQL Server</span>
+<span class="k">CREATE FUNCTION</span> dbo.OrderTotal(@OrderId <span class="k">BIGINT</span>)
+<span class="k">RETURNS</span> <span class="k">DECIMAL</span>(12,2) <span class="k">AS</span>
+<span class="k">BEGIN</span>
+  <span class="k">RETURN</span> (<span class="k">SELECT</span> <span class="k">COALESCE</span>(<span class="k">SUM</span>(qty * price), 0)
+          <span class="k">FROM</span> order_items <span class="k">WHERE</span> order_id = @OrderId);
+<span class="k">END</span>;</pre>
+<p><b>ব্যাখ্যা:</b> scalar function একটা মান ফেরত দেয় এবং query-র ভেতরে expression-এর মতো ব্যবহার করা যায় — reusable calculation (মোট, discount, format) এক জায়গায় রাখতে ভালো।</p>
+<div class="callout mistake"><span class="tag">Scalar UDF performance ফাঁদ (SQL Server)</span>
+পুরনো SQL Server-এ scalar UDF <b>প্রতিটা row-এর জন্য আলাদা</b> চলে (row-by-row) → বড় query-তে ভয়ানক ধীর, আর execution plan-এ cost লুকিয়ে থাকে। SQL Server 2019+ কিছু scalar UDF inline করে, তবু WHERE/SELECT-এ ভারী scalar UDF সাবধানে — প্রায়ই inline TVF বা সরাসরি expression ভালো।</div>
+
+<h3>Table-Valued Function (TVF) — একটা table ফেরে</h3>
+<pre><span class="c">-- PostgreSQL: RETURNS TABLE</span>
+<span class="k">CREATE FUNCTION</span> recent_orders(p_customer <span class="k">BIGINT</span>, p_days <span class="k">INT</span>)
+<span class="k">RETURNS TABLE</span>(id <span class="k">BIGINT</span>, amount <span class="k">NUMERIC</span>, created_at <span class="k">TIMESTAMP</span>) <span class="k">AS</span> $$
+  <span class="k">SELECT</span> id, amount, created_at <span class="k">FROM</span> orders
+  <span class="k">WHERE</span> customer_id = p_customer
+    <span class="k">AND</span> created_at &gt;= <span class="k">NOW</span>() - (p_days || <span class="k">' days'</span>)::<span class="k">INTERVAL</span>;
+$$ <span class="k">LANGUAGE</span> sql;
+
+<span class="k">SELECT</span> * <span class="k">FROM</span> recent_orders(100, 30);   <span class="c">-- FROM-এ table-এর মতো</span>
+
+<span class="c">-- SQL Server: inline TVF (দ্রুত — plan-এ merge হয়)</span>
+<span class="k">CREATE FUNCTION</span> dbo.RecentOrders(@CustomerId <span class="k">BIGINT</span>, @Days <span class="k">INT</span>)
+<span class="k">RETURNS TABLE AS RETURN</span> (
+  <span class="k">SELECT</span> id, amount, created_at <span class="k">FROM</span> orders
+  <span class="k">WHERE</span> customer_id = @CustomerId <span class="k">AND</span> created_at &gt;= <span class="k">DATEADD</span>(<span class="k">DAY</span>, -@Days, <span class="k">SYSUTCDATETIME</span>())
+);</pre>
+<p><b>ব্যাখ্যা:</b> TVF একটা result table ফেরে যা <code>FROM</code>-এ join/filter করা যায় — parameterized view-এর মতো। SQL Server-এ <b>inline TVF</b> (একটা SELECT) planner মূল query-তে merge করে (দ্রুত); <b>multi-statement TVF</b> আলাদা চলে (statistics নেই, ধীর) — তাই inline-ই পছন্দনীয়।</p>
+
+<h3>Stored Procedure — কাজ সম্পাদন</h3>
+<pre><span class="c">-- PostgreSQL</span>
+<span class="k">CREATE PROCEDURE</span> transfer(p_from <span class="k">BIGINT</span>, p_to <span class="k">BIGINT</span>, p_amt <span class="k">NUMERIC</span>)
+<span class="k">LANGUAGE</span> plpgsql <span class="k">AS</span> $$
+<span class="k">BEGIN</span>
+  <span class="k">UPDATE</span> accounts <span class="k">SET</span> balance = balance - p_amt <span class="k">WHERE</span> id = p_from;
+  <span class="k">UPDATE</span> accounts <span class="k">SET</span> balance = balance + p_amt <span class="k">WHERE</span> id = p_to;
+<span class="k">END</span>; $$;
+
+<span class="k">CALL</span> transfer(1, 2, 100);
+
+<span class="c">-- SQL Server</span>
+<span class="k">CREATE PROCEDURE</span> dbo.Transfer @From <span class="k">BIGINT</span>, @To <span class="k">BIGINT</span>, @Amt <span class="k">DECIMAL</span>(12,2) <span class="k">AS</span>
+<span class="k">BEGIN</span>
+  <span class="k">SET NOCOUNT ON</span>;
+  <span class="k">BEGIN TRAN</span>;
+    <span class="k">UPDATE</span> accounts <span class="k">SET</span> balance = balance - @Amt <span class="k">WHERE</span> id = @From;
+    <span class="k">UPDATE</span> accounts <span class="k">SET</span> balance = balance + @Amt <span class="k">WHERE</span> id = @To;
+  <span class="k">COMMIT</span>;
+<span class="k">END</span>;
+
+<span class="k">EXEC</span> dbo.Transfer @From=1, @To=2, @Amt=100;</pre>
+<p><b>ব্যাখ্যা:</b> procedure একাধিক statement-এর একটা কাজ (যেমন টাকা transfer) সম্পাদন করে এবং transaction control করতে পারে। function-এর মতো query-তে embed করা যায় না — আলাদা <code>CALL</code>/<code>EXEC</code> দিয়ে চালাতে হয়। IN/OUT parameter দিয়ে মান নেওয়া-দেওয়া যায়।</p>
+
+<h3>Trigger — event-এ স্বয়ংক্রিয় logic</h3>
+<pre><span class="c">-- PostgreSQL: function + trigger (salary পরিবর্তন audit)</span>
+<span class="k">CREATE FUNCTION</span> log_salary_change() <span class="k">RETURNS TRIGGER AS</span> $$
+<span class="k">BEGIN</span>
+  <span class="k">INSERT INTO</span> salary_audit(emp_id, old_salary, new_salary, changed_at)
+  <span class="k">VALUES</span> (<span class="k">NEW</span>.id, <span class="k">OLD</span>.salary, <span class="k">NEW</span>.salary, <span class="k">NOW</span>());
+  <span class="k">RETURN</span> <span class="k">NEW</span>;
+<span class="k">END</span>; $$ <span class="k">LANGUAGE</span> plpgsql;
+
+<span class="k">CREATE TRIGGER</span> trg_salary <span class="k">AFTER UPDATE OF</span> salary <span class="k">ON</span> employees
+<span class="k">FOR EACH ROW EXECUTE FUNCTION</span> log_salary_change();
+
+<span class="c">-- SQL Server: inserted/deleted pseudo-table (set-based)</span>
+<span class="k">CREATE TRIGGER</span> trg_salary <span class="k">ON</span> employees <span class="k">AFTER UPDATE AS</span>
+<span class="k">BEGIN</span>
+  <span class="k">INSERT INTO</span> salary_audit(emp_id, old_salary, new_salary, changed_at)
+  <span class="k">SELECT</span> d.id, d.salary, i.salary, <span class="k">SYSUTCDATETIME</span>()
+  <span class="k">FROM</span> inserted i <span class="k">JOIN</span> deleted d <span class="k">ON</span> i.id = d.id
+  <span class="k">WHERE</span> i.salary &lt;&gt; d.salary;
+<span class="k">END</span>;</pre>
+<p><b>ব্যাখ্যা:</b> trigger হলো একটা event (INSERT/UPDATE/DELETE)-এ database নিজে থেকে চালানো logic — audit log, derived value maintain, validation-এ ব্যবহার। PG-তে <code>NEW</code>/<code>OLD</code> দিয়ে row-এর নতুন/পুরনো মান; SQL Server-এ <code>inserted</code>/<code>deleted</code> pseudo-table।</p>
+<div class="callout mistake"><span class="tag">Trigger-এর সতর্কতা</span>
+Trigger "লুকানো" logic — কেউ সাধারণ INSERT করল, পেছনে trigger আরও কাজ করল, debug কঠিন। SQL Server trigger <b>set-based</b> (একবারে সব affected row একসাথে) — <code>inserted</code>/<code>deleted</code>-কে একটা row ধরে লিখলে multi-row update-এ bug হবে। ভারী কাজ trigger-এ না দিয়ে application/procedure-এ রাখা ভালো।</div>
+
+<h3>View (গভীরে)</h3>
+<p>View আগের অধ্যায়ে দেখেছি — এখানে দুটো production feature:</p>
+<pre><span class="k">CREATE VIEW</span> active_orders <span class="k">AS</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> orders <span class="k">WHERE</span> status = <span class="k">'ACTIVE'</span>
+<span class="k">WITH CHECK OPTION</span>;   <span class="c">-- এই view দিয়ে status='ACTIVE' নয় এমন row insert/update ব্লক</span></pre>
+<ul>
+<li><b>Updatable view:</b> সরল single-table view-তে সরাসরি INSERT/UPDATE করা যায় (join/aggregate থাকলে সাধারণত নয়)।</li>
+<li><b>WITH CHECK OPTION:</b> view-এর WHERE শর্ত ভাঙে এমন row view দিয়ে ঢোকানো/বদলানো আটকায়।</li>
+</ul>
+
+<h3>কোনটা কখন — সিদ্ধান্ত</h3>
+<table>
+<tr><th>দরকার</th><th>ব্যবহার করুন</th></tr>
+<tr><td>জটিল query-কে নাম দেওয়া (reuse, পড়তে সহজ)</td><td><span class="kw">View</span></td></tr>
+<tr><td>Parameter সহ query result (table)</td><td><span class="kw">Inline TVF</span></td></tr>
+<tr><td>একটা মান হিসাব (query-তে embed)</td><td><span class="kw">Scalar function</span> (সাবধানে)</td></tr>
+<tr><td>Multi-step কাজ + transaction</td><td><span class="kw">Procedure</span></td></tr>
+<tr><td>Event-এ auto কাজ (audit/validate)</td><td><span class="kw">Trigger</span> (হালকা রাখুন)</td></tr>
+<tr><td>ভারী query একবার cache করে দ্রুত read</td><td><span class="kw">Materialized view</span></td></tr>
+</table>
+</template>
+
+<template data-page="optimize">
+<h2 class="title">১৮. Query Optimization Process</h2>
+<p class="lead">ধীর query "কেন ধীর" অনুমান না করে — একটা পদ্ধতিগত process-এ খুঁজে বের করে ঠিক করা। সাথে দুই মূল হাতিয়ার: execution plan ও profiler।</p>
+
+<div class="diagram"><pre>
+① ধীর query খুঁজুন → ② execution plan পড়ুন → ③ সমস্যা চিহ্নিত → ④ ঠিক করুন → ⑤ মেপে যাচাই
+                                   ↺ (আবার)
+</pre></div>
+
+<h3>ধাপ ১ — ধীর query খুঁজুন (measure, অনুমান নয়)</h3>
+<p>আগে জানুন <b>কোন</b> query আসলে সমস্যা — চোখে নয়, ডেটা দিয়ে:</p>
+<table>
+<tr><th>ধরন</th><th>PostgreSQL</th><th>SQL Server</th></tr>
+<tr><td>Aggregate stats</td><td><code>pg_stat_statements</code></td><td>Query Store / <code>sys.dm_exec_query_stats</code></td></tr>
+<tr><td>Slow query log</td><td><code>log_min_duration_statement</code></td><td>Extended Events</td></tr>
+</table>
+<div class="callout best"><span class="tag">মোট সময়, ধীরতম একক নয়</span>
+সবচেয়ে বেশি <b>মোট</b> সময় নেওয়া query আগে ধরুন (calls × avg time)। একটা query হয়তো ধীর কিন্তু দিনে একবার চলে; আরেকটা দ্রুত কিন্তু লাখবার চলে বলে মোট বোঝা বেশি। <code>pg_stat_statements</code>-এ <code>total_exec_time</code> অনুযায়ী sort করুন।</div>
+
+<h3>ধাপ ২ — Execution Plan পড়ুন</h3>
+<p><span class="kw">Execution plan</span> = engine query-টা <b>কীভাবে</b> চালাবে তার নীলনকশা — কোন index, seek না scan, join-এর ধরন ও ক্রম, আনুমানিক cost ও row সংখ্যা।</p>
+<pre><span class="c">-- PostgreSQL: প্রকৃত সময় ও row সহ</span>
+<span class="k">EXPLAIN ANALYZE</span> <span class="k">SELECT</span> * <span class="k">FROM</span> orders <span class="k">WHERE</span> customer_id = 100;
+
+<span class="c">-- SQL Server</span>
+<span class="k">SET STATISTICS IO</span>, <span class="k">TIME ON</span>;    <span class="c">-- I/O ও সময়; + "Actual Execution Plan" চালু করে চালান</span></pre>
+<div class="callout why"><span class="tag">Execution plan — কেন ব্যবহার করবেন ও সুবিধা</span>
+<b>কেন:</b> plan না দেখে tuning মানে অন্ধকারে ঢিল ছোঁড়া — সময় কোথায় যাচ্ছে তা শুধু <b>অনুমান</b> করা। plan সেটা চোখে <b>দেখিয়ে</b> দেয়।<br>
+<b>সুবিধা:</b> (১) সবচেয়ে ব্যয়বহুল operator চিহ্নিত করে; (২) missing index ধরে (বড় table-এ Seq/Table Scan দেখলে); (৩) খারাপ estimate ধরে (estimated বনাম actual row-এর বড় ফারাক = stale statistics); (৪) আপনার fix সত্যিই plan বদলেছে কি না তা <b>প্রমাণ</b> করে। এটাই tuning-এর #১ হাতিয়ার।</div>
+<p>Plan-এ যা খুঁজবেন: বড় table-এ <b>Seq/Table Scan</b> (index দরকার?), সবচেয়ে ব্যয়বহুল node, <b>estimated ≠ actual</b> row (stale stats), বড় row-এর ওপর nested loop, disk-এ sort/hash spill।</p>
+
+<h3>Profiler / Tracing — চলন্ত workload দেখা</h3>
+<p>Execution plan দেখায় <b>একটা</b> query কীভাবে চলবে; <span class="kw">Profiler / trace</span> দেখায় production-এ <b>আসলে কী চলছে</b> — কোন query, কত duration, কত read, কী parameter, কোথায় deadlock/blocking।</p>
+<table>
+<tr><th>ধরন</th><th>SQL Server</th><th>PostgreSQL</th></tr>
+<tr><td>আধুনিক tracing</td><td><span class="kw">Extended Events</span> (হালকা; পুরনো SQL Profiler-এর প্রতিস্থাপন)</td><td><code>auto_explain</code> (slow query-র plan log), <code>log_min_duration_statement</code></td></tr>
+<tr><td>History / বিশ্লেষণ</td><td>Query Store</td><td><code>pg_stat_statements</code>, pgBadger (log report)</td></tr>
+</table>
+<div class="callout why"><span class="tag">Profiler — কেন ব্যবহার করবেন ও সুবিধা</span>
+<b>কেন:</b> dev-এ query দ্রুত অথচ production-এ ধীর — কারণ আসল data volume, parameter, আর concurrency ভিন্ন। Profiler/trace <b>বাস্তব</b> workload ধরে (কৃত্রিম test নয়)।<br>
+<b>সুবিধা:</b> (১) কোন query সবচেয়ে বেশি চলছে/ধীর — প্রকৃত চিত্র; (২) actual parameter value ধরা (parameter sniffing debug); (৩) deadlock ও blocking chain দেখা; (৪) কোন app/endpoint কোন query পাঠাচ্ছে তা চিহ্নিত করা।</div>
+<div class="callout mistake"><span class="tag">সতর্কতা</span>
+পুরনো <b>SQL Profiler (GUI trace)</b> ভারী — busy production-এ চালালে server ধীর হয়ে যায়। এর বদলে <b>Extended Events</b> (হালকা) ব্যবহার করুন। PG-তে <code>log_min_duration_statement</code> + <code>auto_explain</code> দিয়ে শুধু ধীর query log করুন (সব query নয়)।</div>
+
+<h3>ধাপ ৩ — সাধারণ সমস্যা চিহ্নিত করুন</h3>
+<table>
+<tr><th>Plan-এ যা দেখছেন</th><th>সম্ভাব্য কারণ</th><th>সমাধান</th></tr>
+<tr><td>বড় table-এ Seq/Table Scan + selective filter</td><td>missing index</td><td>WHERE/JOIN column-এ index</td></tr>
+<tr><td>index থাকা সত্ত্বেও scan</td><td>non-SARGable (column-এ function) / ভুল index</td><td>query SARGable করুন, সঠিক composite index</td></tr>
+<tr><td>estimated ≠ actual (বড় ফারাক)</td><td>stale statistics</td><td><code>ANALYZE</code> / <code>UPDATE STATISTICS</code></td></tr>
+<tr><td>একই query হাজারবার (loop)</td><td>N+1 (ORM lazy load)</td><td>join / batch / eager load</td></tr>
+<tr><td>Sort/Hash "spill to disk"</td><td>বড় result / কম memory</td><td>row কমান, order-এর জন্য index</td></tr>
+<tr><td>Implicit conversion warning</td><td>data type mismatch (int column-এ string param)</td><td>param-এর type মেলান</td></tr>
+</table>
+
+<h3>ধাপ ৪ — সমাধান প্রয়োগ (একবারে একটা)</h3>
+<ul>
+<li>সঠিক <b>index</b> (composite/covering/filtered) যোগ বা সাজান।</li>
+<li>Query <b>SARGable</b> করুন — column-এ function নয় (অধ্যায় ১০)।</li>
+<li><b>Statistics</b> update করুন।</li>
+<li>আগে filter (WHERE early), শুধু দরকারি column (<code>SELECT *</code> নয়), <b>keyset pagination</b> (অধ্যায় ১১)।</li>
+<li>N+1 এড়াতে join/batch; data type মেলান।</li>
+</ul>
+
+<h3>ধাপ ৫ — মেপে যাচাই</h3>
+<div class="callout best"><span class="tag">অনুমান নয়, সংখ্যা</span>
+Fix-এর আগে ও পরে একই measurement নিন (<code>EXPLAIN ANALYZE</code> / <code>SET STATISTICS IO,TIME</code> / actual duration)। logical reads বা execution time সত্যিই কমেছে কি না দেখুন। <b>একবারে একটা</b> পরিবর্তন করুন — নাহলে কোনটা কাজ করল বোঝা যাবে না।</div>
+
+<h3>Anti-pattern cheat sheet</h3>
+<table>
+<tr><th>Anti-pattern</th><th>কেন খারাপ</th></tr>
+<tr><td><code>SELECT *</code></td><td>অপ্রয়োজনীয় column/I/O, covering index ভাঙে</td></tr>
+<tr><td>WHERE-এ column-এ function</td><td>non-SARGable → index অকেজো</td></tr>
+<tr><td>বড় <code>OFFSET</code> pagination</td><td>আগের সব row skip করতে পড়তে হয় → keyset ব্যবহার করুন</td></tr>
+<tr><td>N+1 query (ORM)</td><td>হাজার round-trip → join/batch</td></tr>
+<tr><td><code>NOT IN</code> + NULL</td><td>ভুল/খালি ফলাফল → <code>NOT EXISTS</code></td></tr>
+<tr><td>সব কিছুতে index</td><td>write ধীর, storage নষ্ট — শুধু দরকারিটা</td></tr>
+</table>
+<div class="callout best"><span class="tag">Golden rule</span>
+Optimization = <b>measure → plan → fix → measure</b>। কখনো plan না দেখে অনুমানে index যোগ করবেন না; আর প্রতিটা fix সংখ্যা দিয়ে প্রমাণ করুন।</div>
+</template>
+
+<template data-page="replcdc">
+<h2 class="title">১৯. Replication & CDC</h2>
+<p class="lead">Data একাধিক জায়গায় sync রাখা (replication) আর প্রতিটা পরিবর্তনকে event হিসেবে ধরা (CDC) — দুটোরই ভিত্তি একই transaction log, কিন্তু উদ্দেশ্য আলাদা।</p>
+
+<h3>Replication — কী ও কেন</h3>
+<p><span class="kw">Replication</span> = একটা database (primary/master)-এর data আরেকটা database (replica/standby)-তে ক্রমাগত copy করে sync রাখা।</p>
+<h4>সুবিধা (benefit)</h4>
+<ul>
+<li><b>High Availability (HA):</b> primary down হলে replica নতুন primary হয়ে সেবা চালু রাখে (failover)।</li>
+<li><b>Read scaling:</b> read query replica থেকে সার্ভ করে primary-র load কমায়।</li>
+<li><b>Disaster Recovery (DR):</b> অন্য datacenter/region-এ copy — বিপর্যয়ে data বাঁচে।</li>
+<li><b>Reporting/backup offload:</b> ভারী report/backup replica-তে চালান, production-এ প্রভাব পড়ে না।</li>
+</ul>
+<div class="callout why"><span class="tag">Sync বনাম Async replication</span>
+<b>Synchronous:</b> primary commit-এর আগে replica-ও লিখেছে নিশ্চিত করে — zero data loss, কিন্তু latency বাড়ে (replica-র জন্য অপেক্ষা)। <b>Asynchronous:</b> primary সাথে সাথে commit করে, replica একটু পিছিয়ে থাকে — দ্রুত, কিন্তু primary crash-এ সর্বশেষ কিছু transaction হারাতে পারে (replication lag)। বেশিরভাগ read-scaling async; কড়া HA-তে sync।</div>
+
+<h3>PostgreSQL Replication</h3>
+<table>
+<tr><th>ধরন</th><th>কী করে</th><th>ব্যবহার</th></tr>
+<tr><td><span class="kw">Physical / Streaming</span></td><td>WAL byte-level stream করে পুরো cluster হুবহু copy (hot standby = read replica)</td><td>HA, DR, read replica</td></tr>
+<tr><td><span class="kw">Logical</span></td><td>publication/subscription — নির্দিষ্ট table row-level replicate (WAL logical decode)</td><td>selective sync, cross-version upgrade, partial copy</td></tr>
+</table>
+<pre><span class="c">-- Logical replication (PG 10+)</span>
+<span class="c">-- primary এ:</span>
+<span class="k">CREATE PUBLICATION</span> pub_orders <span class="k">FOR TABLE</span> orders, order_items;
+<span class="c">-- replica এ:</span>
+<span class="k">CREATE SUBSCRIPTION</span> sub_orders
+  <span class="k">CONNECTION</span> <span class="k">'host=primary dbname=app'</span> <span class="k">PUBLICATION</span> pub_orders;</pre>
+<p><b>ব্যাখ্যা:</b> physical replication পুরো cluster (সব database, একই version) হুবহু নেয় — HA-র জন্য আদর্শ। logical replication টেবিল বেছে নেয়, ভিন্ন version/schema-তেও পাঠানো যায় — migration ও selective sync-এ ভালো। ভেতরে দুটোই WAL ব্যবহার করে।</p>
+
+<h3>SQL Server Replication</h3>
+<table>
+<tr><th>ধরন</th><th>কী করে</th></tr>
+<tr><td><span class="kw">Always On Availability Groups</span></td><td>আধুনিক HA/DR — database group একাধিক replica-তে (sync/async), automatic failover, readable secondary। Enterprise-grade।</td></tr>
+<tr><td><span class="kw">Log Shipping</span></td><td>transaction log backup নিয়মিত standby-তে restore — সরল DR</td></tr>
+<tr><td><span class="kw">Transactional Replication</span></td><td>publisher → distributor → subscriber; committed change subscriber-এ (row-level, near-real-time)</td></tr>
+<tr><td>Snapshot / Merge</td><td>পুরো snapshot / দ্বিমুখী merge (occasional-connect scenario)</td></tr>
+</table>
+<div class="callout behind"><span class="tag">Database Mirroring — deprecated</span>
+পুরনো <b>Database Mirroring</b> আর ব্যবহার করবেন না — Microsoft এটাকে <b>Always On Availability Groups</b> দিয়ে প্রতিস্থাপন করেছে। নতুন HA-তে AG-ই standard।</div>
+
+<h3>CDC (Change Data Capture) — কী ও কেন</h3>
+<p><span class="kw">CDC</span> = database-এ প্রতিটা row পরিবর্তন (INSERT/UPDATE/DELETE) ঘটার সাথে সাথে <b>event হিসেবে ধরা</b>, যাতে downstream system consume করতে পারে — Kafka, search index (Elasticsearch), cache (Redis), data warehouse, বা অন্য microservice।</p>
+<h4>সুবিধা (benefit)</h4>
+<ul>
+<li><b>Near-real-time integration:</b> polling ছাড়াই পরিবর্তন সাথে সাথে অন্য system-এ পৌঁছায়।</li>
+<li><b>Decoupling:</b> source DB জানে না কে consume করছে — নতুন consumer যোগ করা সহজ (event-driven)।</li>
+<li><b>Dual-write সমস্যা এড়ানো:</b> "DB-তে লিখলাম + Kafka-তে পাঠালাম" — দুটো আলাদা কাজ inconsistent হতে পারে; CDC-তে শুধু DB-তে লেখেন, event আপনাআপনি log থেকে আসে (একটাই source of truth)।</li>
+<li><b>Analytics/search/cache sync, audit trail, event sourcing।</b></li>
+</ul>
+<h4>CDC-র তিন কৌশল</h4>
+<table>
+<tr><th>কৌশল</th><th>কীভাবে</th><th>মূল্যায়ন</th></tr>
+<tr><td><span class="kw">Log-based</span></td><td>transaction log/WAL পড়ে change decode করে</td><td>✅ সেরা — কম overhead, DELETE-ও ধরে, ক্রম ঠিক, non-intrusive</td></tr>
+<tr><td><span class="kw">Trigger-based</span></td><td>প্রতি table-এ trigger change table-এ লেখে</td><td>write ধীর করে, ভারী</td></tr>
+<tr><td><span class="kw">Query / polling</span></td><td><code>updated_at &gt; last</code> দিয়ে বারবার poll</td><td>DELETE মিস করে, load বাড়ায়, latency</td></tr>
+</table>
+<div class="callout why"><span class="tag">Log-based CDC কীভাবে কাজ করে (deep) — মূল অন্তর্দৃষ্টি</span>
+Database <b>এমনিতেই</b> প্রতিটা committed change durability-র জন্য transaction log (WAL/transaction log)-এ লেখে (অধ্যায় ৯)। Log-based CDC সেই log-টাই <b>পড়ে</b> — নতুন কোনো trigger বা polling নয়। ফলে (১) source-এ প্রায় কোনো বাড়তি চাপ নেই, (২) প্রতিটা change commit-এর <b>ক্রমেই</b> পাওয়া যায়, (৩) DELETE-ও ধরা পড়ে (polling যা পারে না)। এটাই CDC-কে event-driven architecture-এর মেরুদণ্ড বানায়।</div>
+
+<h3>PostgreSQL CDC</h3>
+<p>PG <span class="kw">logical decoding</span> দিয়ে WAL থেকে row-level change একটা stream-এ বের করে — <span class="kw">replication slot</span> + output plugin (<code>pgoutput</code>, <code>wal2json</code>) ব্যবহার করে।</p>
+<pre><span class="c">-- logical decoding চালু (postgresql.conf: wal_level = logical)</span>
+<span class="k">SELECT</span> pg_create_logical_replication_slot(<span class="k">'cdc_slot'</span>, <span class="k">'wal2json'</span>);
+<span class="c">-- slot থেকে change পড়া (সাধারণত Debezium/connector এটা করে)</span>
+<span class="k">SELECT</span> * <span class="k">FROM</span> pg_logical_slot_get_changes(<span class="k">'cdc_slot'</span>, <span class="k">NULL</span>, <span class="k">NULL</span>);</pre>
+<p>Production-এ সাধারণত <b>Debezium</b> (Kafka Connect) এই logical decoding ব্যবহার করে change গুলো Kafka topic-এ stream করে।</p>
+
+<h3>SQL Server CDC</h3>
+<p>SQL Server-এ <b>native CDC</b> feature আছে — একটা capture job transaction log পড়ে পরিবর্তন change table-এ রাখে।</p>
+<pre><span class="c">-- database ও table এ CDC চালু</span>
+<span class="k">EXEC</span> sys.sp_cdc_enable_db;
+<span class="k">EXEC</span> sys.sp_cdc_enable_table
+  @source_schema = <span class="k">'dbo'</span>, @source_name = <span class="k">'orders'</span>, @role_name = <span class="k">NULL</span>;
+<span class="c">-- change table (cdc.dbo_orders_CT) query করে বা CDC function দিয়ে পড়া</span></pre>
+<table>
+<tr><th>Feature</th><th>কী দেয়</th></tr>
+<tr><td><span class="kw">Change Data Capture</span></td><td>প্রতিটা পরিবর্তনের পূর্ণ ইতিহাস (before/after, INSERT/UPDATE/DELETE)</td></tr>
+<tr><td><span class="kw">Change Tracking</span></td><td>শুধু <b>কোন row</b> বদলেছে (হালকা, history নেই) — sync scenario</td></tr>
+</table>
+<p>Debezium SQL Server-এর এই CDC ব্যবহার করেও Kafka-তে stream করতে পারে।</p>
+
+<h3>CDC Tools — Debezium ও PeerDB</h3>
+<p>CDC হাতে না বানিয়ে সাধারণত ready-made tool ব্যবহার হয়। দুটো প্রধান:</p>
+<h4>Debezium</h4>
+<p>সবচেয়ে প্রচলিত open-source CDC platform (Kafka Connect-এর ওপর)। PostgreSQL (logical decoding), SQL Server (native CDC), MySQL, MongoDB, Oracle — সব থেকে change ধরে <b>Kafka topic</b>-এ পাঠায়। প্রতি table → একটা topic; প্রতিটা message-এ change-এর before/after image ও operation type (<code>c</code>=create, <code>u</code>=update, <code>d</code>=delete)। General-purpose, বহু-DB।</p>
+<h4>PeerDB</h4>
+<p><span class="kw">PeerDB</span> একটা open-source, <b>PostgreSQL-কেন্দ্রিক</b> CDC ও data-movement tool (২০২৪-এ ClickHouse একে অধিগ্রহণ করে)। এটা বিশেষভাবে Postgres থেকে বিশাল data <b>দ্রুত</b> সরাতে optimized — গন্তব্য: data warehouse (Snowflake, BigQuery, ClickHouse), queue (Kafka, PubSub), বা অন্য Postgres।</p>
+<ul>
+<li><b>কীভাবে:</b> ভেতরে Postgres logical replication (replication slot + logical decoding) ব্যবহার করে; সাথে দ্রুত parallel initial <b>snapshot</b> + continuous CDC।</li>
+<li><b>Peer ও Mirror:</b> প্রতিটা data store (source/destination) একটা <span class="kw">peer</span>; দুই peer-এর মধ্যে একটা <span class="kw">mirror</span> = CDC/sync pipeline। SQL-সদৃশ command-এ (<code>CREATE PEER</code>, <code>CREATE MIRROR</code>) সব define হয়।</li>
+<li><b>কেন Debezium-এর বদলে:</b> Postgres → warehouse বড় pipeline-এ PeerDB দ্রুত ও সরল (Kafka layer ছাড়াই সরাসরি warehouse-এ), large-table snapshot ও throughput-এ ভালো।</li>
+</ul>
+<div class="callout why"><span class="tag">Debezium না PeerDB?</span>
+<b>Debezium:</b> multi-DB, Kafka-কেন্দ্রিক event streaming, microservice integration (dual-write সমাধান)। <b>PeerDB:</b> Postgres থেকে warehouse/queue-তে বড় আকারে দ্রুত data sync (analytics/ETL)। দুটোই ভেতরে Postgres logical decoding ব্যবহার করে — পার্থক্য উদ্দেশ্য ও optimization-এ।</div>
+
+<h3>Monitoring — replication/CDC health ও tools</h3>
+<div class="callout mistake"><span class="tag">#১ বিপদ — unconsumed replication slot</span>
+PostgreSQL logical replication/CDC-তে consumer (Debezium/PeerDB) থেমে গেলে replication slot পুরনো WAL <b>ধরে রাখে</b> — WAL জমতে জমতে <b>disk ভরে গিয়ে পুরো database crash</b> করতে পারে! তাই slot lag monitor করা <b>বাধ্যতামূলক</b>: <code>SELECT slot_name, pg_size_pretty(pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn)) FROM pg_replication_slots;</code> — এই retained WAL বাড়তে থাকলে সাথে সাথে alert।</div>
+<h4>কী monitor করবেন</h4>
+<table>
+<tr><th>কী</th><th>PostgreSQL</th><th>SQL Server</th></tr>
+<tr><td>Replication lag</td><td><code>pg_stat_replication</code>, <code>pg_stat_wal_receiver</code></td><td>AG dashboard, <code>sys.dm_hadr_database_replica_states</code></td></tr>
+<tr><td>Slot / CDC lag</td><td><code>pg_replication_slots</code> (retained WAL)</td><td>CDC capture/cleanup job latency</td></tr>
+<tr><td>Connector health</td><td>Debezium / Kafka Connect status + JMX metrics</td><td>CDC capture job status</td></tr>
+</table>
+<h4>Monitoring tools</h4>
+<table>
+<tr><th></th><th><span class="pill pg">PostgreSQL</span></th><th><span class="pill ms">SQL Server</span></th></tr>
+<tr><td>Built-in</td><td><code>pg_stat_*</code> view, <code>pg_stat_statements</code>, <code>auto_explain</code></td><td>Query Store, DMV (<code>sys.dm_*</code>), Extended Events</td></tr>
+<tr><td>Open-source</td><td>pgwatch, pgBadger (log), postgres_exporter</td><td>—</td></tr>
+<tr><td>Dashboard</td><td>Prometheus + Grafana</td><td>Prometheus + Grafana, Azure SQL Analytics</td></tr>
+<tr><td>Commercial</td><td>pganalyze, Datadog</td><td>Redgate, SolarWinds DPA, Datadog</td></tr>
+<tr><td>CDC pipeline</td><td>Debezium (JMX→Grafana), PeerDB UI</td><td>Debezium, Kafka lag tools</td></tr>
+</table>
+<div class="callout best"><span class="tag">Monitoring checklist</span>
+<ul style="margin:4px 0">
+<li>Replication <b>lag</b> (bytes ও সময়) — বাড়তে থাকলে alert।</li>
+<li>PostgreSQL <b>replication slot-এর retained WAL</b> — disk-full রোধে সবচেয়ে জরুরি alert।</li>
+<li>CDC connector/task <b>failed state</b>, error rate, DLQ depth।</li>
+<li>Consumer throughput বনাম source change rate — consumer পিছিয়ে পড়ছে কি না।</li>
+<li>সাধারণ DB health — CPU, memory, disk, slow query, connection count।</li>
+</ul></div>
+
+<h3>Replication বনাম CDC — পার্থক্য</h3>
+<table>
+<tr><th></th><th>Replication</th><th>CDC</th></tr>
+<tr><td>উদ্দেশ্য</td><td>আরেকটা DB-তে full copy sync রাখা</td><td>পরিবর্তনকে event হিসেবে যেকোনো system-এ পাঠানো</td></tr>
+<tr><td>গন্তব্য</td><td>একই ধরনের database (DB → DB)</td><td>যেকোনো — Kafka, search, cache, warehouse</td></tr>
+<tr><td>আকার</td><td>একই schema/shape</td><td>ভিন্ন shape/transform সম্ভব</td></tr>
+<tr><td>ব্যবহার</td><td>HA, read scale, DR</td><td>event-driven integration, ETL, sync</td></tr>
+</table>
+<div class="callout best"><span class="tag">.NET microservice-এ CDC</span>
+Event-driven .NET system-এ CDC (Debezium + Kafka) দিয়ে <b>dual-write সমস্যা</b> এড়ানো যায় — service শুধু নিজের DB-তে লেখে, CDC সেই change Kafka-তে পাঠায়, অন্য service consume করে। বিকল্প: <b>Outbox pattern</b> (একই transaction-এ outbox table-এ লিখে CDC/poller দিয়ে publish)। event streaming বিস্তারিত Kafka ও RabbitMQ ট্যাবে।</div>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>

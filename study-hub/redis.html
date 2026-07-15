@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Redis Mastery — Bangla (Beginner → Advanced, .NET focus)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#ff5c52; --accent2:#ff9a8b;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --blue:#4aa3ff;
+    --code-bg:#0b0f14; --kw:#79c0ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px; -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(255,92,82,.22),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#2a0d0b}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--blue)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--blue)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#8fd0ff}
+  .viz{background:var(--code-bg); border:1px solid var(--border); border-radius:12px; padding:20px 18px 12px; margin:18px 0}
+  .viz svg{width:100%; height:auto; display:block; overflow:visible}
+  .viz figcaption{color:var(--muted); font-size:13px; margin-top:10px; text-align:center; line-height:1.5}
+  .viz text{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .viz .bn{font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla",sans-serif}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🧱 Redis Mastery</h1>
+      <p>Beginner → Advanced • .NET focus • বাংলায়</p>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",   icon:"🔴", title:"Foundation — Redis কী?"},
+  {id:"datatypes",    icon:"🧱", title:"Data Types"},
+  {id:"keys",         icon:"🔑", title:"Keys · TTL · Expiration"},
+  {id:"persistence",  icon:"💾", title:"Persistence — RDB · AOF"},
+  {id:"memory",       icon:"🧹", title:"Memory · Eviction Policy"},
+  {id:"pubsub",       icon:"📡", title:"Pub/Sub · Streams"},
+  {id:"transactions", icon:"⚛️", title:"Transactions · Lua · Pipeline"},
+  {id:"ha",           icon:"🧯", title:"Replication · Sentinel · Cluster"},
+  {id:"caching",      icon:"⚡", title:"Caching Patterns"},
+  {id:"patterns",     icon:"🛠️", title:"Locks · Rate Limit · Leaderboard"},
+  {id:"dotnet",       icon:"💜", title:"Redis in .NET"},
+  {id:"prod",         icon:"🏦", title:"Security · Monitoring · Best Practices"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Foundation — Redis কী?</h2>
+<p class="lead">এক লাইনে: Redis (REmote DIctionary Server) একটা <span class="kw">in-memory data structure store</span> — সব data RAM-এ রাখে বলে sub-millisecond গতিতে read/write দেয়। এটা নিছক cache নয়, একটা পূর্ণ data-structure server।</p>
+
+<h3>Redis ঠিক কী?</h3>
+<p>Redis একটা key-value store — কিন্তু value শুধু string নয়, হতে পারে list, hash, set, sorted set, stream ইত্যাদি। সব data মূলত <b>memory (RAM)</b>-এ থাকে (ঐচ্ছিকভাবে disk-এ persist করা যায়), তাই এটা অবিশ্বাস্য দ্রুত — লাখো operation/সেকেন্ড, প্রতিটা প্রায় ~০.১ ms।</p>
+
+<h3>কেন এত দ্রুত?</h3>
+<ul>
+<li><b>In-memory:</b> disk seek নেই, সব RAM থেকে।</li>
+<li><b>Single-threaded command execution:</b> একটা command একসময়ে চলে → কোনো lock/contention নেই, প্রতিটা command <b>atomic</b>।</li>
+<li><b>Efficient data structures ও I/O:</b> C-তে লেখা optimized structure + event-driven non-blocking I/O (epoll)। Redis 6+ শুধু network I/O-তে multi-thread ব্যবহার করে, command execution তবুও single-threaded।</li>
+</ul>
+<figure class="viz">
+<svg viewBox="0 0 720 280" role="img" aria-label="Redis architecture: multiple clients send commands to a single-threaded event loop that operates on an in-memory keyspace, with optional persistence to disk">
+  <defs><marker id="ra" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa7b4"/></marker></defs>
+  <g font-size="12" fill="#e6edf3" text-anchor="middle">
+    <rect x="20" y="46" width="110" height="40" rx="8" fill="rgba(74,163,255,.12)" stroke="#4aa3ff"/><text x="75" y="70">Client 1</text>
+    <rect x="20" y="116" width="110" height="40" rx="8" fill="rgba(74,163,255,.12)" stroke="#4aa3ff"/><text x="75" y="140">Client 2</text>
+    <rect x="20" y="186" width="110" height="40" rx="8" fill="rgba(74,163,255,.12)" stroke="#4aa3ff"/><text x="75" y="210">Client 3</text>
+  </g>
+  <rect x="210" y="86" width="170" height="100" rx="12" fill="rgba(255,92,82,.10)" stroke="#ff5c52"/>
+  <text x="295" y="128" text-anchor="middle" fill="#ff5c52" font-size="13" font-weight="700">Single-threaded</text>
+  <text x="295" y="150" text-anchor="middle" fill="#ff9a8b" font-size="12">event loop</text>
+  <rect x="440" y="60" width="180" height="70" rx="10" fill="rgba(63,185,80,.12)" stroke="#3fb950"/>
+  <text x="530" y="90" text-anchor="middle" fill="#e6edf3" font-size="13" font-weight="700">In-memory keyspace</text>
+  <text x="530" y="110" text-anchor="middle" fill="#9aa7b4" font-size="11">(RAM — সব data এখানে)</text>
+  <rect x="440" y="168" width="180" height="60" rx="10" fill="#161b22" stroke="#2d333b" stroke-dasharray="5 4"/>
+  <text x="530" y="194" text-anchor="middle" fill="#9aa7b4" font-size="12.5">RDB / AOF (disk)</text>
+  <text x="530" y="212" text-anchor="middle" fill="#6e7681" font-size="10.5">ঐচ্ছিক persistence</text>
+  <path d="M130 66 C 170 66, 175 120, 208 128" fill="none" stroke="#9aa7b4" stroke-width="1.6" marker-end="url(#ra)"/>
+  <path d="M130 136 L208 136" fill="none" stroke="#9aa7b4" stroke-width="1.6" marker-end="url(#ra)"/>
+  <path d="M130 206 C 170 206, 175 152, 208 144" fill="none" stroke="#9aa7b4" stroke-width="1.6" marker-end="url(#ra)"/>
+  <path d="M380 120 L438 100" fill="none" stroke="#ff5c52" stroke-width="2" marker-end="url(#ra)"/>
+  <path d="M530 130 L530 166" fill="none" stroke="#9aa7b4" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#ra)"/>
+</svg>
+<figcaption>সব client-এর command একটাই event loop-এ ক্রমে process হয় (atomic), data থাকে RAM-এ, আর ঐচ্ছিকভাবে disk-এ persist হয়। Single-thread বলেই lock লাগে না।</figcaption>
+</figure>
+
+<h3>কীসে ব্যবহার হয়</h3>
+<table>
+<tr><th>ব্যবহার</th><th>কীভাবে</th></tr>
+<tr><td><span class="kw">Caching</span></td><td>DB query result cache করে latency কমানো (সবচেয়ে সাধারণ)</td></tr>
+<tr><td><span class="kw">Session store</span></td><td>stateless API-তে user session রাখা (TTL সহ)</td></tr>
+<tr><td><span class="kw">Rate limiting</span></td><td>INCR + EXPIRE দিয়ে API throttle</td></tr>
+<tr><td><span class="kw">Leaderboard</span></td><td>Sorted Set দিয়ে real-time ranking</td></tr>
+<tr><td><span class="kw">Queue / Stream</span></td><td>List বা Stream দিয়ে job queue</td></tr>
+<tr><td><span class="kw">Pub/Sub</span></td><td>real-time message broadcast</td></tr>
+<tr><td><span class="kw">Distributed lock</span></td><td>multi-instance coordination</td></tr>
+</table>
+
+<h3>Redis বনাম Memcached</h3>
+<table>
+<tr><th></th><th>Redis</th><th>Memcached</th></tr>
+<tr><td>Data type</td><td>অনেক (list, hash, set, zset, stream…)</td><td>শুধু string key-value</td></tr>
+<tr><td>Persistence</td><td>হ্যাঁ (RDB/AOF)</td><td>না</td></tr>
+<tr><td>Replication/HA</td><td>হ্যাঁ (replica, Sentinel, Cluster)</td><td>না (built-in)</td></tr>
+<tr><td>ব্যবহার</td><td>cache + data structure + messaging</td><td>শুধু সরল cache</td></tr>
+</table>
+<div class="callout why"><span class="tag">.NET engineer হিসেবে</span>
+আপনার ASP.NET Core API-তে Redis দিয়ে: DB-heavy endpoint cache (<code>IDistributedCache</code>), stateless session, rate limiting, আর multi-instance distributed lock — সব করা যায়। শেষ দিকের .NET ট্যাবে হাতে-কলমে দেখব।</div>
+
+<h3>একটু প্রসঙ্গ — RESP protocol, license ও Valkey</h3>
+<p><b>Protocol:</b> Redis client ও server <span class="kw">RESP</span> (REdis Serialization Protocol) দিয়ে কথা বলে — সরল, দ্রুত parse-যোগ্য, TCP-ভিত্তিক (default port <code>6379</code>)। <span class="kw">RESP3</span> (Redis 6+) আরও data type ও client-side caching সমর্থন যোগ করেছে।</p>
+<p><b>License ও Valkey (জেনে রাখা ভালো):</b> ২০২৪-এ Redis তার license BSD থেকে source-available (RSALv2/SSPL)-এ বদলায়; ফলে community একটা open-source fork <span class="kw">Valkey</span> (Linux Foundation-সমর্থিত) তৈরি করে, যা Redis-এর সাথে API-সমতুল্য। পরে Redis 8-এ AGPL option যুক্ত হয়। প্রকল্পে license গুরুত্বপূর্ণ হলে বর্তমান শর্ত যাচাই করে নিন — command/কোড প্রায় অভিন্ন, তাই এই কোর্সের সবকিছু Valkey-তেও প্রযোজ্য।</p>
+</template>
+
+<template data-page="datatypes">
+<h2 class="title">২. Data Types</h2>
+<p class="lead">Redis-এর আসল শক্তি এর data type-এ। সঠিক type বাছলে জটিল কাজও এক-দুটো command-এ, atomic-ভাবে হয়ে যায়।</p>
+
+<h3>মূল data type গুলো</h3>
+<table>
+<tr><th>Type</th><th>কী</th><th>ব্যবহার</th></tr>
+<tr><td><span class="kw">String</span></td><td>bytes/number (max 512MB)</td><td>cache, counter, flag</td></tr>
+<tr><td><span class="kw">List</span></td><td>ordered linked list</td><td>queue, stack, recent items</td></tr>
+<tr><td><span class="kw">Hash</span></td><td>field→value map</td><td>object (user profile)</td></tr>
+<tr><td><span class="kw">Set</span></td><td>unique unordered</td><td>tags, unique visitors, relation</td></tr>
+<tr><td><span class="kw">Sorted Set (ZSet)</span></td><td>score সহ unique, sorted</td><td>leaderboard, priority, time-series</td></tr>
+<tr><td><span class="kw">Bitmap</span></td><td>bit array (string-এর ওপর)</td><td>per-user flag (daily active)</td></tr>
+<tr><td><span class="kw">HyperLogLog</span></td><td>approximate unique count</td><td>বিশাল unique count (~0.8% error, খুব কম memory)</td></tr>
+<tr><td><span class="kw">Stream</span></td><td>append-only log + consumer group</td><td>event log, reliable queue</td></tr>
+<tr><td><span class="kw">Geospatial</span></td><td>lat/lon (zset-ভিত্তিক)</td><td>"কাছের দোকান" query</td></tr>
+</table>
+
+<h3>String — counter ও cache</h3>
+<pre>SET user:1000:name "Rasel"          <span class="c"># সরল key-value</span>
+SETEX session:abc 3600 "userdata"  <span class="c"># 1 ঘণ্টা TTL সহ</span>
+INCR page:views                     <span class="c"># atomic counter (+1)</span>
+INCRBY wallet:1000 500              <span class="c"># atomic +500</span></pre>
+
+<h3>List — queue/stack</h3>
+<pre>LPUSH jobs "email:1"     <span class="c"># বাঁ দিকে push</span>
+RPUSH jobs "email:2"     <span class="c"># ডান দিকে push</span>
+LPOP jobs                <span class="c"># বাঁ থেকে নাও (FIFO worker)</span>
+LRANGE jobs 0 -1         <span class="c"># সব দেখা</span>
+BRPOP jobs 5             <span class="c"># blocking pop (worker pattern)</span></pre>
+
+<h3>Hash — object</h3>
+<pre>HSET user:1000 name "Rasel" role "SWE" city "Dhaka"
+HGET user:1000 role       <span class="c"># "SWE"</span>
+HGETALL user:1000         <span class="c"># পুরো object</span>
+HINCRBY user:1000 loginCount 1</pre>
+<div class="callout best"><span class="tag">কেন Hash</span>
+একটা object-এর প্রতিটা field আলাদা key না বানিয়ে একটা hash-এ রাখুন (<code>user:1000</code>) — কম key, কম memory, আর একসাথে fetch/update সহজ। ছোট hash Redis ভেতরে খুব compact-ভাবে রাখে।</div>
+
+<h3>Set ও Sorted Set</h3>
+<pre><span class="c"># Set — unique</span>
+SADD post:1:tags "redis" "cache" "dotnet"
+SISMEMBER post:1:tags "redis"     <span class="c"># 1 (আছে)</span>
+SINTER user:1:follows user:2:follows   <span class="c"># mutual follow</span>
+
+<span class="c"># Sorted Set — leaderboard</span>
+ZADD leaderboard 1500 "rasel" 1200 "karim"
+ZREVRANGE leaderboard 0 9 WITHSCORES   <span class="c"># top 10</span>
+ZRANK leaderboard "rasel"              <span class="c"># rank</span>
+ZINCRBY leaderboard 50 "rasel"         <span class="c"># score বাড়াও</span></pre>
+
+<h3>Bitmap, HyperLogLog, Stream, Geo</h3>
+<pre><span class="c"># Bitmap — user 1000 আজ active</span>
+SETBIT active:2026-07-16 1000 1
+BITCOUNT active:2026-07-16          <span class="c"># আজ কতজন active</span>
+
+<span class="c"># HyperLogLog — বিশাল unique count, সামান্য memory</span>
+PFADD visitors:today "ip1" "ip2" "ip1"
+PFCOUNT visitors:today              <span class="c"># ~unique (approx)</span>
+
+<span class="c"># Stream — reliable event log</span>
+XADD orders "*" id 1000 amount 500
+XREAD COUNT 10 STREAMS orders 0
+
+<span class="c"># Geo</span>
+GEOADD shops 90.41 23.81 "dhaka-shop"
+GEOSEARCH shops FROMLONLAT 90.4 23.8 BYRADIUS 5 km ASC</pre>
+<div class="callout why"><span class="tag">সঠিক type = সরল সমাধান</span>
+Leaderboard বানাতে DB-তে <code>ORDER BY score</code> ব্যয়বহুল; Redis Sorted Set-এ <code>ZREVRANGE</code> O(log n)-এ। Unique visitor গুনতে বিশাল Set-এর বদলে HyperLogLog সামান্য memory-তে করে। type বাছাই-ই ৮০% design।</div>
+</template>
+
+<template data-page="keys">
+<h2 class="title">৩. Keys · TTL · Expiration</h2>
+<p class="lead">Key কীভাবে নাম দেবেন, কতক্ষণ বাঁচবে, আর কীভাবে নিরাপদে key খুঁজবেন — cache system-এর মেরুদণ্ড।</p>
+
+<h3>Key naming convention</h3>
+<p>Redis-এ folder নেই — সব flat key। তাই <code>:</code> দিয়ে namespace বানানো নিয়ম: <code>object-type:id:field</code>।</p>
+<pre>user:1000:profile
+user:1000:sessions
+order:5521:status
+cache:product:42
+ratelimit:api:user:1000</pre>
+<div class="callout best"><span class="tag">Convention</span>
+সুসংগত, পঠনযোগ্য, predictable রাখুন — যাতে <code>user:*</code> pattern দিয়ে যুক্তিসঙ্গতভাবে group করা যায়। Key-তে বড় blob বা পুরো JSON string না রেখে যেখানে সম্ভব hash ব্যবহার করুন।</div>
+
+<h3>TTL ও Expiration</h3>
+<table>
+<tr><th>Command</th><th>কাজ</th></tr>
+<tr><td><code>EXPIRE key 60</code></td><td>60 সেকেন্ড পর key মুছবে</td></tr>
+<tr><td><code>PEXPIRE key 500</code></td><td>ms-এ TTL</td></tr>
+<tr><td><code>SET key val EX 60</code></td><td>set + TTL একসাথে (atomic)</td></tr>
+<tr><td><code>TTL key</code></td><td>কত সেকেন্ড বাকি (-1 = না মেয়াদ, -2 = নেই)</td></tr>
+<tr><td><code>PERSIST key</code></td><td>TTL সরিয়ে permanent</td></tr>
+</table>
+<div class="callout behind"><span class="tag">Expiration কীভাবে ঘটে</span>
+Redis দুইভাবে expired key মোছে: <b>lazy</b> — key access করার সময় দেখলে মেয়াদ শেষ, তখন মুছে দেয়; আর <b>active</b> — background-এ মাঝে মাঝে কিছু expired key খুঁজে মোছে। তাই একটা key মেয়াদোত্তীর্ণ হলেও memory সঙ্গে সঙ্গে খালি না-ও হতে পারে (access বা active cycle পর্যন্ত)।</div>
+
+<h3>KEYS বনাম SCAN — production-এ গুরুত্বপূর্ণ</h3>
+<div class="callout mistake"><span class="tag">Common mistake — KEYS *</span>
+Production-এ <code>KEYS pattern</code> চালানো <b>ভয়ংকর</b> — এটা পুরো keyspace একবারে scan করে আর single-threaded Redis-কে ঐ সময় পুরো <b>block</b> করে রাখে (লাখো key হলে সেকেন্ডের পর সেকেন্ড)। সব client আটকে যায়। এর বদলে <code>SCAN</code> ব্যবহার করুন — এটা cursor দিয়ে অল্প অল্প করে iterate করে, block করে না।</div>
+<pre><span class="c"># খারাপ (block করে):  KEYS user:*</span>
+<span class="c"># ভালো (cursor, non-blocking):</span>
+SCAN 0 MATCH user:* COUNT 100
+<span class="c"># ফেরত দেওয়া cursor দিয়ে পরের batch, cursor 0 হলে শেষ</span></pre>
+
+<h3>Keyspace Notifications — key event-এ react করা</h3>
+<p>Redis চাইলে key event (set, del, <b>expired</b>) একটা pub/sub channel-এ publish করতে পারে (<code>notify-keyspace-events</code> config দিয়ে চালু করতে হয়)। যেমন একটা session key expire হলে <code>__keyevent@0__:expired</code> channel-এ event আসে → cleanup বা অন্য কাজ trigger করা যায়।</p>
+<div class="callout mistake"><span class="tag">সীমা</span>
+Expired-event key আসলে <b>মুছে যাওয়ার সময়</b> আসে (lazy/active expiry অনুযায়ী) — তাই ঠিক সময়ের নিশ্চয়তা নেই। আর delivery pub/sub-এর মতো <b>unreliable</b> (subscriber down থাকলে event miss)। জরুরি cleanup-এর একমাত্র ভরসা হিসেবে ব্যবহার করবেন না।</div>
+</template>
+
+<template data-page="persistence">
+<h2 class="title">৪. Persistence — RDB · AOF</h2>
+<p class="lead">Redis in-memory, কিন্তু restart/crash-এ data হারালে চলবে না এমন ক্ষেত্রে disk-এ persist করা দরকার। দুই কৌশল — RDB আর AOF।</p>
+
+<h3>RDB — Snapshot</h3>
+<p><span class="kw">RDB</span> নির্দিষ্ট সময় পরপর পুরো dataset-এর একটা <b>point-in-time snapshot</b> disk-এ লেখে (<code>dump.rdb</code>)। compact, restart দ্রুত, backup সহজ। কিন্তু দুই snapshot-এর মাঝের data crash-এ হারায়।</p>
+
+<h3>AOF — Append Only File</h3>
+<p><span class="kw">AOF</span> প্রতিটা write command একটা log ফাইলে append করে। restart-এ Redis সেই command গুলো replay করে state ফিরিয়ে আনে। বেশি durable, কিন্তু ফাইল বড় ও restart ধীর। <code>appendfsync</code> policy:</p>
+<table>
+<tr><th><code>appendfsync</code></th><th>durability</th><th>গতি</th></tr>
+<tr><td><code>always</code></td><td>প্রতি write disk-এ — সর্বোচ্চ নিরাপদ</td><td>ধীর</td></tr>
+<tr><td><code>everysec</code> (default)</td><td>প্রতি সেকেন্ডে fsync — সর্বোচ্চ ~1s হারায়</td><td>ভালো ভারসাম্য</td></tr>
+<tr><td><code>no</code></td><td>OS-এর ইচ্ছায়</td><td>দ্রুত, কম নিরাপদ</td></tr>
+</table>
+
+<h3>RDB বনাম AOF — কোনটা</h3>
+<table>
+<tr><th></th><th>RDB</th><th>AOF</th></tr>
+<tr><td>Data loss ঝুঁকি</td><td>বেশি (snapshot গ্যাপ)</td><td>কম (everysec = ~1s)</td></tr>
+<tr><td>ফাইল আকার</td><td>ছোট (compact)</td><td>বড়</td></tr>
+<tr><td>Restart গতি</td><td>দ্রুত</td><td>ধীর (replay)</td></tr>
+<tr><td>Backup</td><td>সহজ (একটা ফাইল)</td><td>তুলনায় কঠিন</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice</span>
+Durability গুরুত্বপূর্ণ হলে <b>দুটোই চালু</b> করুন (RDB + AOF) — Redis restart-এ AOF ব্যবহার করে (বেশি সম্পূর্ণ), আর RDB backup/দ্রুত restart-এ কাজে লাগে। <b>Pure cache</b> হলে (data DB-তে আছে) persistence পুরো <b>বন্ধ</b> রাখাই ভালো — দ্রুত, disk overhead নেই।</div>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+Redis-কে primary database হিসেবে ব্যবহার করা অথচ persistence off রাখা — restart/crash-এ সব data চলে যায়। Redis-কে source of truth বানালে অবশ্যই AOF (+RDB) চালু ও fsync policy বুঝে সেট করুন।</div>
+</template>
+
+<template data-page="memory">
+<h2 class="title">৫. Memory · Eviction Policy</h2>
+<p class="lead">RAM সীমিত — Redis ভরে গেলে কী করবে তা আপনি ঠিক করে দেন। ভুল policy = হয় error, নয় ভুল data উধাও।</p>
+
+<h3>maxmemory ও eviction</h3>
+<p><code>maxmemory 2gb</code> দিয়ে সীমা বেঁধে দিন। এই সীমায় পৌঁছালে <code>maxmemory-policy</code> ঠিক করে কোন key সরানো হবে:</p>
+<table>
+<tr><th>Policy</th><th>আচরণ</th></tr>
+<tr><td><code>noeviction</code></td><td>কিছু সরায় না — নতুন write-এ error (default; DB-mode-এ নিরাপদ)</td></tr>
+<tr><td><code>allkeys-lru</code></td><td>যেকোনো key থেকে <b>least recently used</b> সরায় (সাধারণ cache-এ সেরা)</td></tr>
+<tr><td><code>allkeys-lfu</code></td><td>least <b>frequently</b> used সরায় (access frequency ধরে)</td></tr>
+<tr><td><code>volatile-lru</code></td><td>শুধু TTL-সহ key থেকে LRU সরায়</td></tr>
+<tr><td><code>volatile-ttl</code></td><td>সবচেয়ে কম TTL বাকি এমন key আগে সরায়</td></tr>
+<tr><td><code>allkeys-random</code> / <code>volatile-random</code></td><td>এলোমেলোভাবে সরায়</td></tr>
+</table>
+<div class="callout why"><span class="tag">LRU বনাম LFU</span>
+<b>LRU</b> — শেষ কবে access হয়েছে তা দেখে (recency)। <b>LFU</b> — কতবার access হয়েছে তা দেখে (frequency)। যেসব key মাঝে মাঝে জনপ্রিয় হয় কিন্তু সবসময় নয়, সেখানে LFU ভালো (একবার-ব্যবহৃত key জনপ্রিয় key-কে সরিয়ে দেয় না)।</div>
+<div class="callout best"><span class="tag">কোনটা বাছবেন</span>
+<ul style="margin:4px 0">
+<li><b>Pure cache:</b> <code>allkeys-lru</code> বা <code>allkeys-lfu</code> — ভরে গেলে পুরনো/কম-ব্যবহৃত cache মুছে জায়গা করবে।</li>
+<li><b>Data store / persistence:</b> <code>noeviction</code> — data নীরবে হারাতে দেবেন না, বরং write fail করবে (তখন scale করুন)।</li>
+<li>সব key-তে TTL দিন যাতে stale data নিজে থেকেই সরে; <code>INFO memory</code> দিয়ে <code>used_memory</code> ও eviction নজরে রাখুন।</li>
+</ul></div>
+</template>
+
+<template data-page="pubsub">
+<h2 class="title">৬. Pub/Sub · Streams</h2>
+<p class="lead">Redis দিয়ে messaging — সরল fire-and-forget (Pub/Sub) থেকে reliable, replayable queue (Streams)।</p>
+
+<h3>Pub/Sub — fire and forget</h3>
+<p><code>SUBSCRIBE</code>/<code>PUBLISH</code> দিয়ে channel-ভিত্তিক broadcast। যারা তখন subscribe করা আছে শুধু তারাই message পায়।</p>
+<pre><span class="c"># subscriber</span>
+SUBSCRIBE notifications
+PSUBSCRIBE news.*          <span class="c"># pattern subscribe</span>
+
+<span class="c"># publisher</span>
+PUBLISH notifications "hello"</pre>
+<div class="callout mistake"><span class="tag">Pub/Sub-এর সীমা</span>
+Pub/Sub message <b>persist হয় না</b> — publish-এর মুহূর্তে কোনো subscriber না থাকলে message <b>হারিয়ে যায়</b> (কোনো replay নেই, কোনো ack নেই)। তাই real-time notification/broadcast-এ ঠিক আছে, কিন্তু "message হারানো যাবে না" এমন কাজে নয়। সেখানে <b>Streams</b>।</div>
+
+<h3>Streams — reliable, replayable</h3>
+<p><span class="kw">Stream</span> একটা append-only log (Kafka-র ছোট সংস্করণের মতো)। Message persist হয়, id দিয়ে replay করা যায়, আর <span class="kw">consumer group</span> দিয়ে একাধিক worker কাজ ভাগ করে + ack করে।</p>
+<pre>XADD orders "*" user 1000 amount 500     <span class="c"># message যোগ (auto id)</span>
+XLEN orders
+
+<span class="c"># consumer group — reliable delivery</span>
+XGROUP CREATE orders billing 0
+XREADGROUP GROUP billing worker1 COUNT 10 STREAMS orders ">"
+XACK orders billing 1690000000000-0      <span class="c"># process শেষে ack</span></pre>
+<table>
+<tr><th></th><th>Pub/Sub</th><th>Streams</th></tr>
+<tr><td>Persist</td><td>না</td><td>হ্যাঁ</td></tr>
+<tr><td>Replay</td><td>না</td><td>হ্যাঁ (id দিয়ে)</td></tr>
+<tr><td>Consumer group / ack</td><td>না</td><td>হ্যাঁ</td></tr>
+<tr><td>ব্যবহার</td><td>real-time broadcast</td><td>reliable queue / event log</td></tr>
+</table>
+<div class="callout why"><span class="tag">কখন Redis Stream, কখন Kafka/RabbitMQ</span>
+হালকা queue যেখানে ইতিমধ্যে Redis আছে — Stream যথেষ্ট। বিশাল throughput/long retention/complex routing হলে Kafka/RabbitMQ। Redis Stream সরল, কিন্তু pfull message broker নয়।</div>
+</template>
+
+<template data-page="transactions">
+<h2 class="title">৭. Transactions · Lua · Pipelining</h2>
+<p class="lead">একাধিক command একসাথে, atomic-ভাবে বা efficient-ভাবে চালানো — MULTI/EXEC, WATCH, Lua script আর pipeline।</p>
+
+<h3>Transactions — MULTI / EXEC</h3>
+<p><code>MULTI</code> দিয়ে command queue করা শুরু, <code>EXEC</code>-এ সব একসাথে atomic চলে (মাঝখানে অন্য client ঢুকতে পারে না)। <code>DISCARD</code> বাতিল করে।</p>
+<pre>MULTI
+INCR wallet:1000
+INCRBY wallet:1000 -100
+EXEC        <span class="c"># দুটো একসাথে, atomic</span></pre>
+<div class="callout mistake"><span class="tag">Rollback নেই!</span>
+Redis transaction-এ SQL-এর মতো <b>rollback নেই</b>। EXEC-এর মধ্যে কোনো command runtime error দিলেও বাকিগুলো চলতেই থাকে। MULTI/EXEC শুধু <b>atomicity + isolation</b> দেয় (মাঝখানে কেউ ঢোকে না), "all-or-nothing rollback" নয়।</div>
+
+<h3>WATCH — optimistic locking (CAS)</h3>
+<p><code>WATCH key</code> করলে, EXEC-এর আগে যদি ঐ key অন্য কেউ বদলায়, transaction <b>fail</b> করে (nil ফেরে) — তখন আপনি আবার চেষ্টা করেন। এটাই check-and-set।</p>
+<pre>WATCH wallet:1000
+<span class="c"># balance পড়ে যাচাই করলাম</span>
+MULTI
+INCRBY wallet:1000 -100
+EXEC   <span class="c"># এর মধ্যে wallet:1000 কেউ বদলালে EXEC nil → retry</span></pre>
+
+<h3>Lua Scripting — server-side atomic</h3>
+<p><code>EVAL</code> দিয়ে একটা Lua script Redis-এর ভেতরে <b>atomic</b>-ভাবে চলে (পুরোটা single-threaded-এ এক ধাপে)। জটিল "read-modify-write" logic এক round-trip-এ, race ছাড়া।</p>
+<pre><span class="c"># atomic: key থাকলে তবেই মুছে 1 ফেরত (distributed lock release)</span>
+EVAL "if redis.call('GET', KEYS[1]) == ARGV[1] then
+        return redis.call('DEL', KEYS[1])
+      else return 0 end" 1 lock:order:5 my-token</pre>
+<div class="callout best"><span class="tag">কখন Lua</span>
+"পড়ে → শর্ত দেখে → লেখো" — এই ধরনের logic client-এ করলে দুই ধাপের মাঝে race হতে পারে। Lua-তে করলে পুরোটা atomic। Distributed lock release, rate-limit, conditional update-এ আদর্শ।</div>
+
+<h3>Pipelining — round-trip কমানো</h3>
+<p>একগুচ্ছ command একসাথে পাঠিয়ে সব response একবারে নেওয়া — প্রতিটার জন্য আলাদা network round-trip নয়। ১০০টা SET আলাদা করলে ১০০ RTT; pipeline-এ ১ RTT।</p>
+<div class="callout why"><span class="tag">Pipeline ≠ transaction</span>
+Pipeline শুধু network optimization — command গুলো batched, কিন্তু atomic <b>নয়</b> (মাঝখানে অন্য client-এর command ঢুকতে পারে)। Atomicity চাইলে MULTI/EXEC বা Lua; শুধু গতি চাইলে pipeline। দুটো একসাথেও ব্যবহার হয়।</div>
+</template>
+
+<template data-page="ha">
+<h2 class="title">৮. Replication · Sentinel · Cluster</h2>
+<p class="lead">একটা Redis instance যথেষ্ট নয় — read scale, automatic failover আর horizontal sharding-এর তিন স্তর।</p>
+
+<h3>Replication — master/replica</h3>
+<p>একটা <span class="kw">master</span> (read/write) থেকে এক বা একাধিক <span class="kw">replica</span> (read-only) async-এ data copy করে। এতে <b>read scaling</b> (replica থেকে পড়া) ও redundancy পাওয়া যায়। কিন্তু replication async — master crash করলে সর্বশেষ কিছু write হারাতে পারে, আর failover <b>স্বয়ংক্রিয় নয়</b>।</p>
+<figure class="viz">
+<svg viewBox="0 0 640 240" role="img" aria-label="Redis replication: one master handles writes and asynchronously replicates to read-only replicas which serve reads">
+  <defs><marker id="rp" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa7b4"/></marker></defs>
+  <rect x="250" y="26" width="150" height="56" rx="10" fill="rgba(255,92,82,.14)" stroke="#ff5c52"/>
+  <text x="325" y="50" text-anchor="middle" fill="#e6edf3" font-size="13" font-weight="700">Master</text>
+  <text x="325" y="70" text-anchor="middle" fill="#9aa7b4" font-size="11">read / write</text>
+  <rect x="70" y="150" width="150" height="56" rx="10" fill="rgba(74,163,255,.12)" stroke="#4aa3ff"/>
+  <text x="145" y="174" text-anchor="middle" fill="#e6edf3" font-size="13" font-weight="700">Replica</text>
+  <text x="145" y="194" text-anchor="middle" fill="#9aa7b4" font-size="11">read-only</text>
+  <rect x="420" y="150" width="150" height="56" rx="10" fill="rgba(74,163,255,.12)" stroke="#4aa3ff"/>
+  <text x="495" y="174" text-anchor="middle" fill="#e6edf3" font-size="13" font-weight="700">Replica</text>
+  <text x="495" y="194" text-anchor="middle" fill="#9aa7b4" font-size="11">read-only</text>
+  <path d="M300 82 L170 148" fill="none" stroke="#ff5c52" stroke-width="1.8" marker-end="url(#rp)"/>
+  <path d="M350 82 L470 148" fill="none" stroke="#ff5c52" stroke-width="1.8" marker-end="url(#rp)"/>
+  <text x="205" y="120" fill="#ff9a8b" font-size="10.5" class="bn">async replicate</text>
+  <text x="415" y="120" fill="#ff9a8b" font-size="10.5" class="bn">async replicate</text>
+</svg>
+<figcaption>Write শুধু master-এ; replica async-এ copy রাখে ও read serve করে। Master down হলে নিজে থেকে নতুন master হয় না — সেজন্য Sentinel।</figcaption>
+</figure>
+
+<h3>Sentinel — automatic failover</h3>
+<p><span class="kw">Redis Sentinel</span> master-কে monitor করে; master down হলে (quorum সংখ্যক Sentinel একমত হলে) একটা replica-কে <b>promote</b> করে নতুন master বানায় এবং client-দের নতুন master-এর ঠিকানা জানায়। অর্থাৎ Sentinel = HA-র "watchdog + failover manager"।</p>
+<div class="diagram"><pre>
+[Sentinel] [Sentinel] [Sentinel]   ← quorum এ সিদ্ধান্ত নেয়
+     \        |        /
+      monitor সবাই
+        Master ──► Replica1, Replica2
+  Master down → quorum → Replica1 promote → নতুন Master → client redirect
+</pre></div>
+
+<h3>Cluster — horizontal sharding</h3>
+<p>Dataset একটা node-এর RAM-এ না আঁটলে <span class="kw">Redis Cluster</span> — data <b>16384 hash slot</b>-এ ভাগ হয়ে একাধিক master node-এ ছড়িয়ে থাকে (প্রতি master-এর নিজের replica)। Key-এর hash অনুযায়ী কোন slot/node তা ঠিক হয়। এতে memory ও throughput দুটোই scale করে।</p>
+<table>
+<tr><th>দরকার</th><th>সমাধান</th></tr>
+<tr><td>Read scale + redundancy</td><td>Replication</td></tr>
+<tr><td>Automatic failover (HA)</td><td>Sentinel (+ replication)</td></tr>
+<tr><td>Dataset এক node-এ আঁটছে না</td><td>Cluster (sharding)</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Cluster-এর ফাঁদ — multi-key</span>
+Cluster-এ একাধিক key ভিন্ন node-এ থাকতে পারে, তাই সব multi-key operation (MGET, transaction, Lua) সরাসরি চলে না। একসাথে রাখতে চাইলে <b>hash tag</b> ব্যবহার করুন — <code>{user:1000}:profile</code> ও <code>{user:1000}:cart</code> একই slot-এ যাবে (<code>{}</code>-এর ভেতরের অংশ দিয়ে hash হয়)।</div>
+</template>
+
+<template data-page="caching">
+<h2 class="title">৯. Caching Patterns</h2>
+<p class="lead">Redis-এর #১ ব্যবহার। কোন pattern-এ cache আর DB সমন্বয় করবেন, আর কোন ফাঁদগুলো (stampede, invalidation) এড়াবেন।</p>
+
+<h3>Cache-Aside (Lazy Loading) — সবচেয়ে প্রচলিত</h3>
+<p>App নিজে cache manage করে: আগে cache দেখে; miss হলে DB থেকে এনে cache-এ রেখে ফেরত দেয়।</p>
+<div class="diagram"><pre>
+GET request
+   │
+   ▼
+Redis-এ আছে? ──হ্যাঁ (HIT)──► সরাসরি ফেরত (দ্রুত)
+   │ না (MISS)
+   ▼
+DB থেকে পড়ো ─► Redis-এ SET (TTL সহ) ─► ফেরত
+</pre></div>
+
+<h3>আরও pattern</h3>
+<table>
+<tr><th>Pattern</th><th>কীভাবে</th><th>trade-off</th></tr>
+<tr><td><span class="kw">Cache-aside</span></td><td>app miss-এ DB পড়ে cache ভরে</td><td>সরল, প্রচলিত; প্রথম hit ধীর, stale সম্ভব</td></tr>
+<tr><td><span class="kw">Read-through</span></td><td>cache layer নিজে DB পড়ে (app-এর কাছে transparent)</td><td>app সরল; library/layer লাগে</td></tr>
+<tr><td><span class="kw">Write-through</span></td><td>write একসাথে cache + DB-তে</td><td>cache সবসময় fresh; write ধীর</td></tr>
+<tr><td><span class="kw">Write-behind</span></td><td>write cache-এ, DB-তে async পরে</td><td>write দ্রুত; crash-এ data loss ঝুঁকি</td></tr>
+</table>
+
+<h3>TTL কৌশল ও Cache Invalidation</h3>
+<p>প্রতিটা cache entry-তে TTL দিন — stale data নিজে থেকেই মেয়াদোত্তীর্ণ হয়ে যায়। Data বদলালে দুইভাবে সামলানো: (১) TTL-এর অপেক্ষা (eventual), বা (২) write-এর সময় সরাসরি key <b>invalidate</b> (DEL/update)।</p>
+<div class="callout mistake"><span class="tag">Cache invalidation — কঠিন সমস্যা</span>
+"There are only two hard things in CS: cache invalidation and naming things।" DB update করলেন কিন্তু cache invalidate ভুলে গেলেন → user পুরনো data দেখে। নিয়ম: <b>write path-এ</b> সংশ্লিষ্ট cache key মুছুন/আপডেট করুন, এবং safety net হিসেবে যুক্তিসঙ্গত TTL রাখুন।</div>
+
+<h3>Cache Stampede (Thundering Herd)</h3>
+<p>একটা জনপ্রিয় key expire হওয়ার সাথে সাথে হাজারো request একসাথে miss করে সবাই DB-তে ঝাঁপায় → DB overload।</p>
+<div class="callout best"><span class="tag">সমাধান</span>
+<ul style="margin:4px 0">
+<li><b>Lock/single-flight:</b> প্রথম miss একটা lock নিয়ে DB পড়ে cache ভরে, বাকিরা অপেক্ষা করে বা পুরনো value পায়।</li>
+<li><b>Jittered TTL:</b> সব key একই মুহূর্তে expire না করে TTL-এ random jitter যোগ করুন।</li>
+<li><b>Early recompute:</b> TTL শেষ হওয়ার একটু আগেই background-এ refresh করুন।</li>
+</ul></div>
+</template>
+
+<template data-page="patterns">
+<h2 class="title">১০. Distributed Locks · Rate Limiting · Leaderboard</h2>
+<p class="lead">Redis দিয়ে multi-instance coordination — যেসব pattern .NET microservice-এ প্রতিদিন লাগে।</p>
+
+<h3>Distributed Lock</h3>
+<p>একাধিক instance একই resource-এ একসাথে কাজ না করে — একটা lock key দিয়ে coordinate। মূল command: <code>SET key token NX PX 30000</code> — key না থাকলে (NX) 30s TTL (PX) সহ সেট, যিনি পান তিনিই lock ধারক।</p>
+<pre><span class="c"># lock নেওয়া (atomic): শুধু না থাকলে সেট হবে</span>
+SET lock:order:5 &lt;unique-token&gt; NX PX 30000
+
+<span class="c"># release — অবশ্যই নিজের token যাচাই করে (Lua, atomic)</span>
+EVAL "if redis.call('GET',KEYS[1])==ARGV[1] then return redis.call('DEL',KEYS[1]) else return 0 end" 1 lock:order:5 &lt;token&gt;</pre>
+<div class="callout mistake"><span class="tag">Lock-এর ফাঁদ</span>
+<ul style="margin:4px 0">
+<li>TTL ছাড়া lock — holder crash করলে lock চিরকাল আটকে থাকে (deadlock)। সবসময় PX দিন।</li>
+<li>Token যাচাই ছাড়া <code>DEL</code> — আপনার TTL শেষ হয়ে অন্য কেউ lock নিয়েছে, আপনি ভুল করে তারটা মুছে ফেললেন। তাই release-এ Lua দিয়ে token মিলিয়ে DEL।</li>
+<li>একক Redis-এ lock "best-effort"; কড়া correctness দরকার হলে <b>Redlock</b> (একাধিক independent node) বিবেচনা করুন (তবু সীমাবদ্ধতা আছে)।</li>
+</ul></div>
+
+<h3>Rate Limiting</h3>
+<p><b>Fixed window (সরল):</b> প্রতি user/window-এ একটা counter — <code>INCR</code>, প্রথমবার হলে <code>EXPIRE</code>। limit ছাড়ালে block।</p>
+<pre>INCR ratelimit:user:1000:60s     <span class="c"># এই মিনিটের count</span>
+EXPIRE ratelimit:user:1000:60s 60 NX   <span class="c"># প্রথমবারই TTL</span>
+<span class="c"># count > limit হলে 429 ফেরত</span></pre>
+<p>আরও নিখুঁত: <b>sliding window</b> (Sorted Set-এ timestamp রেখে window-এর বাইরেরগুলো বাদ) বা <b>token bucket</b> (Lua দিয়ে atomic)।</p>
+
+<h3>Leaderboard</h3>
+<pre>ZINCRBY game:leaderboard 10 "rasel"      <span class="c"># score বাড়াও</span>
+ZREVRANGE game:leaderboard 0 9 WITHSCORES  <span class="c"># top 10</span>
+ZREVRANK game:leaderboard "rasel"        <span class="c"># নিজের rank</span></pre>
+<p>Sorted Set-এ leaderboard O(log n)-এ update ও O(log n + k)-তে top-k — DB-তে <code>ORDER BY</code>-র চেয়ে বহু গুণ দ্রুত ও real-time।</p>
+
+<h3>Session Store</h3>
+<p>Stateless API-তে session hash + TTL-এ রাখুন: <code>HSET session:abc userId 1000 role SWE</code> + <code>EXPIRE session:abc 1800</code>। যেকোনো instance একই Redis থেকে session পায় (sticky session লাগে না)।</p>
+</template>
+
+<template data-page="dotnet">
+<h2 class="title">১১. Redis in .NET</h2>
+<p class="lead">ASP.NET Core-এ Redis — <code>StackExchange.Redis</code> সরাসরি, আর <code>IDistributedCache</code> abstraction দিয়ে।</p>
+
+<h3>StackExchange.Redis — সংযোগ</h3>
+<pre><span class="c">// dotnet add package StackExchange.Redis</span>
+<span class="c">// ConnectionMultiplexer ব্যয়বহুল ও thread-safe — একটাই বানিয়ে singleton হিসেবে reuse!</span>
+builder.Services.AddSingleton&lt;IConnectionMultiplexer&gt;(
+    ConnectionMultiplexer.Connect("localhost:6379"));</pre>
+<div class="callout mistake"><span class="tag">#১ .NET mistake</span>
+প্রতি request-এ নতুন <code>ConnectionMultiplexer.Connect()</code> করা — এটা connection storm তৈরি করে, socket শেষ হয়, পারফরম্যান্স ধসে যায়। <b>একটাই multiplexer</b> বানিয়ে singleton হিসেবে ব্যবহার করুন (এটা internally connection multiplex করে, thread-safe)।</div>
+
+<h3>Get / Set</h3>
+<pre>public class CacheService(IConnectionMultiplexer mux) {
+    private readonly IDatabase _db = mux.GetDatabase();
+
+    public async Task SetAsync(string key, string val, TimeSpan ttl) =&gt;
+        await _db.StringSetAsync(key, val, ttl);
+
+    public async Task&lt;string?&gt; GetAsync(string key) =&gt;
+        await _db.StringGetAsync(key);
+}</pre>
+
+<h3>IDistributedCache — built-in abstraction</h3>
+<pre><span class="c">// dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis</span>
+builder.Services.AddStackExchangeRedisCache(o =&gt; {
+    o.Configuration = "localhost:6379";
+    o.InstanceName  = "myapi:";
+});
+
+<span class="c">// ব্যবহার — controller/service এ inject করে</span>
+public async Task&lt;Product&gt; GetProductAsync(int id, IDistributedCache cache) {
+    var key = $"product:{id}";
+    var cached = await cache.GetStringAsync(key);
+    if (cached is not null) return JsonSerializer.Deserialize&lt;Product&gt;(cached)!;
+
+    var product = await _db.GetProductAsync(id);          <span class="c">// DB (miss)</span>
+    await cache.SetStringAsync(key, JsonSerializer.Serialize(product),
+        new DistributedCacheEntryOptions {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+        });
+    return product;
+}</pre>
+<div class="callout best"><span class="tag">কোনটা কখন</span>
+সরল cache-aside/session-এ <code>IDistributedCache</code> যথেষ্ট ও পোর্টেবল। কিন্তু Sorted Set, pub/sub, Lua, atomic INCR, distributed lock — এসব advanced কাজে সরাসরি <code>IConnectionMultiplexer</code>/<code>IDatabase</code> লাগবে (<code>IDistributedCache</code> শুধু get/set/remove দেয়)।</div>
+
+<h3>Distributed lock (.NET)</h3>
+<pre>var db = mux.GetDatabase();
+var token = Guid.NewGuid().ToString();
+<span class="c">// lock নেওয়া: NX + TTL</span>
+bool locked = await db.StringSetAsync("lock:order:5", token,
+    TimeSpan.FromSeconds(30), When.NotExists);
+if (locked) {
+    try { /* critical section */ }
+    finally {
+        <span class="c">// token মিলিয়ে release (Lua, atomic)</span>
+        const string lua = @"if redis.call('get',KEYS[1])==ARGV[1] then
+                               return redis.call('del',KEYS[1]) else return 0 end";
+        await db.ScriptEvaluateAsync(lua,
+            new RedisKey[]{ "lock:order:5" }, new RedisValue[]{ token });
+    }
+}</pre>
+
+<h3>Connection resilience ও timeout (.NET production)</h3>
+<p>Production-এ raw connection string না দিয়ে <code>ConfigurationOptions</code> দিয়ে resilience টিউন করুন:</p>
+<pre>var options = new ConfigurationOptions {
+    EndPoints          = { "redis-host:6379" },
+    AbortOnConnectFail = false,   <span class="c">// Redis সাময়িক down থাকলেও app start হবে, পরে auto-reconnect</span>
+    ConnectRetry       = 3,
+    ConnectTimeout     = 5000,
+    SyncTimeout        = 5000,
+    Ssl                = true,
+    Password           = "...",
+};
+builder.Services.AddSingleton&lt;IConnectionMultiplexer&gt;(
+    ConnectionMultiplexer.Connect(options));</pre>
+<p>StackExchange.Redis connection drop হলে <b>নিজে থেকে reconnect</b> করে। তবু <code>RedisTimeoutException</code> production-এ সবচেয়ে সাধারণ ব্যথা।</p>
+<div class="callout mistake"><span class="tag">RedisTimeoutException-এর আসল কারণ</span>
+বেশিরভাগ সময় এটা Redis "ধীর" বলে নয় — বরং: (১) <b>sync-over-async</b> (<code>.Result</code>/<code>.Wait()</code>) → thread-pool starvation; (২) বিশাল value/big key transfer; (৩) একটা ধীর O(N) command পুরো server block করছে; বা (৪) প্রতি request-এ নতুন multiplexer। সমাধান: সবসময় <b>async</b> (<code>await</code>), <code>.Result</code>/<code>.Wait()</code> এড়ানো, <b>singleton</b> multiplexer, আর big key ভাঙা।</div>
+</template>
+
+<template data-page="prod">
+<h2 class="title">১২. Security · Monitoring · Best Practices</h2>
+<p class="lead">Production Redis নিরাপদে চালানো ও নজরে রাখা — আর শেষে master checklist।</p>
+
+<h3>Security</h3>
+<div class="callout best"><span class="tag">Checklist</span>
+<ul style="margin:4px 0">
+<li><b>Authentication:</b> <code>requirepass</code> (সরল), বা Redis 6+ <span class="kw">ACL</span> — per-user password + কোন command/key allowed তা নিয়ন্ত্রণ।</li>
+<li><b>TLS:</b> encrypted connection (Redis 6+ built-in) — public network-এ অবশ্যই।</li>
+<li><b>Network:</b> <code>bind</code> শুধু private interface-এ, <code>protected-mode on</code>, port বাইরের internet-এ খুলবেন না।</li>
+<li><b>Dangerous command rename/disable:</b> <code>FLUSHALL</code>, <code>FLUSHDB</code>, <code>KEYS</code>, <code>CONFIG</code> — <code>rename-command</code> দিয়ে বন্ধ/rename করুন।</li>
+</ul></div>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+Redis-কে auth ছাড়া, public IP-তে খুলে রাখা — internet-এ scan হয়ে মুহূর্তে compromise হয় (ransomware/crypto-miner)। সবসময় auth + private network + TLS।</div>
+
+<h3>Monitoring</h3>
+<table>
+<tr><th>Command / metric</th><th>কী দেখায়</th></tr>
+<tr><td><code>INFO</code></td><td>সব — memory, clients, persistence, stats, replication</td></tr>
+<tr><td><code>INFO memory</code> → <code>used_memory</code></td><td>কত RAM ব্যবহৃত (maxmemory-এর কাছে?)</td></tr>
+<tr><td>hit rate (<code>keyspace_hits/misses</code>)</td><td>cache কতটা কার্যকর</td></tr>
+<tr><td><code>SLOWLOG GET</code></td><td>ধীর command গুলো (block করছে যেগুলো)</td></tr>
+<tr><td><code>redis-cli --stat</code> / <code>--latency</code></td><td>live throughput / latency</td></tr>
+<tr><td>evicted_keys / expired_keys</td><td>eviction চাপ</td></tr>
+<tr><td>connected_clients</td><td>connection leak?</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">MONITOR সাবধানে</span>
+<code>MONITOR</code> সব command live দেখায় — debug-এ কাজের, কিন্তু production-এ চালিয়ে রাখলে প্রতিটা command process করতে হয় বলে Redis ধীর হয়ে যায়। শুধু ক্ষণিকের debug-এ।</div>
+
+<h3>Performance ও latency ফাঁদ — big key · hot key · O(N)</h3>
+<p>Redis single-threaded — মানে <b>একটা</b> ধীর command চলাকালীন বাকি সব client অপেক্ষা করে। তাই latency-র মূল শত্রু তিনটা:</p>
+<table>
+<tr><th>ফাঁদ</th><th>সমস্যা</th><th>সমাধান</th></tr>
+<tr><td><span class="kw">Big key</span></td><td>লাখো element-এর একটা list/hash/set/zset — O(N) command ও memory spike; cluster-এ reshard কঠিন</td><td>key split/ছোট করুন, size cap দিন; <code>redis-cli --bigkeys</code> দিয়ে খুঁজুন</td></tr>
+<tr><td><span class="kw">Hot key</span></td><td>একটা key-তে বিপুল traffic → একটা shard/instance overload</td><td>in-process (local) cache, replica read, key replication/split</td></tr>
+<tr><td><span class="kw">O(N) command</span></td><td><code>KEYS</code>, বড় collection-এ <code>HGETALL</code>/<code>SMEMBERS</code>/<code>ZRANGE</code>/<code>SORT</code> — পুরো server block</td><td>SCAN-পরিবার (<code>HSCAN</code>/<code>SSCAN</code>/<code>ZSCAN</code>), ranged query, ছোট batch</td></tr>
+</table>
+
+<h3>Troubleshooting</h3>
+<table>
+<tr><th>উপসর্গ</th><th>সম্ভাব্য কারণ</th><th>সমাধান</th></tr>
+<tr><td>RedisTimeoutException</td><td>sync-over-async / big key / ধীর O(N) command / per-request multiplexer</td><td>async, singleton multiplexer, big key ভাঙা, <code>SLOWLOG</code> দেখা</td></tr>
+<tr><td>হঠাৎ latency spike</td><td>O(N)/big key, বা RDB fork / AOF rewrite চলছে</td><td><code>SLOWLOG GET</code>, <code>redis-cli --latency</code>, persistence timing</td></tr>
+<tr><td>Write reject / OOM</td><td>maxmemory পূর্ণ + <code>noeviction</code></td><td>eviction policy সেট, TTL দিন, scale করুন</td></tr>
+<tr><td>used_memory বেড়েই চলছে</td><td>TTL নেই / big key / fragmentation</td><td>TTL দিন, <code>MEMORY USAGE key</code>, <code>mem_fragmentation_ratio</code> দেখুন</td></tr>
+<tr><td>connection সংখ্যা বাড়ছে</td><td>per-request multiplexer / leak</td><td>singleton multiplexer; <code>CLIENT LIST</code></td></tr>
+<tr><td>Replica পিছিয়ে (stale read)</td><td>network / বড় write burst</td><td>replication offset compare, network/capacity</td></tr>
+<tr><td>সব client hang</td><td><code>KEYS</code>/বড় O(N) / <code>MONITOR</code> চালু</td><td>SCAN ব্যবহার, MONITOR বন্ধ, big key খুঁজুন</td></tr>
+</table>
+
+<h3>Production Best Practices</h3>
+<div class="callout best"><span class="tag">Checklist</span>
+<ul style="margin:4px 0">
+<li>প্রতিটা key-তে যুক্তিসঙ্গত <b>TTL</b>; <code>maxmemory</code> + সঠিক <b>eviction policy</b> সেট।</li>
+<li>Production-এ <b>KEYS/FLUSHALL ব্যবহার নয়</b> — SCAN ব্যবহার করুন।</li>
+<li>Cache হলে persistence off; data-store হলে AOF+RDB।</li>
+<li>HA — Sentinel (failover) বা managed Redis; বড় হলে Cluster।</li>
+<li>.NET-এ <b>singleton</b> ConnectionMultiplexer; connection/timeout config টিউন।</li>
+<li>Cache-aside-এ invalidation + jittered TTL (stampede রোধ)।</li>
+<li>Auth + TLS + private network; hit rate, memory, slowlog নজরে।</li>
+<li>Big key (বিশাল list/hash) এড়ান — একটা key-তে লাখো element single-thread block করে।</li>
+</ul></div>
+
+<h3>✅ Redis Master Checklist</h3>
+<div class="card">
+<div class="grid2">
+<div>
+<p style="margin:4px 0"><b>Core</b></p>
+<ul style="margin:0">
+<li>✅ Redis কী · কেন দ্রুত · single-thread</li>
+<li>✅ Data types (String/List/Hash/Set/ZSet/Bitmap/HLL/Stream/Geo)</li>
+<li>✅ Keys · naming · TTL · SCAN vs KEYS</li>
+<li>✅ Persistence — RDB · AOF · fsync</li>
+<li>✅ Memory · eviction policy · LRU/LFU</li>
+<li>✅ Pub/Sub · Streams · consumer group</li>
+</ul>
+</div>
+<div>
+<p style="margin:4px 0"><b>Advanced &amp; Ops</b></p>
+<ul style="margin:0">
+<li>✅ Transactions (MULTI/WATCH) · Lua · pipeline</li>
+<li>✅ Replication · Sentinel · Cluster · hash slot</li>
+<li>✅ Caching patterns · stampede · invalidation</li>
+<li>✅ Distributed lock · rate limit · leaderboard · session</li>
+<li>✅ .NET — StackExchange.Redis · IDistributedCache</li>
+<li>✅ Security · monitoring · production best practices</li>
+</ul>
+</div>
+</div>
+</div>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>

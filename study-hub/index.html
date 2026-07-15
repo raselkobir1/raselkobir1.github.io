@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Study Hub — শেখার ড্যাশবোর্ড</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#ff8c42; --accent2:#4aa3ff;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1100px 520px at 85% -10%, rgba(255,140,66,.10), transparent 60%),
+      radial-gradient(900px 500px at 5% 0%, rgba(74,163,255,.10), transparent 55%),
+      var(--bg);
+    color:var(--text); min-height:100vh;
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.7; font-size:16px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1160px; margin:0 auto; padding:34px 28px 90px}
+
+  /* Header */
+  .topbar{display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:12px; flex-wrap:wrap}
+  .topright{display:flex; flex-direction:column; align-items:flex-end; gap:20px}
+  .logo{display:flex; align-items:center; gap:12px}
+  .logo .mark{
+    width:46px; height:46px; border-radius:13px; display:grid; place-items:center; font-size:24px;
+    background:linear-gradient(135deg, rgba(255,140,66,.9), rgba(74,163,255,.85)); color:#0d1117;
+    box-shadow:0 6px 22px rgba(255,140,66,.25);
+  }
+  .logo h1{font-size:20px; margin:0; letter-spacing:.2px}
+  .logo p{margin:0; font-size:12.5px; color:var(--muted)}
+  .stats{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
+  .stat{background:var(--panel); border:1px solid var(--border); border-radius:11px; padding:8px 14px; text-align:center; min-width:78px}
+  .stat b{display:block; font-size:19px; color:var(--accent)}
+  .stat span{font-size:11.5px; color:var(--muted)}
+
+  /* Profile */
+  .profile{display:flex; align-items:center; gap:12px; background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:9px 15px 9px 10px}
+  .avatar{
+    width:44px; height:44px; flex:0 0 44px; border-radius:50%; display:grid; place-items:center;
+    font-weight:700; font-size:16px; letter-spacing:.5px; color:#0d1117;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    box-shadow:0 5px 16px rgba(74,163,255,.28);
+  }
+  .profile .who{line-height:1.4}
+  .profile .who b{font-size:14.5px; display:block}
+  .profile .who .role{font-size:12px; color:var(--accent2)}
+  .profile .who a{font-size:12px; color:var(--muted); text-decoration:none}
+  .profile .who a:hover{color:var(--text); text-decoration:underline}
+  .profile a.aboutbtn{
+    font-size:11.5px; font-weight:700; color:#0d1117; text-decoration:none; white-space:nowrap;
+    padding:6px 13px; border-radius:20px; margin-left:6px; align-self:center;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+  }
+  .profile a.aboutbtn:hover{color:#0d1117; text-decoration:none; filter:brightness(1.08)}
+
+  /* Hero */
+  .hero{margin:0 0 30px}
+  .hero h2{font-size:30px; margin:0 0 8px; line-height:1.25}
+  .hero h2 .hl{background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; background-clip:text; color:transparent}
+  .hero p{margin:0; color:var(--muted); font-size:15.5px; max-width:680px}
+
+  /* Controls */
+  .controls{display:flex; align-items:center; gap:12px; margin:0 0 22px; flex-wrap:wrap}
+  .search{flex:1; min-width:220px; position:relative}
+  .search input{
+    width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text);
+    border-radius:11px; padding:11px 14px 11px 40px; font-family:inherit; font-size:14.5px; outline:none;
+  }
+  .search input:focus{border-color:var(--accent2)}
+  .search svg{position:absolute; left:13px; top:50%; transform:translateY(-50%); opacity:.6}
+  .chips{display:flex; gap:8px; flex-wrap:wrap}
+  .chip{
+    background:var(--panel); border:1px solid var(--border); color:var(--muted); cursor:pointer;
+    padding:9px 15px; border-radius:20px; font-size:13.5px; font-family:inherit; transition:.15s;
+  }
+  .chip:hover{color:var(--text)}
+  .chip.active{background:linear-gradient(90deg,rgba(255,140,66,.22),rgba(74,163,255,.15)); color:var(--text); border-color:var(--accent)}
+
+  /* Grid */
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(268px,1fr)); gap:18px}
+
+  /* Card */
+  .tcard{
+    position:relative; display:flex; flex-direction:column; text-decoration:none; color:inherit;
+    background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:20px 20px 18px;
+    overflow:hidden; transition:transform .16s, border-color .16s, box-shadow .16s;
+  }
+  .tcard::before{content:""; position:absolute; inset:0 0 auto 0; height:4px; background:var(--c,var(--accent))}
+  .tcard.ready{cursor:pointer}
+  .tcard.ready:hover{transform:translateY(-4px); border-color:var(--c,var(--accent)); box-shadow:0 14px 34px rgba(0,0,0,.4)}
+  .tcard.soon{opacity:.72}
+  .tcard.soon:hover{border-color:var(--border)}
+
+  .tcard-top{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px}
+  .ticon{
+    width:52px; height:52px; border-radius:14px; display:grid; place-items:center; font-size:27px;
+    background:color-mix(in srgb, var(--c,var(--accent)) 16%, transparent);
+    border:1px solid color-mix(in srgb, var(--c,var(--accent)) 40%, transparent);
+  }
+  .status{font-size:11px; font-weight:700; letter-spacing:.4px; text-transform:uppercase; padding:5px 10px; border-radius:20px; white-space:nowrap}
+  .status.ready{color:var(--green); background:rgba(63,185,80,.14); border:1px solid rgba(63,185,80,.4)}
+  .status.soon{color:var(--muted); background:var(--panel2); border:1px solid var(--border)}
+
+  .tcard h3{font-size:19px; margin:0 0 6px}
+  .tcard .desc{margin:0 0 14px; font-size:14px; color:var(--muted); line-height:1.6; flex:1}
+  .tmeta{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:14px}
+  .badge{font-size:11.5px; color:var(--muted); background:var(--panel2); border:1px solid var(--border); border-radius:20px; padding:3px 10px}
+  .tgo{display:inline-flex; align-items:center; gap:7px; font-size:14px; font-weight:600; color:var(--c,var(--accent))}
+  .tgo .arw{transition:transform .16s}
+  .tcard.ready:hover .tgo .arw{transform:translateX(4px)}
+  .tgo.muted{color:var(--muted); font-weight:500}
+
+  .empty{grid-column:1/-1; text-align:center; color:var(--muted); padding:50px 0}
+
+  footer{margin-top:46px; padding-top:20px; border-top:1px solid var(--border); color:var(--muted); font-size:13px; text-align:center}
+
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+
+  @media (max-width:600px){
+    .wrap{padding:24px 16px 60px}
+    .hero h2{font-size:24px}
+    .grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="logo">
+      <div class="mark">📚</div>
+      <div>
+        <h1>Study Hub</h1>
+        <p>শেখার ড্যাশবোর্ড • বাংলায় (keyword ইংরেজিতে)</p>
+      </div>
+    </div>
+    <div class="topright">
+      <div class="profile">
+        <div class="avatar">RK</div>
+        <div class="who">
+          <b><a href="about.html" style="color:inherit;text-decoration:none;font-size:inherit;border-bottom:1px dashed var(--muted)" title="About Me">Rasel Kabir</a></b>
+          <span class="role">Backend-Focused Full-Stack Developer</span><br>
+          <a href="mailto:raselkobir57@gmail.com">raselkobir57@gmail.com</a>
+        </div>
+        <a class="aboutbtn" href="about.html">About →</a>
+      </div>
+      <div class="stats" id="stats"></div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <h2>যা শিখতে চান <span class="hl">সেই টপিকে</span> ক্লিক করুন</h2>
+    <p>প্রতিটা কার্ড একটা সম্পূর্ণ কোর্স — beginner থেকে advanced, internals ও production সহ। "Ready" কার্ডে ক্লিক করলে পুরো পেজ খুলবে।</p>
+  </div>
+
+  <div class="controls">
+    <div class="search">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9aa7b4" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="q" type="text" placeholder="টপিক খুঁজুন… (kafka, docker, sql)" autocomplete="off" />
+    </div>
+    <div class="chips" id="chips">
+      <button class="chip active" data-f="all">সব</button>
+      <button class="chip" data-f="ready">Ready</button>
+      <button class="chip" data-f="soon">শীঘ্রই</button>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>ক্রমশ আরও টপিক যোগ হবে • Study Hub</footer>
+</div>
+
+<script>
+// ================= TOPICS =================
+// নতুন টপিক যোগ করতে শুধু এই তালিকায় একটা object যোগ করুন।
+// ready:true হলে href-এ লিংক করা পেজ খুলবে; ready:false = "শীঘ্রই আসছে"।
+const topics = [
+  { id:"kafka",      icon:"⚡",  title:"Apache Kafka", accent:"#ff8c42",
+    desc:"Distributed event streaming — architecture, storage internals, producer/consumer, replication থেকে production।",
+    tags:["১৫ অধ্যায়","Beginner→Advanced"], ready:true, href:"kafka-mastery-bangla.html" },
+
+  { id:"rabbitmq",   icon:"🐰",  title:"RabbitMQ", accent:"#f96a6a",
+    desc:"Message broker — AMQP, exchange, queue, binding, routing, DLX/DLQ, quorum queue থেকে production।",
+    tags:["১২ অধ্যায়","Beginner→Advanced"], ready:true, href:"rabbitmq.html" },
+
+  { id:"docker",     icon:"🐳",  title:"Docker", accent:"#4aa3ff",
+    desc:"Image, layer, Dockerfile, multi-stage, volume, network, Compose ও .NET stack — production-grade।",
+    tags:["১২ অধ্যায়","Beginner→Advanced"], ready:true, href:"docker.html" },
+
+  { id:"kubernetes", icon:"☸️",  title:"Kubernetes", accent:"#7b9cff",
+    desc:"Pod, deployment, service, ingress, config, autoscaling ও operator।",
+    tags:["পরিকল্পিত"], ready:false, href:"kubernetes.html" },
+
+  { id:"csharp",     icon:"💜",  title:"C# / .NET", accent:"#bc8cff",
+    desc:"Language core, async/await, LINQ, memory ও .NET internals।",
+    tags:["পরিকল্পিত"], ready:false, href:"csharp.html" },
+
+  { id:"sql",        icon:"🗄️",  title:"SQL · PostgreSQL · SQL Server", accent:"#3fb950",
+    desc:"Portable SQL (join, window, CTE, tx, index) + PostgreSQL ও SQL Server specifics — production-grade।",
+    tags:["১৯ অধ্যায়","+ interview · tuning · CDC"], ready:true, href:"sql.html" },
+
+  { id:"redis",      icon:"🧱",  title:"Redis", accent:"#f85149",
+    desc:"Data types, persistence, eviction, pub/sub, streams, replication, caching pattern ও .NET — production-grade।",
+    tags:["১২ অধ্যায়","Beginner→Advanced"], ready:true, href:"redis.html" },
+
+  { id:"git",        icon:"🌿",  title:"Git", accent:"#e3b341",
+    desc:"Branch, merge, rebase, conflict resolution ও team workflow।",
+    tags:["পরিকল্পিত"], ready:false, href:"git.html" },
+
+  { id:"auth",       icon:"🔐",  title:"Auth & Keycloak", accent:"#eab308",
+    desc:"Authentication, authorization, JWT, OAuth2, OpenID Connect ও Keycloak — identity ও access management।",
+    tags:["পরিকল্পিত"], ready:false, href:"auth.html" },
+
+  { id:"distsys",    icon:"🕸️",  title:"Distributed Systems", accent:"#2dd4bf",
+    desc:"CAP theorem, consistency, consensus, replication, partitioning, fault tolerance ও design pattern।",
+    tags:["পরিকল্পিত"], ready:false, href:"distsys.html" },
+];
+
+// ================= RENDER =================
+(function(){
+  const grid  = document.getElementById('grid');
+  const stats = document.getElementById('stats');
+  const q      = document.getElementById('q');
+  const chips  = document.getElementById('chips');
+  let filter = 'all', term = '';
+
+  // stats
+  const ready = topics.filter(t=>t.ready).length;
+  stats.innerHTML =
+     `<div class="stat"><b>${topics.length}</b><span>টপিক</span></div>`
+   + `<div class="stat"><b>${ready}</b><span>প্রস্তুত</span></div>`
+   + `<div class="stat"><b>${topics.length-ready}</b><span>শীঘ্রই</span></div>`;
+
+  function card(t){
+    const cls = t.ready ? 'ready' : 'soon';
+    const status = t.ready
+      ? '<span class="status ready">Ready</span>'
+      : '<span class="status soon">শীঘ্রই</span>';
+    const go = t.ready
+      ? '<span class="tgo">শুরু করুন <span class="arw">→</span></span>'
+      : '<span class="tgo muted">প্রস্তুত হচ্ছে…</span>';
+    const meta = t.tags.map(x=>`<span class="badge">${x}</span>`).join('');
+    const inner =
+       `<div class="tcard-top"><div class="ticon">${t.icon}</div>${status}</div>`
+     + `<h3>${t.title}</h3>`
+     + `<p class="desc">${t.desc}</p>`
+     + `<div class="tmeta">${meta}</div>`
+     + go;
+    if(t.ready){
+      return `<a class="tcard ready" style="--c:${t.accent}" href="${t.href}">${inner}</a>`;
+    }
+    return `<div class="tcard soon" style="--c:${t.accent}" title="শীঘ্রই যোগ হবে">${inner}</div>`;
+  }
+
+  function render(){
+    const list = topics.filter(t=>{
+      const okF = filter==='all' || (filter==='ready'&&t.ready) || (filter==='soon'&&!t.ready);
+      const okT = !term || (t.title+' '+t.id+' '+t.desc).toLowerCase().includes(term);
+      return okF && okT;
+    });
+    grid.innerHTML = list.length
+      ? list.map(card).join('')
+      : '<div class="empty">কোনো টপিক মেলেনি — অন্য কিছু খুঁজে দেখুন।</div>';
+  }
+
+  chips.addEventListener('click', e=>{
+    const b = e.target.closest('.chip'); if(!b) return;
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active', c===b));
+    filter = b.dataset.f; render();
+  });
+  q.addEventListener('input', ()=>{ term = q.value.trim().toLowerCase(); render(); });
+
+  render();
+})();
+</script>
+</body>
+</html>

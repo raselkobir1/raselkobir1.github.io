@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rasel Kabir — About Me</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#ff8c42; --accent2:#4aa3ff;
+    --green:#3fb950; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1100px 520px at 85% -10%, rgba(255,140,66,.10), transparent 60%),
+      radial-gradient(900px 500px at 5% 0%, rgba(74,163,255,.12), transparent 55%),
+      var(--bg);
+    color:var(--text); min-height:100vh;
+    font-family:"Inter","Hind Siliguri","Noto Sans Bengali",system-ui,-apple-system,"Segoe UI",sans-serif;
+    line-height:1.7; font-size:16px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:26px 26px 90px}
+  a.back{display:inline-block; color:var(--muted); text-decoration:none; font-size:13px; margin-bottom:22px}
+  a.back:hover{color:var(--text)}
+
+  /* Hero */
+  .hero{display:flex; align-items:center; gap:22px; flex-wrap:wrap; margin-bottom:10px}
+  .avatar{
+    width:88px; height:88px; flex:0 0 88px; border-radius:24px; display:grid; place-items:center;
+    font-size:32px; font-weight:800; letter-spacing:1px; color:#0d1117;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    box-shadow:0 10px 30px rgba(74,163,255,.28);
+  }
+  .hero h1{margin:0 0 4px; font-size:30px; letter-spacing:.2px}
+  .hero .title{margin:0; color:var(--accent2); font-size:16px; font-weight:600}
+  .contact{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px}
+  .contact a{
+    display:inline-flex; align-items:center; gap:7px; text-decoration:none; font-size:13.5px;
+    background:var(--panel); border:1px solid var(--border); color:var(--text);
+    padding:7px 13px; border-radius:20px; transition:.15s;
+  }
+  .contact a:hover{border-color:var(--accent2); color:var(--accent2)}
+  .contact a.dl{
+    background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#0d1117;
+    border:none; font-weight:700; box-shadow:0 6px 18px rgba(74,163,255,.25);
+  }
+  .contact a.dl:hover{color:#0d1117; filter:brightness(1.08)}
+
+  h2{
+    font-size:14px; text-transform:uppercase; letter-spacing:1.5px; color:var(--accent);
+    margin:38px 0 16px; padding-bottom:8px; border-bottom:1px solid var(--border);
+  }
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16.5px; line-height:1.85}
+
+  /* Skills */
+  .skillgroup{margin:12px 0}
+  .skillgroup .lbl{font-size:13px; color:var(--purple); font-weight:700; margin-bottom:7px}
+  .chips{display:flex; gap:8px; flex-wrap:wrap}
+  .chip{
+    font-size:13px; background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    padding:4px 12px; border-radius:8px;
+  }
+
+  /* Experience timeline */
+  .tl{border-left:2px solid var(--border); margin-left:8px; padding-left:22px}
+  .job{position:relative; margin-bottom:26px}
+  .job::before{
+    content:""; position:absolute; left:-30px; top:6px; width:12px; height:12px; border-radius:50%;
+    background:var(--accent2); box-shadow:0 0 0 4px rgba(74,163,255,.15);
+  }
+  .job h3{margin:0; font-size:18px}
+  .job .co{color:var(--accent2); font-weight:600}
+  .job .meta{color:var(--muted); font-size:13px; margin:3px 0 8px}
+  .job ul{margin:8px 0; padding-left:20px}
+  .job li{margin:5px 0; font-size:14.5px}
+  .tag{
+    display:inline-block; font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
+    color:var(--green); background:rgba(63,185,80,.12); border:1px solid rgba(63,185,80,.35);
+    padding:2px 9px; border-radius:20px; margin-left:8px; vertical-align:middle;
+  }
+
+  /* Projects (name only) */
+  .projcard{
+    background:var(--panel); border:1px solid var(--border); border-left:4px solid var(--accent2);
+    border-radius:0 10px 10px 0; padding:12px 16px; margin:10px 0; font-weight:600;
+  }
+
+  /* Education */
+  .edu{
+    background:var(--panel); border:1px solid var(--border); border-left:4px solid var(--accent);
+    border-radius:0 12px 12px 0; padding:16px 20px;
+  }
+  .edu b{font-size:16px}
+
+  /* Contact form */
+  .form{display:grid; gap:12px; max-width:520px}
+  .form input, .form textarea{
+    width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text);
+    border-radius:10px; padding:11px 13px; font-family:inherit; font-size:14.5px; outline:none;
+  }
+  .form input:focus, .form textarea:focus{border-color:var(--accent2)}
+  .form textarea{min-height:120px; resize:vertical}
+  .form button{
+    justify-self:start; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#0d1117;
+    border:none; font-weight:700; font-size:14.5px; padding:11px 22px; border-radius:10px; cursor:pointer;
+  }
+  .form button:hover{filter:brightness(1.08)}
+  .hint{color:var(--muted); font-size:12.5px; margin-top:8px}
+
+  footer{margin-top:44px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px; text-align:center}
+  ::-webkit-scrollbar{width:10px; height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d; border-radius:6px}
+  @media (max-width:560px){ .wrap{padding:20px 16px 60px} .hero h1{font-size:24px} }
+
+  /* Print / "Download Info" → Save as PDF: only the about content, fits ONE page */
+  @page{ size:A4; margin:10mm; }
+  @media print{
+    a.back, .contact a.dl, #contact, footer { display:none !important; }
+    body{ background:#fff !important; color:#111; font-size:10px; line-height:1.32; }
+    .wrap{ max-width:100%; padding:0 }
+    .hero{ gap:14px; margin-bottom:6px }
+    .avatar{ width:52px; height:52px; flex:0 0 52px; border-radius:14px; font-size:19px; box-shadow:none }
+    .hero h1{ font-size:20px; margin:0 }
+    .hero .title{ font-size:12px; color:#0b5cad }
+    .contact{ margin-top:6px; gap:6px }
+    .contact a{ background:#f2f2f2; border-color:#ccc; color:#111; padding:3px 9px; font-size:10px }
+    h2{ color:#111; border-color:#ccc; font-size:11px; letter-spacing:1px; margin:11px 0 5px; padding-bottom:3px }
+    p{ margin:4px 0 }
+    .lead{ font-size:10px; line-height:1.4; color:#222; margin:4px 0 }
+    .skillgroup{ margin:4px 0 }
+    .skillgroup .lbl{ color:#6d28d9; margin-bottom:2px; font-size:9.5px }
+    .chips{ gap:4px }
+    .chip{ background:#f2f2f2; border-color:#ccc; color:#111; padding:1px 7px; font-size:9.5px; border-radius:5px }
+    .tl{ border-color:#ccc; padding-left:14px; margin-left:5px }
+    .job{ margin-bottom:7px; page-break-inside:avoid }
+    .job::before{ background:#0b5cad; box-shadow:none; width:8px; height:8px; left:-19px; top:5px }
+    .job h3{ font-size:12.5px }
+    .job .co{ color:#0b5cad; font-size:11px }
+    .job .meta{ color:#333; font-size:9.5px; margin:1px 0 0 }
+    .tag{ font-size:8px; padding:1px 6px }
+    .projcard{ background:#f7f7f7; border-color:#ccc; color:#111; padding:5px 11px; margin:4px 0; font-size:11px; page-break-inside:avoid }
+    .edu{ background:#f7f7f7; border-color:#ccc; color:#111; padding:7px 12px; page-break-inside:avoid }
+    .edu b{ font-size:12px }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← সব টপিক (Dashboard)</a>
+
+  <header class="hero">
+    <div class="avatar">RK</div>
+    <div>
+      <h1>Rasel Kabir</h1>
+      <p class="title">Backend-Focused Full-Stack Software Developer</p>
+      <div class="contact">
+        <a href="mailto:raselkobir57@gmail.com">✉️ raselkobir57@gmail.com</a>
+        <a href="tel:+8801773206744">📞 +88 01773-206744</a>
+        <a class="dl" href="#" onclick="window.print(); return false;">⬇️ Download Info</a>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <h2>Summary</h2>
+    <p class="lead">Backend-focused full-stack developer with <b>5+ years of experience</b> delivering
+    scalable software solutions. Skilled in .NET technologies, SQL &amp; <b>PostgreSQL</b>, and modern
+    JavaScript frameworks, with hands-on experience building <b>event-driven microservices</b>.
+    Experienced in designing, developing, and deploying software systems with strong problem-solving
+    skills. Adept at collaborating with business and technical stakeholders.</p>
+  </section>
+
+  <section>
+    <h2>Technical Skills</h2>
+    <div class="skillgroup"><div class="lbl">Languages</div><div class="chips">
+      <span class="chip">C#</span><span class="chip">JavaScript</span><span class="chip">TypeScript</span><span class="chip">SQL</span><span class="chip">jQuery</span>
+    </div></div>
+    <div class="skillgroup"><div class="lbl">Frameworks &amp; Libraries</div><div class="chips">
+      <span class="chip">.NET Core</span><span class="chip">.NET 8</span><span class="chip">EF Core</span><span class="chip">Dapper</span><span class="chip">ASP.NET MVC</span><span class="chip">Angular</span><span class="chip">Vue.js</span>
+    </div></div>
+    <div class="skillgroup"><div class="lbl">Databases</div><div class="chips">
+      <span class="chip">MS SQL</span><span class="chip">PostgreSQL</span><span class="chip">MongoDB</span>
+    </div></div>
+    <div class="skillgroup"><div class="lbl">Caching / Streaming &amp; Messaging</div><div class="chips">
+      <span class="chip">Redis</span><span class="chip">Kafka</span><span class="chip">RabbitMQ</span>
+    </div></div>
+    <div class="skillgroup"><div class="lbl">Cloud &amp; DevOps</div><div class="chips">
+      <span class="chip">AWS (EC2, S3, RDS)</span><span class="chip">Docker</span><span class="chip">Linux</span>
+    </div></div>
+    <div class="skillgroup"><div class="lbl">Architecture &amp; Principles</div><div class="chips">
+      <span class="chip">Microservices</span><span class="chip">Monolithic</span><span class="chip">Modular Monolith</span><span class="chip">Repository Pattern</span><span class="chip">API Gateway</span><span class="chip">gRPC</span><span class="chip">Clean Architecture</span><span class="chip">OOP</span><span class="chip">SOLID</span><span class="chip">Design Patterns</span>
+    </div></div>
+    <div class="skillgroup"><div class="lbl">Security</div><div class="chips">
+      <span class="chip">ASP.NET Identity</span><span class="chip">JWT</span><span class="chip">API Key Auth</span><span class="chip">Role &amp; Policy Authorization</span><span class="chip">Fluent Validation</span>
+    </div></div>
+    <div class="skillgroup"><div class="lbl">Monitoring &amp; Logging</div><div class="chips">
+      <span class="chip">Serilog</span><span class="chip">Elasticsearch</span><span class="chip">APM</span><span class="chip">Loki</span><span class="chip">Grafana</span>
+    </div></div>
+    <div class="skillgroup"><div class="lbl">Other Tools</div><div class="chips">
+      <span class="chip">Git</span><span class="chip">GitHub</span><span class="chip">GitLab</span><span class="chip">Bitbucket</span><span class="chip">SourceTree</span><span class="chip">Postman</span><span class="chip">Redmine</span><span class="chip">ER Diagram</span>
+    </div></div>
+  </section>
+
+  <section>
+    <h2>Professional Experience</h2>
+    <div class="tl">
+      <div class="job">
+        <h3>Backend Software Engineer <span class="tag">Current</span></h3>
+        <div class="co">TechnoNext Software Limited</div>
+        <div class="meta">Mar 2022 – Present · Talukdar Tower, Saied Nagar</div>
+      </div>
+      <div class="job">
+        <h3>Full Stack Jr. Software Engineer</h3>
+        <div class="co">Enkaizen</div>
+        <div class="meta">May 2021 – Mar 2022 · Mohakhali DOHS</div>
+      </div>
+      <div class="job">
+        <h3>Full Stack Jr. Software Engineer</h3>
+        <div class="co">Desh Universel Pvt. Limited</div>
+        <div class="meta">May 2020 – Mar 2021 · Mohakhali DOHS</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Projects</h2>
+    <div class="projcard">Fintech System</div>
+    <div class="projcard">OTA — Online Travel Agency (Airlines B2B &amp; B2C)</div>
+    <div class="projcard">Education Institute Management System (EIMS)</div>
+  </section>
+
+  <section>
+    <h2>Education</h2>
+    <div class="edu">
+      <b>BSc in Computer Science &amp; Software Engineering</b><br>
+      Bangladesh University of Business and Technology — 2020
+    </div>
+  </section>
+
+  <section id="contact">
+    <h2>Contact</h2>
+    <form class="form" action="https://formsubmit.co/raselkobir57@gmail.com" method="POST">
+      <input type="hidden" name="_subject" value="New message from About page">
+      <input type="hidden" name="_template" value="table">
+      <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off">
+      <input type="text" name="name" placeholder="Your name" required>
+      <input type="email" name="email" placeholder="Your email" required>
+      <textarea name="message" placeholder="Your message…" required></textarea>
+      <button type="submit">✉️ Send Message</button>
+    </form>
+    <p class="hint">Messages are delivered straight to my inbox via FormSubmit.</p>
+  </section>
+
+  <footer>Rasel Kabir · Backend-Focused Full-Stack Developer</footer>
+</div>
+</body>
+</html>
