@@ -486,42 +486,106 @@ Production release চিহ্নিত করতে annotated tag ব্যব
 <h2 class="title">৮. Undo · Recovery</h2>
 <p class="lead">ভুল করলে ঘাবড়াবেন না — Git-এ প্রায় সবকিছুই ফেরানো যায়। কোন কমান্ড কোন স্তরে কাজ করে সেটা বোঝাই আসল কথা।</p>
 
-<h3>Reset — তিন মোড, তিন রকম প্রভাব</h3>
-<p><code>git reset</code> বর্তমান branch-এর pointer-কে অন্য কোনো commit-এ সরিয়ে দেয়, কিন্তু <b>কতটা</b> বদলাবে তা নির্ভর করে flag-এর উপর:</p>
-<table>
-<tr><th>Command</th><th>Branch pointer</th><th>Staging Area</th><th>Working Directory</th></tr>
-<tr><td><code>git reset --soft &lt;commit&gt;</code></td><td>বদলায়</td><td>অপরিবর্তিত (আগের মতোই staged থাকে)</td><td>অপরিবর্তিত</td></tr>
-<tr><td><code>git reset --mixed &lt;commit&gt;</code> (default)</td><td>বদলায়</td><td>খালি হয়ে যায় (unstaged)</td><td>অপরিবর্তিত (ফাইল ঠিকই থাকে)</td></tr>
-<tr><td><code>git reset --hard &lt;commit&gt;</code></td><td>বদলায়</td><td>খালি হয়ে যায়</td><td><b>মুছে যায়</b> — ফাইলের কন্টেন্টও সেই commit-এর মতো হয়ে যায়</td></tr>
-</table>
-<div class="callout why"><span class="tag">কখন কোনটা</span>
-<code>--soft</code>: কয়েকটা commit একসাথে মিশিয়ে নতুন করে commit করতে চাইলে (commit বাতিল কিন্তু কাজ staged-ই থাকুক)। <code>--mixed</code>: commit বাতিল করে আবার নতুন করে বেছে বেছে stage করতে চাইলে। <code>--hard</code>: সেই commit থেকে সবকিছু — commit ও ফাইলের পরিবর্তন — পুরোপুরি বাতিল করতে চাইলে।</div>
+<h3>একটা বাস্তব দৃশ্যপট — পুরো অধ্যায়ে এই একই উদাহরণ চলবে</h3>
+<p>ধরুন আপনি <code>Calculator.cs</code> নিয়ে কাজ করছেন, আর এখন পর্যন্ত <code>git log --oneline</code> দিলে এই real (কাল্পনিক কিন্তু বাস্তবসম্মত) history দেখাচ্ছে:</p>
+<pre>$ git log --oneline
+d4f8a91 (HEAD -> main) Add tax calculation to invoice total   <span class="c"># সর্বশেষ commit — এইটাই ভুল, ফর্মুলা ভুল ছিল</span>
+9c2e7b3 Fix rounding bug in Divide method                      <span class="c"># এই অবস্থায় ফিরে যেতে চাই</span>
+a1f5c02 Add Divide method to Calculator
+7b3e9d1 Initial commit — Calculator with Add, Subtract</pre>
+<p>প্রতিটা লাইনের শুরুর ৭-অক্ষরের কোড (<code>d4f8a91</code>, <code>9c2e7b3</code> ইত্যাদি) হলো সেই commit-এর real hash — বইয়ের মতো জায়গায় ব্যবহৃত <code>&lt;commit&gt;</code> placeholder-এর জায়গায় বাস্তবে ঠিক এরকম একটা মান বসে।</p>
+
+<div class="callout why"><span class="tag">সবচেয়ে বেশি ভুল-বোঝা বিষয় — <code>&lt;commit&gt;</code> মানে কী, ঠিক কোনটা?</span>
+<code>git reset --soft &lt;commit&gt;</code>-এ <code>&lt;commit&gt;</code> হলো <b>যেখানে আপনি ফিরে যেতে/পৌঁছাতে চান সেই commit-এর hash</b> — যে commit-টা <b>বাতিল করতে চান</b> তার hash <b>নয়</b>। উপরের উদাহরণে <code>d4f8a91</code> ("tax calculation") বাতিল করতে চাই, কিন্তু কমান্ডে বসাতে হবে <b>তার আগের</b> commit — <code>9c2e7b3</code>। কারণ reset-এর অর্থ "branch pointer-কে ঠিক এই commit-এ নিয়ে যাও" — d4f8a91-এর আগে যা ছিল সেটাই তো 9c2e7b3।
+<pre>git reset --soft 9c2e7b3
+<span class="c"># হুবহু একই কাজ, hash মনে না রাখলেও চলে (৯c2e7b3 ঠিক HEAD-এর ১ ধাপ পেছনে):</span>
+git reset --soft HEAD~1</pre>
+২টা commit বাতিল করতে চাইলে <code>HEAD~2</code> (এখানে সেটা হতো <code>a1f5c02</code>) — সবসময় <b>যেখানে থামতে চান</b> সেই commit বসান।</div>
+
+<h3>Reset — তিন মোড, তিন রকম প্রভাব (একই hash, ভিন্ন ফলাফল)</h3>
+<p><code>git reset</code> বর্তমান branch-এর pointer-কে অন্য কোনো commit-এ সরিয়ে দেয়, কিন্তু <b>কতটা</b> বদলাবে তা নির্ভর করে flag-এর উপর। নিচে তিনটাই <b>ঠিক একই কমান্ড</b> (<code>9c2e7b3</code>-তে ফেরা) দিয়ে, শুধু flag বদলে, ফলাফল কতটা ভিন্ন — real <code>git status</code> আউটপুট দিয়ে দেখানো হলো:</p>
+
+<h4><code>git reset --soft 9c2e7b3</code></h4>
+<pre>$ git reset --soft 9c2e7b3
+$ git status
+On branch main
+Changes to be committed:
+        modified:   Invoice.cs
+
+$ git log --oneline
+9c2e7b3 (HEAD -> main) Fix rounding bug in Divide method
+a1f5c02 Add Divide method to Calculator
+7b3e9d1 Initial commit — Calculator with Add, Subtract</pre>
+<p>লক্ষ্য করুন: <code>d4f8a91</code> commit history থেকে চলে গেছে, কিন্তু তার কোড-পরিবর্তন (<code>Invoice.cs</code>) এখনো <b>staged</b> — অর্থাৎ ফর্মুলা ঠিক করে সাথে সাথেই আবার <code>git commit -m "..."</code> দিয়ে re-commit করতে পারবেন।</p>
+
+<h4><code>git reset --mixed 9c2e7b3</code> (flag ছাড়া দিলে এটাই default)</h4>
+<pre>$ git reset --mixed 9c2e7b3
+$ git status
+On branch main
+Changes not staged for commit:
+        modified:   Invoice.cs</pre>
+<p>এবার একই <code>Invoice.cs</code>-এর পরিবর্তন working directory-তে আছে, কিন্তু staged নয় — <code>git add</code> না করা পর্যন্ত commit হবে না। ফর্মুলা আংশিক ঠিক করে শুধু কিছু অংশ নতুন করে stage করতে চাইলে এটা সুবিধাজনক।</p>
+
+<h4><code>git reset --hard 9c2e7b3</code> ⚠</h4>
+<pre>$ git reset --hard 9c2e7b3
+$ git status
+On branch main
+nothing to commit, working tree clean
+
+$ cat Invoice.cs
+<span class="c"># tax calculation-এর কোড সম্পূর্ণ উধাও — যেন d4f8a91 কমিটটা কখনো হয়ইনি</span></pre>
 <div class="callout mistake"><span class="tag">Common mistake — --hard-এর বিপদ</span>
-<code>git reset --hard</code> uncommitted কাজ <b>স্থায়ীভাবে মুছে দেয়</b> — কোনো commit হয়নি এমন পরিবর্তন <code>reflog</code>-এও ফিরে পাওয়া যায় না। চালানোর আগে <code>git status</code>/<code>git diff</code> দিয়ে নিশ্চিত হয়ে নিন কিছু হারানোর ঝুঁকি নেই, বা আগে <code>git stash</code> করুন।</div>
+এখানে <code>Invoice.cs</code>-এর সেই পরিবর্তন <b>সম্পূর্ণ মুছে গেছে</b> — কোনো commit না থাকায় (এটা তো আগেই ছিল commit d4f8a91-এ, কিন্তু ধরুন এর সাথে আরও কিছু uncommitted edit থাকলে সেগুলোও) <code>reflog</code>-এও সেই uncommitted অংশ ফিরে পাওয়া যায় না। চালানোর আগে <code>git status</code>/<code>git diff</code> দিয়ে নিশ্চিত হয়ে নিন কিছু হারানোর ঝুঁকি নেই, বা আগে <code>git stash</code> করুন।</div>
 
 <h3>Revert — নিরাপদ, shared branch-বান্ধব Undo</h3>
-<table>
-<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
-<tr><td><code>git revert &lt;commit&gt;</code></td><td>ইতিমধ্যে push/shared হয়ে যাওয়া একটা commit বাতিল করতে (history rewrite না করে)</td><td>পুরনো commit মোছে না — বরং তার <b>উল্টো পরিবর্তন</b> নিয়ে একটা <b>নতুন commit</b> তৈরি হয়</td></tr>
-</table>
-<div class="callout why"><span class="tag">Reset বনাম Revert</span>
-<code>reset</code> history <b>মুছে/পাল্টে</b> দেয় — শুধু local/না-শেয়ার-করা branch-এ নিরাপদ। <code>revert</code> পুরনো history অক্ষত রেখে তার বিপরীত একটা নতুন commit যোগ করে — তাই shared/production branch-এ bug ছড়িয়ে পড়া commit বাতিল করার সঠিক উপায় সবসময় <code>revert</code>।</div>
+<p>ধরুন <code>d4f8a91</code> ("tax calculation") ইতিমধ্যে <code>git push</code> করা হয়ে গেছে, আর দুইজন সহকর্মী সেটা <code>pull</code>-ও করে ফেলেছে। এখন <code>reset</code> ব্যবহার করলে আপনার আর তাদের history আলাদা হয়ে যাবে — তাই এখানে সঠিক কমান্ড:</p>
+<pre>$ git revert d4f8a91
+<span class="c"># editor খুলবে ডিফল্ট message নিয়ে: "Revert \"Add tax calculation to invoice total\""</span>
+<span class="c"># সংরক্ষণ করলেই একটা নতুন commit তৈরি হয়:</span>
+
+$ git log --oneline
+e7c1a05 (HEAD -> main) Revert "Add tax calculation to invoice total"
+d4f8a91 Add tax calculation to invoice total
+9c2e7b3 Fix rounding bug in Divide method
+a1f5c02 Add Divide method to Calculator
+7b3e9d1 Initial commit — Calculator with Add, Subtract</pre>
+<p>লক্ষ্য করুন এবার <code>d4f8a91</code> মুছে যায়নি — history-তে ঠিক আগের মতোই আছে, শুধু <code>e7c1a05</code> নামে একটা <b>নতুন</b> commit যোগ হয়েছে যা তার পরিবর্তন উল্টে দেয়। সহকর্মীরা <code>git pull</code> করলেই এই revert তাদের কাছেও পৌঁছে যাবে, কোনো history-conflict ছাড়াই।</p>
+<div class="callout why"><span class="tag">Reset বনাম Revert — কখন কোনটা</span>
+<code>d4f8a91</code> এখনো শুধু আপনার local branch-এ (push হয়নি) থাকলে — <code>reset</code> ব্যবহার করুন (উপরের উদাহরণের মতো, history পরিষ্কার থাকবে)। <code>d4f8a91</code> push/shared হয়ে গেলে — সবসময় <code>revert</code> ব্যবহার করুন (history মুছবেন না, বরং নতুন commit দিয়ে ঠিক করুন)।</div>
 
 <h3>Reflog — শেষ ভরসা</h3>
-<table>
-<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
-<tr><td><code>git reflog</code></td><td>ভুলবশত branch মুছে ফেলা/reset --hard করার পর commit "হারিয়ে" গেলে খুঁজে বের করতে</td><td>HEAD কোথায় কোথায় গিয়েছিল তার সময়ানুক্রমিক তালিকা দেখায় (সাধারণত ~৯০ দিন স্থানীয়ভাবে সংরক্ষিত)</td></tr>
-<tr><td><code>git reset --hard HEAD@{2}</code></td><td>Reflog-এ পাওয়া পুরনো অবস্থায় ফিরে যেতে</td><td>branch সেই মুহূর্তের commit-এ ফিরে যায় — "হারানো" commit উদ্ধার হয়</td></tr>
-<tr><td><code>git branch recovered &lt;hash&gt;</code></td><td>Reflog-এ পাওয়া "orphan" commit-কে একটা branch-এর নিচে স্থায়ী করতে</td><td>নতুন branch সেই commit-কে point করে — এখন থেকে garbage collection-এ মুছে যাবে না</td></tr>
-</table>
+<p>ধরুন উপরের <code>git reset --hard 9c2e7b3</code> আসলে ভুল করে চালিয়ে ফেলেছেন — আসলে আপনি <code>d4f8a91</code> commit-টা রাখতে চেয়েছিলেন, শুধু ফর্মুলা ঠিক করতে চেয়েছিলেন। <code>git log</code>-এ এখন আর <code>d4f8a91</code> দেখা যাচ্ছে না। এখানেই <code>reflog</code> কাজে লাগে:</p>
+<pre>$ git reflog
+9c2e7b3 (HEAD -> main) HEAD@{0}: reset: moving to 9c2e7b3
+d4f8a91 HEAD@{1}: commit: Add tax calculation to invoice total
+9c2e7b3 HEAD@{2}: commit: Fix rounding bug in Divide method
+a1f5c02 HEAD@{3}: commit: Add Divide method to Calculator
+7b3e9d1 HEAD@{4}: commit (initial): Initial commit — Calculator with Add, Subtract</pre>
+<p><code>HEAD@{1}</code> ঠিক সেই মুহূর্ত, যখন <code>d4f8a91</code> এখনো HEAD ছিল — reset চালানোর ঠিক আগে। সেখানে ফিরে যেতে:</p>
+<pre>$ git reset --hard HEAD@{1}
+$ git log --oneline
+d4f8a91 (HEAD -> main) Add tax calculation to invoice total   <span class="c"># ফিরে এসেছে!</span>
+9c2e7b3 Fix rounding bug in Divide method
+...</pre>
 <div class="callout best"><span class="tag">সবচেয়ে গুরুত্বপূর্ণ নিরাপত্তা জাল</span>
-Git-এ commit করা কোনো কাজ প্রায় কখনোই সত্যিকারভাবে সাথে সাথে হারায় না — <code>reflog</code> local HEAD movement-এর ইতিহাস রাখে। "সব শেষ!" মনে হলে প্রথমেই <code>git reflog</code> চালান।</div>
+Git-এ commit করা কোনো কাজ প্রায় কখনোই সত্যিকারভাবে সাথে সাথে হারায় না — <code>reflog</code> local HEAD movement-এর ইতিহাস রাখে (সাধারণত ~৯০ দিন)। "সব শেষ!" মনে হলে প্রথমেই <code>git reflog</code> চালান, তারপর প্রয়োজনীয় <code>HEAD@{N}</code> এন্ট্রি খুঁজে <code>git reset --hard HEAD@{N}</code> দিন।</div>
 
 <h3>ফাইল-স্তরের Undo</h3>
+<p>ধরুন এখন <code>Calculator.cs</code>-এ একটা নতুন <code>Multiply</code> মেথড লিখছেন, এখনো commit করেননি, আর পুরোপুরি বাতিল করতে চান:</p>
+<pre>$ git status
+On branch main
+Changes not staged for commit:
+        modified:   Calculator.cs
+
+$ git restore Calculator.cs
+$ git status
+On branch main
+nothing to commit, working tree clean
+<span class="c"># Calculator.cs এখন শেষ commit (d4f8a91) এর অবস্থায় — Multiply মেথড উধাও</span></pre>
 <table>
 <tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
-<tr><td><code>git restore &lt;file&gt;</code></td><td>একটা ফাইলে করা uncommitted পরিবর্তন বাতিল করে শেষ commit-এর অবস্থায় ফিরতে</td><td>working directory-র ফাইল শেষ commit-এর কন্টেন্ট দিয়ে প্রতিস্থাপিত হয় — <b>edit হারিয়ে যায়</b></td></tr>
-<tr><td><code>git checkout &lt;commit&gt; -- &lt;file&gt;</code></td><td>একটা পুরনো commit থেকে শুধু একটা ফাইল ফিরিয়ে আনতে (পুরো checkout না করে)</td><td>working directory-তে সেই ফাইল পুরনো commit-এর অবস্থায় বসে যায় (staged থাকে)</td></tr>
+<tr><td><code>git restore Calculator.cs</code></td><td>একটা ফাইলে করা uncommitted পরিবর্তন বাতিল করে শেষ commit-এর অবস্থায় ফিরতে</td><td>working directory-র ফাইল শেষ commit-এর কন্টেন্ট দিয়ে প্রতিস্থাপিত হয় — <b>edit হারিয়ে যায়</b></td></tr>
+<tr><td><code>git checkout a1f5c02 -- Calculator.cs</code></td><td>পুরনো commit <code>a1f5c02</code> (Divide method যোগ হওয়ার সময়) থেকে শুধু <code>Calculator.cs</code>-টা ফিরিয়ে আনতে, পুরো repo checkout না করে</td><td>working directory-তে <code>Calculator.cs</code> সেই পুরনো commit-এর অবস্থায় বসে যায় (staged থাকে)</td></tr>
 <tr><td><code>git clean -fd</code></td><td>Untracked ফাইল/ফোল্ডার (build artifact, ভুলে তৈরি ফাইল) সব মুছে working directory পরিষ্কার করতে</td><td>Git-এ কখনো add না-হওয়া সব ফাইল <b>স্থায়ীভাবে মুছে যায়</b> — <code>reflog</code>-এও ফেরত পাওয়া যায় না</td></tr>
 <tr><td><code>git clean -n</code></td><td><code>clean</code> আসলে কী মুছবে আগে দেখে নিতে (dry-run)</td><td>শুধু তালিকা দেখায়, কিছু মোছে না — <code>-fd</code> চালানোর আগে সবসময় এটা দিয়ে যাচাই করুন</td></tr>
 </table>
