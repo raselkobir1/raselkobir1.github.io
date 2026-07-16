@@ -530,6 +530,7 @@ docker run --rm -v pgdata:/data -v $(pwd):/backup alpine \
 <tr><td><span class="kw">bridge</span> (default)</td><td>একই host-এর container-দের জন্য private virtual network</td></tr>
 <tr><td><span class="kw">host</span></td><td>container সরাসরি host-এর network ব্যবহার করে (isolation নেই, দ্রুত)</td></tr>
 <tr><td><span class="kw">none</span></td><td>কোনো network নেই (সম্পূর্ণ isolated)</td></tr>
+<tr><td><span class="kw">container:&lt;name&gt;</span></td><td>অন্য একটা container-এর network namespace <b>share</b> করে (নিজের IP/interface নেই)</td></tr>
 <tr><td><span class="kw">overlay</span></td><td>একাধিক host জুড়ে container network (Swarm/multi-host) — concept</td></tr>
 </table>
 
@@ -574,6 +575,32 @@ docker run -d --name db --network appnet --ip 172.28.0.10 postgres:16   <span cl
 docker network inspect appnet      <span class="c"># subnet, gateway, যুক্ত container, IP — JSON</span>
 docker network rm appnet           <span class="c"># মুছুন (কোনো container যুক্ত থাকলে আগে disconnect)</span>
 docker network prune               <span class="c"># কোনো container ব্যবহার করছে না এমন সব network মুছুন</span></pre>
+
+<h3>Network Aliases — একই container-কে একাধিক নামে চেনা</h3>
+<p>একটা container-এর মূল নাম ছাড়াও network-এ বাড়তি DNS নাম (<span class="kw">alias</span>) দেওয়া যায় — একই container একাধিক নামে resolve হবে। Blue-green deployment বা একটা shared cache-এর জন্য একাধিক নাম রাখতে কাজে লাগে।</p>
+<pre>docker run -d --name api-v2 --network appnet --network-alias api myapi:2.0
+<span class="c"># অন্য container থেকে "api-v2" বা "api" দুটো নাম দিয়েই এটাকে পাওয়া যাবে</span>
+
+docker network connect --alias cache-primary appnet redis-main   <span class="c"># চলমান container-এ alias যোগ</span></pre>
+<p>Compose-এ একইভাবে <code>networks.&lt;network&gt;.aliases</code> দিয়ে:</p>
+<pre>services:
+  db:
+    image: postgres:16
+    networks:
+      appnet:
+        aliases: [primary-db]</pre>
+
+<h3>Container Network Mode — namespace share (debug sidecar)</h3>
+<p><code>--network container:&lt;name&gt;</code> দিলে নতুন container তার <b>নিজের network namespace বানায় না</b> — বরং target container-এর network namespace-ই ধার করে (একই IP, একই port, <code>localhost</code> দিয়ে একে অপরকে দেখে)। এটাই সেই কৌশল যা দিয়ে distroless/chiseled container-এ shell না থাকলেও পাশে একটা <b>debug sidecar</b> চালিয়ে সমস্যা দেখা যায় (Troubleshooting ট্যাব দেখুন)।</p>
+<pre><span class="c"># myapi container এ shell নেই (distroless) — পাশে debug container একই network namespace এ চালান</span>
+docker run -it --rm --network container:myapi nicolaka/netshoot sh
+<span class="c"># এখন curl/ping/netstat দিয়ে myapi এর মতো একই localhost/port এ debug করা যায়</span></pre>
+<div class="callout why"><span class="tag">Kubernetes-এর সাথে মিল</span>
+এই একই ধারণা Kubernetes-এ Pod-এর সব container একসাথে ব্যবহার করে (একই Pod-এর container-রা <code>localhost</code>-এ একে অপরকে দেখে) — সেখানে এটাই default আচরণ, Docker-এ এটা <code>--network container:</code> দিয়ে explicit করে নিতে হয়।</div>
+
+<h3>Port Publishing আসলে কীভাবে কাজ করে</h3>
+<div class="callout behind"><span class="tag">পর্দার আড়ালে — NAT / <code>docker-proxy</code></span>
+<code>-p 8080:8080</code> দিলে Docker host-এর <code>iptables</code>-এ একটা <b>DNAT (destination NAT)</b> rule বসায়, যা host-এর 8080-এ আসা traffic container-এর IP:8080-এ ফরওয়ার্ড করে। কিছু ক্ষেত্রে (বা platform-এ) এর পাশাপাশি একটা ছোট <code>docker-proxy</code> userspace process-ও একই কাজ হ্যান্ডেল করে। এজন্যই port publish করতে root/iptables permission লাগে, আর Linux firewall (<code>ufw</code>/<code>firewalld</code>) সরাসরি বসালে মাঝেমধ্যে Docker-এর নিজের iptables rule-এর সাথে conflict করে — port খোলা থাকলেও বাইরে থেকে access না পাওয়ার একটা সাধারণ কারণ এটা।</div>
 
 <h3>Port Mapping</h3>
 <p>Container-এর port host-এ প্রকাশ করতে <code>-p host:container</code>:</p>
