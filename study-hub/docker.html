@@ -979,15 +979,7 @@ docker compose logs -f               <span class="c"># সব service একস�
 <div class="callout behind"><span class="tag">Distroless/chiseled-এ debug</span>
 Chiseled/distroless image-এ shell নেই, তাই <code>exec sh</code> চলবে না। Debug করতে হলে একটা "debug sidecar" container একই namespace-এ চালান, বা temporarily full image দিয়ে reproduce করুন।</div>
 
-<h3>Common Docker Commands (cheat sheet)</h3>
-<pre>docker build -t myapi:1.0 .          docker images
-docker run -d -p 8080:8080 myapi     docker ps        (-a সব)
-docker stop / start / restart api    docker rm api    (-f জোর করে)
-docker logs -f api                   docker rmi img
-docker exec -it api sh               docker pull/push repo:tag
-docker volume ls / prune             docker network ls
-docker system df                     docker system prune -a   (⚠ সব unused মুছবে)
-docker compose up -d / down          docker compose logs -f</pre>
+<p class="lead" style="margin-top:24px">প্রতিদিনের command-এর পূর্ণ, ব্যাখ্যাসহ তালিকা এখন আলাদা <b>"Essential CLI Commands"</b> ট্যাবে (পাশের মেনুর ১৩ নম্বর) — category অনুযায়ী সাজানো, প্রতিটার পাশে কী কাজ করে তার সংক্ষিপ্ত ব্যাখ্যা।</p>
 
 <h3>Production Best Practices</h3>
 <div class="callout best"><span class="tag">Checklist</span>
@@ -1000,49 +992,6 @@ docker compose up -d / down          docker compose logs -f</pre>
 <li>Image <b>scan</b> (Scout/Trivy); base image নিয়মিত update।</li>
 <li>Graceful shutdown — exec-form ENTRYPOINT যাতে SIGTERM পৌঁছায়; app SIGTERM handle করুক।</li>
 </ul></div>
-
-<h3>✅ Final Master Checklist</h3>
-<div class="card">
-<div class="grid2">
-<div>
-<p style="margin:4px 0"><b>Core &amp; Images</b></p>
-<ul style="margin:0">
-<li>✅ What is Docker / Architecture / Engine</li>
-<li>✅ Docker CLI / Desktop</li>
-<li>✅ Images · Containers · Layers</li>
-<li>✅ Union FS (OverlayFS)</li>
-<li>✅ Base / Distroless images</li>
-<li>✅ Tagging · Versioning</li>
-</ul>
-<p style="margin:10px 0 4px"><b>Build</b></p>
-<ul style="margin:0">
-<li>✅ Dockerfile · .dockerignore</li>
-<li>✅ Build process · context · cache</li>
-<li>✅ Multi-stage builds</li>
-<li>✅ Instructions (ENTRYPOINT/CMD/RUN/COPY/ADD/WORKDIR/ENV/ARG/EXPOSE/USER/HEALTHCHECK/LABEL)</li>
-</ul>
-</div>
-<div>
-<p style="margin:4px 0"><b>Runtime</b></p>
-<ul style="margin:0">
-<li>✅ Lifecycle · interactive · detached</li>
-<li>✅ Exec vs Attach · inspect · stats · events · logs</li>
-<li>✅ Restart policies · resource limits · logging drivers</li>
-<li>✅ Volumes · bind · named · tmpfs · backup</li>
-<li>✅ Networks (bridge/host/none/overlay) · ports · DNS</li>
-</ul>
-<p style="margin:10px 0 4px"><b>Ops &amp; .NET</b></p>
-<ul style="margin:0">
-<li>✅ Env vars · secrets · security · non-root · read-only · scanning</li>
-<li>✅ Image optimization</li>
-<li>✅ Registry · Hub · private · push/pull</li>
-<li>✅ Compose (services/networks/volumes/.env/healthcheck/depends_on/profiles)</li>
-<li>✅ .NET · ASP.NET · Postgres · Redis · RabbitMQ · Kafka · prod compose</li>
-<li>✅ Troubleshooting · debugging · best practices · commands</li>
-</ul>
-</div>
-</div>
-</div>
 </template>
 
 <template data-page="cli">
@@ -1158,16 +1107,6 @@ docker compose up -d / down          docker compose logs -f</pre>
 </table>
 <div class="callout mistake"><span class="tag">Common mistake</span>
 <code>docker system prune -a --volumes</code> কোনো confirmation ছাড়াই স্ক্রিপ্টে/cron-এ রাখা — এটা চলমান নয় এমন প্রতিটা image আর volume মুছে দেয়। CI/CD বা automation-এ চালানোর আগে নিশ্চিত হয়ে নিন কোনটা আসলে দরকার নেই।</div>
-
-<h3>📋 এক নজরে — category cheat sheet</h3>
-<pre>docker build -t myapi:1.0 .          docker images
-docker run -d -p 8080:8080 myapi     docker ps        (-a সব)
-docker stop / start / restart api    docker rm api    (-f জোর করে)
-docker logs -f api                   docker rmi img
-docker exec -it api sh               docker pull/push repo:tag
-docker volume ls / prune             docker network ls
-docker system df                     docker system prune -a   (⚠ সব unused মুছবে)
-docker compose up -d / down          docker compose logs -f</pre>
 </template>
 
 <!-- ============================ RENDER ============================ -->
