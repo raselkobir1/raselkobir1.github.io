@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kubernetes Mastery — Bangla (Beginner → Advanced, .NET focus)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#7b9cff; --accent2:#a5b8ff;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --blue:#4aa3ff;
+    --code-bg:#0b0f14; --kw:#7b9cff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(123,156,255,.22),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#08111f}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--blue)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--blue)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#a5b8ff}
+  .viz{background:var(--code-bg); border:1px solid var(--border); border-radius:12px; padding:20px 18px 12px; margin:18px 0}
+  .viz svg{width:100%; height:auto; display:block; overflow:visible}
+  .viz figcaption{color:var(--muted); font-size:13px; margin-top:10px; text-align:center; line-height:1.5}
+  .viz text{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .viz .bn{font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla",sans-serif}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>☸️ Kubernetes Mastery</h1>
+      <p>Beginner → Advanced • .NET focus • বাংলায়</p>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",  icon:"☸️", title:"Foundation — কেন Orchestration দরকার"},
+  {id:"objects",     icon:"📦", title:"Pod · ReplicaSet · Deployment"},
+  {id:"networking",  icon:"🌐", title:"Service · DNS · Ingress"},
+  {id:"storage",     icon:"💾", title:"Volumes · PV · PVC · StatefulSet"},
+  {id:"config",      icon:"⚙️", title:"ConfigMap · Secret · Downward API"},
+  {id:"scheduling",  icon:"🎯", title:"Resources · Probes · Scheduling"},
+  {id:"scaling",     icon:"📈", title:"Scaling · Rolling Update · Rollback"},
+  {id:"packaging",   icon:"📦", title:"Helm · Kustomize"},
+  {id:"security",    icon:"🔐", title:"RBAC · Security Context · Network Policy"},
+  {id:"observability",icon:"🔭", title:"Observability · Debugging"},
+  {id:"dotnet",      icon:"💜", title:"ASP.NET Core on Kubernetes"},
+  {id:"troubleshoot",icon:"🛠️", title:"Troubleshooting"},
+  {id:"cli",         icon:"⌨️", title:"Essential kubectl Commands"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Foundation — কেন Container Orchestration দরকার</h2>
+<p class="lead">Docker একটা container চালাতে শেখায়। Kubernetes শেখায় — শত শত container, বহু মেশিন জুড়ে, স্বয়ংক্রিয়ভাবে, নিজে থেকে সুস্থ থেকে কীভাবে চলবে। এই পার্থক্যটাই পুরো টপিকের ভিত্তি।</p>
+
+<h3>যে সমস্যা থেকে Kubernetes-এর জন্ম</h3>
+<p>ধরুন আপনার একটা ASP.NET Core API-কে ১০টা container instance-এ চালাতে হবে (load সামলাতে), ৩টা আলাদা সার্ভারে ছড়িয়ে (একটা সার্ভার ডাউন হলেও service চলবে)। এখন প্রশ্ন — একটা container crash করলে কে সেটা টের পাবে, কে নতুন একটা তুলবে? একটা নতুন version deploy করতে হলে, একসাথে সবগুলো বন্ধ না করে কীভাবে ধাপে ধাপে বদলাবেন? একটা সার্ভারে জায়গা না থাকলে কে বুঝবে অন্য সার্ভারে চালাতে হবে? Traffic কীভাবে ১০টা instance-এ ভাগ হবে, কেউ একটা bad instance-এ না গিয়ে?</p>
+<div class="callout why"><span class="tag">Docker Compose কেন যথেষ্ট নয় (বড় স্কেলে)</span>
+Docker Compose একটা <b>একক মেশিনে</b> multi-container app চালানোর জন্য চমৎকার (Docker কোর্সে দেখেছেন)। কিন্তু Compose জানে না একাধিক <b>ভৌত মেশিন</b> (নোড) জুড়ে কীভাবে container ছড়িয়ে দিতে হয়, একটা নোড মরে গেলে সেখানকার container অন্য নোডে কীভাবে সরিয়ে নিতে হয়, বা লক্ষ লক্ষ request-এর মধ্যে load ঠিক কীভাবে ভাগ করতে হয়। Kubernetes ঠিক এই কাজের জন্যই ডিজাইন করা — একে বলে <span class="kw">container orchestration</span>।</div>
+
+<h3>মূল দার্শনিক ভিত্তি — Declarative, Desired State</h3>
+<p>Kubernetes ব্যবহারের সবচেয়ে গুরুত্বপূর্ণ মানসিক পরিবর্তন: আপনি ধাপে ধাপে <b>কী করতে হবে</b> তা বলেন না (imperative script), বরং আপনি বলেন আপনি ঠিক <b>কী চান</b> (declarative YAML) — আর Kubernetes একটা অবিরাম চলমান <span class="kw">control loop</span> দিয়ে বাস্তব অবস্থাকে সেই কাঙ্ক্ষিত অবস্থার সাথে মিলিয়ে রাখে।</p>
+<div class="diagram"><pre>
+Imperative (আপনি নিজে প্রতিটা ধাপ লেখেন):        Declarative (Kubernetes-এর ধরন):
+─────────────────────────────────                ─────────────────────────────────
+1. server-A তে container চালাও                    "৩টা replica সবসময় চলবে" — ঘোষণা দিন
+2. server-B তে আরেকটা চালাও                        Kubernetes নিজে ঠিক করে কোথায়,
+3. একটা crash করলে, নিজে লগইন করে                   কীভাবে চালাবে, আর কোনোটা মরলে
+   আবার চালাও                                      স্বয়ংক্রিয়ভাবে replace করবে
+</pre></div>
+<div class="callout behind"><span class="tag">Control Loop আসলে কীভাবে কাজ করে</span>
+প্রতিটা Kubernetes controller একটা অন্তহীন লুপে চলে: <b>দেখো</b> (বর্তমান অবস্থা কী) → <b>তুলনা করো</b> (কাঙ্ক্ষিত অবস্থার সাথে পার্থক্য আছে কি) → <b>ব্যবস্থা নাও</b> (পার্থক্য থাকলে ঠিক করো) → আবার দেখো। এই প্যাটার্নকে বলে <span class="kw">reconciliation loop</span>। আপনি যখন <code>kubectl apply</code> দিয়ে "৩টা replica চাই" ঘোষণা করেন, সেটা শুধু একটা লক্ষ্য সেট করে — বাস্তবে সেই লক্ষ্য পূরণ করার কাজ চলতেই থাকে, চিরকাল। একটা pod crash করলে সাথে সাথেই এই লুপ সেটা লক্ষ্য করে নতুন একটা তুলে ফেলে — কেউ manual script চালায় না।</div>
+
+<h3>Architecture — Control Plane বনাম Worker Node</h3>
+<figure class="viz">
+<svg viewBox="0 0 740 320" role="img" aria-label="Kubernetes cluster architecture: the control plane runs the API server, etcd, scheduler, and controller manager; worker nodes run kubelet, kube-proxy, and the container runtime managing pods">
+  <g font-size="12.5" text-anchor="middle" fill="#e6edf3">
+    <rect x="30" y="20" width="330" height="220" rx="12" fill="rgba(123,156,255,.07)" stroke="#7b9cff"/>
+    <text x="195" y="42" fill="#7b9cff" font-size="13.5" font-weight="700">Control Plane</text>
+    <rect x="50" y="58" width="140" height="50" rx="8" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/><text x="120" y="88" font-weight="700">API Server</text>
+    <rect x="200" y="58" width="140" height="50" rx="8" fill="rgba(63,185,80,.14)" stroke="#3fb950"/><text x="270" y="88" font-weight="700">etcd</text>
+    <rect x="50" y="122" width="140" height="50" rx="8" fill="rgba(227,179,65,.14)" stroke="#e3b341"/><text x="120" y="152" font-weight="700">Scheduler</text>
+    <rect x="200" y="122" width="140" height="50" rx="8" fill="rgba(188,140,255,.14)" stroke="#bc8cff"/><text x="270" y="145" font-weight="700">Controller</text><text x="270" y="160" font-weight="700">Manager</text>
+    <text x="195" y="200" fill="#9aa7b4" font-size="11" class="bn">cluster-এর "মস্তিষ্ক" — কোথায় কী চলবে সিদ্ধান্ত নেয়</text>
+  </g>
+  <g font-size="12.5" text-anchor="middle" fill="#e6edf3">
+    <rect x="400" y="20" width="330" height="220" rx="12" fill="rgba(63,185,80,.06)" stroke="#3fb950"/>
+    <text x="565" y="42" fill="#3fb950" font-size="13.5" font-weight="700">Worker Node</text>
+    <rect x="420" y="58" width="140" height="50" rx="8" fill="rgba(255,140,66,.14)" stroke="#ff8c42"/><text x="490" y="88" font-weight="700">kubelet</text>
+    <rect x="570" y="58" width="140" height="50" rx="8" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/><text x="640" y="88" font-weight="700">kube-proxy</text>
+    <rect x="420" y="122" width="290" height="50" rx="8" fill="rgba(248,81,73,.1)" stroke="#f85149"/><text x="565" y="152" font-weight="700">Container Runtime (containerd)</text>
+    <rect x="450" y="185" width="90" height="34" rx="7" fill="#161b22" stroke="#2d333b"/><text x="495" y="206" fill="#9aa7b4" font-size="10.5">Pod</text>
+    <rect x="550" y="185" width="90" height="34" rx="7" fill="#161b22" stroke="#2d333b"/><text x="595" y="206" fill="#9aa7b4" font-size="10.5">Pod</text>
+  </g>
+  <defs><marker id="ka" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa7b4"/></marker></defs>
+  <path d="M360 100 L398 100" fill="none" stroke="#9aa7b4" stroke-width="1.6" marker-end="url(#ka)"/>
+  <text x="379" y="90" text-anchor="middle" fill="#9aa7b4" font-size="9.5">নির্দেশ</text>
+  <text x="379" y="270" text-anchor="middle" fill="#9aa7b4" font-size="11" class="bn">এমন worker node একাধিক — কয়েক দশ থেকে হাজার নোড পর্যন্ত হতে পারে</text>
+</svg>
+<figcaption>Control Plane সিদ্ধান্ত নেয় ও state সংরক্ষণ করে; Worker Node-গুলো আসল container/Pod চালায়। প্রতিটা উপাদানের কাজ নিচে বিস্তারিত।</figcaption>
+</figure>
+<table>
+<tr><th>উপাদান</th><th>অবস্থান</th><th>কাজ</th></tr>
+<tr><td><span class="kw">API Server</span></td><td>Control Plane</td><td>একমাত্র প্রবেশদ্বার — <code>kubectl</code>, dashboard, সব controller এর সাথেই REST/gRPC-এর মাধ্যমে কথা বলে</td></tr>
+<tr><td><span class="kw">etcd</span></td><td>Control Plane</td><td>একটা distributed key-value store — পুরো cluster-এর <b>একমাত্র সত্যিকারের উৎস (source of truth)</b>, সব object-এর বর্তমান ও কাঙ্ক্ষিত state এখানেই থাকে</td></tr>
+<tr><td><span class="kw">Scheduler</span></td><td>Control Plane</td><td>নতুন Pod তৈরি হলে, কোন worker node-এ সেটা চালানো উচিত তা resource/constraint দেখে ঠিক করে</td></tr>
+<tr><td><span class="kw">Controller Manager</span></td><td>Control Plane</td><td>সব reconciliation loop চালায় (Deployment, ReplicaSet controller ইত্যাদি) — কাঙ্ক্ষিত অবস্থা বজায় রাখার আসল কাজ এখানেই হয়</td></tr>
+<tr><td><span class="kw">kubelet</span></td><td>প্রতিটা Worker Node</td><td>সেই নোডের এজেন্ট — API Server-এর নির্দেশ অনুযায়ী container চালায়/বন্ধ করে, স্বাস্থ্য রিপোর্ট করে</td></tr>
+<tr><td><span class="kw">kube-proxy</span></td><td>প্রতিটা Worker Node</td><td>Service-এর ভার্চুয়াল IP থেকে সঠিক Pod-এ traffic route করার নিয়ম (iptables/IPVS) বজায় রাখে</td></tr>
+<tr><td><span class="kw">Container Runtime</span></td><td>প্রতিটা Worker Node</td><td>আসল container চালানোর ইঞ্জিন (<code>containerd</code>, Docker কোর্সে যা শিখেছেন তার নিচের স্তর)</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">etcd হারালে কী হয়</span>
+etcd-ই একমাত্র জায়গা যেখানে cluster-এর পুরো অবস্থা (কোন Deployment আছে, কতগুলো replica, কোন Secret) সংরক্ষিত থাকে। etcd data হারালে — regular backup ছাড়া — পুরো cluster-এর "মেমরি" মুছে যায়, যদিও worker node-এ চলমান container তখনো চলতে থাকতে পারে। Production cluster-এ etcd-এর নিয়মিত backup (<code>etcdctl snapshot save</code>) অত্যাবশ্যকীয়।</div>
+
+<h3>kubectl — কীভাবে সব যুক্ত</h3>
+<p><code>kubectl</code> command চালালে তা সরাসরি worker node-এ যায় না — এটা সবসময় <b>API Server</b>-এর সাথে কথা বলে। <code>kubectl apply -f deployment.yaml</code> মানে: YAML-এ বর্ণিত কাঙ্ক্ষিত অবস্থা API Server-কে পাঠানো, যা সেটা etcd-এ সংরক্ষণ করে, আর Controller Manager/Scheduler সেই লক্ষ্য পূরণে কাজ শুরু করে।</p>
+</template>
+
+<template data-page="objects">
+<h2 class="title">২. Pod · ReplicaSet · Deployment</h2>
+<p class="lead">Kubernetes-এর সবচেয়ে গুরুত্বপূর্ণ তিনটা object — একটার উপর আরেকটা তৈরি — যেগুলো একসাথেই একটা app-কে স্থিতিস্থাপক (resilient) করে তোলে।</p>
+
+<h3>Pod — সবচেয়ে ছোট deployable একক</h3>
+<p>Kubernetes সরাসরি container চালায় না — এটা <span class="kw">Pod</span> চালায়, যা এক বা একাধিক container-এর একটা মোড়ক। একই Pod-এর ভেতরের container একই network namespace (একই IP, <code>localhost</code> দিয়ে একে অপরকে দেখে) ও ঐচ্ছিকভাবে volume শেয়ার করে।</p>
+<div class="callout why"><span class="tag">কেন সরাসরি Container নয়, Pod?</span>
+বেশিরভাগ app-এ একটা মূল container-এর পাশে একটা সহায়ক (helper) process দরকার হয় — যেমন log shipping, বা একটা proxy (service mesh sidecar)। এই দুটোকে একসাথে, একই network/lifecycle-এ থাকতে হয়। Pod এই <b>"একসাথে থাকা আবশ্যক"</b> সম্পর্কটা মডেল করে — একই Pod-এর সব container একসাথে schedule হয়, একসাথে শুরু/শেষ হয়, একই নোডে থাকে।
+</div>
+<pre><span class="c"># pod.yaml — সরাসরি একটা Pod (সাধারণত production-এ এভাবে না, শুধু concept বোঝাতে)</span>
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapi-pod
+spec:
+  containers:
+    - name: myapi
+      image: myregistry/myapi:1.4.2
+      ports:
+        - containerPort: 8080</pre>
+<div class="callout mistake"><span class="tag">Common mistake — সরাসরি Pod deploy করা</span>
+একটা standalone Pod crash করলে বা যে নোডে ছিল সেটা মরে গেলে, <b>কেউ সেটা আবার তুলবে না</b> — Pod নিজে থেকে self-healing নয়। এজন্য production-এ কখনো সরাসরি Pod তৈরি করা হয় না — সবসময় Deployment (বা StatefulSet/DaemonSet)-এর মাধ্যমে, যা Pod-এর স্বাস্থ্য নিশ্চিত করার দায়িত্ব নেয়।</div>
+
+<h3>ReplicaSet — সংখ্যা বজায় রাখা</h3>
+<p><span class="kw">ReplicaSet</span> নিশ্চিত করে ঠিক <code>N</code> সংখ্যক Pod (একটা নির্দিষ্ট template অনুযায়ী) সবসময় চলছে। একটা Pod মরে গেলে, ReplicaSet controller সেটা লক্ষ্য করে সাথে সাথেই একটা নতুন Pod তৈরি করে replace করে।</p>
+
+<h3>Deployment — যা আপনি সরাসরি ব্যবহার করবেন</h3>
+<p><span class="kw">Deployment</span> ReplicaSet-এর উপরে আরেক স্তর — এটা ReplicaSet পরিচালনা করে, আর সবচেয়ে গুরুত্বপূর্ণভাবে <b>rolling update</b> ও <b>rollback</b> সুবিধা দেয়। বাস্তবে প্রায় সবসময় সরাসরি Deployment-ই তৈরি করা হয়, ReplicaSet নয় — Deployment নিজেই প্রয়োজনমতো ReplicaSet তৈরি/পরিচালনা করে।</p>
+<figure class="viz">
+<svg viewBox="0 0 700 260" role="img" aria-label="A Deployment manages a ReplicaSet, which manages a set of identical Pods; updating the image creates a new ReplicaSet that gradually replaces the old one" >
+  <g font-size="12.5" text-anchor="middle" fill="#e6edf3">
+    <rect x="270" y="20" width="160" height="46" rx="9" fill="rgba(123,156,255,.16)" stroke="#7b9cff"/><text x="350" y="48" font-weight="700">Deployment: myapi</text>
+    <rect x="270" y="96" width="160" height="42" rx="9" fill="rgba(63,185,80,.14)" stroke="#3fb950"/><text x="350" y="121">ReplicaSet (rev 2)</text>
+    <rect x="110" y="170" width="120" height="40" rx="8" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/><text x="170" y="194">Pod (v1.5)</text>
+    <rect x="290" y="170" width="120" height="40" rx="8" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/><text x="350" y="194">Pod (v1.5)</text>
+    <rect x="470" y="170" width="120" height="40" rx="8" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/><text x="530" y="194">Pod (v1.5)</text>
+    <rect x="470" y="96" width="160" height="30" rx="7" fill="#161b22" stroke="#2d333b"/><text x="550" y="116" fill="#9aa7b4" font-size="10.5">ReplicaSet (rev 1, v1.4) — scaled to 0</text>
+  </g>
+  <defs><marker id="da2" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa7b4"/></marker></defs>
+  <path d="M350 66 L350 94" fill="none" stroke="#9aa7b4" stroke-width="1.6" marker-end="url(#da2)"/>
+  <path d="M270 130 L180 168" fill="none" stroke="#9aa7b4" stroke-width="1.4" marker-end="url(#da2)"/>
+  <path d="M350 138 L350 168" fill="none" stroke="#9aa7b4" stroke-width="1.4" marker-end="url(#da2)"/>
+  <path d="M410 130 L520 168" fill="none" stroke="#9aa7b4" stroke-width="1.4" marker-end="url(#da2)"/>
+  <text x="350" y="235" text-anchor="middle" fill="#9aa7b4" font-size="11" class="bn">Image বদলে <code>kubectl apply</code> করলে Deployment নতুন ReplicaSet বানায়, ধাপে ধাপে পুরনোটার Pod কমিয়ে নতুনটার Pod বাড়ায় (rolling update)</text>
+</svg>
+<figcaption>Deployment → ReplicaSet → Pod — তিন স্তরের hierarchy। Rollback করলে Deployment পুরনো ReplicaSet-কে আবার scale up করে দেয়।</figcaption>
+</figure>
+<pre><span class="c"># deployment.yaml — বাস্তবে এভাবেই deploy করবেন</span>
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapi
+spec:
+  replicas: 3                       <span class="c"># ৩টা Pod সবসময় চলবে</span>
+  selector:
+    matchLabels: { app: myapi }
+  template:                          <span class="c"># Pod-এর ব্লুপ্রিন্ট</span>
+    metadata:
+      labels: { app: myapi }
+    spec:
+      containers:
+        - name: myapi
+          image: myregistry/myapi:1.4.2
+          ports: [{ containerPort: 8080 }]</pre>
+<div class="callout why"><span class="tag">Label ও Selector — Kubernetes-এর "আঠা"</span>
+Kubernetes object একে অপরকে সরাসরি reference করে না — বরং <span class="kw">label</span> (key-value tag) ও <span class="kw">selector</span> (label-এর ভিত্তিতে খোঁজা) দিয়ে সংযুক্ত হয়। উপরের উদাহরণে Deployment তার নিজের তৈরি Pod-গুলো <code>app: myapi</code> label দিয়ে চেনে। এই একই নীতিতে পরের চ্যাপ্টারে Service কীভাবে সঠিক Pod-এ traffic পাঠায় তা দেখবেন — সবই label selector-নির্ভর, hard-coded reference নয়।</div>
+
+<h3>Namespace — একই cluster-এর ভেতরে বিভাজন</h3>
+<p><span class="kw">Namespace</span> একটা cluster-কে একাধিক ভার্চুয়াল অংশে ভাগ করে — <code>dev</code>, <code>staging</code>, <code>production</code> namespace আলাদা রাখলে নাম সংঘর্ষ এড়ানো যায়, আর RBAC দিয়ে কোন টিম কোন namespace-এ কী করতে পারবে তা সীমিত করা যায়।</p>
+<pre>kubectl get pods -n production      <span class="c"># নির্দিষ্ট namespace-এর Pod দেখা</span>
+kubectl config set-context --current --namespace=dev   <span class="c"># ডিফল্ট namespace বদলানো</span></pre>
+</template>
+
+<template data-page="networking">
+<h2 class="title">৩. Service · DNS · Ingress</h2>
+<p class="lead">Pod-এর IP অস্থায়ী — একটা নতুন Pod মানেই নতুন IP। তাহলে অন্য Pod বা বাইরের world কীভাবে নির্ভরযোগ্যভাবে একটা app-এ পৌঁছাবে? এই সমস্যার সমাধানই এই চ্যাপ্টার।</p>
+
+<h3>সমস্যা — Pod IP অস্থির</h3>
+<div class="callout why"><span class="tag">কেন সরাসরি Pod IP ব্যবহার করা যায় না</span>
+Deployment যখন একটা crashed Pod replace করে, নতুন Pod-টা <b>সম্পূর্ণ নতুন IP</b> পায়। Rolling update-এ পুরনো সব Pod সরে গিয়ে নতুন Pod আসে — প্রতিটাই নতুন IP। যদি অন্য একটা service সরাসরি সেই IP মনে রাখতে চেষ্টা করত, প্রতিটা redeploy-এ সব ভেঙে পড়ত। দরকার একটা <b>স্থির ঠিকানা</b> যা পেছনের আসল Pod বদলালেও অপরিবর্তিত থাকে।</div>
+
+<h3>Service — স্থির ভার্চুয়াল IP + Load Balancing</h3>
+<p><span class="kw">Service</span> একটা স্থায়ী virtual IP (<span class="kw">ClusterIP</span>) ও DNS নাম তৈরি করে, যা label selector দিয়ে মেলা সব Pod-এর মধ্যে automatically load-balance করে।</p>
+<pre>apiVersion: v1
+kind: Service
+metadata:
+  name: myapi-svc
+spec:
+  selector: { app: myapi }        <span class="c"># app: myapi label-ওয়ালা সব Pod-ই এই Service-এর সদস্য</span>
+  ports:
+    - port: 80                    <span class="c"># Service-এর নিজের port</span>
+      targetPort: 8080            <span class="c"># Pod-এর ভেতরের container port</span></pre>
+<table>
+<tr><th>Service Type</th><th>কাজ</th><th>কখন ব্যবহার</th></tr>
+<tr><td><span class="kw">ClusterIP</span> (ডিফল্ট)</td><td>শুধু cluster-এর ভেতর থেকে অ্যাক্সেসযোগ্য</td><td>Internal service (যেমন database, backend API যা শুধু অন্য Pod ব্যবহার করবে)</td></tr>
+<tr><td><span class="kw">NodePort</span></td><td>প্রতিটা worker node-এর IP-তে একটা নির্দিষ্ট (৩০০০০-৩২৭৬৭ পরিসরের) port খুলে দেয়</td><td>Dev/test-এ দ্রুত বাইরে থেকে অ্যাক্সেস, cloud LoadBalancer ছাড়াই</td></tr>
+<tr><td><span class="kw">LoadBalancer</span></td><td>Cloud provider-কে (AWS/Azure/GCP) একটা external load balancer provision করতে বলে</td><td>Production-এ internet-facing service</td></tr>
+<tr><td><span class="kw">ExternalName</span></td><td>Service-কে cluster-এর বাইরের একটা DNS নামের সাথে map করে (CNAME-এর মতো)</td><td>Cluster-এর বাইরের managed database/API-কে cluster-এর ভেতর থেকে সাধারণ service-নামে ডাকতে</td></tr>
+</table>
+<div class="callout behind"><span class="tag">kube-proxy পর্দার আড়ালে কী করে</span>
+Service তৈরি হলে, প্রতিটা worker node-এর <code>kube-proxy</code> সেই node-এ <code>iptables</code> (বা IPVS) rule বসায় — ClusterIP-তে আসা traffic দেখলেই সেটা সদস্য Pod-গুলোর একটার (সাধারণত round-robin-এর কাছাকাছি) আসল IP-তে পাঠিয়ে দেয়। ClusterIP নিজে কোনো "সত্যিকারের" নেটওয়ার্ক ইন্টারফেস নয় — এটা শুধু iptables rule-এর মধ্যে বিদ্যমান একটা ভার্চুয়াল ঠিকানা।</div>
+
+<h3>DNS — নাম দিয়ে খোঁজা</h3>
+<p>Kubernetes-এ <span class="kw">CoreDNS</span> প্রতিটা Service-কে স্বয়ংক্রিয়ভাবে একটা DNS নাম দেয়:</p>
+<pre>myapi-svc.production.svc.cluster.local
+└────┬───┘└────┬────┘└──────┬──────┘
+  Service নাম   namespace    বাকি অংশ সবসময় একই
+
+<span class="c"># একই namespace-এর ভেতর থেকে শুধু ছোট নাম দিয়েই চলে:</span>
+curl http://myapi-svc/orders</pre>
+<div class="callout why"><span class="tag">Docker Compose-এর সাথে মিল</span>
+এটা ঠিক Docker Compose-এর user-defined network DNS-এর মতোই ধারণা (Docker কোর্সে দেখেছেন) — শুধু scale করা হয়েছে পুরো cluster জুড়ে, একাধিক namespace-সহ।</div>
+
+<h3>Ingress — HTTP(S)-এর জন্য L7 রাউটিং</h3>
+<p>প্রতিটা Service-এর জন্য আলাদা LoadBalancer (এবং আলাদা cloud cost) তৈরি করা অপচয়। <span class="kw">Ingress</span> একটাই entry point দিয়ে path/host-ভিত্তিক routing দেয় — একাধিক Service-কে একটাই external IP-এর পেছনে রাখে।</p>
+<pre>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myapi-ingress
+spec:
+  rules:
+    - host: api.mycompany.com
+      http:
+        paths:
+          - path: /orders
+            pathType: Prefix
+            backend: { service: { name: order-svc, port: { number: 80 } } }
+          - path: /users
+            pathType: Prefix
+            backend: { service: { name: user-svc, port: { number: 80 } } }</pre>
+<div class="callout mistake"><span class="tag">Common mistake — Ingress object বানালেই কাজ হয়ে যাবে ভাবা</span>
+Ingress object নিজে শুধু একটা <b>নিয়মের ঘোষণা</b> — এটা বাস্তবায়ন করার জন্য cluster-এ একটা <span class="kw">Ingress Controller</span> (যেমন NGINX Ingress Controller, Traefik) আলাদাভাবে install থাকতে হবে। Ingress Controller ছাড়া Ingress object তৈরি করলে কিছুই ঘটবে না — কোনো traffic route হবে না।</div>
+
+<h3>NetworkPolicy — Pod-এর মধ্যে ফায়ারওয়াল</h3>
+<div class="callout mistake"><span class="tag">ডিফল্ট আচরণ — সব Pod সবার সাথে কথা বলতে পারে</span>
+কোনো NetworkPolicy না থাকলে, cluster-এর <b>যেকোনো Pod যেকোনো Pod-এর সাথে</b> কথা বলতে পারে (namespace নির্বিশেষে)। এর মানে একটা compromised frontend Pod সরাসরি database Pod-এও পৌঁছাতে পারে। <span class="kw">NetworkPolicy</span> দিয়ে স্পষ্টভাবে বলে দিতে হয় কোন Pod কার সাথে কথা বলতে পারবে — এটাই Kubernetes-এর মাইক্রো-সেগমেন্টেশন ফায়ারওয়াল স্তর।</div>
+<pre>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-allow-only-api
+spec:
+  podSelector: { matchLabels: { app: postgres } }
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: myapi } }   <span class="c"># শুধু myapi Pod থেকে ইনকামিং allow</span></pre>
+</template>
+
+<template data-page="storage">
+<h2 class="title">৪. Volumes · PersistentVolume · PersistentVolumeClaim · StatefulSet</h2>
+<p class="lead">Pod-ও container-এর মতোই ephemeral — মুছে গেলে ভেতরের ডেটাও হারায়। Database-এর মতো stateful app চালাতে persistent storage-এর আলাদা মডেল দরকার।</p>
+
+<h3>Volume — Pod-এর জীবনকালব্যাপী স্টোরেজ</h3>
+<p>একটা সাধারণ <span class="kw">Volume</span> Pod-এর ভেতরের container restart-এ টিকে থাকে, কিন্তু Pod নিজে মুছে গেলে (redeploy, reschedule) সেই ডেটাও হারিয়ে যায় — ঠিক Docker-এর anonymous volume-এর মতো আচরণ।</p>
+
+<h3>PersistentVolume (PV) ও PersistentVolumeClaim (PVC)</h3>
+<p>সত্যিকারের persistent storage-এর জন্য দুটো স্তরের abstraction:</p>
+<table>
+<tr><th>Object</th><th>ভূমিকা</th></tr>
+<tr><td><span class="kw">PersistentVolume (PV)</span></td><td>cluster-স্তরের একটা storage resource — আসল disk (cloud disk, NFS share)-এর প্রতিনিধিত্ব করে, admin বা dynamic provisioning দিয়ে তৈরি হয়</td></tr>
+<tr><td><span class="kw">PersistentVolumeClaim (PVC)</span></td><td>একটা Pod-এর "storage চাই" আবেদন — কত সাইজ, কোন access mode লাগবে বলে দেয়; Kubernetes সেটা একটা মিলে-যাওয়া PV-এর সাথে bind করে</td></tr>
+</table>
+<div class="callout why"><span class="tag">দুই স্তর কেন — Developer বনাম Infrastructure উদ্বেগ আলাদা রাখা</span>
+Developer শুধু জানে "আমার ১০GB storage লাগবে, ReadWriteOnce" — সেটাই PVC। ঠিক কোন cloud disk, কোন physical server, কোন network storage এটার পেছনে আছে তা Developer-এর জানার দরকার নেই — সেটা PV (ও তার provisioner)-এর দায়িত্ব। এই বিভাজন app-এর YAML-কে cloud-agnostic রাখে — একই Deployment/PVC YAML AWS, Azure, বা on-prem cluster-এ চলে, শুধু পেছনের StorageClass বদলায়।</div>
+<pre>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pgdata-pvc
+spec:
+  accessModes: [ReadWriteOnce]      <span class="c"># একসাথে একটা মাত্র node থেকে read-write mount</span>
+  storageClassName: standard-ssd
+  resources:
+    requests: { storage: 10Gi }</pre>
+<pre><span class="c"># Pod/Deployment-এ ব্যবহার:</span>
+spec:
+  containers:
+    - name: postgres
+      volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+  volumes:
+    - name: data
+      persistentVolumeClaim: { claimName: pgdata-pvc }</pre>
+
+<h3>StorageClass — Dynamic Provisioning</h3>
+<p><span class="kw">StorageClass</span> ছাড়া admin-কে হাতে হাতে প্রতিটা PV তৈরি করতে হতো। StorageClass একটা "storage-এর টেমপ্লেট" সংজ্ঞায়িত করে (কোন provisioner, কোন disk type) — PVC তৈরি হলেই প্রয়োজনমতো স্বয়ংক্রিয়ভাবে একটা নতুন PV তৈরি হয়ে যায়।</p>
+
+<h3>StatefulSet — যখন Pod-গুলো একে অপরের থেকে ভিন্ন</h3>
+<div class="callout why"><span class="tag">Deployment কেন Database-এর জন্য যথেষ্ট নয়</span>
+Deployment-এর সব Pod <b>একে অপরের সাথে বিনিময়যোগ্য (interchangeable)</b> — কোনটা কোনটা তা গুরুত্বপূর্ণ নয়, সবাই একই কাজ করে। কিন্তু একটা database cluster-এ (যেমন replicated PostgreSQL) প্রতিটা replica-র নিজস্ব, স্থায়ী পরিচয় থাকা দরকার — <code>db-0</code> primary, <code>db-1</code>/<code>db-2</code> replica — এবং প্রতিটার নিজস্ব storage (একটার ডেটা আরেকটার সাথে গুলিয়ে গেলে চলবে না)। <span class="kw">StatefulSet</span> ঠিক এই দুটো জিনিস guarantee করে।</div>
+<table>
+<tr><th></th><th>Deployment</th><th>StatefulSet</th></tr>
+<tr><td>Pod নাম</td><td>Random suffix (<code>myapi-7d9f-x2k</code>)</td><td>ক্রমিক, স্থায়ী (<code>db-0</code>, <code>db-1</code>, <code>db-2</code>)</td></tr>
+<tr><td>Storage</td><td>সব Pod একই/শেয়ার্ড বা কোনোটাই নয়</td><td>প্রতিটা Pod-এর নিজস্ব PVC, Pod পুনরায় তৈরি হলেও একই PVC-এর সাথে আবার bind হয়</td></tr>
+<tr><td>Startup order</td><td>সমান্তরালে, যেকোনো ক্রমে</td><td>ক্রমানুসারে (<code>db-0</code> আগে, তারপর <code>db-1</code>...)</td></tr>
+<tr><td>ব্যবহার</td><td>Stateless app (web API)</td><td>Database, message queue, distributed cache (Redis Cluster, Kafka, PostgreSQL)</td></tr>
+</table>
+</template>
+
+<template data-page="config">
+<h2 class="title">৫. ConfigMap · Secret · Downward API</h2>
+<p class="lead">Image-কে বদলানো ছাড়াই একই container image ভিন্ন environment (dev/staging/prod)-এ ভিন্নভাবে configure করার উপায়।</p>
+
+<h3>ConfigMap — Non-secret কনফিগারেশন</h3>
+<p><span class="kw">ConfigMap</span> key-value config data ধরে রাখে, যা Pod-এ environment variable বা mounted file হিসেবে inject করা যায় — image-এ hard-code না করে।</p>
+<pre>apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myapi-config
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  Logging__LogLevel__Default: "Warning"</pre>
+<pre><span class="c"># Pod spec-এ ব্যবহার:</span>
+containers:
+  - name: myapi
+    envFrom:
+      - configMapRef: { name: myapi-config }   <span class="c"># সব key env var হিসেবে ঢুকে যায়</span></pre>
+
+<h3>Secret — Sensitive ডেটা (কিন্তু একটা গুরুত্বপূর্ণ ভুল-ধারণা)</h3>
+<pre>apiVersion: v1
+kind: Secret
+metadata:
+  name: db-credentials
+type: Opaque
+data:
+  password: c3VwZXJzZWNyZXQ=      <span class="c"># base64("supersecret") — এনক্রিপশন নয়!</span></pre>
+<div class="callout mistake"><span class="tag">সবচেয়ে বেশি ভুল-বোঝা বিষয় — Secret এনক্রিপ্টেড নয়</span>
+Kubernetes <code>Secret</code>-এর নাম শুনে মনে হয় এটা নিরাপদে এনক্রিপ্ট করা — আসলে এটা শুধু <b>base64-encoded</b>, যা JWT payload-এর মতোই কয়েক সেকেন্ডে decode করা যায় (<code>echo ... | base64 -d</code>)। ডিফল্টভাবে etcd-এ Secret <b>plaintext-এর কাছাকাছি আকারেই</b> সংরক্ষিত থাকে (encryption at rest আলাদাভাবে চালু করতে হয়)। যে কেউ etcd বা এমনকি Secret object পড়ার RBAC অনুমতি পেলেই আসল মান দেখে ফেলতে পারে। প্রকৃত নিরাপত্তার জন্য: (১) etcd-এ <b>encryption at rest</b> চালু করুন, (২) RBAC দিয়ে Secret পড়ার অনুমতি কড়াকড়িভাবে সীমিত করুন, (৩) সম্ভব হলে external secret manager (HashiCorp Vault, AWS Secrets Manager, Azure Key Vault) + External Secrets Operator ব্যবহার করুন।</div>
+<pre>containers:
+  - name: myapi
+    env:
+      - name: ConnectionStrings__Db
+        valueFrom:
+          secretKeyRef: { name: db-credentials, key: password }</pre>
+
+<h3>ConfigMap/Secret File হিসেবে Mount করা</h3>
+<p>Environment variable-এর বদলে ফাইল হিসেবেও mount করা যায় — বড় config file (যেমন <code>appsettings.json</code>) বা certificate-এর জন্য এটাই স্বাভাবিক:</p>
+<pre>volumes:
+  - name: config-volume
+    configMap: { name: myapi-config }
+containers:
+  - name: myapi
+    volumeMounts:
+      - name: config-volume
+        mountPath: /app/config</pre>
+
+<h3>Downward API — Pod নিজের সম্পর্কে জানুক</h3>
+<p><span class="kw">Downward API</span> দিয়ে Pod-এর নিজের metadata (নাম, namespace, label, resource limit) container-এর ভেতরে env var/file হিসেবে expose করা যায় — যেমন logging-এ কোন Pod থেকে log আসছে তা include করতে:</p>
+<pre>env:
+  - name: POD_NAME
+    valueFrom: { fieldRef: { fieldPath: metadata.name } }
+  - name: POD_NAMESPACE
+    valueFrom: { fieldRef: { fieldPath: metadata.namespace } }</pre>
+</template>
+
+<template data-page="scheduling">
+<h2 class="title">৬. Resources · Probes · Scheduling</h2>
+<p class="lead">Kubernetes কীভাবে বুঝবে একটা Pod সুস্থ আছে কিনা, কতটুকু resource দরকার, আর কোন node-এ সেটা চালানো উচিত — production stability-র মূল ভিত্তি এখানেই।</p>
+
+<h3>Resource Requests ও Limits</h3>
+<table>
+<tr><th></th><th><code>requests</code></th><th><code>limits</code></th></tr>
+<tr><td>অর্থ</td><td>নিশ্চিত ন্যূনতম বরাদ্দ — Scheduler এই মান দেখে ঠিক করে কোন node-এ জায়গা আছে</td><td>সর্বোচ্চ সীমা — এর বেশি ব্যবহার করতে দেওয়া হবে না</td></tr>
+<tr><td>CPU বেশি ব্যবহার করলে</td><td>—</td><td>Throttle হয় (ধীর হয়ে যায়, kill হয় না)</td></tr>
+<tr><td>Memory বেশি ব্যবহার করলে</td><td>—</td><td><b>OOMKilled</b> — container সাথে সাথেই kill হয়ে যায়</td></tr>
+</table>
+<pre>resources:
+  requests: { cpu: "250m", memory: "256Mi" }   <span class="c"># 250m = ০.২৫ CPU core</span>
+  limits:   { cpu: "500m", memory: "512Mi" }</pre>
+<div class="callout why"><span class="tag">.NET-এর সাথে সরাসরি সম্পর্ক (Docker কোর্সের ধারাবাহিকতা)</span>
+Docker কোর্সে দেখেছেন .NET (Core 3.0+) cgroup limit নিজে পড়ে GC heap ও thread pool টিউন করে। Kubernetes-এর <code>limits.memory</code> ঠিক সেই cgroup limit-ই সেট করে দেয় — তাই memory limit ভুল বসালে (খুব কম) .NET-এর GC আক্রমণাত্মক হয়ে CPU খরচ বাড়িয়ে দিতে পারে, এমনকি CPU limit-এর সাথে মিলিয়ে <code>DOTNET_GCHeapHardLimit</code>-এর মতো সেটিংও প্রাসঙ্গিক হয়ে ওঠে।</div>
+<div class="callout mistake"><span class="tag">Common mistake — requests/limits না দেওয়া</span>
+কোনো request/limit না দিলে সেই Pod <span class="kw">BestEffort</span> QoS class পায় — node-এ resource চাপ পড়লে (memory pressure) এই ধরনের Pod-ই <b>সবার আগে evict</b> হয়, নির্বিচারে। Production-এ সবসময় অন্তত request দিন — এটা শুধু resource control নয়, scheduling-এর ভিত্তিও।</div>
+
+<h3>QoS Class — কে আগে Evict হবে</h3>
+<table>
+<tr><th>Class</th><th>শর্ত</th><th>Eviction অগ্রাধিকার</th></tr>
+<tr><td><span class="kw">Guaranteed</span></td><td>প্রতিটা container-এ <code>requests == limits</code> (CPU ও memory দুটোতেই)</td><td>সবচেয়ে নিরাপদ — শেষ পর্যন্ত evict হয়</td></tr>
+<tr><td><span class="kw">Burstable</span></td><td>request দেওয়া আছে, কিন্তু limit-এর সমান নয়</td><td>মাঝামাঝি</td></tr>
+<tr><td><span class="kw">BestEffort</span></td><td>কোনো request/limit-ই নেই</td><td>সবার আগে evict হয়</td></tr>
+</table>
+
+<h3>Probes — স্বাস্থ্য পরীক্ষা</h3>
+<table>
+<tr><th>Probe</th><th>ব্যর্থ হলে কী হয়</th><th>কখন ব্যবহার</th></tr>
+<tr><td><span class="kw">livenessProbe</span></td><td>Container <b>restart</b> হয়</td><td>App deadlock/hang হয়ে গেলে detect করে পুনরায় চালু করতে</td></tr>
+<tr><td><span class="kw">readinessProbe</span></td><td>Pod Service-এর endpoint তালিকা থেকে <b>সাময়িকভাবে বাদ</b> পড়ে (restart হয় না)</td><td>App সাময়িকভাবে ব্যস্ত/dependency-না-পাওয়া অবস্থায় traffic বন্ধ রাখতে</td></tr>
+<tr><td><span class="kw">startupProbe</span></td><td>মেয়াদ শেষ হলে container restart, কিন্তু success না হওয়া পর্যন্ত liveness/readiness শুরু হয় না</td><td>ধীরে-শুরু-হওয়া app (ভারী migration/cache warm-up)-কে liveness probe ভুল করে kill করা থেকে বাঁচাতে</td></tr>
+</table>
+<pre>livenessProbe:
+  httpGet: { path: /health/live, port: 8080 }
+  initialDelaySeconds: 10
+  periodSeconds: 15
+readinessProbe:
+  httpGet: { path: /health/ready, port: 8080 }
+  periodSeconds: 5</pre>
+<div class="callout mistake"><span class="tag">Common mistake — liveness ও readiness-এ একই endpoint</span>
+যদি একই <code>/health</code> endpoint দুটোতেই ব্যবহার করেন, আর সেই endpoint database connectivity-ও চেক করে — database সাময়িক downtime হলে liveness probe-ও fail করবে, Kubernetes app <b>restart</b> করতে শুরু করবে, যদিও app নিজে সুস্থ, শুধু dependency অস্থায়ীভাবে অনুপস্থিত। সঠিক প্যাটার্ন: liveness শুধু "process নিজে বেঁচে আছে কিনা" চেক করুক (হালকা), readiness dependency-সহ পূর্ণ health চেক করুক।</div>
+
+<h3>Node Affinity, Taints ও Tolerations</h3>
+<table>
+<tr><th>ধারণা</th><th>কাজ</th></tr>
+<tr><td><span class="kw">nodeAffinity</span></td><td>Pod-কে নির্দিষ্ট বৈশিষ্ট্যের node-এ (যেমন <code>disktype=ssd</code>) পছন্দ/বাধ্য করে schedule করতে বলে</td></tr>
+<tr><td><span class="kw">podAntiAffinity</span></td><td>একই app-এর একাধিক replica যেন আলাদা node-এ ছড়িয়ে থাকে (একটা node ডাউন হলে সব replica না হারায়)</td></tr>
+<tr><td><span class="kw">Taint</span> (node-এ)</td><td>একটা node-কে "সবাই এখানে আসতে পারবে না" চিহ্নিত করে (যেমন GPU node শুধু GPU workload-এর জন্য সংরক্ষিত রাখতে)</td></tr>
+<tr><td><span class="kw">Toleration</span> (Pod-এ)</td><td>একটা নির্দিষ্ট taint "সহ্য করতে পারি" ঘোষণা — তবেই সেই Pod সেই node-এ schedule হতে পারবে</td></tr>
+</table>
+</template>
+
+<template data-page="scaling">
+<h2 class="title">৭. Scaling · Rolling Update · Rollback</h2>
+<p class="lead">Traffic বাড়লে/কমলে replica সংখ্যা স্বয়ংক্রিয়ভাবে বদলানো, আর নতুন version deploy করার সময় downtime এড়ানো — এই চ্যাপ্টারের মূল বিষয়।</p>
+
+<h3>Horizontal Pod Autoscaler (HPA)</h3>
+<p><span class="kw">HPA</span> একটা metric (সাধারণত CPU utilization, বা custom metric) দেখে replica সংখ্যা স্বয়ংক্রিয়ভাবে বাড়ায়/কমায়:</p>
+<pre>apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: myapi-hpa
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: myapi }
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }</pre>
+<div class="callout why"><span class="tag">এর জন্য কী দরকার</span>
+HPA কাজ করার জন্য cluster-এ <span class="kw">metrics-server</span> চলতে হবে (CPU/memory metric সংগ্রহ করে), আর Deployment-এ অবশ্যই <code>resources.requests</code> সেট থাকতে হবে — percentage utilization এই request-এর সাপেক্ষেই গণনা হয় (request না থাকলে HPA percentage হিসাব করতে পারবে না)।</div>
+
+<h3>Vertical Pod Autoscaler (VPA) ও Cluster Autoscaler</h3>
+<table>
+<tr><th>Autoscaler</th><th>কী বদলায়</th><th>উদাহরণ পরিস্থিতি</th></tr>
+<tr><td><span class="kw">HPA</span></td><td>Replica-র <b>সংখ্যা</b></td><td>Traffic বাড়লে ৩টা Pod থেকে ৮টা Pod</td></tr>
+<tr><td><span class="kw">VPA</span></td><td>প্রতিটা Pod-এর resource <b>request/limit</b></td><td>একটা app প্রকৃতপক্ষে requests-এর চেয়ে বেশি/কম memory ব্যবহার করছে — VPA সেটা adjust করে</td></tr>
+<tr><td><span class="kw">Cluster Autoscaler</span></td><td>Worker <b>node</b>-এর সংখ্যা</td><td>Pending Pod-এর জন্য বিদ্যমান কোনো node-এ জায়গা নেই — নতুন node cloud provider থেকে provision হয়</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">HPA ও VPA একসাথে CPU/memory-তে ব্যবহার না করা</span>
+একই metric-এ HPA (replica বাড়ানো) ও VPA (প্রতি Pod-এর size বাড়ানো) একসাথে চালালে দুটো controller একে অপরের সিদ্ধান্তের সাথে সংঘর্ষে যেতে পারে (VPA Pod বড় করছে, HPA একই সাথে সংখ্যা বাড়াচ্ছে)। সাধারণত HPA replica-র জন্য, VPA শুধু non-HPA workload বা শুধু recommendation mode-এ ব্যবহার করা নিরাপদ।</div>
+
+<h3>Rolling Update — Zero-downtime Deploy</h3>
+<div class="diagram"><pre>
+maxSurge: 1, maxUnavailable: 0  (v1.4 → v1.5, ৩টা replica)
+
+ধাপ ১:  [v1.4] [v1.4] [v1.4] [v1.5-নতুন]        ← ৪টা চলছে, কেউ বন্ধ হয়নি
+ধাপ ২:  [v1.4] [v1.4] [v1.5]  [v1.5]            ← একটা পুরনো সরে, নতুন যাচাই হয়ে রেডি
+ধাপ ৩:  [v1.4] [v1.5] [v1.5]  [v1.5]
+ধাপ ৪:         [v1.5] [v1.5]  [v1.5]            ← সম্পূর্ণ নতুন version, downtime শূন্য
+</pre></div>
+<pre>spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1          <span class="c"># replicas-এর বাড়তি কতগুলো Pod সাময়িক তৈরি হতে পারে</span>
+      maxUnavailable: 0    <span class="c"># সবসময় কমপক্ষে সব replica available থাকবে (কড়া, ধীর কিন্তু নিরাপদ)</span></pre>
+<div class="callout why"><span class="tag">readinessProbe-এর সাথে সরাসরি সম্পর্ক</span>
+Rolling update-এ নতুন Pod তখনই "রেডি" ধরা হয় (এবং পুরনো Pod সরানো শুরু হয়) যখন তার <code>readinessProbe</code> পাস করে। readinessProbe না থাকলে, বা ভুলভাবে সেট করা থাকলে, Kubernetes নতুন Pod তৈরি হওয়া মাত্রই সেটাকে "ready" ধরে নিতে পারে — অথচ app তখনো startup/warm-up করছে — ফলে কিছু request ব্যর্থ হতে পারে। সঠিক readinessProbe এই পুরো rolling update-এর নিরাপত্তার ভিত্তি।</div>
+
+<h3>Rollback — এক কমান্ডে আগের version-এ ফেরা</h3>
+<p>প্রতিটা Deployment update একটা নতুন <b>revision</b> তৈরি করে (আগের ReplicaSet মুছে না ফেলে, scale-to-0 রাখা হয়) — এজন্যই দ্রুত rollback সম্ভব:</p>
+<pre>kubectl rollout history deployment/myapi         <span class="c"># সব revision-এর তালিকা</span>
+kubectl rollout undo deployment/myapi             <span class="c"># ঠিক আগের revision-এ ফেরা</span>
+kubectl rollout undo deployment/myapi --to-revision=3   <span class="c"># নির্দিষ্ট revision-এ ফেরা</span>
+kubectl rollout status deployment/myapi           <span class="c"># rollout শেষ হয়েছে কিনা দেখা</span></pre>
+</template>
+
+<template data-page="packaging">
+<h2 class="title">৮. Helm · Kustomize</h2>
+<p class="lead">এক app-এর জন্য ১০-১৫টা YAML ফাইল (Deployment, Service, ConfigMap, Ingress, HPA...) হাতে ব্যবস্থাপনা করা কষ্টসাধ্য — বিশেষ করে dev/staging/prod-এ সামান্য পার্থক্য রেখে। Helm ও Kustomize এই সমস্যার দুই ভিন্ন সমাধান।</p>
+
+<h3>Helm — Package Manager, Templating</h3>
+<p><span class="kw">Helm</span>-কে Kubernetes-এর জন্য npm/NuGet-এর মতো ভাবা যায় — একটা <span class="kw">Chart</span> হলো একগুচ্ছ templated YAML + একটা <code>values.yaml</code>, যেখানে environment-ভেদে বদলানো মানগুলো প্যারামিটার হিসেবে বের করা থাকে।</p>
+<pre><span class="c"># templates/deployment.yaml (Chart-এর ভেতরে)</span>
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    spec:
+      containers:
+        - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          resources: {{ toYaml .Values.resources | nindent 12 }}</pre>
+<pre><span class="c"># values-prod.yaml</span>
+replicaCount: 5
+image: { repository: myregistry/myapi, tag: "1.4.2" }
+resources: { requests: { cpu: "500m", memory: "512Mi" } }</pre>
+<pre>helm install myapi ./mychart -f values-prod.yaml     <span class="c"># প্রথমবার install</span>
+helm upgrade myapi ./mychart -f values-prod.yaml     <span class="c"># নতুন version deploy</span>
+helm rollback myapi 2                                 <span class="c"># নির্দিষ্ট release-এ ফেরা</span>
+helm uninstall myapi                                  <span class="c"># পুরো release সরানো</span></pre>
+<div class="callout why"><span class="tag">Helm-এর মূল শক্তি — Release হিসেবে ট্র্যাকিং</span>
+Helm প্রতিটা <code>install</code>/<code>upgrade</code>-কে একটা <span class="kw">Release</span> হিসেবে ট্র্যাক করে — কোন version কখন deploy হলো তার ইতিহাস রাখে, ফলে <code>helm rollback</code> দিয়ে Deployment-সহ সম্পর্কিত সব object (Service, ConfigMap ইত্যাদি) একসাথে আগের অবস্থায় ফেরানো যায়, শুধু একটা Deployment নয়।</div>
+
+<h3>Kustomize — Template ছাড়াই Overlay</h3>
+<p><span class="kw">Kustomize</span> (kubectl-এর built-in অংশ) ভিন্ন দর্শনে চলে — কোনো templating syntax (<code>{{ }}</code>) নেই, বরং একটা <b>base</b> YAML-এর উপর <b>overlay</b> দিয়ে নির্দিষ্ট অংশ patch করা হয়:</p>
+<pre><span class="c"># base/kustomization.yaml</span>
+resources: [deployment.yaml, service.yaml]
+
+<span class="c"># overlays/production/kustomization.yaml</span>
+resources: [../../base]
+patches:
+  - target: { kind: Deployment, name: myapi }
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 5</pre>
+<pre>kubectl apply -k overlays/production/</pre>
+<table>
+<tr><th></th><th>Helm</th><th>Kustomize</th></tr>
+<tr><td>দর্শন</td><td>Templating (string interpolation)</td><td>Overlay/patch (structured YAML merge)</td></tr>
+<tr><td>শেখার খরচ</td><td>বেশি — নিজস্ব template language</td><td>কম — plain YAML, শুধু patch যোগ</td></tr>
+<tr><td>Package বিতরণ</td><td>Chart হিসেবে ভাগাভাগি/ভার্সন করা সহজ (Helm Hub/OCI registry)</td><td>প্রথাগত packaging নেই, তবে kubectl-এ built-in</td></tr>
+<tr><td>কখন উপযুক্ত</td><td>Third-party চার্ট ব্যবহার/বিতরণ, জটিল conditional logic</td><td>নিজেদের app-এর জন্য সরল, readable environment override</td></tr>
+</table>
+</template>
+
+<template data-page="security">
+<h2 class="title">৯. RBAC · Security Context · Network Policy</h2>
+<p class="lead">Cluster-এ কে কী করতে পারবে (RBAC), Pod নিজে কতটা privilege নিয়ে চলবে (Security Context), আর কে কার সাথে কথা বলতে পারবে (Network Policy — আগের চ্যাপ্টারে দেখা হয়েছে)।</p>
+
+<h3>RBAC — কে কী করতে পারবে</h3>
+<table>
+<tr><th>Object</th><th>স্কোপ</th><th>কাজ</th></tr>
+<tr><td><span class="kw">Role</span></td><td>একটা নির্দিষ্ট namespace</td><td>নির্দিষ্ট resource-এ নির্দিষ্ট action (get/list/create/delete) অনুমতির তালিকা</td></tr>
+<tr><td><span class="kw">RoleBinding</span></td><td>একটা namespace</td><td>একটা Role-কে একটা user/ServiceAccount-এর সাথে যুক্ত করে</td></tr>
+<tr><td><span class="kw">ClusterRole</span></td><td>পুরো cluster</td><td>Role-এর মতোই, কিন্তু namespace-নির্বিশেষে বা cluster-scoped resource (Node)-এ প্রযোজ্য</td></tr>
+<tr><td><span class="kw">ClusterRoleBinding</span></td><td>পুরো cluster</td><td>ClusterRole-কে cluster-জুড়ে বেঁধে দেয়</td></tr>
+</table>
+<pre>apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: { namespace: production, name: pod-reader }
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]        <span class="c"># শুধু পড়া, delete/create নয়</span>
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { namespace: production, name: read-pods }
+subjects:
+  - kind: ServiceAccount
+    name: monitoring-sa
+roleRef: { kind: Role, name: pod-reader, apiGroup: rbac.authorization.k8s.io }</pre>
+<div class="callout why"><span class="tag">ServiceAccount — Pod-এর নিজস্ব পরিচয়</span>
+প্রতিটা Pod একটা <span class="kw">ServiceAccount</span> নিয়ে চলে (নির্দিষ্ট না করলে namespace-এর <code>default</code> ServiceAccount) — এটাই Pod-এর পরিচয়, যখন সে নিজেই API Server-কে কল করে (যেমন একটা controller নিজে অন্য Pod তালিকা দেখতে চায়)। RBAC এই ServiceAccount-এর ওপরই প্রয়োগ হয় — user-এর RBAC আর Pod-এর RBAC সম্পূর্ণ আলাদা বিষয়।</div>
+<div class="callout mistake"><span class="tag">Common mistake — সবকিছুতে <code>cluster-admin</code> বেঁধে দেওয়া</span>
+দ্রুত কাজ চালাতে অনেকে ServiceAccount-কে built-in <code>cluster-admin</code> ClusterRole দিয়ে বেঁধে দেন (সব resource-এ সব অনুমতি)। সেই Pod compromise হলে attacker-এর হাতে পুরো cluster-এর নিয়ন্ত্রণ চলে যায়। সবসময় <b>least privilege</b> — যে Pod-এর যা লাগবে ঠিক ততটুকু অনুমতি, নামমাত্র Role দিয়ে।</div>
+
+<h3>Security Context — Container কতটা Privilege নিয়ে চলবে</h3>
+<pre>securityContext:
+  runAsNonRoot: true            <span class="c"># root user হিসেবে চলতে দেবে না (Docker কোর্সের USER app-এর সমতুল্য)</span>
+  runAsUser: 1000
+  readOnlyRootFilesystem: true  <span class="c"># container নিজের filesystem বদলাতে পারবে না</span>
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]                <span class="c"># সব Linux capability বাদ (Docker কোর্সের --cap-drop ALL-এর সমতুল্য)</span></pre>
+<div class="callout why"><span class="tag">Docker কোর্সের নিরাপত্তা অনুশীলনই এখানে YAML হয়ে ফিরে এসেছে</span>
+এই প্রতিটা সেটিং হুবহু Docker কোর্সের "Security Best Practices" চ্যাপ্টারের <code>docker run --user ... --read-only --cap-drop ALL</code>-এর YAML রূপ — শুধু এখানে flag না দিয়ে declaratively Pod spec-এ লেখা হয়, আর Kubernetes নিশ্চিত করে <b>প্রতিটা</b> Pod তৈরির সময় এই নিয়ম মানা হচ্ছে (মানুষ ভুলে flag বাদ দিতে পারবে না)।</div>
+
+<h3>Pod Security Standards</h3>
+<p>Namespace-স্তরে <span class="kw">Pod Security Admission</span> দিয়ে ন্যূনতম নিরাপত্তা মান বাধ্যতামূলক করা যায় — <code>privileged</code> (কোনো বাধা নেই), <code>baseline</code> (পরিচিত privilege-escalation পথ বন্ধ), <code>restricted</code> (কড়াকড়ি — non-root, capability drop বাধ্যতামূলক)।</p>
+<pre>apiVersion: v1
+kind: Namespace
+metadata:
+  name: production
+  labels:
+    pod-security.kubernetes.io/enforce: restricted</pre>
+</template>
+
+<template data-page="observability">
+<h2 class="title">১০. Observability · Debugging</h2>
+<p class="lead">Production-এ Pod অনেক, node অনেক — সমস্যা কোথায় তা দ্রুত বের করতে সঠিক টুল ও কমান্ড জানা জরুরি।</p>
+
+<h3>দ্রুত পর্যবেক্ষণের কমান্ড</h3>
+<pre>kubectl get pods -o wide              <span class="c"># সব Pod, কোন node-এ আছে, IP সহ</span>
+kubectl describe pod myapi-7d9f-x2k   <span class="c"># সম্পূর্ণ বিবরণ + সাম্প্রতিক Event (সমস্যা নির্ণয়ে প্রথম ধাপ)</span>
+kubectl logs myapi-7d9f-x2k           <span class="c"># container-এর stdout/stderr</span>
+kubectl logs myapi-7d9f-x2k --previous   <span class="c"># crash হওয়া আগের container-এর log</span>
+kubectl logs myapi-7d9f-x2k -c sidecar   <span class="c"># multi-container Pod-এ নির্দিষ্ট container বেছে নেওয়া</span>
+kubectl top pods                       <span class="c"># live CPU/memory (metrics-server লাগবে)</span>
+kubectl exec -it myapi-7d9f-x2k -- sh  <span class="c"># ভেতরে shell (Docker-এর exec-এর মতোই)</span></pre>
+
+<h3>Centralized Logging — কেন শুধু <code>kubectl logs</code> যথেষ্ট নয়</h3>
+<div class="callout why"><span class="tag">Pod ক্ষণস্থায়ী, log-ও তাই</span>
+একটা Pod মুছে গেলে (crash, reschedule, scale-down) তার log-ও সাথে সাথে হারিয়ে যায় — <code>kubectl logs</code> শুধু <b>এখনো বেঁচে থাকা</b> Pod-এর log দেখাতে পারে। Production-এ প্রতিটা node-এ একটা log-shipping <span class="kw">DaemonSet</span> (Fluentd/Fluent Bit) চালানো হয়, যা প্রতিটা container-এর log সংগ্রহ করে একটা কেন্দ্রীয় সিস্টেমে (Elasticsearch/Loki) পাঠিয়ে দেয় — Pod মুছে গেলেও log টিকে থাকে।</div>
+
+<h3>Metrics — Prometheus ও Grafana (concept)</h3>
+<p><span class="kw">metrics-server</span> শুধু হালকা, বর্তমান মুহূর্তের CPU/memory (HPA-এর জন্য) দেয় — historical trend/alerting-এর জন্য নয়। Production-এ সাধারণত <span class="kw">Prometheus</span> (time-series মেট্রিক সংগ্রহ ও সংরক্ষণ) + <span class="kw">Grafana</span> (visualization dashboard) ব্যবহার হয়, application নিজে <code>/metrics</code> endpoint-এ Prometheus-format মেট্রিক expose করে (যেমন .NET-এ <code>prometheus-net</code> লাইব্রেরি দিয়ে)।</p>
+
+<h3>Events — Kubernetes নিজে কী ভাবছে তা দেখা</h3>
+<pre>kubectl get events --sort-by=.lastTimestamp   <span class="c"># সাম্প্রতিক সব cluster event, সময়ক্রম অনুযায়ী</span></pre>
+<div class="callout best"><span class="tag">Debug করার সঠিক ক্রম</span>
+সমস্যা দেখা দিলে এই ক্রমে এগোন: (১) <code>kubectl get pods</code> — কোন Pod-এর status অস্বাভাবিক (<code>CrashLoopBackOff</code>, <code>Pending</code>, <code>ImagePullBackOff</code>)? (২) <code>kubectl describe pod</code> — নিচের দিকে Events section-এ Kubernetes নিজেই সমস্যার কারণ বলে দেয় প্রায়ই। (৩) <code>kubectl logs</code> (দরকার হলে <code>--previous</code>) — app নিজে কী বলছে। এই তিন ধাপেই ৯০% সমস্যার কারণ বেরিয়ে আসে।</div>
+</template>
+
+<template data-page="dotnet">
+<h2 class="title">১১. ASP.NET Core on Kubernetes</h2>
+<p class="lead">তত্ত্ব থেকে বাস্তবায়নে — একটা সম্পূর্ণ, production-grade ASP.NET Core Deployment, আগের প্রতিটা চ্যাপ্টারের ধারণা একসাথে জোড়া দিয়ে।</p>
+
+<h3>সম্পূর্ণ Deployment + Service + HPA</h3>
+<pre>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapi
+  namespace: production
+spec:
+  replicas: 3
+  selector: { matchLabels: { app: myapi } }
+  strategy:
+    rollingUpdate: { maxSurge: 1, maxUnavailable: 0 }
+  template:
+    metadata: { labels: { app: myapi } }
+    spec:
+      serviceAccountName: myapi-sa
+      securityContext: { runAsNonRoot: true, runAsUser: 1000 }
+      terminationGracePeriodSeconds: 30       <span class="c"># .NET-এর graceful shutdown-এর সাথে মেলান (Docker কোর্স দেখুন)</span>
+      containers:
+        - name: myapi
+          image: myregistry/myapi:1.4.2
+          ports: [{ containerPort: 8080 }]
+          envFrom:
+            - configMapRef: { name: myapi-config }
+          env:
+            - name: ConnectionStrings__Db
+              valueFrom: { secretKeyRef: { name: db-credentials, key: connectionString } }
+          resources:
+            requests: { cpu: "250m", memory: "256Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }
+          readinessProbe:
+            httpGet: { path: /health/ready, port: 8080 }
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /health/live, port: 8080 }
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          lifecycle:
+            preStop:
+              exec: { command: ["sleep", "5"] }   <span class="c"># নিচে ব্যাখ্যা</span>
+---
+apiVersion: v1
+kind: Service
+metadata: { name: myapi-svc, namespace: production }
+spec:
+  selector: { app: myapi }
+  ports: [{ port: 80, targetPort: 8080 }]</pre>
+
+<h3>দুইটা আলাদা Health Endpoint কেন দরকার</h3>
+<p>ASP.NET Core-এর <code>Microsoft.Extensions.Diagnostics.HealthChecks</code> দিয়ে সহজেই দুটো আলাদা endpoint বানানো যায়:</p>
+<pre><span class="c">// Program.cs</span>
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" })
+    .AddNpgSql(connectionString, tags: new[] { "ready" });    <span class="c">// DB connectivity সহ</span>
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live")          <span class="c">// শুধু process বেঁচে আছে কিনা — হালকা</span>
+});
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")          <span class="c">// DB/dependency-সহ পূর্ণ চেক</span>
+});</pre>
+<div class="callout why"><span class="tag">Scheduling চ্যাপ্টারের সাথে সংযোগ</span>
+এই দুই endpoint-এর বিভাজনই আগের চ্যাপ্টারের সেই সতর্কতার সমাধান — database সাময়িক downtime হলে <code>/health/ready</code> fail করবে (Pod traffic থেকে সাময়িক বাদ পড়বে), কিন্তু <code>/health/live</code> pass করতেই থাকবে (app process নিজে সুস্থ, তাই অযথা restart হবে না)।</div>
+
+<h3>preStop Hook — Kubernetes-এর নিজস্ব "grace period" সমস্যা</h3>
+<div class="callout mistake"><span class="tag">একটা সূক্ষ্ম কিন্তু গুরুত্বপূর্ণ race condition</span>
+Pod বন্ধ হওয়ার নির্দেশ এলে, Kubernetes <b>একই সাথে</b> দুটো কাজ শুরু করে: (১) Pod-কে Service-এর endpoint তালিকা থেকে সরানো, (২) container-কে SIGTERM পাঠানো। কিন্তু endpoint তালিকা আপডেট cluster-জুড়ে ছড়াতে (kube-proxy পর্যন্ত পৌঁছাতে) কিছুটা সময় লাগে — এই সংক্ষিপ্ত সময়ে নতুন request এখনো সেই Pod-এ আসতে পারে, যদিও সেটা ইতিমধ্যে বন্ধ হওয়ার প্রক্রিয়ায়। <code>preStop</code> hook-এ একটা ছোট <code>sleep</code> (৩-৫ সেকেন্ড) যোগ করলে — SIGTERM পাঠানোর আগে এই সময়টুকু অপেক্ষা করা হয়, যতক্ষণে endpoint তালিকা updates পুরো cluster-এ ছড়িয়ে যায়, নতুন traffic আসা বন্ধ হয় — তারপর আসল graceful shutdown শুরু হয়।</div>
+
+<h3>Init Container — App শুরুর আগে Migration</h3>
+<p>Docker কোর্সে দেখা "migration আলাদা করে একবার চালানো" নীতি Kubernetes-এ <span class="kw">initContainer</span> দিয়ে বাস্তবায়িত হয় — মূল container শুরুর আগে সম্পূর্ণ হতেই হবে:</p>
+<pre>spec:
+  initContainers:
+    - name: migrate
+      image: myregistry/myapi:1.4.2
+      command: ["dotnet", "MyApi.dll", "--migrate-only"]
+  containers:
+    - name: myapi
+      image: myregistry/myapi:1.4.2</pre>
+</template>
+
+<template data-page="troubleshoot">
+<h2 class="title">১২. Troubleshooting</h2>
+<p class="lead">সবচেয়ে বেশি দেখা Pod status সমস্যা, আর প্রতিটার প্রকৃত কারণ ও সমাধান।</p>
+
+<table>
+<tr><th>Status/উপসর্গ</th><th>সাধারণ কারণ</th><th>নির্ণয়/সমাধান</th></tr>
+<tr><td><code>CrashLoopBackOff</code></td><td>Container বারবার চালু হয়ে সাথে সাথে crash করছে (app-এর ভেতরের error, ভুল config, missing dependency)</td><td><code>kubectl logs &lt;pod&gt; --previous</code> দিয়ে crash হওয়ার ঠিক আগের log দেখুন</td></tr>
+<tr><td><code>ImagePullBackOff</code> / <code>ErrImagePull</code></td><td>ভুল image নাম/tag, private registry-তে credential নেই, registry unreachable</td><td><code>kubectl describe pod</code>-এ Events দেখুন; private registry হলে <code>imagePullSecrets</code> সেট আছে কিনা যাচাই করুন</td></tr>
+<tr><td><code>Pending</code> (অনেকক্ষণ ধরে)</td><td>কোনো node-এ যথেষ্ট CPU/memory নেই, বা nodeAffinity/taint মিলছে না</td><td><code>kubectl describe pod</code> — "Insufficient cpu" বা "didn't match node selector"-এর মতো নির্দিষ্ট কারণ দেখাবে</td></tr>
+<tr><td><code>OOMKilled</code></td><td>Container তার <code>memory limit</code>-এর বেশি ব্যবহার করেছে</td><td>প্রকৃত ব্যবহার মেপে limit বাড়ান, অথবা memory leak থাকলে app-এ ঠিক করুন</td></tr>
+<tr><td>Pod "Running" কিন্তু traffic পাচ্ছে না</td><td>readinessProbe fail করছে, বা Service selector label-এর সাথে Pod label মিলছে না</td><td><code>kubectl get endpoints &lt;service&gt;</code> — খালি থাকলে selector/label যাচাই করুন</td></tr>
+<tr><td>DNS resolve হচ্ছে না</td><td>ভুল namespace-এ short name ব্যবহার, বা CoreDNS Pod সমস্যায়</td><td>সম্পূর্ণ FQDN (<code>svc.namespace.svc.cluster.local</code>) দিয়ে test করুন; <code>kubectl get pods -n kube-system</code>-এ CoreDNS status দেখুন</td></tr>
+<tr><td>Rolling update আটকে আছে</td><td>নতুন Pod-এর readinessProbe কখনো pass করছে না</td><td><code>kubectl rollout status</code> ও নতুন Pod-এর log/describe দেখুন; দরকারে <code>kubectl rollout undo</code></td></tr>
+</table>
+
+<div class="callout best"><span class="tag">Troubleshooting-এর সবচেয়ে গুরুত্বপূর্ণ অভ্যাস</span>
+৯০% ক্ষেত্রেই <code>kubectl describe pod &lt;name&gt;</code>-এর একদম নিচের <b>Events</b> section-এ Kubernetes নিজেই স্পষ্ট বাংলায়-না-হলেও-স্পষ্ট ইংরেজিতে বলে দেয় কী ভুল হচ্ছে ("Insufficient memory", "back-off restarting failed container", "readiness probe failed")। Log দেখার আগেই সবসময় এই Events section প্রথমে পড়ুন।</div>
+</template>
+
+<template data-page="cli">
+<h2 class="title">১৩. Essential kubectl Commands</h2>
+<p class="lead">দৈনন্দিন ব্যবহারের কমান্ড, category অনুযায়ী — প্রতিটার কারণ ও প্রভাবসহ।</p>
+
+<h3>🔍 দেখা ও পর্যবেক্ষণ</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার</th><th>প্রভাব</th></tr>
+<tr><td><code>kubectl get pods</code></td><td>Pod-এর তালিকা ও status দেখতে</td><td>শুধু দেখায় — নিরাপদ</td></tr>
+<tr><td><code>kubectl get pods -o wide</code></td><td>কোন node-এ কোন Pod, IP-সহ দেখতে</td><td>শুধু দেখায়</td></tr>
+<tr><td><code>kubectl describe pod &lt;name&gt;</code></td><td>বিস্তারিত অবস্থা ও সাম্প্রতিক Event দেখতে (troubleshooting-এর প্রথম ধাপ)</td><td>শুধু দেখায়</td></tr>
+<tr><td><code>kubectl logs &lt;pod&gt; [-f] [--previous]</code></td><td>Container-এর log দেখতে (<code>-f</code> = live, <code>--previous</code> = crash-হওয়া আগের instance)</td><td>শুধু দেখায়</td></tr>
+<tr><td><code>kubectl get events --sort-by=.lastTimestamp</code></td><td>Cluster-জুড়ে সাম্প্রতিক ঘটনা সময়ক্রমে দেখতে</td><td>শুধু দেখায়</td></tr>
+<tr><td><code>kubectl top pods</code> / <code>top nodes</code></td><td>Live CPU/memory ব্যবহার দেখতে</td><td>শুধু দেখায় (metrics-server দরকার)</td></tr>
+</table>
+
+<h3>🚀 Deploy ও পরিবর্তন</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার</th><th>প্রভাব</th></tr>
+<tr><td><code>kubectl apply -f deployment.yaml</code></td><td>একটা resource তৈরি/আপডেট করতে (declarative — বর্তমান বনাম কাঙ্ক্ষিত অবস্থার diff apply করে)</td><td>না থাকলে তৈরি হয়, থাকলে পার্থক্যটুকু আপডেট হয়</td></tr>
+<tr><td><code>kubectl delete -f deployment.yaml</code></td><td>YAML-এ বর্ণিত resource মুছতে</td><td>Deployment মুছলে তার সব Pod-ও মুছে যায়</td></tr>
+<tr><td><code>kubectl set image deployment/myapi myapi=myregistry/myapi:1.5.0</code></td><td>দ্রুত শুধু image version বদলাতে (পুরো YAML re-apply ছাড়াই)</td><td>Rolling update শুরু হয়</td></tr>
+<tr><td><code>kubectl scale deployment/myapi --replicas=5</code></td><td>Replica সংখ্যা তাৎক্ষণিকভাবে বদলাতে</td><td>ReplicaSet নতুন সংখ্যায় Pod তৈরি/মুছে ফেলে</td></tr>
+<tr><td><code>kubectl rollout status deployment/myapi</code></td><td>Rolling update শেষ হয়েছে কিনা দেখতে</td><td>শুধু দেখায় (rollout শেষ না হলে টার্মিনাল আটকে থাকে)</td></tr>
+<tr><td><code>kubectl rollout undo deployment/myapi</code></td><td>খারাপ deploy থেকে দ্রুত আগের version-এ ফিরতে</td><td>আগের ReplicaSet আবার scale up হয়, বর্তমানটা scale down</td></tr>
+</table>
+
+<h3>🐚 Debug ও Interact</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার</th><th>প্রভাব</th></tr>
+<tr><td><code>kubectl exec -it &lt;pod&gt; -- sh</code></td><td>চলমান container-এর ভেতরে shell খুলতে</td><td>নতুন process container-এর namespace-এ চালু হয় (Docker-এর <code>exec</code>-এর মতোই)</td></tr>
+<tr><td><code>kubectl port-forward pod/&lt;name&gt; 8080:8080</code></td><td>স্থানীয় মেশিন থেকে সরাসরি একটা Pod-এ (Service ছাড়াই) অস্থায়ীভাবে পৌঁছাতে (debug-এ কাজে লাগে)</td><td>Local port থেকে Pod port-এ একটা অস্থায়ী টানেল তৈরি হয়</td></tr>
+<tr><td><code>kubectl cp &lt;pod&gt;:/path ./local-path</code></td><td>Pod থেকে ফাইল স্থানীয় মেশিনে কপি করতে</td><td>নির্দিষ্ট ফাইল/ফোল্ডার কপি হয়</td></tr>
+<tr><td><code>kubectl get endpoints &lt;service&gt;</code></td><td>একটা Service আসলে কোন Pod-গুলোতে route করছে তা যাচাই করতে</td><td>খালি থাকলে বোঝা যায় selector/readinessProbe-এ সমস্যা আছে</td></tr>
+</table>
+
+<h3>⚙️ Context ও Namespace</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার</th><th>প্রভাব</th></tr>
+<tr><td><code>kubectl config get-contexts</code></td><td>কোন কোন cluster-এ সংযুক্ত হতে পারবেন তালিকা দেখতে</td><td>শুধু দেখায়</td></tr>
+<tr><td><code>kubectl config use-context &lt;name&gt;</code></td><td>ভিন্ন cluster-এ কমান্ড পাঠানো শুরু করতে</td><td>পরের সব কমান্ড সেই cluster-এ প্রযোজ্য হবে — production cluster-এ ভুল কমান্ড এড়াতে সবসময় active context যাচাই করুন</td></tr>
+<tr><td><code>kubectl config set-context --current --namespace=&lt;ns&gt;</code></td><td>বারবার <code>-n</code> না লিখে ডিফল্ট namespace বদলাতে</td><td>পরের সব কমান্ড এই namespace-কে ডিফল্ট ধরবে</td></tr>
+</table>
+
+<h3>📋 এক নজরে</h3>
+<pre>kubectl get pods -o wide               kubectl describe pod <name>
+kubectl logs <pod> -f / --previous     kubectl get events --sort-by=.lastTimestamp
+kubectl apply -f file.yaml             kubectl delete -f file.yaml
+kubectl set image deploy/x c=img:tag   kubectl scale deploy/x --replicas=N
+kubectl rollout status/undo/history deployment/x
+kubectl exec -it <pod> -- sh           kubectl port-forward pod/<name> 8080:8080
+kubectl get endpoints <service>        kubectl top pods / nodes
+kubectl config use-context <name>      kubectl config set-context --current --namespace=<ns></pre>
+<div class="callout best"><span class="tag">সংক্ষেপে — পুরো কোর্সের সারাংশ</span>
+সবকিছু declarative — আপনি কাঙ্ক্ষিত অবস্থা ঘোষণা করেন, control loop সেটা বজায় রাখে। Pod ক্ষণস্থায়ী, তাই Deployment/StatefulSet দিয়ে পরিচালনা করুন, কখনো সরাসরি Pod নয়। Service দিয়ে স্থির ঠিকানা, Ingress দিয়ে HTTP routing। readinessProbe/livenessProbe আলাদা রাখুন। resources.requests সবসময় দিন। Secret এনক্রিপ্টেড ভাবা বন্ধ করুন — RBAC ও least privilege দিয়ে সুরক্ষিত করুন।</div>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>
