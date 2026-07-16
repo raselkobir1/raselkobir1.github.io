@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Auth & Keycloak Mastery — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#eab308; --accent2:#fbbf24;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --blue:#4aa3ff;
+    --code-bg:#0b0f14; --kw:#eab308;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(234,179,8,.22),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#08111f}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--blue)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--blue)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#fbbf24}
+  .viz{background:var(--code-bg); border:1px solid var(--border); border-radius:12px; padding:20px 18px 12px; margin:18px 0}
+  .viz svg{width:100%; height:auto; display:block; overflow:visible}
+  .viz figcaption{color:var(--muted); font-size:13px; margin-top:10px; text-align:center; line-height:1.5}
+  .viz text{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .viz .bn{font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla",sans-serif}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🔐 Auth & Keycloak</h1>
+      <p>Beginner → Advanced • Identity, JWT, OAuth2, OIDC ও Keycloak — গভীরভাবে • বাংলায়</p>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",  icon:"🧭", title:"Foundation — AuthN বনাম AuthZ"},
+  {id:"credentials", icon:"🔑", title:"Password Security · MFA"},
+  {id:"session",     icon:"🍪", title:"Session-based Auth · Cookies · CSRF"},
+  {id:"jwt",         icon:"🪪", title:"Token-based Auth · JWT Internals"},
+  {id:"oauth2",      icon:"🔗", title:"OAuth 2.0 — Roles · Grant Types"},
+  {id:"oidc",        icon:"🆔", title:"OpenID Connect (OIDC)"},
+  {id:"keycloak",    icon:"🏰", title:"Keycloak Core — Realm · Client · User"},
+  {id:"flows",       icon:"🔄", title:"Flows in Practice · PKCE · curl"},
+  {id:"authz",       icon:"🛡️", title:"Authorization Models — RBAC · ABAC · UMA"},
+  {id:"securing",    icon:"🧱", title:"Securing SPA/API · BFF · Token Storage"},
+  {id:"dotnet",      icon:"💜", title:"ASP.NET Core + Keycloak Integration"},
+  {id:"pitfalls",    icon:"⚠️", title:"Pitfalls · Best Practices · Troubleshooting"},
+  {id:"cli",         icon:"⌨️", title:"Essential Commands — curl · kcadm"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Foundation — Authentication বনাম Authorization</h2>
+<p class="lead">প্রায় প্রতিটা security বাগ, প্রতিটা ভুল architecture decision শুরু হয় এই দুইটা শব্দ গুলিয়ে ফেলা থেকে। শুরুতেই এটা স্পষ্ট না হলে বাকি পুরো টপিক — JWT, OAuth2, Keycloak — সবই ভাসাভাসা মুখস্থ থেকে যাবে।</p>
+
+<h3>দুইটা সম্পূর্ণ ভিন্ন প্রশ্ন</h3>
+<table>
+<tr><th></th><th><span class="kw">Authentication (AuthN)</span></th><th><span class="kw">Authorization (AuthZ)</span></th></tr>
+<tr><td>প্রশ্ন</td><td>"আপনি আসলে কে?"</td><td>"আপনাকে এই কাজটা করতে দেওয়া হবে কি?"</td></tr>
+<tr><td>ঘটে কখন</td><td>প্রথমে — login-এর সময়</td><td>AuthN-এর পরে, প্রতিটা action-এর আগে</td></tr>
+<tr><td>বাস্তব উদাহরণ</td><td>বিমানবন্দরে পাসপোর্ট দেখিয়ে প্রমাণ করা আপনি কে</td><td>বোর্ডিং পাস দেখে ঠিক করা আপনি কোন গেট/flight-এ যেতে পারবেন</td></tr>
+<tr><td>ব্যর্থ হলে</td><td><code>401 Unauthorized</code> — identity প্রমাণ হয়নি</td><td><code>403 Forbidden</code> — identity জানা আছে, কিন্তু অনুমতি নেই</td></tr>
+<tr><td>প্রযুক্তি (সাধারণত)</td><td>Password, OTP, biometric, certificate</td><td>Role, permission, policy, scope</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">সবচেয়ে সাধারণ ভুল</span>
+কোড রিভিউতে সবচেয়ে বেশি দেখা bug: developer শুধু চেক করে "user login করা আছে কি না" (<code>[Authorize]</code> লাগিয়ে দিলাম, শেষ) — কিন্তু "এই <b>নির্দিষ্ট</b> resource-এ এই user-এর অ্যাক্সেস আছে কি না" (যেমন অন্য কারো অর্ডার/ইনভয়েস দেখা) তা কখনো যাচাই করে না। এটাকে বলে <b>IDOR (Insecure Direct Object Reference)</b> — OWASP Top 10-এর সবচেয়ে সাধারণ দুর্বলতাগুলোর একটা। Authentication থাকা মানেই Authorization নিশ্চিত নয় — দুটো আলাদা চেক, দুটোই দরকার।</div>
+
+<h3>এই টপিকে কী কী থাকবে</h3>
+<p>Auth মানে শুধু "login বানানো" নয়। এটা একটা সম্পূর্ণ স্তরায়িত সিস্টেম:</p>
+<ol>
+<li><b>Credential যাচাই</b> — password hashing, MFA (কীভাবে identity প্রথমবার প্রমাণ হয়)</li>
+<li><b>Session বজায় রাখা</b> — প্রতিটা পরের request-এ কীভাবে identity মনে রাখা হয় (cookie/session বনাম token)</li>
+<li><b>Delegated authorization</b> — একটা app কীভাবে অন্য app/API-কে "আমার হয়ে এই কাজটুকু করো" অনুমতি দেয় (OAuth2)</li>
+<li><b>Federated identity</b> — একটা central identity provider (Keycloak) দিয়ে একাধিক app-এ single sign-on</li>
+<li><b>Fine-grained authorization</b> — role/attribute/policy দিয়ে ঠিক কে কী করতে পারবে তার নিয়ন্ত্রণ</li>
+</ol>
+
+<h3>কেন নিজে থেকে auth লেখা প্রায় সবসময় ভুল সিদ্ধান্ত</h3>
+<div class="callout why"><span class="tag">"Don't roll your own auth"</span>
+Password hashing algorithm-এ এক লাইন ভুল, session token generate করতে দুর্বল random source ব্যবহার, বা redirect URL ঠিকমতো validate না করা — প্রতিটাই production-এ পুরো user base-কে ঝুঁকিতে ফেলতে পারে। Keycloak/Auth0/Okta-এর মতো battle-tested identity provider হাজার হাজার security researcher দ্বারা যাচাই করা প্রোটোকল (OAuth2/OIDC) implement করে। এজন্যই আধুনিক architecture-এ app নিজে password store করে না — একটা dedicated <span class="kw">Identity Provider (IdP)</span>-এর কাছে identity যাচাইয়ের দায়িত্ব দিয়ে দেয়, আর নিজে শুধু সেই IdP-এর দেওয়া token বিশ্বাস করে।</div>
+
+<h3>যে দিকে পুরো ইন্ডাস্ট্রি এগিয়েছে</h3>
+<div class="diagram"><pre>
+২০০০-এর দশক               →    আজ
+─────────────────              ─────────────────
+প্রতিটা app নিজে user/         একটা central Identity Provider
+password টেবিল রাখে            (Keycloak/Auth0/Azure AD)
+প্রতিটা app নিজে session       app গুলো শুধু token যাচাই করে,
+সামলায়                         identity/password নিজে জানে না
+আলাদা app = আলাদা login        Single Sign-On (এক login, সব app)
+</pre></div>
+<p>বাকি এই পুরো কোর্স এই দ্বিতীয় মডেলটা — কেন, কীভাবে, আর ঠিক কোন প্রোটোকল (JWT/OAuth2/OIDC) দিয়ে এটা বাস্তবায়িত হয় — গভীরভাবে ব্যাখ্যা করবে, Keycloak-কে concrete উদাহরণ হিসেবে ব্যবহার করে।</p>
+</template>
+
+<template data-page="credentials">
+<h2 class="title">২. Password Security · Hashing · MFA</h2>
+<p class="lead">Identity যাচাইয়ের সবচেয়ে প্রথম ও এখনো সবচেয়ে বেশি ব্যবহৃত পদ্ধতি — password। কিন্তু password সংরক্ষণের ভুল পদ্ধতিই সবচেয়ে বেশি data breach-এর কারণ।</p>
+
+<h3>Plaintext কখনো নয় — কিন্তু শুধু hash-ও যথেষ্ট নয়</h3>
+<p>Password ডেটাবেসে সরাসরি রাখা (plaintext) মানে database leak হলেই প্রতিটা user-এর আসল password ফাঁস — আর মানুষ একাধিক সাইটে একই password ব্যবহার করে বলে সেই leak অন্য সাইটেও অ্যাকাউন্ট দখলের কারণ হয় (<span class="kw">credential stuffing</span>)। তাই password-এর বদলে তার <b>hash</b> রাখা হয় — কিন্তু সাধারণ hash function (MD5, SHA-256) দিয়ে করলেও যথেষ্ট নয়।</p>
+<div class="callout mistake"><span class="tag">Common mistake — শুধু SHA-256 দিয়ে password hash করা</span>
+SHA-256 এর মতো cryptographic hash function <b>ডিজাইন করাই হয়েছে দ্রুত হওয়ার জন্য</b> (ফাইল integrity check-এর মতো কাজে গতি দরকার)। এই গতিই password-এর জন্য দুর্বলতা — আধুনিক GPU সেকেন্ডে বিলিয়ন SHA-256 hash গণনা করতে পারে, তাই attacker সহজেই সব সম্ভাব্য password try করে ফেলতে পারে (<span class="kw">brute-force</span>), বা আগে থেকে গণনা করা <span class="kw">rainbow table</span> ব্যবহার করে হ্যাশ থেকে password উল্টে বের করতে পারে।</div>
+
+<h3>Salt — Rainbow Table প্রতিরোধ</h3>
+<p><span class="kw">Salt</span> হলো প্রতিটা password-এর জন্য আলাদাভাবে জেনারেট করা একটা random value, যা hash করার আগে password-এর সাথে যোগ করা হয়, আর hash-এর পাশে (plaintext-এ) সংরক্ষিত হয়।</p>
+<pre>hash = H(salt + password)
+<span class="c">সংরক্ষণ: user_id | salt | hash   (salt গোপন রাখার দরকার নেই, শুধু unique হতে হবে)</span></pre>
+<div class="callout why"><span class="tag">Salt কী সমাধান করে</span>
+Salt ছাড়া দুইজন user একই password ("123456") ব্যবহার করলে তাদের hash-ও হুবহু এক হয় — attacker একবার একটা common password-এর hash বানিয়ে রাখলে (rainbow table) সেটা লক্ষ লক্ষ ব্যবহারকারীর বিরুদ্ধে একবারেই কাজ করে। Salt প্রতিটা user-এর hash-কে <b>ইউনিক</b> করে দেয় — এমনকি password এক হলেও hash আলাদা হয়, ফলে precomputed rainbow table পুরোপুরি অকেজো হয়ে যায়। প্রতিটা password আলাদাভাবে brute-force করতে হয়।</div>
+
+<h3>Adaptive Hash Function — bcrypt, scrypt, Argon2</h3>
+<p>Salt যথেষ্ট নয় যদি hash function এখনো দ্রুত হয় — attacker তখনো একটা একটা করে (salt-সহ) brute-force করতে পারে, শুধু rainbow table কাজ করে না। এজন্য password-নির্দিষ্ট <span class="kw">adaptive/slow hash function</span> ব্যবহার করা হয়, যেগুলো ইচ্ছাকৃতভাবে ধীর ও memory-intensive:</p>
+<table>
+<tr><th>Algorithm</th><th>বৈশিষ্ট্য</th><th>সুপারিশ</th></tr>
+<tr><td><span class="kw">bcrypt</span></td><td>CPU-intensive, cost factor দিয়ে ধীরতা নিয়ন্ত্রণযোগ্য, দশকের বেশি সময় ধরে যাচাইকৃত</td><td>ভালো ডিফল্ট, ব্যাপক library সাপোর্ট</td></tr>
+<tr><td><span class="kw">scrypt</span></td><td>CPU + memory উভয়ই intensive — GPU/ASIC দিয়ে parallelize করা কঠিন</td><td>bcrypt-এর চেয়ে GPU attack-প্রতিরোধী</td></tr>
+<tr><td><span class="kw">Argon2</span> (Argon2id)</td><td>Password Hashing Competition (2015)-এর বিজয়ী; memory, CPU, parallelism — তিনটাই আলাদাভাবে টিউন করা যায়</td><td>বর্তমান সবচেয়ে ভালো সুপারিশ (OWASP-এর প্রথম পছন্দ)</td></tr>
+</table>
+<div class="callout behind"><span class="tag">Cost factor / work factor কীভাবে কাজ করে</span>
+bcrypt-এ cost factor ১ বাড়ালে hashing-এর সময় <b>দ্বিগুণ</b> হয়ে যায় (exponential)। ধরুন এক hash গণনা করতে ২৫০ms লাগে — legitimate login-এ এটা user টের পাওয়ার মতো ধীর নয়, কিন্তু attacker যদি প্রতি সেকেন্ডে বিলিয়ন try করতে চায়, ২৫০ms/try মানে সেকেন্ডে মাত্র ৪টা try সম্ভব — brute-force কার্যত অসম্ভব হয়ে যায়। হার্ডওয়্যার দ্রুততর হলে cost factor বাড়িয়ে সবসময় "ইচ্ছাকৃত ধীরতা" বজায় রাখা যায়।</div>
+
+<h3>Timing Attack ও Constant-Time Comparison</h3>
+<p>Login যাচাইয়ে সাধারণ string comparison (<code>hash == storedHash</code>) ব্যবহার করলে, কম্পিউটার প্রথম অমিল character পেলেই তুলনা বন্ধ করে দেয় — এই সময়ের সামান্য পার্থক্য মেপে attacker ধাপে ধাপে সঠিক hash অনুমান করতে পারে (<span class="kw">timing attack</span>)। এজন্য password/token তুলনায় সবসময় <b>constant-time comparison</b> function ব্যবহার করা উচিত (যেমন .NET-এ <code>CryptographicOperations.FixedTimeEquals</code>), যা পুরো string না মিলিয়েও সবসময় একই সময় নেয়।</p>
+
+<h3>Multi-Factor Authentication (MFA)</h3>
+<p>শুধু password (একটা factor) দিয়ে identity প্রমাণ করাকে বলে <span class="kw">single-factor authentication</span> — কিন্তু password চুরি/leak/phishing হয়ে গেলে এটাই একমাত্র বাধা। MFA একাধিক ভিন্ন-ধরনের প্রমাণ একসাথে দাবি করে:</p>
+<table>
+<tr><th>Factor Category</th><th>উদাহরণ</th><th>শক্তি</th></tr>
+<tr><td><b>যা আপনি জানেন</b> (Knowledge)</td><td>Password, PIN</td><td>দুর্বল একা — leak/phish হতে পারে</td></tr>
+<tr><td><b>যা আপনার কাছে আছে</b> (Possession)</td><td>TOTP app (Google Authenticator), hardware key (YubiKey), SMS OTP</td><td>মাঝারি-শক্তিশালী — SMS OTP দুর্বলতম (SIM swap ঝুঁকি)</td></tr>
+<tr><td><b>যা আপনি</b> (Inherence)</td><td>Fingerprint, face recognition</td><td>সুবিধাজনক, কিন্তু device-নির্ভর</td></tr>
+</table>
+<div class="callout best"><span class="tag">সুপারিশকৃত MFA পদ্ধতি</span>
+<b>TOTP (Time-based One-Time Password, RFC 6238)</b> — একটা shared secret দিয়ে প্রতি ৩০ সেকেন্দে নতুন ৬-সংখ্যার কোড জেনারেট হয়, app ও server independently একই গণনা করে মিলিয়ে দেখে। <b>WebAuthn/FIDO2</b> (hardware security key বা platform authenticator যেমন Windows Hello/Face ID) — phishing-প্রতিরোধী, কারণ private key কখনো device ছেড়ে বের হয় না এবং origin (domain) যাচাই built-in। SMS OTP সুবিধাজনক কিন্তু SIM-swapping attack-এর কারণে NIST দীর্ঘদিন ধরে নিরুৎসাহিত করছে।</div>
+
+<h3>Brute-force ও Credential Stuffing প্রতিরোধ</h3>
+<ul>
+<li><b>Rate limiting</b> — একই IP/অ্যাকাউন্ট থেকে বারবার ব্যর্থ login attempt সীমিত করা</li>
+<li><b>Account lockout / exponential backoff</b> — কয়েকবার ভুল হলে সাময়িক বিরতি (কিন্তু স্থায়ী lockout সতর্কতার সাথে — এটা নিজেই একটা DoS ভেক্টর হতে পারে যদি attacker ইচ্ছাকৃতভাবে অন্যের অ্যাকাউন্ট lock করাতে চায়)</li>
+<li><b>CAPTCHA</b> — automated bot script থেকে আলাদা করতে</li>
+<li><b>Breached-password check</b> — নতুন password সেট করার সময় known-leaked password তালিকার (যেমন Have I Been Pwned API) বিরুদ্ধে যাচাই</li>
+</ul>
+</template>
+
+<template data-page="session">
+<h2 class="title">৩. Session-based Authentication · Cookies · CSRF</h2>
+<p class="lead">Login একবার হলে পরের প্রতিটা request-এ identity কীভাবে মনে রাখা হয়? HTTP নিজে <b>stateless</b> — প্রতিটা request আগেরটা থেকে সম্পূর্ণ বিচ্ছিন্ন। Session ও Token — দুটো ভিন্ন সমাধান এই একই সমস্যার।</p>
+
+<h3>Session-based Auth কীভাবে কাজ করে</h3>
+<div class="diagram"><pre>
+1) User login করে (username+password POST)
+2) Server credential যাচাই করে, একটা random session ID তৈরি করে
+3) Server session ID ↔ user data সার্ভার-সাইড মেমরি/DB/Redis-এ সংরক্ষণ করে
+4) Server "Set-Cookie: sessionId=abc123" পাঠায়
+5) Browser পরের প্রতিটা request-এ automatically এই cookie যোগ করে পাঠায়
+6) Server প্রতি request-এ sessionId দিয়ে lookup করে user শনাক্ত করে
+</pre></div>
+<div class="callout why"><span class="tag">মূল বৈশিষ্ট্য — Stateful</span>
+Session ID নিজে অর্থহীন — এটা শুধু একটা random reference, প্রকৃত user data সার্ভারেই থাকে। এজন্যই server-কে "state" রাখতে হয় — এটাই <span class="kw">stateful authentication</span>। সুবিধা: server চাইলে যেকোনো মুহূর্তে সেই entry মুছে সাথে সাথেই session বাতিল (instant revocation) করতে পারে। অসুবিধা: একাধিক server (horizontal scaling)-এ session data শেয়ার করতে হয় — sticky session বা centralized store (Redis)-এর দরকার পড়ে।</div>
+
+<h3>Cookie Security Flags — প্রতিটার আলাদা কাজ</h3>
+<table>
+<tr><th>Flag</th><th>কী প্রতিরোধ করে</th><th>ব্যাখ্যা</th></tr>
+<tr><td><code>HttpOnly</code></td><td>XSS-এর মাধ্যমে cookie চুরি</td><td>JavaScript (<code>document.cookie</code>) দিয়ে এই cookie পড়া যায় না — malicious script ইনজেক্ট হলেও session token চুরি করতে পারবে না</td></tr>
+<tr><td><code>Secure</code></td><td>Man-in-the-middle-এ cookie ফাঁস</td><td>শুধু HTTPS connection-এ cookie পাঠানো হয়, plain HTTP-তে নয়</td></tr>
+<tr><td><code>SameSite=Strict/Lax</code></td><td>CSRF (নিচে বিস্তারিত)</td><td>অন্য সাইট থেকে আসা request-এর সাথে এই cookie পাঠানো হবে কি না নিয়ন্ত্রণ করে</td></tr>
+</table>
+
+<h3>CSRF (Cross-Site Request Forgery) — cookie-based auth-এর প্রধান দুর্বলতা</h3>
+<p>Browser স্বয়ংক্রিয়ভাবে cookie পাঠায় — request কোথা থেকে এসেছে তা বিবেচনা না করেই। এই "স্বয়ংক্রিয়তা"-ই সমস্যা তৈরি করে:</p>
+<div class="diagram"><pre>
+1) আপনি bank.com-এ লগইন করা আছেন (browser-এ session cookie জমা আছে)
+2) আপনি malicious-site.com ভিজিট করলেন (অন্য ট্যাবে)
+3) সেই সাইটে লুকানো একটা ফর্ম আছে যা bank.com/transfer-এ POST করে
+4) Browser এই request-এর সাথেও bank.com-এর cookie যোগ করে পাঠিয়ে দেয় (automatic!)
+5) bank.com দেখে বৈধ session cookie আছে → request execute করে ফেলে
+   (আপনার অজান্তেই টাকা ট্রান্সফার হয়ে যায়)
+</pre></div>
+<table>
+<tr><th>প্রতিরোধ পদ্ধতি</th><th>কীভাবে কাজ করে</th></tr>
+<tr><td><span class="kw">SameSite=Lax/Strict cookie</span></td><td>অন্য ডোমেইন থেকে আসা cross-site request-এর সাথে cookie পাঠানো বন্ধ করে দেয় — আধুনিক browser-এ default আচরণ</td></tr>
+<tr><td><span class="kw">Anti-CSRF token (Synchronizer Token)</span></td><td>প্রতিটা ফর্মে একটা গোপন, random token embed করা হয়; server সেই token যাচাই করে — attacker-এর সাইট এই token জানে না, তাই forge করা request-এ token মিলবে না</td></tr>
+<tr><td><span class="kw">Double-submit cookie</span></td><td>Token cookie হিসেবেও পাঠানো হয় ও header/body-তেও — server দুটো মেলায় (attacker-এর সাইট cookie পড়তে পারে না বলে দুটো একসাথে জোগাড় করতে পারে না)</td></tr>
+</table>
+<div class="callout best"><span class="tag">কেন token-based auth (JWT) CSRF থেকে স্বাভাবিকভাবে সুরক্ষিত</span>
+JWT সাধারণত cookie-তে না রেখে <code>Authorization: Bearer &lt;token&gt;</code> header-এ পাঠানো হয়। Browser নিজে থেকে কখনো custom header cross-site request-এ auto-attach করে না — attacker-এর সাইট থেকে সেই header বসানো সম্ভব নয় (CORS policy-ও আটকায়)। এজন্য header-based token authentication ডিজাইন অনুযায়ীই CSRF-প্রতিরোধী — কিন্তু (পরের চ্যাপ্টারে দেখবেন) এর নিজস্ব ঝুঁকি আছে: XSS হলে JavaScript দিয়ে token পড়ে ফেলা যায়।</div>
+
+<h3>Session Fixation Attack</h3>
+<p>Login-এর <b>আগে</b> ইস্যু করা session ID যদি login-এর পরও অপরিবর্তিত থাকে, attacker একটা পরিচিত session ID victim-কে ব্যবহার করাতে বাধ্য করে (URL-এ বসিয়ে পাঠিয়ে), victim login করলে সেই একই ID তে authenticated হয়ে যায় — attacker সেই একই ID দিয়ে victim-এর session হাইজ্যাক করে ফেলে।</p>
+<div class="callout best"><span class="tag">সমাধান</span>
+প্রতিটা সফল login-এর পর session ID <b>নতুন করে জেনারেট</b> করুন (session regeneration) — পুরনো (pre-login) ID অচল করে দিন। প্রায় সব আধুনিক framework এটা ডিফল্টভাবে করে, কিন্তু custom session handling লিখলে এটা মনে রাখা জরুরি।</div>
+</template>
+
+<template data-page="jwt">
+<h2 class="title">৪. Token-based Authentication · JWT Internals</h2>
+<p class="lead">Session-based auth-এর "server-কে state রাখতে হয়" সমস্যা সমাধান করতেই JWT (JSON Web Token) এসেছে — <span class="kw">stateless</span> authentication, যেখানে token নিজেই প্রমাণ বহন করে।</p>
+
+<h3>JWT-এর তিনটা অংশ</h3>
+<p>একটা JWT দেখতে এরকম — তিনটা অংশ ডট (<code>.</code>) দিয়ে আলাদা, প্রতিটা Base64URL-এ এনকোড করা:</p>
+<pre>eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0IiwibmFtZSI6IlJhc2VsIiwiZXhwIjoxNzUwMDAwMDAwfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+└──────────── Header ────────────┘└──────────────── Payload ────────────────┘└──────── Signature ────────┘</pre>
+<figure class="viz">
+<svg viewBox="0 0 700 260" role="img" aria-label="A JWT has three parts: a Header describing the algorithm, a Payload of claims, and a Signature computed from the header and payload using a secret or private key">
+  <g font-size="13" text-anchor="middle" fill="#e6edf3">
+    <rect x="30" y="30" width="200" height="90" rx="10" fill="rgba(234,179,8,.14)" stroke="#eab308"/>
+    <text x="130" y="55" font-weight="700">Header</text>
+    <text x="130" y="78" fill="#9aa7b4" font-size="11">{ "alg": "RS256",</text>
+    <text x="130" y="95" fill="#9aa7b4" font-size="11">"typ": "JWT" }</text>
+
+    <rect x="250" y="30" width="200" height="90" rx="10" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/>
+    <text x="350" y="55" font-weight="700">Payload (Claims)</text>
+    <text x="350" y="78" fill="#9aa7b4" font-size="11">sub, iss, aud,</text>
+    <text x="350" y="95" fill="#9aa7b4" font-size="11">exp, roles...</text>
+
+    <rect x="470" y="30" width="200" height="90" rx="10" fill="rgba(63,185,80,.14)" stroke="#3fb950"/>
+    <text x="570" y="55" font-weight="700">Signature</text>
+    <text x="570" y="78" fill="#9aa7b4" font-size="11">HMAC/RSA(header +</text>
+    <text x="570" y="95" fill="#9aa7b4" font-size="11">payload, secret/key)</text>
+  </g>
+  <path d="M130 120 L130 160 L570 160 L570 120" fill="none" stroke="#9aa7b4" stroke-width="1.5"/>
+  <path d="M350 120 L350 160" fill="none" stroke="#9aa7b4" stroke-width="1.5"/>
+  <text x="350" y="185" text-anchor="middle" fill="#f0d878" font-size="12" class="bn">Signature = sign(header + "." + payload, key) — এই দুটো বদলালেই signature অমিল ধরা পড়বে</text>
+  <text x="350" y="230" text-anchor="middle" fill="#f85149" font-size="11.5" class="bn">⚠ Header ও Payload শুধু Base64 এনকোড করা — এনক্রিপ্ট নয়। যে কেউ পড়তে পারে, শুধু বদলাতে পারে না।</text>
+</svg>
+<figcaption>Header বলে কোন algorithm ব্যবহৃত হয়েছে, Payload-এ claim (user সম্পর্কে দাবি), আর Signature নিশ্চিত করে কেউ payload বদলায়নি।</figcaption>
+</figure>
+<div class="callout mistake"><span class="tag">সবচেয়ে বেশি ভুল-বোঝা বিষয়</span>
+JWT <b>এনক্রিপ্টেড নয়</b> — এটা শুধু <b>signed</b> (JWS)। Base64URL এনকোডিং যেকোনো টুল/ব্রাউজার কনসোলে কয়েক সেকেন্ডে decode করে ফেলা যায় (jwt.io-এর মতো সাইটে পেস্ট করলেই)। তাই payload-এ password, credit card, বা কোনো secret data রাখা <b>একেবারেই উচিত না</b> — signature শুধু নিশ্চিত করে ডেটা <b>বদলানো হয়নি</b>, ডেটা <b>গোপন</b> থাকবে তা না। সত্যিকার গোপনীয়তা দরকার হলে JWE (JSON Web Encryption) ব্যবহার করতে হয় — যা কম প্রচলিত।</div>
+
+<h3>গুরুত্বপূর্ণ Registered Claims</h3>
+<table>
+<tr><th>Claim</th><th>মানে</th><th>কেন গুরুত্বপূর্ণ</th></tr>
+<tr><td><code>iss</code> (issuer)</td><td>কে token ইস্যু করেছে (যেমন Keycloak realm URL)</td><td>যাচাই না করলে অন্য কোনো (হয়তো compromised) issuer-এর token গ্রহণ করে ফেলার ঝুঁকি</td></tr>
+<tr><td><code>sub</code> (subject)</td><td>token কার সম্পর্কে (user ID)</td><td>Application-এর মধ্যে user শনাক্ত করার মূল identifier</td></tr>
+<tr><td><code>aud</code> (audience)</td><td>এই token কোন API/service-এর জন্য উদ্দিষ্ট</td><td>যাচাই না করলে <b>confused deputy</b> — সার্ভিস A-এর জন্য ইস্যু করা token সার্ভিস B ভুল করে গ্রহণ করে নিতে পারে</td></tr>
+<tr><td><code>exp</code> (expiration)</td><td>কখন token আর বৈধ থাকবে না (Unix timestamp)</td><td>Stateless token-এর একমাত্র "স্বয়ংক্রিয় বাতিল" ব্যবস্থা</td></tr>
+<tr><td><code>iat</code> (issued at)</td><td>কখন ইস্যু হয়েছিল</td><td>Token-এর বয়স হিসাব, রিপ্লে সনাক্তে সহায়ক</td></tr>
+<tr><td><code>nbf</code> (not before)</td><td>এই সময়ের আগে token বৈধ নয়</td><td>Scheduled access-এর মতো বিশেষ ক্ষেত্রে</td></tr>
+<tr><td><code>jti</code> (JWT ID)</td><td>প্রতিটা token-এর ইউনিক identifier</td><td>Replay detection বা নির্দিষ্ট একটা token blacklist করতে</td></tr>
+</table>
+
+<h3>Signing Algorithm — Symmetric বনাম Asymmetric</h3>
+<table>
+<tr><th></th><th><code>HS256</code> (HMAC + SHA-256, symmetric)</th><th><code>RS256</code> (RSA + SHA-256, asymmetric)</th></tr>
+<tr><td>Key</td><td>একটাই shared secret — sign ও verify দুটোই এটা দিয়ে</td><td>private key দিয়ে sign, আলাদা public key দিয়ে verify</td></tr>
+<tr><td>Microservice-এ</td><td>প্রতিটা verify করা service-কে সেই একই secret জানতে হবে — যত বেশি service জানবে, leak-এর ঝুঁকি তত বেশি</td><td>Public key নির্দ্বিধায় সবার সাথে শেয়ার করা যায় (এমনকি সেই key দিয়ে token বানানো যাবে না, শুধু verify করা যাবে)</td></tr>
+<tr><td>Keycloak-এর ডিফল্ট</td><td>—</td><td>RS256 (JWKS endpoint দিয়ে public key প্রকাশ করে)</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">বিখ্যাত দুর্বলতা — <code>alg: none</code> ও algorithm confusion</span>
+পুরনো কিছু JWT library token-এর header-এ থাকা <code>alg</code> ফিল্ড অন্ধভাবে বিশ্বাস করে ঠিক সেই algorithm দিয়েই verify করত। Attacker তখন token-এর header বদলে <code>alg: "none"</code> বসিয়ে signature সম্পূর্ণ বাদ দিয়ে পাঠাতো, বা RS256-expected জায়গায় HS256 বসিয়ে <b>public key-কেই HMAC secret হিসেবে ব্যবহার করে</b> সাইন করে ফেলত (public key তো সবাই জানে!)। আধুনিক library এটা ঠিক করেছে server-সাইডে <b>প্রত্যাশিত algorithm hard-code করে</b> — token-এর ভেতরের <code>alg</code> ফিল্ড কখনো অন্ধভাবে বিশ্বাস না করে।</div>
+
+<h3>Access Token বনাম Refresh Token</h3>
+<table>
+<tr><th></th><th>Access Token</th><th>Refresh Token</th></tr>
+<tr><td>জীবনকাল</td><td>ছোট (৫–১৫ মিনিট সাধারণ)</td><td>দীর্ঘ (ঘন্টা/দিন/সপ্তাহ)</td></tr>
+<tr><td>ব্যবহার</td><td>প্রতিটা API call-এ পাঠানো হয়</td><td>শুধু নতুন access token চাইতে auth server-এ পাঠানো হয়</td></tr>
+<tr><td>কোথায় রাখা উচিত</td><td>Memory (সবচেয়ে নিরাপদ) বা secure storage</td><td>httpOnly secure cookie বা backend-এ (কখনো browser JS-accessible storage-এ নয়)</td></tr>
+</table>
+<div class="callout why"><span class="tag">দুই ধরনের token কেন দরকার</span>
+Access token ছোট জীবনকালের কারণে চুরি হলেও ক্ষতির পরিসর সীমিত (কিছু মিনিটের মধ্যেই অকেজো)। কিন্তু প্রতি ৫ মিনিটে user-কে আবার password দিয়ে login করতে বলাও বাস্তবসম্মত নয়। Refresh token দীর্ঘ জীবনকাল রেখে, নিরাপদে সংরক্ষণ করে, প্রয়োজনমতো নতুন access token "রিফ্রেশ" করার সুযোগ দেয় — user-experience আর security-এর মধ্যে ভারসাম্য।</div>
+
+<h3>Revocation সমস্যা — Stateless হওয়ার মূল্য</h3>
+<div class="callout mistake"><span class="tag">JWT-এর সবচেয়ে বড় trade-off</span>
+Session-based auth-এ server চাইলেই সাথে সাথে একটা session বাতিল করতে পারে (ডাটাবেস থেকে মুছে ফেলেই)। কিন্তু stateless JWT-তে token একবার ইস্যু হয়ে গেলে, <code>exp</code> পার না হওয়া পর্যন্ত এটা <b>বৈধ থেকে যায়</b> — server-এর কাছে token "মনে রাখার" কোনো জায়গা নেই যে সেটা বাতিল করতে হবে। User logout করলেও, বা অ্যাকাউন্ট compromise হলেও, পুরনো access token তার মেয়াদ শেষ না হওয়া পর্যন্ত কাজ করতে থাকবে।</div>
+<table>
+<tr><th>সমাধান কৌশল</th><th>কীভাবে কাজ করে</th><th>Trade-off</th></tr>
+<tr><td>খুব ছোট access token জীবনকাল</td><td>৫-১৫ মিনিট — চুরি হলেও ক্ষতির সময় সীমিত</td><td>বেশি refresh call, তবু সবচেয়ে ব্যবহারিক সমাধান</td></tr>
+<tr><td>Token denylist/blacklist</td><td>বাতিল করা <code>jti</code>-র তালিকা একটা fast store (Redis)-এ রাখা, প্রতি request-এ চেক করা</td><td>Stateless-এর সুবিধা কিছুটা হারায় — এখন আবার একটা lookup লাগে</td></tr>
+<tr><td>Refresh token rotation</td><td>প্রতিবার refresh করলেই পুরনো refresh token বাতিল, নতুন একটা ইস্যু — পুরনোটা আবার ব্যবহার হলে (replay) পুরো token family বাতিল</td><td>চুরি হওয়া refresh token দ্রুত ধরা পড়ে, কিন্তু implementation জটিলতা বাড়ে</td></tr>
+</table>
+</template>
+
+<template data-page="oauth2">
+<h2 class="title">৫. OAuth 2.0 — Roles · Grant Types</h2>
+<p class="lead">OAuth 2.0 প্রায়ই ভুল বোঝা হয় "login করার প্রোটোকল" হিসেবে — আসলে এটা <b>delegated authorization</b>-এর প্রোটোকল: একটা app-কে, user-এর পক্ষ থেকে, সীমিত পরিমাণে অন্য একটা resource-এ অ্যাক্সেস দেওয়ার উপায়।</p>
+
+<h3>আসল সমস্যা যা OAuth2 সমাধান করে</h3>
+<p>ধরুন একটা photo-printing app-কে আপনার Google Photos-এর ছবি অ্যাক্সেস করতে দিতে চান। পুরনো (ভুল) সমাধান: photo-printing app-কে সরাসরি আপনার Google password দিয়ে দেওয়া। সমস্যা — (১) এখন সেই app-এর কাছে আপনার <b>পুরো</b> Google অ্যাকাউন্ট-এর অ্যাক্সেস (শুধু ছবি নয়, Gmail-ও), (২) password বাতিল না করলে অ্যাক্সেস কখনো প্রত্যাহার করা যায় না, (৩) সেই app-এর ডেটাবেস leak হলে আপনার আসল Google password-ই ফাঁস।</p>
+<div class="callout why"><span class="tag">OAuth2-এর সমাধান</span>
+Photo-printing app কখনো আপনার password দেখেই না। বরং Google নিজেই আপনাকে জিজ্ঞেস করে ("এই app-কে কি আপনার Photos দেখতে দেবেন?"), আপনি সম্মত হলে Google একটা <b>সীমিত ক্ষমতার, প্রত্যাহারযোগ্য token</b> ইস্যু করে — শুধু "Photos পড়া" scope-এ, নির্দিষ্ট মেয়াদের জন্য। এই মডেলকেই বলে <b>delegated authorization</b>।</div>
+
+<h3>চারটা মূল Role</h3>
+<table>
+<tr><th>Role</th><th>বাস্তব উদাহরণ</th><th>দায়িত্ব</th></tr>
+<tr><td><span class="kw">Resource Owner</span></td><td>আপনি (user)</td><td>যার ডেটার মালিকানা, যিনি অ্যাক্সেস অনুমতি দেন</td></tr>
+<tr><td><span class="kw">Client</span></td><td>Photo-printing app</td><td>Resource Owner-এর হয়ে resource অ্যাক্সেস করতে চায়</td></tr>
+<tr><td><span class="kw">Authorization Server</span></td><td>Google-এর/Keycloak-এর token সার্ভার</td><td>Resource Owner-কে যাচাই করে, সম্মতি নেয়, token ইস্যু করে</td></tr>
+<tr><td><span class="kw">Resource Server</span></td><td>Google Photos API</td><td>Access token যাচাই করে প্রকৃত ডেটা/সেবা দেয়</td></tr>
+</table>
+
+<h3>Grant Types — কোনটা কখন</h3>
+<p>OAuth2-এ "grant type" মানে token পাওয়ার নির্দিষ্ট পদ্ধতি — client-এর ধরন (ব্রাউজার SPA, mobile app, server, বা কোনো user-ই নেই) অনুযায়ী ভিন্ন grant উপযুক্ত।</p>
+<table>
+<tr><th>Grant Type</th><th>কখন ব্যবহার</th><th>কীভাবে কাজ করে (সংক্ষেপে)</th></tr>
+<tr><td><span class="kw">Authorization Code (+ PKCE)</span></td><td>Web app, SPA, mobile app — user সরাসরি জড়িত</td><td>User auth server-এ redirect হয়ে login করে, একটা এক-বারের "code" নিয়ে ফিরে আসে, client সেই code token-এর সাথে exchange করে</td></tr>
+<tr><td><span class="kw">Client Credentials</span></td><td>Machine-to-machine — কোনো user নেই (যেমন একটা backend service অন্য backend API ডাকছে)</td><td>Client নিজের client_id + client_secret দিয়ে সরাসরি token চায়, কোনো redirect/login screen নেই</td></tr>
+<tr><td><span class="kw">Device Authorization Grant</span></td><td>Input-সীমিত device (Smart TV, CLI tool)</td><td>Device একটা কোড দেখায়, user অন্য ডিভাইসে (ফোন/ল্যাপটপ) গিয়ে সেই কোড লিখে অনুমোদন দেয়</td></tr>
+<tr><td><span class="kw">Resource Owner Password Credentials</span> ⚠</td><td>(অত্যন্ত সীমিত — legacy migration ছাড়া এড়িয়ে চলুন)</td><td>App নিজেই username/password ফর্ম নিয়ে সরাসরি auth server-এ পাঠায়</td></tr>
+<tr><td><span class="kw">Implicit Grant</span> ⚠ (deprecated)</td><td>(আর সুপারিশ করা হয় না)</td><td>Token সরাসরি redirect URL-এর fragment-এ ফেরত আসত, কোনো code exchange ছাড়াই</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">কেন Password Grant ও Implicit Grant এখন এড়িয়ে চলা হয়</span>
+<b>Password Grant</b>-এ client app user-এর raw password দেখে ফেলে — এটাই OAuth2 যা প্রতিরোধ করতে চেয়েছিল তার বিপরীত; শুধু সেই client-কেই সম্পূর্ণ বিশ্বাস করা যায় এমন সংকীর্ণ ক্ষেত্রে (নিজেদের প্রথম-পক্ষ legacy app migration) এটা ব্যবহারযোগ্য। <b>Implicit Grant</b>-এ access token সরাসরি browser URL-এর (fragment) মধ্যে দিয়ে আসত — browser history, referrer header, বা malicious script এই token পড়ে ফেলতে পারত, আর token refresh করাও কঠিন ছিল। আজ SPA-র জন্যও <b>Authorization Code + PKCE</b>-ই মান্য সুপারিশ (OAuth 2.1 খসড়ায় Implicit ও Password grant পুরোপুরি বাদ দেওয়া হয়েছে)।</div>
+
+<h3>Scope — সীমিত অনুমতির ঘোষণা</h3>
+<p><span class="kw">Scope</span> নির্দিষ্ট করে client ঠিক কতটুকু অ্যাক্সেস চাইছে (যেমন <code>read:photos</code>, <code>profile</code>, <code>email</code>) — Resource Owner সম্মতি screen-এ এই scope-গুলোই দেখেন, আর ইস্যু হওয়া token-এ সেগুলোই এনকোড থাকে। Resource Server প্রতিটা request-এ token-এর scope যাচাই করে বুঝতে পারে client কী করার অনুমতি পেয়েছে।</p>
+
+<h3>redirect_uri যাচাইয়ের গুরুত্ব</h3>
+<div class="callout mistake"><span class="tag">Common mistake — ঢিলে redirect_uri validation</span>
+Authorization Code flow-এ auth server code-টা client-এর নিবন্ধিত <code>redirect_uri</code>-তে পাঠায়। যদি auth server ওয়াইল্ডকার্ড/আংশিক মিল (যেমন শুধু domain মিলিয়ে path না মিলিয়ে) মেনে নেয়, attacker নিজের নিয়ন্ত্রণে থাকা একটা subdomain/path-কে redirect_uri হিসেবে বসিয়ে authorization code চুরি করতে পারে। এজন্য production-grade IdP (Keycloak-সহ) client নিবন্ধনের সময় <b>exact-match redirect_uri</b> require করে — এক অক্ষরও এদিক-ওদিক হলে flow ব্যর্থ হয়।</div>
+</template>
+
+<template data-page="oidc">
+<h2 class="title">৬. OpenID Connect (OIDC)</h2>
+<p class="lead">OAuth2 নিজে identity নিয়ে কিছু বলে না — এটা শুধু "access" ডেলিগেট করে। OpenID Connect হলো OAuth2-এর উপরে বসানো একটা পাতলা স্তর, যা <b>প্রকৃত authentication</b> (identity প্রমাণ) স্ট্যান্ডার্ডাইজ করে।</p>
+
+<h3>সমস্যা যা OIDC সমাধান করে</h3>
+<div class="callout why"><span class="tag">OAuth2-কে "login"-এর জন্য অপব্যবহার করা</span>
+OAuth2-only যুগে, "Google দিয়ে Login" বানাতে developer-রা একটা কৌশল ব্যবহার করত: access token দিয়ে Google-এর profile API কল করে user-এর তথ্য আনা, এবং সেটাকেই "login সফল" ধরে নেওয়া। সমস্যা — access token আসলে API অ্যাক্সেসের জন্য ডিজাইন করা, তার কোনো standard "এই মুহূর্তে authentication ঘটেছে" প্রমাণ বা expiry/audience নিয়ম নেই যা identity-নির্দিষ্ট প্রশ্নের জবাব দেয়। প্রতিটা প্রোভাইডার নিজের মতো API বানাতো — একটা কমন স্ট্যান্ডার্ড ছিল না।</div>
+<p>OIDC এই ফাঁক পূরণ করে একটা নতুন, নির্দিষ্ট উদ্দেশ্যের টোকেন যোগ করে: <span class="kw">ID Token</span>।</p>
+
+<h3>ID Token বনাম Access Token — সম্পূর্ণ ভিন্ন উদ্দেশ্য</h3>
+<table>
+<tr><th></th><th>ID Token</th><th>Access Token</th></tr>
+<tr><td>উদ্দেশ্য</td><td>"এই মুহূর্তে ঠিক এই user authenticate হয়েছে" — এর প্রমাণ</td><td>"এই client-কে এই resource-এ এই কাজ করতে দেওয়া হয়েছে" — এর প্রমাণ</td></tr>
+<tr><td>যে পড়বে</td><td><b>Client</b> (নিজে) — বোঝার জন্য কে login করলো</td><td><b>Resource Server / API</b> — যাচাইয়ের জন্য</td></tr>
+<tr><td>ফরম্যাট</td><td>সবসময় JWT (standard claim সহ)</td><td>JWT হতে পারে, বা opaque string-ও হতে পারে</td></tr>
+<tr><td>API কল করতে ব্যবহার</td><td>❌ কখনো নয় — এটার জন্য ডিজাইন করা হয়নি</td><td>✅ এটাই এর কাজ</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+ID Token নিয়ে API call authenticate করার চেষ্টা করা — ID Token client-এর নিজের consumption-এর জন্য, এর audience (<code>aud</code>) claim সাধারণত client_id নিজেই, কোনো resource server নয়। Resource server-এর কাছে সবসময় <b>access token</b> পাঠাতে হবে।</div>
+
+<h3>OIDC-নির্দিষ্ট Claims (ID Token-এ)</h3>
+<table>
+<tr><th>Claim</th><th>মানে</th></tr>
+<tr><td><code>sub</code></td><td>Unique, স্থায়ী user identifier (এই ভিত্তিতেই local user record match করা উচিত — email নয়, কারণ email বদলাতে পারে)</td></tr>
+<tr><td><code>auth_time</code></td><td>ব্যবহারকারী ঠিক কখন সক্রিয়ভাবে authenticate করেছিল (re-authentication নীতির জন্য গুরুত্বপূর্ণ)</td></tr>
+<tr><td><code>nonce</code></td><td>Client-এর পাঠানো একটা random value, ID token-এ ফেরত আসে — replay attack প্রতিরোধ করে</td></tr>
+<tr><td><code>email</code>, <code>name</code>, <code>preferred_username</code></td><td>Profile তথ্য (scope অনুযায়ী অন্তর্ভুক্ত হয়)</td></tr>
+</table>
+
+<h3><code>scope=openid</code> — যেখানে OAuth2, OIDC হয়ে ওঠে</h3>
+<p>একই Authorization Code flow ব্যবহার করেই, request-এ <code>scope=openid</code> যোগ করলে auth server বুঝে নেয় এটা একটা OIDC request — access token-এর পাশাপাশি একটা <b>ID token</b>-ও ইস্যু করে।</p>
+<pre>GET /auth?response_type=code&client_id=myapp&redirect_uri=...&scope=openid%20profile%20email&state=xyz&nonce=abc123
+<span class="c"># scope-এ "openid" থাকাটাই OIDC ট্রিগার করে; "profile", "email" অতিরিক্ত claim যোগ করে</span></pre>
+
+<h3>UserInfo Endpoint</h3>
+<p>ID Token-এ সীমিত claim থাকে (payload আকার ছোট রাখতে)। আরও বিস্তারিত প্রোফাইল তথ্য দরকার হলে, access token দিয়ে <span class="kw">UserInfo endpoint</span>-এ কল করা যায়:</p>
+<pre>GET /realms/myrealm/protocol/openid-connect/userinfo
+Authorization: Bearer &lt;access_token&gt;
+
+<span class="c"># response:</span>
+{ "sub": "1234", "email": "rasel@example.com", "email_verified": true, "name": "Rasel Kabir" }</pre>
+
+<h3>Discovery Document — <code>.well-known/openid-configuration</code></h3>
+<p>প্রতিটা OIDC-compliant IdP (Keycloak-সহ) একটা স্ট্যান্ডার্ড URL-এ নিজের সব endpoint ও ক্ষমতা প্রকাশ করে — client লাইব্রেরি নিজে থেকেই এটা পড়ে auto-configure হয়ে যায়:</p>
+<pre>GET http://localhost:8080/realms/myrealm/.well-known/openid-configuration
+
+{
+  "issuer": "http://localhost:8080/realms/myrealm",
+  "authorization_endpoint": ".../protocol/openid-connect/auth",
+  "token_endpoint": ".../protocol/openid-connect/token",
+  "userinfo_endpoint": ".../protocol/openid-connect/userinfo",
+  "jwks_uri": ".../protocol/openid-connect/certs",
+  "end_session_endpoint": ".../protocol/openid-connect/logout"
+}</pre>
+<div class="callout why"><span class="tag">এজন্যই integration এত সহজ</span>
+কোনো library-কে হার্ডকোড করে প্রতিটা endpoint URL দিতে হয় না — শুধু issuer URL দিলেই library discovery document পড়ে বাকি সব (authorization, token, JWKS, logout endpoint) নিজে জেনে নেয়। ASP.NET Core-এর <code>Authority</code> কনফিগারেশন এই নীতিতেই কাজ করে (dotnet চ্যাপ্টারে দেখবেন)।</div>
+</template>
+
+<template data-page="keycloak">
+<h2 class="title">৭. Keycloak Core — Realm · Client · User · Role · Group</h2>
+<p class="lead">Keycloak হলো একটা open-source, self-hosted <span class="kw">Identity and Access Management (IAM)</span> সার্ভার — OAuth2 ও OIDC প্রোটোকল সম্পূর্ণভাবে implement করে, যাতে আপনাকে এই প্রোটোকলগুলো নিজে বাস্তবায়ন করতে না হয়।</p>
+
+<h3>Realm — সম্পূর্ণ বিচ্ছিন্ন নিরাপত্তা-জগৎ</h3>
+<p><span class="kw">Realm</span> হলো Keycloak-এর সবচেয়ে বড় isolation boundary — একটা realm-এর user, client, role, group সম্পূর্ণভাবে অন্য realm থেকে আলাদা, একে অপরকে দেখতেও পায় না।</p>
+<figure class="viz">
+<svg viewBox="0 0 700 300" role="img" aria-label="A Keycloak realm contains clients, users, roles, and groups; identity providers federate external logins into the realm">
+  <g font-size="12.5" text-anchor="middle" fill="#e6edf3">
+    <rect x="40" y="20" width="620" height="260" rx="14" fill="rgba(234,179,8,.06)" stroke="#eab308"/>
+    <text x="350" y="42" fill="#eab308" font-size="14" font-weight="700">Realm: "mycompany"</text>
+
+    <rect x="70" y="70" width="140" height="60" rx="9" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/><text x="140" y="105" font-weight="700">Clients</text>
+    <rect x="70" y="150" width="140" height="60" rx="9" fill="rgba(74,163,255,.08)" stroke="#4aa3ff"/><text x="140" y="185" fill="#9aa7b4" font-size="11">web-app, mobile-app, backend-api</text>
+
+    <rect x="280" y="70" width="140" height="60" rx="9" fill="rgba(63,185,80,.14)" stroke="#3fb950"/><text x="350" y="105" font-weight="700">Users</text>
+    <rect x="280" y="150" width="140" height="60" rx="9" fill="rgba(63,185,80,.08)" stroke="#3fb950"/><text x="350" y="185" fill="#9aa7b4" font-size="11">local + federated (LDAP/AD)</text>
+
+    <rect x="490" y="70" width="140" height="60" rx="9" fill="rgba(188,140,255,.14)" stroke="#bc8cff"/><text x="560" y="105" font-weight="700">Roles &amp; Groups</text>
+    <rect x="490" y="150" width="140" height="60" rx="9" fill="rgba(188,140,255,.08)" stroke="#bc8cff"/><text x="560" y="185" fill="#9aa7b4" font-size="11">realm role, client role</text>
+
+    <rect x="200" y="235" width="300" height="34" rx="8" fill="#161b22" stroke="#2d333b"/>
+    <text x="350" y="257" fill="#9aa7b4" font-size="11.5">Identity Providers (Google, GitHub, SAML, LDAP) → federated login</text>
+  </g>
+</svg>
+<figcaption>একটা realm-এর ভেতরে client, user, role/group সংজ্ঞায়িত থাকে; Identity Provider দিয়ে বাইরের login সিস্টেম federate করা যায়।</figcaption>
+</figure>
+<div class="callout why"><span class="tag">কেন multi-tenant SaaS-এ realm গুরুত্বপূর্ণ</span>
+প্রতিটা গ্রাহক (tenant)-কে একটা আলাদা realm দিলে তাদের user/role সম্পূর্ণ বিচ্ছিন্ন থাকে — একই ইমেইল দুই ভিন্ন tenant-এ ভিন্ন অ্যাকাউন্ট হতে পারে, এক tenant-এর admin অন্য tenant-এর data-এ কখনো ভুলবশত অ্যাক্সেস পায় না। যদিও অনেক-বেশি realm সৃষ্টি করলে ব্যবস্থাপনা জটিল হয়ে ওঠে — অনেক SaaS তখন এক realm-এ থেকেই group/attribute দিয়ে tenant আলাদা করে।</div>
+
+<h3>Client — প্রতিটা Application-এর নিবন্ধন</h3>
+<p>প্রতিটা application (frontend, mobile app, backend service) যেটা Keycloak দিয়ে authenticate করতে চায়, তাকে একটা <span class="kw">Client</span> হিসেবে নিবন্ধন করতে হয়।</p>
+<table>
+<tr><th>Client Type</th><th>বৈশিষ্ট্য</th><th>উদাহরণ</th></tr>
+<tr><td><span class="kw">Confidential</span></td><td>client_secret রাখতে পারে — এটা সবসময় server-side, secret কখনো browser-এ যায় না</td><td>ASP.NET Core backend, Node.js API</td></tr>
+<tr><td><span class="kw">Public</span></td><td>Secret রাখতে পারে না (browser/mobile-এ decompile/inspect করা সম্ভব) — PKCE বাধ্যতামূলক</td><td>React/Angular SPA, mobile app</td></tr>
+<tr><td><span class="kw">Bearer-only</span></td><td>নিজে কখনো login flow শুরু করে না, শুধু token যাচাই করে</td><td>একটা pure REST API যা শুধু access token গ্রহণ করে</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+SPA-কে <b>Confidential</b> client হিসেবে সেট করা এবং client_secret সরাসরি frontend JavaScript bundle-এ বসিয়ে দেওয়া — browser-এর যেকোনো কোড View Source/DevTools দিয়ে দেখা যায়, তাই "secret" আসলে গোপন থাকে না। SPA/mobile app সবসময় <b>Public</b> client হিসেবে নিবন্ধন করে, secret-এর বদলে <b>PKCE</b> দিয়ে সুরক্ষিত করা উচিত।</div>
+
+<h3>Users, Roles, Groups — কীভাবে সম্পর্কিত</h3>
+<table>
+<tr><th>ধারণা</th><th>ব্যাখ্যা</th></tr>
+<tr><td><span class="kw">Realm Role</span></td><td>পুরো realm জুড়ে অর্থপূর্ণ role (যেমন <code>admin</code>, <code>customer</code>) — যেকোনো client-এর token-এ প্রযোজ্য হতে পারে</td></tr>
+<tr><td><span class="kw">Client Role</span></td><td>একটা নির্দিষ্ট client-এর জন্যই অর্থপূর্ণ (যেমন <code>invoice-api</code> client-এর <code>invoice:write</code> role) — সূক্ষ্মতর নিয়ন্ত্রণ</td></tr>
+<tr><td><span class="kw">Group</span></td><td>একগুচ্ছ user-কে একসাথে role অ্যাসাইন করার সুবিধাজনক উপায় — নতুন employee "Engineering" group-এ যোগ করলেই সেই group-এর সব role স্বয়ংক্রিয়ভাবে পায়, প্রতিটা role আলাদা করে বসাতে হয় না</td></tr>
+<tr><td><span class="kw">Composite Role</span></td><td>একটা role যা নিজেই আরও কয়েকটা role bundle করে রাখে (যেমন <code>admin</code> role আসলে <code>user:read</code> + <code>user:write</code> + <code>settings:manage</code>-এর সমষ্টি)</td></tr>
+</table>
+
+<h3>Client Scopes ও Protocol Mappers — Token-এ কী যাবে তার নিয়ন্ত্রণ</h3>
+<p>Keycloak default-এ token-এ কী কী claim যাবে (email, roles, group membership) নিয়ন্ত্রণ করে <span class="kw">Client Scope</span> ও তার ভেতরের <span class="kw">Protocol Mapper</span> দিয়ে। যেমন একটা mapper realm role-গুলোকে <code>realm_access.roles</code> claim হিসেবে token-এ inject করে:</p>
+<pre>{
+  "sub": "1234-...",
+  "preferred_username": "rasel",
+  "realm_access": { "roles": ["customer", "admin"] },
+  "resource_access": {
+    "invoice-api": { "roles": ["invoice:write"] }
+  }
+}</pre>
+<div class="callout behind"><span class="tag">এই নেস্টেড structure-ই .NET integration-এ সবচেয়ে বেশি ঘাবড়ে দেয়</span>
+ASP.NET Core-এর ডিফল্ট JWT bearer middleware সাধারণ, flat <code>role</code> claim আশা করে — কিন্তু Keycloak roles পাঠায় <code>realm_access.roles</code>-এর ভেতরে নেস্টেড আকারে। এজন্য <code>[Authorize(Roles = "admin")]</code> চেক না করে সরাসরি "কাজ করছে না" মনে হতে পারে — আসলে middleware এই নেস্টেড claim বুঝতে পারছে না। .NET চ্যাপ্টারে এর সমাধান (custom claims transformation) দেখানো হয়েছে।</div>
+</template>
+
+<template data-page="flows">
+<h2 class="title">৮. Flows in Practice — Authorization Code + PKCE · curl দিয়ে</h2>
+<p class="lead">তত্ত্ব যথেষ্ট নয় — এখন Keycloak-এর সাথে বাস্তব HTTP request/response দিয়ে পুরো flow ধাপে ধাপে দেখা যাক।</p>
+
+<h3>PKCE (Proof Key for Code Exchange) — Public client-এর জন্য অতিরিক্ত সুরক্ষা</h3>
+<div class="callout why"><span class="tag">কোন সমস্যা সমাধান করে</span>
+SPA-র মতো public client-এর কোনো secret নেই — শুধু authorization code দিয়েই যদি token exchange করা যেত, তাহলে সেই code মাঝপথে চুরি হলে (যেমন malicious app একই device-এ redirect URI intercept করে) attacker নিজেই সেই code দিয়ে token নিয়ে নিতে পারত। PKCE প্রতিটা login attempt-এর জন্য client-সাইডে একটা random <code>code_verifier</code> বানায়, তার hash (<code>code_challenge</code>) auth request-এর সাথে পাঠায়। Token exchange-এর সময় আসল <code>code_verifier</code> পাঠাতে হয় — auth server সেটার hash মিলিয়ে দেখে। Code চুরি হলেও, চোরের কাছে মূল <code>code_verifier</code> না থাকায় token exchange ব্যর্থ হবে।</div>
+
+<h3>ধাপ ১ — Authorization Request (browser redirect)</h3>
+<pre>GET http://localhost:8080/realms/myrealm/protocol/openid-connect/auth
+  ?client_id=web-app
+  &redirect_uri=https://myapp.com/callback
+  &response_type=code
+  &scope=openid profile email
+  &state=xk3f9a2b              <span class="c"># CSRF-প্রতিরোধী random value, client পরে যাচাই করবে</span>
+  &code_challenge=E9Melhoa2Ow...  <span class="c"># SHA-256(code_verifier), base64url</span>
+  &code_challenge_method=S256</pre>
+<p>User এখানে Keycloak-এর নিজস্ব login পেজ দেখে (আপনার app নয়!) — username/password (ও MFA থাকলে তাও) দেয়।</p>
+
+<h3>ধাপ ২ — Redirect ফেরত, Code সহ</h3>
+<pre>GET https://myapp.com/callback?code=a1b2c3d4...&state=xk3f9a2b</pre>
+<div class="callout mistake"><span class="tag">Common mistake — <code>state</code> যাচাই না করা</span>
+Client-কে অবশ্যই ফেরত আসা <code>state</code> নিজের পাঠানো মানের সাথে মিলিয়ে দেখতে হবে। যাচাই না করলে attacker নিজের একটা বৈধ authorization code দিয়ে victim-কে callback URL-এ পাঠিয়ে victim-এর সেশনে attacker-এর অ্যাকাউন্টে login করিয়ে দিতে পারে (<span class="kw">login CSRF</span>)।</div>
+
+<h3>ধাপ ৩ — Code-কে Token-এর সাথে Exchange</h3>
+<pre>POST http://localhost:8080/realms/myrealm/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code
+&code=a1b2c3d4...
+&redirect_uri=https://myapp.com/callback
+&client_id=web-app
+&code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk   <span class="c"># PKCE-এর আসল secret</span></pre>
+<pre><span class="c"># সফল response:</span>
+{
+  "access_token": "eyJhbGciOi...",
+  "expires_in": 300,
+  "refresh_token": "eyJhbGciOi...",
+  "refresh_expires_in": 1800,
+  "token_type": "Bearer",
+  "id_token": "eyJhbGciOi...",
+  "scope": "openid profile email"
+}</pre>
+
+<h3>ধাপ ৪ — API কল করা</h3>
+<pre>GET https://api.myapp.com/orders
+Authorization: Bearer eyJhbGciOi...</pre>
+
+<h3>ধাপ ৫ — Access Token মেয়াদ শেষে Refresh</h3>
+<pre>POST http://localhost:8080/realms/myrealm/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token
+&refresh_token=eyJhbGciOi...
+&client_id=web-app</pre>
+
+<h3>Client Credentials Flow — Machine-to-Machine</h3>
+<p>কোনো user নেই — একটা backend service সরাসরি নিজের পরিচয়ে token চায়:</p>
+<pre>POST http://localhost:8080/realms/myrealm/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
+&client_id=billing-service
+&client_secret=super-secret-value</pre>
+
+<h3>Token Introspection — Opaque Token বা Real-time যাচাই</h3>
+<p>যখন resource server নিজে JWT signature যাচাই করতে চায় না (বা token opaque), তখন সরাসরি auth server-কে জিজ্ঞেস করা যায় token এখনো বৈধ কিনা:</p>
+<pre>POST http://localhost:8080/realms/myrealm/protocol/openid-connect/token/introspect
+Authorization: Basic base64(client_id:client_secret)
+Content-Type: application/x-www-form-urlencoded
+
+token=eyJhbGciOi...</pre>
+<pre>{ "active": true, "sub": "1234", "scope": "openid profile", "exp": 1750000300 }</pre>
+<div class="callout why"><span class="tag">Introspection বনাম Local JWT Validation</span>
+<b>Local validation</b> (JWKS public key দিয়ে signature check) দ্রুত — network call লাগে না, কিন্তু token বাতিল হলেও তা <code>exp</code>-এর আগে ধরা যায় না। <b>Introspection</b> প্রতিটা request-এ auth server-কে জিজ্ঞেস করে — তাই সাথে সাথে revocation দেখা যায়, কিন্তু প্রতি API call-এ network round-trip যোগ হয় (latency ও auth server-এর উপর load বাড়ে)। বেশিরভাগ high-throughput API local JWT validation বেছে নেয়, আর ছোট জীবনকালের access token দিয়ে revocation-এর ঝুঁকি সামলায়।</div>
+</template>
+
+<template data-page="authz">
+<h2 class="title">৯. Authorization Models — RBAC · ABAC · Keycloak Authorization Services</h2>
+<p class="lead">Authentication (Keycloak) দিয়ে বোঝা গেল "কে" — এখন প্রশ্ন "সে ঠিক কী করতে পারবে" তা মডেল করার কয়েকটা পদ্ধতি।</p>
+
+<h3>RBAC — Role-Based Access Control</h3>
+<p>সবচেয়ে সহজ ও সবচেয়ে বেশি ব্যবহৃত মডেল: user-কে এক বা একাধিক <b>role</b> দেওয়া হয় (<code>admin</code>, <code>editor</code>, <code>viewer</code>), আর কোড-এ role চেক করে সিদ্ধান্ত নেওয়া হয়।</p>
+<pre>[Authorize(Roles = "admin")]
+public IActionResult DeleteUser(int id) { ... }</pre>
+<div class="callout why"><span class="tag">সীমাবদ্ধতা</span>
+RBAC ভালো কাজ করে যখন অনুমতি মোটামুটি স্থির ও ভূমিকা-ভিত্তিক। কিন্তু "শুধু নিজের তৈরি করা document edit করতে পারবে", বা "office hours-এর মধ্যেই এই action চলবে"-এর মতো <b>প্রসঙ্গ-নির্ভর (contextual)</b> নিয়মে RBAC হিমশিম খায় — role বিস্ফোরণ ঘটে (<code>editor-own-docs-business-hours-only</code> জাতীয় hyper-specific role তৈরি করতে হয়)।</div>
+
+<h3>ABAC — Attribute-Based Access Control</h3>
+<p>ABAC role-এর বদলে (বা পাশাপাশি) <b>attribute</b> — user attribute, resource attribute, ও environment attribute — দিয়ে সিদ্ধান্ত নেয়:</p>
+<table>
+<tr><th>Attribute Category</th><th>উদাহরণ</th></tr>
+<tr><td>User attribute</td><td>department, seniority, employment status</td></tr>
+<tr><td>Resource attribute</td><td>document-এর owner, classification level (public/confidential)</td></tr>
+<tr><td>Environment attribute</td><td>সময়, IP location, device type</td></tr>
+</table>
+<p>নিয়ম: <i>"user.department == resource.department AND environment.time BETWEEN 9AM-6PM হলে access দাও"</i> — এটাই ABAC-এর ধরন। RBAC-এর চেয়ে অনেক বেশি expressive, কিন্তু বাস্তবায়ন ও debug করা জটিলতর।</p>
+
+<h3>Keycloak Authorization Services — Fine-Grained Authorization (UMA 2.0)</h3>
+<p>Keycloak শুধু authentication নয়, একটা সম্পূর্ণ <span class="kw">policy-based authorization</span> ইঞ্জিনও দেয় — যা RBAC-এর সরলতা ছাড়িয়ে ABAC-এর মতো সূক্ষ্ম নিয়ম প্রয়োগ করতে পারে, কেন্দ্রীয়ভাবে, কোডে হার্ড-কোড না করে।</p>
+<table>
+<tr><th>উপাদান</th><th>মানে</th></tr>
+<tr><td><span class="kw">Resource</span></td><td>যা সুরক্ষিত করতে হবে (যেমন <code>/invoices/{id}</code>, বা "Invoice" টাইপের যেকোনো object)</td></tr>
+<tr><td><span class="kw">Scope</span></td><td>Resource-এর উপর সম্ভাব্য action (<code>view</code>, <code>edit</code>, <code>delete</code>)</td></tr>
+<tr><td><span class="kw">Policy</span></td><td>একটা নিয়ম — role-based, user-based, time-based, বা এমনকি custom JavaScript/Rule-based policy</td></tr>
+<tr><td><span class="kw">Permission</span></td><td>Resource/scope-কে এক বা একাধিক policy-র সাথে যুক্ত করে — "কোন policy(গুলো) এই resource-এ প্রযোজ্য"</td></tr>
+</table>
+<div class="callout behind"><span class="tag">এটা কীভাবে ব্যবহার হয় — PEP ও PDP</span>
+Application (Resource Server) একটা <span class="kw">Policy Enforcement Point (PEP)</span> হিসেবে কাজ করে — প্রতিটা sensitive action-এর আগে Keycloak-কে (যেটা এখানে <span class="kw">Policy Decision Point, PDP</span>) জিজ্ঞেস করে "এই user কি এই resource-এ এই scope-এ অ্যাক্সেস পাবে?" Keycloak তার সংরক্ষিত policy/permission মূল্যায়ন করে হ্যাঁ/না জবাব দেয় (একটা বিশেষ <b>RPT — Requesting Party Token</b> আকারে)। এভাবে authorization logic কোডে ছড়িয়ে না থেকে কেন্দ্রীয়ভাবে Keycloak-এ পরিচালিত হয় — non-developer (product/security team)-ও Admin Console থেকে নিয়ম বদলাতে পারে, deploy ছাড়াই।</div>
+<div class="callout best"><span class="tag">কখন এই জটিলতার দরকার আছে</span>
+ছোট/মাঝারি application-এ সাধারণ RBAC (<code>[Authorize(Roles=...)]</code> + নিজের কোডে সাধারণ ownership check) প্রায়ই যথেষ্ট এবং অনেক সহজ maintain করা। Keycloak Authorization Services তখনই সার্থক যখন অনুমতির নিয়ম ঘন ঘন বদলায়, একাধিক application-জুড়ে consistent থাকতে হয়, অথবা non-technical stakeholder-দের নিয়ম নিজেরাই পরিবর্তন করতে হয়।</div>
+</template>
+
+<template data-page="securing">
+<h2 class="title">১০. Securing SPA/API · BFF Pattern · Token Storage</h2>
+<p class="lead">সঠিক প্রোটোকল (OIDC) জানা যথেষ্ট নয় — token আসলে ব্রাউজারে <b>কোথায়</b> রাখা হচ্ছে, তার উপরেই আসল নিরাপত্তা নির্ভর করে।</p>
+
+<h3>Token কোথায় রাখবেন — সবচেয়ে বিতর্কিত প্রশ্ন</h3>
+<table>
+<tr><th>জায়গা</th><th>XSS ঝুঁকি</th><th>CSRF ঝুঁকি</th><th>মন্তব্য</th></tr>
+<tr><td><code>localStorage</code>/<code>sessionStorage</code></td><td>❌ উচ্চ — যেকোনো injected script <code>localStorage</code> সরাসরি পড়তে পারে</td><td>✅ কম (auto-send হয় না)</td><td>সবচেয়ে সহজ কিন্তু নিরাপত্তার দিক থেকে সবচেয়ে দুর্বল সাধারণ পছন্দ</td></tr>
+<tr><td>In-memory (JS variable, page reload-এ হারায়)</td><td>✅ ভালো — script access করতে পারলেও token persist করে না, আক্রমণের জানালা ছোট</td><td>✅ কম</td><td>প্রতিটা page reload-এ নতুন silent-refresh লাগে — জটিলতা বাড়ে</td></tr>
+<tr><td><code>httpOnly</code> secure cookie</td><td>✅ সবচেয়ে ভালো — JavaScript এই cookie পড়তেই পারে না</td><td>⚠️ মাঝারি — <code>SameSite</code> + CSRF token দিয়ে সামলাতে হয়</td><td>Token backend-এ রাখা ভালো — এজন্যই BFF pattern জনপ্রিয়</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">কেন localStorage-এ token রাখা এত সাধারণ, তবু ঝুঁকিপূর্ণ</span>
+XSS (Cross-Site Scripting) দুর্বলতা থাকলে — যেকোনো একটা library-র dependency-তেও যদি malicious code ঢুকে যায় — সেই script <code>localStorage.getItem('access_token')</code> লিখে সরাসরি token চুরি করে নিজের সার্ভারে পাঠিয়ে দিতে পারে। <code>httpOnly</code> cookie হলে script সেই cookie-এর অস্তিত্বই দেখতে পারত না। এজন্য OWASP ও অধিকাংশ security guide localStorage-এ token রাখা নিরুৎসাহিত করে, যদিও অনেক tutorial/উদাহরণে সরলতার জন্য এটাই দেখানো হয়।</div>
+
+<h3>BFF (Backend-for-Frontend) Pattern — বর্তমান সুপারিশকৃত সমাধান</h3>
+<div class="diagram"><pre>
+Browser (SPA)  ──login──►  BFF (নিজের backend)  ──OIDC flow──►  Keycloak
+     │                            │  (token এখানেই থাকে,
+     │◄──httpOnly session cookie──┘   browser-এ কখনো যায় না)
+     │
+     └──API call + cookie──►  BFF  ──Bearer token যোগ করে──►  Resource API
+</pre></div>
+<div class="callout why"><span class="tag">মূল ধারণা</span>
+SPA নিজে কখনো OAuth2 token ধরে না। এর বদলে SPA-র নিজস্ব ছোট backend (BFF) পুরো OIDC flow পরিচালনা করে, token নিজের সার্ভার-সাইড session-এ (বা encrypted cookie-তে) সংরক্ষণ করে, আর browser-কে শুধু একটা সাধারণ <code>httpOnly</code> session cookie দেয় — ঠিক session-based auth-এর মতোই ব্যবহারকারীর জন্য, কিন্তু ভেতরে ভেতরে backend সেই session-কে আসল OAuth2 token-এর সাথে map করে রাখে এবং প্রতিটা downstream API call-এ Bearer token যোগ করে দেয়। Browser-এ token কখনো exposed হয় না — XSS হলেও token চুরি করার কিছু নেই।</div>
+
+<h3>Silent Token Renewal — কেন কঠিন হয়ে উঠেছে</h3>
+<p>পুরনো SPA-only (BFF ছাড়া) architecture-এ token refresh করতে একটা লুকানো <code>&lt;iframe&gt;</code> দিয়ে auth server-এ silent (no-UI) request পাঠানো হতো, যা browser-এর existing SSO session cookie ব্যবহার করে চুপচাপ নতুন token ফেরত দিত।</p>
+<div class="callout mistake"><span class="tag">কেন এই কৌশল আর নির্ভরযোগ্য নয়</span>
+আধুনিক browser (Safari-এর ITP, Chrome-এর third-party cookie phase-out) ডিফল্টভাবে <b>third-party/cross-site cookie ব্লক করে</b> — iframe-ভিত্তিক silent renewal ঠিক এই third-party cookie-র উপর নির্ভর করত। ফলে এই কৌশল অনেক ব্রাউজারে আর কাজ করে না। এটাই আরেকটা কারণ কেন ইন্ডাস্ট্রি BFF pattern বা refresh token rotation-নির্ভর প্রথম-পক্ষ (first-party) backend flow-এর দিকে সরে গেছে।</div>
+
+<h3>Logout — শুধু local token মুছলেই যথেষ্ট নয়</h3>
+<table>
+<tr><th>ধরন</th><th>কী করে</th></tr>
+<tr><td>Local logout</td><td>শুধু client-এর কাছে থাকা token/cookie মুছে ফেলা — কিন্তু Keycloak-এর SSO session তখনো সক্রিয় থাকে</td></tr>
+<tr><td><span class="kw">RP-Initiated Logout</span></td><td>Client, Keycloak-এর <code>end_session_endpoint</code>-এ redirect করে — এটা Keycloak-এর SSO session-ও শেষ করে</td></tr>
+<tr><td><span class="kw">Back-channel Logout</span></td><td>একটা app থেকে logout করলে Keycloak সরাসরি (browser redirect ছাড়াই) সেই user-এর অন্য সব logged-in app-কে server-to-server নোটিফিকেশন পাঠিয়ে সেখানেও session শেষ করতে বলে — true <b>Single Logout</b></td></tr>
+</table>
+<div class="callout best"><span class="tag">সুপারিশ</span>
+শুধু local token clear করাকে "logout" ধরে নেবেন না — বিশেষ করে SSO পরিবেশে (একাধিক app এক Keycloak realm শেয়ার করছে), সবসময় <code>end_session_endpoint</code>-এ redirect করুন যাতে Keycloak-এর কেন্দ্রীয় সেশনও বন্ধ হয়, নাহলে user "logout" করার পরেও অন্য একটা ট্যাবে গিয়ে ঐ realm-এর অন্য app-এ auto-login হয়ে যেতে পারে।</div>
+</template>
+
+<template data-page="dotnet">
+<h2 class="title">১১. ASP.NET Core + Keycloak Integration</h2>
+<p class="lead">তত্ত্ব থেকে বাস্তবায়নে — ASP.NET Core API-কে Keycloak-ইস্যু করা JWT যাচাই করানো, ও role-based authorization কাজ করানো (Keycloak-এর নেস্টেড role claim সামলে)।</p>
+
+<h3>Setup — JWT Bearer Authentication</h3>
+<pre><span class="c">// Program.cs</span>
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = "http://localhost:8080/realms/myrealm";  <span class="c">// discovery document এখান থেকে auto-load হয়</span>
+        options.Audience = "invoice-api";                              <span class="c">// aud claim যাচাই</span>
+        options.RequireHttpsMetadata = true;                           <span class="c">// production-এ সবসময় true</span>
+    });
+
+builder.Services.AddAuthorization();
+<span class="c">// ...</span>
+app.UseAuthentication();
+app.UseAuthorization();</pre>
+<div class="callout why"><span class="tag"><code>Authority</code> কী করছে</span>
+<code>Authority</code> সেট করলে middleware নিজে থেকেই <code>{Authority}/.well-known/openid-configuration</code> fetch করে, সেখান থেকে <code>jwks_uri</code> বের করে, ও সেই endpoint থেকে public key (JWKS) ডাউনলোড করে token signature যাচাই করে। Key rotate হলেও (Keycloak নিয়মিত key ঘুরায়) middleware স্বয়ংক্রিয়ভাবে নতুন key নিয়ে আসে — manual key management লাগে না।</div>
+
+<h3>সমস্যা — Keycloak-এর Roles Claim ASP.NET Core বুঝতে পারে না</h3>
+<p>Keycloak token-এ role পাঠায় এভাবে:</p>
+<pre>{ "realm_access": { "roles": ["admin", "customer"] } }</pre>
+<p>কিন্তু ASP.NET Core-এর <code>[Authorize(Roles = "admin")]</code> ডিফল্টভাবে খোঁজে একটা সাধারণ, flat <code>role</code> (বা <code>ClaimTypes.Role</code>) claim — যা এখানে নেই। এজন্য <b>custom claims transformation</b> লিখে নেস্টেড <code>realm_access.roles</code>-কে standard role claim-এ রূপান্তর করতে হয়:</p>
+<pre><span class="c">// KeycloakRoleClaimsTransformation.cs</span>
+public class KeycloakRoleClaimsTransformation : IClaimsTransformation
+{
+    public Task&lt;ClaimsPrincipal&gt; TransformAsync(ClaimsPrincipal principal)
+    {
+        var identity = (ClaimsIdentity)principal.Identity!;
+        var realmAccessJson = principal.FindFirst("realm_access")?.Value;
+        if (realmAccessJson != null)
+        {
+            using var doc = JsonDocument.Parse(realmAccessJson);
+            foreach (var role in doc.RootElement.GetProperty("roles").EnumerateArray())
+                identity.AddClaim(new Claim(ClaimTypes.Role, role.GetString()!));
+        }
+        return Task.FromResult(principal);
+    }
+}
+
+<span class="c">// Program.cs</span>
+builder.Services.AddTransient&lt;IClaimsTransformation, KeycloakRoleClaimsTransformation&gt;();</pre>
+<div class="callout best"><span class="tag">এখন থেকে স্বাভাবিকভাবেই কাজ করবে</span>
+এই transformation যোগ করার পর <code>[Authorize(Roles = "admin")]</code>, <code>User.IsInRole("admin")</code> সব প্রত্যাশিতভাবেই কাজ করবে — Keycloak-এর নেস্টেড claim structure application কোডের কাছে আড়াল হয়ে যায়।</div>
+
+<h3>Policy-based Authorization — Role-এর চেয়ে বেশি নমনীয়</h3>
+<pre>builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CanManageInvoices", policy =>
+        policy.RequireRole("admin").RequireClaim("email_verified", "true"));
+});</pre>
+<pre>[Authorize(Policy = "CanManageInvoices")]
+public IActionResult DeleteInvoice(int id) { ... }</pre>
+
+<h3>Object-level Authorization — Role চেক-এই থেমে যাবেন না (recap)</h3>
+<div class="callout mistake"><span class="tag">Foundation চ্যাপ্টারের কথা মনে করুন</span>
+<code>[Authorize(Roles = "customer")]</code> শুধু নিশ্চিত করে user login করা "customer" — এটা <b>কখনোই</b> নিশ্চিত করে না যে সে ঠিক <b>যে</b> invoice চাইছে সেটা তারই। প্রতিটা handler-এ resource fetch করার পর সবসময় explicit ownership check যোগ করুন:
+<pre>var invoice = await _db.Invoices.FindAsync(id);
+if (invoice.OwnerId != User.FindFirst("sub")?.Value)
+    return Forbid();   <span class="c">// এই লাইন ছাড়াই এটা IDOR (Foundation চ্যাপ্টার দেখুন)</span></pre>
+</div>
+
+<h3>Client Credentials Flow — .NET থেকে Machine-to-Machine কল</h3>
+<pre><span class="c">// backend service নিজেই token নিয়ে অন্য API কল করছে</span>
+var client = new HttpClient();
+var tokenResponse = await client.PostAsync(
+    "http://localhost:8080/realms/myrealm/protocol/openid-connect/token",
+    new FormUrlEncodedContent(new Dictionary&lt;string,string&gt;
+    {
+        ["grant_type"] = "client_credentials",
+        ["client_id"] = "billing-service",
+        ["client_secret"] = builder.Configuration["Keycloak:ClientSecret"]!
+    }));</pre>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+<code>client_secret</code> সরাসরি <code>appsettings.json</code>-এ commit করে ফেলা। Docker/.NET-এর মতোই এখানেও সেই একই নিয়ম প্রযোজ্য — secret সবসময় environment variable, User Secrets (dev), বা Azure Key Vault/HashiCorp Vault (production)-এ রাখুন, কখনো source control-এ নয়।</div>
+</template>
+
+<template data-page="pitfalls">
+<h2 class="title">১২. Pitfalls · Best Practices · Troubleshooting</h2>
+<p class="lead">যেসব ভুল বারবার দেখা যায়, আর যেভাবে Keycloak/OIDC সমস্যা দ্রুত নির্ণয় করবেন।</p>
+
+<h3>সবচেয়ে সাধারণ Security Pitfalls</h3>
+<table>
+<tr><th>ভুল</th><th>কেন বিপজ্জনক</th><th>সঠিক পথ</th></tr>
+<tr><td><code>aud</code>/<code>iss</code> claim যাচাই না করা</td><td>Service A-এর জন্য ইস্যু করা টোকেন Service B ভুল করে গ্রহণ করে নেয় (confused deputy)</td><td>প্রতিটা resource server নিজের audience-এর বিরুদ্ধে token যাচাই করুক</td></tr>
+<tr><td>Authentication-কেই Authorization ধরে নেওয়া</td><td>IDOR — অন্যের ডেটায় অ্যাক্সেস</td><td>প্রতিটা resource-level action-এ ownership/permission আলাদা করে চেক করুন</td></tr>
+<tr><td>SPA-তে token localStorage-এ রাখা</td><td>XSS হলে token সরাসরি চুরি</td><td>BFF pattern + httpOnly cookie</td></tr>
+<tr><td>Public client-কে Confidential বানিয়ে secret frontend-এ বসানো</td><td>Secret আর গোপন থাকে না — DevTools দিয়ে দেখা যায়</td><td>SPA/mobile সবসময় Public client + PKCE</td></tr>
+<tr><td>Refresh token rotation না করা</td><td>একবার refresh token চুরি হলে চিরকাল ব্যবহারযোগ্য (মেয়াদ শেষ না হওয়া পর্যন্ত)</td><td>প্রতিবার refresh-এ নতুন refresh token ইস্যু, পুরনোটা বাতিল, reuse ধরা পড়লে পুরো family revoke</td></tr>
+<tr><td>redirect_uri-তে wildcard/ঢিলে matching</td><td>Authorization code চুরি হয়ে attacker-এর কাছে চলে যাওয়ার সুযোগ</td><td>Exact-match redirect_uri নিবন্ধন করুন</td></tr>
+<tr><td>Access token-এর জীবনকাল অনেক বড় (ঘন্টার পর ঘন্টা)</td><td>চুরি হলে দীর্ঘ সময় ব্যবহারযোগ্য থেকে যায়</td><td>৫-১৫ মিনিট + refresh token দিয়ে সামলান</td></tr>
+<tr><td>CORS-এ <code>Access-Control-Allow-Origin: *</code> + credentials</td><td>যেকোনো ডোমেইন থেকে authenticated request পাঠানো সম্ভব হয়ে যায়</td><td>নির্দিষ্ট, whitelisted origin + <code>Access-Control-Allow-Credentials</code> সতর্কতার সাথে</td></tr>
+</table>
+
+<h3>Clock Skew — একটা প্রায়ই ভুলে-যাওয়া সমস্যা</h3>
+<div class="callout mistake"><span class="tag">"Token expired" যদিও এখনো বৈধ হওয়ার কথা</span>
+Keycloak সার্ভার ও resource server (API) ভিন্ন মেশিনে চললে, তাদের system clock সামান্য (কয়েক সেকেন্ড) ভিন্ন হতে পারে। JWT validation library কড়াকড়িভাবে <code>exp</code>/<code>nbf</code> মিলালে সামান্য clock পার্থক্যেই বৈধ token-ও "expired"/"not yet valid" মনে হতে পারে। বেশিরভাগ JWT library-তে একটা ছোট <b>clock skew tolerance</b> (যেমন ৫ মিনিট) কনফিগার করা যায় — ASP.NET Core-এ <code>TokenValidationParameters.ClockSkew</code> (ডিফল্ট ৫ মিনিট, প্রয়োজনে কমানো/বাড়ানো যায়)।</div>
+
+<h3>সাধারণ Keycloak/OIDC ত্রুটি ও সমাধান</h3>
+<table>
+<tr><th>ত্রুটি</th><th>সাধারণ কারণ</th></tr>
+<tr><td><code>invalid_redirect_uri</code></td><td>Client-এ নিবন্ধিত redirect URI-র সাথে request-এর URI হুবহু মিলছে না (trailing slash, http/https, port সহ প্রতিটা অক্ষর মেলে)</td></tr>
+<tr><td><code>unauthorized_client</code></td><td>এই client-এর জন্য অনুরোধ করা grant type Keycloak-এ enable করা নেই (Client-এর "Capability config"-এ চেক করুন)</td></tr>
+<tr><td><code>invalid_client</code></td><td>ভুল <code>client_secret</code>, অথবা Public client থেকে secret পাঠানো হচ্ছে (Public client-এর secret লাগে না)</td></tr>
+<tr><td><code>invalid_grant</code> (token exchange-এ)</td><td>Authorization code একবারই ব্যবহারযোগ্য — দ্বিতীয়বার ব্যবহারের চেষ্টা, অথবা code-এর মেয়াদ (সাধারণত ৬০ সেকেন্ড) পার হয়ে গেছে</td></tr>
+<tr><td>Browser console-এ CORS error</td><td>Keycloak client-এর "Web Origins" ফিল্ডে frontend-এর origin যোগ করা হয়নি</td></tr>
+<tr><td>Role claim অনুযায়ী <code>[Authorize(Roles=...)]</code> কাজ করছে না (.NET)</td><td>Keycloak-এর নেস্টেড <code>realm_access.roles</code> ক্লেইম transform করা হয়নি (dotnet চ্যাপ্টার দেখুন)</td></tr>
+</table>
+
+<h3>Diagnostic টুল</h3>
+<table>
+<tr><th>টুল/পদ্ধতি</th><th>কাজে লাগে</th></tr>
+<tr><td>Keycloak Admin Console → Client → "Events"</td><td>প্রতিটা login/token attempt-এর server-সাইড লগ দেখা</td></tr>
+<tr><td>Browser DevTools → Network tab</td><td>Authorization request/redirect/token exchange-এর ঠিক কোন ধাপে ব্যর্থ হচ্ছে দেখা</td></tr>
+<tr><td>jwt.io (শুধু dev/test token-এ)</td><td>Token decode করে claim/expiry visually যাচাই করা</td></tr>
+<tr><td><code>/.well-known/openid-configuration</code></td><td>Realm-এর actual endpoint/config যাচাই করা</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">সতর্কতা — jwt.io-এ কখনো production token পেস্ট করবেন না</span>
+jwt.io ক্লায়েন্ট-সাইডে decode করে (দাবি অনুযায়ী), কিন্তু একটা <b>বাস্তব production access/refresh token</b> কোনো তৃতীয়-পক্ষ ওয়েবসাইটে পেস্ট করা একটা অপ্রয়োজনীয় ঝুঁকি — টোকেন কপি-পেস্ট হয়ে clipboard/browser history-তে থেকে যেতে পারে। শুধু local/dev/test environment-এর টোকেন এভাবে inspect করুন; production টোকেন local script/debugger দিয়ে decode করুন।</div>
+</template>
+
+<template data-page="cli">
+<h2 class="title">১৩. Essential Commands — curl · kcadm · openssl</h2>
+<p class="lead">Keycloak নিয়ে দৈনন্দিন কাজে যা লাগবে — টোকেন আনা, realm/client/user ব্যবস্থাপনা, token পরীক্ষা — প্রতিটার কারণ ও প্রভাবসহ।</p>
+
+<h3>🔑 Token Endpoint — curl দিয়ে</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার</th><th>প্রভাব</th></tr>
+<tr><td><code>curl -d "grant_type=password&client_id=...&username=...&password=..." .../token</code></td><td>দ্রুত টেস্টিং-এ সরাসরি token পেতে (⚠ production flow নয়, শুধু dev/debug)</td><td>access + refresh token ফেরত আসে; production app-এ Password Grant ব্যবহার করবেন না</td></tr>
+<tr><td><code>curl -d "grant_type=client_credentials&client_id=...&client_secret=..." .../token</code></td><td>Machine-to-machine token পেতে</td><td>শুধু access token (কোনো user context নেই, refresh token সাধারণত থাকে না)</td></tr>
+<tr><td><code>curl -d "grant_type=refresh_token&refresh_token=...&client_id=..." .../token</code></td><td>মেয়াদ শেষ হওয়া access token নবায়ন করতে</td><td>নতুন access token (ও rotation enabled থাকলে নতুন refresh token)</td></tr>
+<tr><td><code>curl -H "Authorization: Bearer ..." .../userinfo</code></td><td>Token বৈধ কিনা ও কার তা যাচাই করতে</td><td>বৈধ হলে user claim JSON; অবৈধ/মেয়াদোত্তীর্ণ হলে <code>401</code></td></tr>
+<tr><td><code>curl -u client_id:secret -d "token=..." .../token/introspect</code></td><td>Token real-time active কিনা যাচাই (revocation তাৎক্ষণিক দেখতে)</td><td><code>{"active": true/false, ...}</code> — <code>false</code> মানে বাতিল/মেয়াদোত্তীর্ণ</td></tr>
+</table>
+
+<h3>⚙️ kcadm.sh — Keycloak Admin CLI</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার</th><th>প্রভাব</th></tr>
+<tr><td><code>kcadm.sh config credentials --server ... --realm master --user admin</code></td><td>CLI session-কে admin হিসেবে authenticate করতে</td><td>Local config file-এ session token সংরক্ষিত হয়, পরের সব কমান্ডে পুনরায় login লাগবে না</td></tr>
+<tr><td><code>kcadm.sh create realms -s realm=myrealm -s enabled=true</code></td><td>স্ক্রিপ্ট/CI দিয়ে নতুন realm তৈরি করতে (Admin Console click করা ছাড়াই)</td><td>নতুন, খালি realm তৈরি হয়</td></tr>
+<tr><td><code>kcadm.sh create clients -r myrealm -s clientId=web-app -s publicClient=true</code></td><td>নতুন client নিবন্ধন করতে</td><td>Client তৈরি হয়; পরে redirect URI, scope আলাদা করে সেট করতে হবে</td></tr>
+<tr><td><code>kcadm.sh create users -r myrealm -s username=rasel -s enabled=true</code></td><td>নতুন user তৈরি করতে</td><td>User তৈরি হয় (password আলাদাভাবে সেট করতে হয়)</td></tr>
+<tr><td><code>kcadm.sh set-password -r myrealm --username rasel --new-password ...</code></td><td>User-এর password সেট/রিসেট করতে</td><td>পরের login থেকে নতুন password কার্যকর</td></tr>
+<tr><td><code>kcadm.sh add-roles -r myrealm --uusername rasel --rolename admin</code></td><td>User-কে role অ্যাসাইন করতে</td><td>পরের বার token ইস্যু হলে সেই role token-এ অন্তর্ভুক্ত হবে</td></tr>
+<tr><td><code>kcadm.sh get realms/myrealm</code></td><td>Realm-এর বর্তমান কনফিগারেশন দেখতে</td><td>শুধু দেখায়, কিছু বদলায় না</td></tr>
+</table>
+
+<h3>🔍 Token Inspection ও Debug</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার</th><th>প্রভাব</th></tr>
+<tr><td><code>echo $TOKEN | cut -d. -f2 | base64 -d</code></td><td>Terminal থেকেই দ্রুত JWT payload decode করে claim দেখতে (কোনো ওয়েবসাইটে পেস্ট না করে)</td><td>শুধু দেখায় — payload plaintext হওয়ায় কোনো secret ছাড়াই decode হয়ে যায়</td></tr>
+<tr><td><code>curl .../.well-known/openid-configuration</code></td><td>Realm-এর actual endpoint URL, supported scope/grant যাচাই করতে</td><td>শুধু দেখায় — কনফিগারেশন সমস্যা নির্ণয়ে প্রথম ধাপ</td></tr>
+<tr><td><code>curl .../protocol/openid-connect/certs</code></td><td>JWKS (public key) সরাসরি দেখতে — signature validation সমস্যা ডিবাগে</td><td>শুধু দেখায় — key rotation ঠিকভাবে হচ্ছে কিনা যাচাই করা যায়</td></tr>
+<tr><td><code>openssl x509 -in cert.pem -text -noout</code></td><td>Keycloak realm-এর signing certificate-এর বিস্তারিত (validity period, algorithm) দেখতে</td><td>শুধু দেখায়</td></tr>
+</table>
+
+<h3>📋 এক নজরে</h3>
+<pre>curl -d "grant_type=authorization_code&code=...&redirect_uri=...&client_id=...&code_verifier=..." .../token
+curl -d "grant_type=client_credentials&client_id=...&client_secret=..." .../token
+curl -d "grant_type=refresh_token&refresh_token=...&client_id=..." .../token
+curl -H "Authorization: Bearer $TOKEN" .../userinfo
+curl -u client_id:secret -d "token=$TOKEN" .../token/introspect
+curl .../.well-known/openid-configuration
+kcadm.sh config credentials --server ... --realm master --user admin
+kcadm.sh create realms/clients/users -r myrealm -s ...
+kcadm.sh add-roles -r myrealm --uusername ... --rolename ...</pre>
+<div class="callout best"><span class="tag">সংক্ষেপে — পুরো কোর্সের সারাংশ</span>
+Authentication (কে) ও Authorization (কী করতে পারে) আলাদা রাখুন। Password কখনো নিজে হ্যান্ডেল না করে Keycloak-এর মতো IdP-কে বিশ্বাস করুন। Stateless JWT দিয়ে scale করুন, কিন্তু revocation-এর trade-off মনে রাখুন। SPA-তে PKCE + BFF pattern দিয়ে token চুরি ঠেকান। প্রতিটা resource-level action-এ ownership আলাদা করে যাচাই করুন — শুধু login-check যথেষ্ট নয়।</div>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>
