@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Git Mastery — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#e3b341; --accent2:#f0d878;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --blue:#4aa3ff;
+    --code-bg:#0b0f14; --kw:#e3b341;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(227,179,65,.22),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#08111f}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--blue)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--blue)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#f0d878}
+  .viz{background:var(--code-bg); border:1px solid var(--border); border-radius:12px; padding:20px 18px 12px; margin:18px 0}
+  .viz svg{width:100%; height:auto; display:block; overflow:visible}
+  .viz figcaption{color:var(--muted); font-size:13px; margin-top:10px; text-align:center; line-height:1.5}
+  .viz text{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .viz .bn{font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla",sans-serif}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🌿 Git Mastery</h1>
+      <p>Beginner → Advanced • প্রতিটা command-এর কারণ ও প্রভাব সহ • বাংলায়</p>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",  icon:"🌿", title:"Foundation — Git কী?"},
+  {id:"internals",   icon:"🧬", title:"Internals · Objects · .git"},
+  {id:"basics",      icon:"📝", title:"Basic Workflow"},
+  {id:"branching",   icon:"🌳", title:"Branching · Merge"},
+  {id:"rebase",      icon:"🔀", title:"Rebase · History Rewrite"},
+  {id:"remote",      icon:"☁️", title:"Remote · Collaboration"},
+  {id:"stashtags",   icon:"📦", title:"Stash · Tags"},
+  {id:"undo",        icon:"⏪", title:"Undo · Recovery"},
+  {id:"advanced",    icon:"🧪", title:"Advanced — Submodule · Worktree · Hooks"},
+  {id:"workflow",    icon:"👥", title:"Team Workflow · Best Practices"},
+  {id:"troubleshoot",icon:"🛠️", title:"Troubleshooting"},
+  {id:"cli",         icon:"⌨️", title:"Essential CLI Commands"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Foundation — Git কী?</h2>
+<p class="lead">এক লাইনে: Git হলো একটা <span class="kw">distributed version control system (VCS)</span> — কোড-এর প্রতিটা পরিবর্তন সময়ের সাথে ট্র্যাক করে, যাতে যেকোনো মুহূর্তে পেছনে ফিরে যাওয়া, তুলনা করা, বা একাধিক মানুষ সমান্তরালে কাজ করা যায়।</p>
+
+<h3>কোন সমস্যা সমাধান করে?</h3>
+<p>Version control ছাড়া কোড history রাখতে হলে <code>app_final.js</code>, <code>app_final_v2.js</code>, <code>app_final_REALLY_final.js</code>-এর মতো ফাইল জমতে থাকে, আর দুইজন একই ফাইলে কাজ করলে একজনের কাজ অন্যজনের overwrite করে ফেলার ঝুঁকি থাকে। Git প্রতিটা পরিবর্তনকে একটা <b>snapshot</b> হিসেবে সংরক্ষণ করে, কে-কখন-কী বদলেছে তার সম্পূর্ণ ইতিহাস রাখে, আর একাধিক মানুষের সমান্তরাল কাজ নিরাপদে <b>merge</b> করার উপায় দেয়।</p>
+
+<h3>Centralized বনাম Distributed VCS</h3>
+<table>
+<tr><th></th><th>Centralized (যেমন পুরনো SVN)</th><th>Distributed (Git)</th></tr>
+<tr><td>History কোথায়</td><td>শুধু central server-এ</td><td>প্রতিটা developer-এর local machine-এ <b>সম্পূর্ণ</b> history</td></tr>
+<tr><td>Server ছাড়া কাজ</td><td>প্রায় অসম্ভব (commit-এর জন্যও network লাগে)</td><td>সম্পূর্ণ সম্ভব — commit, branch, log সব local</td></tr>
+<tr><td>Server নষ্ট হলে</td><td>পুরো history হারানোর ঝুঁকি</td><td>প্রতিটা clone-ই একটা পূর্ণ backup</td></tr>
+<tr><td>Branch তৈরি</td><td>ভারী, ধীর অপারেশন</td><td>মিলিসেকেন্ডে — শুধু একটা pointer তৈরি</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন distributed মডেল জেতে</span>
+Git-এ <code>.git</code> ফোল্ডারেই পুরো project history থাকে — push করার আগেই আপনি local-এ commit, branch, revert, log সব করতে পারেন। Network লাগে শুধু অন্যদের সাথে <b>sync</b> (push/pull) করতে। এজন্য Git অফলাইনেও পুরোপুরি কাজ করে, আর GitHub-এর মতো কোনো central server হারিয়ে গেলেও যে কারো local clone থেকে পুরো history ফিরে পাওয়া যায়।</div>
+
+<h3>Git বনাম GitHub/GitLab/Bitbucket</h3>
+<p><span class="kw">Git</span> হলো version control tool নিজেই (কমান্ড-লাইন প্রোগ্রাম, local-এ চলে)। <span class="kw">GitHub/GitLab/Bitbucket</span> হলো Git repository <b>hosting platform</b> — এগুলো Git-এর উপর pull request, code review, CI/CD, issue tracking-এর মতো collaboration feature যোগ করে। Git ছাড়া GitHub অচল, কিন্তু Git একা GitHub ছাড়াও পুরোপুরি ব্যবহারযোগ্য।</p>
+
+<h3>Working Directory · Staging Area · Repository — তিনটা অবস্থা</h3>
+<p>Git-এ একটা ফাইলের পরিবর্তন তিনটা ধাপ পার হয়ে "commit" হয়ে যায়:</p>
+<figure class="viz">
+<svg viewBox="0 0 720 220" role="img" aria-label="Three states: Working Directory holds edited files, git add moves changes to the Staging Area (Index), git commit moves them into the Repository as a permanent snapshot">
+  <g font-size="13" text-anchor="middle" fill="#e6edf3">
+    <rect x="20" y="70" width="190" height="80" rx="10" fill="rgba(248,81,73,.12)" stroke="#f85149"/>
+    <text x="115" y="105" font-weight="700">Working Directory</text>
+    <text x="115" y="125" fill="#9aa7b4" font-size="11.5" class="bn">ফাইল এডিট করছেন</text>
+
+    <rect x="265" y="70" width="190" height="80" rx="10" fill="rgba(227,179,65,.14)" stroke="#e3b341"/>
+    <text x="360" y="105" font-weight="700">Staging Area</text>
+    <text x="360" y="125" fill="#9aa7b4" font-size="11.5" class="bn">(Index) — পরের commit-এ যা যাবে</text>
+
+    <rect x="510" y="70" width="190" height="80" rx="10" fill="rgba(63,185,80,.14)" stroke="#3fb950"/>
+    <text x="605" y="105" font-weight="700">Repository</text>
+    <text x="605" y="125" fill="#9aa7b4" font-size="11.5" class="bn">(.git) — স্থায়ী snapshot</text>
+  </g>
+  <defs><marker id="ga" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa7b4"/></marker></defs>
+  <path d="M210 110 L263 110" fill="none" stroke="#9aa7b4" stroke-width="2" marker-end="url(#ga)"/>
+  <text x="237" y="98" text-anchor="middle" fill="#9aa7b4" font-size="11">git add</text>
+  <path d="M455 110 L508 110" fill="none" stroke="#9aa7b4" stroke-width="2" marker-end="url(#ga)"/>
+  <text x="481" y="98" text-anchor="middle" fill="#9aa7b4" font-size="11">git commit</text>
+  <path d="M605 150 C605 190, 115 190, 115 150" fill="none" stroke="#4aa3ff" stroke-width="1.6" stroke-dasharray="4 4" marker-end="url(#ga)"/>
+  <text x="360" y="205" text-anchor="middle" fill="#4aa3ff" font-size="11" class="bn">git checkout / restore — repository থেকে working directory ফেরত</text>
+</svg>
+<figcaption>ফাইল বদলালে তা প্রথমে Working Directory-তে থাকে, <code>git add</code> দিলে Staging Area-এ যায় (পরের commit-এর "প্রস্তাব"), <code>git commit</code> দিলে সেটা Repository-তে স্থায়ী snapshot হয়ে যায়।</figcaption>
+</figure>
+<div class="callout best"><span class="tag">Staging area কেন দরকার</span>
+Staging area থাকার কারণে আপনি একবারে <b>নির্বাচন করে</b> commit করতে পারেন — ৫টা ফাইল বদলালেও চাইলে শুধু ২টা stage করে আলাদা, ছোট, অর্থবহ commit বানাতে পারবেন। এটাই Git-কে অন্য অনেক সহজ VCS থেকে flexible করে তোলে।</div>
+</template>
+
+<template data-page="internals">
+<h2 class="title">২. Internals · Objects · .git ডিরেক্টরি</h2>
+<p class="lead">Git ভেতরে আসলে কী করে বুঝলে branch/merge/rebase সব হঠাৎ সহজ মনে হবে। Git মূলত একটা <b>content-addressable key-value store</b> — উপরে version control বসানো।</p>
+
+<h3>চারটা Object Type</h3>
+<table>
+<tr><th>Object</th><th>ধারণ করে</th></tr>
+<tr><td><span class="kw">blob</span></td><td>একটা ফাইলের কন্টেন্ট (নাম নেই, শুধু data)</td></tr>
+<tr><td><span class="kw">tree</span></td><td>একটা ডিরেক্টরির snapshot — ফাইলনাম ↔ blob/tree-এর mapping</td></tr>
+<tr><td><span class="kw">commit</span></td><td>একটা tree-এর reference + parent commit(s) + author/message/timestamp</td></tr>
+<tr><td><span class="kw">tag</span></td><td>(annotated) কোনো নির্দিষ্ট commit-কে স্থায়ী নাম দেওয়া, সাথে metadata</td></tr>
+</table>
+<figure class="viz">
+<svg viewBox="0 0 700 250" role="img" aria-label="A commit points to a tree; the tree points to blobs and sub-trees; each commit also points to its parent commit, forming a chain">
+  <g font-size="12.5" text-anchor="middle" fill="#e6edf3">
+    <rect x="270" y="20" width="160" height="46" rx="9" fill="rgba(227,179,65,.16)" stroke="#e3b341"/><text x="350" y="48" font-weight="700">commit a1b2c3</text>
+    <rect x="270" y="96" width="160" height="42" rx="9" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/><text x="350" y="121">tree</text>
+    <rect x="130" y="170" width="140" height="40" rx="8" fill="rgba(63,185,80,.14)" stroke="#3fb950"/><text x="200" y="194">blob: index.html</text>
+    <rect x="290" y="170" width="140" height="40" rx="8" fill="rgba(63,185,80,.14)" stroke="#3fb950"/><text x="360" y="194">blob: style.css</text>
+    <rect x="450" y="170" width="140" height="40" rx="8" fill="rgba(74,163,255,.14)" stroke="#4aa3ff"/><text x="520" y="194">tree: src/</text>
+    <rect x="480" y="20" width="150" height="46" rx="9" fill="#161b22" stroke="#2d333b"/><text x="555" y="48" fill="#9aa7b4">commit (parent) 9f8e7d</text>
+  </g>
+  <defs><marker id="oa" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#9aa7b4"/></marker></defs>
+  <path d="M350 66 L350 94" fill="none" stroke="#9aa7b4" stroke-width="2" marker-end="url(#oa)"/>
+  <path d="M320 138 L220 168" fill="none" stroke="#9aa7b4" stroke-width="1.6" marker-end="url(#oa)"/>
+  <path d="M350 138 L360 168" fill="none" stroke="#9aa7b4" stroke-width="1.6" marker-end="url(#oa)"/>
+  <path d="M390 138 L500 168" fill="none" stroke="#9aa7b4" stroke-width="1.6" marker-end="url(#oa)"/>
+  <path d="M430 43 L478 43" fill="none" stroke="#f0d878" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#oa)"/>
+  <text x="453" y="33" text-anchor="middle" fill="#f0d878" font-size="10">parent</text>
+</svg>
+<figcaption>প্রতিটা commit একটা tree-কে point করে (সেই মুহূর্তের পুরো ফাইল-কাঠামোর snapshot), আর নিজের parent commit-কেও point করে — এভাবেই history-র চেইন তৈরি হয়।</figcaption>
+</figure>
+
+<h3>SHA-1/SHA-256 হ্যাশ — Content Addressing</h3>
+<p>প্রতিটা object তার নিজের <b>content</b> থেকে গণনা করা একটা hash (যেমন <code>a1b2c3d4...</code>, ৪০ hex character) দিয়ে চেনা যায় — object-এর নাম নয়, তার <b>বিষয়বস্তুই</b> তার ঠিকানা।</p>
+<div class="callout why"><span class="tag">এর ফলাফল</span>
+হুবহু একই কন্টেন্টের দুইটা ফাইল/commit সবসময় একই hash পাবে — তাই Git স্বয়ংক্রিয়ভাবে duplicate data বাদ দেয় (deduplication)। আর কন্টেন্ট এক bit বদলালেও hash সম্পূর্ণ বদলে যায় — এটাই নিশ্চিত করে কোনো commit/history চুপিসারে বদলানো হয়নি (tamper-evident)।</div>
+
+<h3>.git ডিরেক্টরি — সবকিছু এখানেই</h3>
+<pre>.git/
+├── HEAD              <span class="c"># এখন কোন branch/commit-এ আছেন, তার pointer</span>
+├── config            <span class="c"># repo-specific সেটিংস (remote, user override...)</span>
+├── objects/          <span class="c"># সব blob/tree/commit/tag object (compressed)</span>
+├── refs/
+│   ├── heads/         <span class="c"># local branch pointer (প্রতিটা ফাইল = এক commit hash)</span>
+│   └── tags/          <span class="c"># tag pointer</span>
+├── index             <span class="c"># staging area-র বর্তমান অবস্থা</span>
+└── logs/              <span class="c"># reflog — HEAD কোথায় কোথায় গেছে তার ইতিহাস</span></pre>
+<div class="callout behind"><span class="tag">Branch আসলে কী</span>
+একটা branch (<code>refs/heads/main</code>) আসলে একটা <b>৪০-character হ্যাশ ধারণকারী ছোট্ট ফাইল</b> — সেই branch-এর সর্বশেষ commit-এর দিকে নির্দেশ করে। নতুন commit করলে Git শুধু এই ফাইলের ভেতরের hash বদলে দেয়। এজন্যই branch তৈরি এত সস্তা ও দ্রুত — নতুন কোনো ফাইল কপি হয় না, শুধু একটা ছোট pointer তৈরি হয়।</div>
+
+<h3>HEAD — আপনি এখন কোথায়</h3>
+<p><code>HEAD</code> মানে "আমি এখন কোন commit/branch দেখছি"। সাধারণত <code>HEAD</code> একটা branch-কে point করে (যেমন <code>ref: refs/heads/main</code>), আর সেই branch একটা commit-কে। কোনো নির্দিষ্ট commit-এ সরাসরি checkout করলে <code>HEAD</code> কোনো branch ছাড়াই সরাসরি সেই commit-কে point করে — একে বলে <span class="kw">detached HEAD</span>।</p>
+<div class="callout mistake"><span class="tag">Detached HEAD-এ ভুলবশত commit</span>
+Detached HEAD অবস্থায় commit করলে সেই commit কোনো branch-এর অংশ নয় — branch পরিবর্তন করলেই সেটা "হারিয়ে" যাওয়ার মতো মনে হয় (আসলে <code>reflog</code>-এ কিছুদিন থাকে, Undo চ্যাপ্টার দেখুন)। Detached HEAD-এ কাজ শুরু করার সাথে সাথেই <code>git switch -c new-branch</code> দিয়ে একটা নাম দিয়ে ফেলুন।</div>
+</template>
+
+<template data-page="basics">
+<h2 class="title">৩. Basic Workflow — init, add, commit, log</h2>
+<p class="lead">দৈনন্দিন ৯০% কাজ এই কয়েকটা কমান্ডেই — repo শুরু করা, পরিবর্তন দেখা, stage করা, commit করা, history দেখা।</p>
+
+<h3>Repository শুরু করা</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git init</code></td><td>একটা নতুন, খালি প্রজেক্টকে Git-এ আনতে</td><td>বর্তমান ডিরেক্টরিতে একটা <code>.git</code> ফোল্ডার তৈরি হয় — এখন থেকে এখানে version tracking শুরু (কোনো ফাইল এখনো commit হয়নি)</td></tr>
+<tr><td><code>git clone &lt;url&gt;</code></td><td>ইতিমধ্যে থাকা একটা remote repository (GitHub ইত্যাদি) থেকে কাজ শুরু করতে</td><td>পুরো history সহ repo local-এ ডাউনলোড হয়, একটা <code>origin</code> remote auto-সেট হয়, ও default branch checkout হয়ে যায়</td></tr>
+<tr><td><code>git config --global user.name "..."</code></td><td>প্রতিটা commit-এ কার নাম যাবে তা ঠিক করতে</td><td>Global config file (<code>~/.gitconfig</code>)-এ লেখা হয় — এই মেশিনের সব repo-তে প্রযোজ্য</td></tr>
+<tr><td><code>git config --global user.email "..."</code></td><td>commit author-এর email ঠিক করতে (GitHub-এ profile-এর সাথে মেলাতে)</td><td>একইভাবে global config-এ সংরক্ষিত হয়</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+<code>user.name</code>/<code>user.email</code> সেট না করেই commit করা — Git কোনো default বসিয়ে দেয় (প্রায়ই OS username + hostname), যা ভুল author দেখায়। প্রথম commit-এর আগেই <code>--global</code> দিয়ে একবার সেট করে নিন।</div>
+
+<h3>পরিবর্তন দেখা ও Stage করা</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git status</code></td><td>কোন ফাইল বদলেছে, কোনটা staged, কোনটা untracked — এক নজরে দেখতে</td><td>শুধু তথ্য দেখায়, কিছুই বদলায় না — সবচেয়ে বেশি ব্যবহৃত ও সম্পূর্ণ নিরাপদ command</td></tr>
+<tr><td><code>git diff</code></td><td>Working directory-তে ঠিক কী লাইন বদলেছে তা commit করার আগে review করতে</td><td>staged না-হওয়া পরিবর্তনগুলোর line-by-line diff দেখায়; কিছু বদলায় না</td></tr>
+<tr><td><code>git diff --staged</code></td><td>Stage করা পরিবর্তন commit করার ঠিক আগে শেষবার review করতে</td><td>শুধু staged (add করা) পরিবর্তন দেখায়</td></tr>
+<tr><td><code>git add &lt;file&gt;</code></td><td>নির্দিষ্ট ফাইলের পরিবর্তন পরের commit-এ নিতে চাইলে</td><td>ফাইলের বর্তমান কন্টেন্ট staging area-তে কপি হয় — working directory-র ফাইল অপরিবর্তিত থাকে</td></tr>
+<tr><td><code>git add .</code></td><td>বর্তমান ডিরেক্টরির সব বদলানো/নতুন ফাইল একসাথে stage করতে</td><td>সব পরিবর্তন staged হয় — সুবিধাজনক কিন্তু অপ্রয়োজনীয় ফাইল ঢুকে যাওয়ার ঝুঁকি থাকে</td></tr>
+<tr><td><code>git add -p</code></td><td>একটা ফাইলের ভেতরের কিছু অংশ (hunk) stage করতে, পুরোটা নয়</td><td>প্রতিটা পরিবর্তনের অংশ (hunk) আলাদা করে জিজ্ঞেস করে — ছোট, পরিষ্কার, একক-উদ্দেশ্যের commit বানাতে সাহায্য করে</td></tr>
+<tr><td><code>git restore --staged &lt;file&gt;</code></td><td>ভুলবশত stage করা ফাইল unstage করতে (working directory-র পরিবর্তন রেখে)</td><td>ফাইল staging area থেকে সরে যায়, কিন্তু working directory-তে edit ঠিকই থাকে</td></tr>
+</table>
+
+<h3>Commit করা</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git commit -m "message"</code></td><td>Staged পরিবর্তনগুলোকে একটা স্থায়ী snapshot হিসেবে সংরক্ষণ করতে</td><td>একটা নতুন commit object তৈরি হয়, বর্তমান branch তার দিকে point করে, staging area খালি হয়ে যায়</td></tr>
+<tr><td><code>git commit</code> (editor খোলে)</td><td>একাধিক লাইনের বিস্তারিত commit message লিখতে (subject + body)</td><td>editor বন্ধ করলে message সহ commit তৈরি হয়; খালি রাখলে commit বাতিল হয়</td></tr>
+<tr><td><code>git commit --amend</code></td><td>সদ্য করা commit-এ ফাইল/message ঠিক করতে (যেমন একটা ফাইল বাদ পড়েছিল)</td><td>শেষ commit-টা <b>প্রতিস্থাপিত</b> হয় — নতুন hash পায়। ইতিমধ্যে push করা commit-এ amend করলে history আলাদা হয়ে যায় (force-push লাগবে)</td></tr>
+<tr><td><code>git commit -am "message"</code></td><td>ইতিমধ্যে tracked ফাইলের সব পরিবর্তন এক ধাপে stage+commit করতে</td><td><code>git add -u</code> + <code>commit</code>-এর সমান — কিন্তু <b>নতুন (untracked)</b> ফাইল যোগ করে না, শুধু আগে থেকে ট্র্যাক-হওয়া ফাইল</td></tr>
+</table>
+<div class="callout best"><span class="tag">ভালো commit message</span>
+প্রথম লাইন ৫০ অক্ষরের মধ্যে, imperative mood-এ ("Add", "Fix", "Update" — "Added"/"Fixing" নয়), আর <b>কী</b> নয় <b>কেন</b> বদলালেন সেটা বলুন — কোড দেখলেই "কী" বোঝা যায়, "কেন" শুধু আপনিই জানেন।</div>
+
+<h3>History দেখা</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git log</code></td><td>commit history পুরো বিস্তারিতভাবে দেখতে</td><td>hash, author, date, message সহ তালিকা দেখায় (নতুন থেকে পুরনো)</td></tr>
+<tr><td><code>git log --oneline</code></td><td>দ্রুত এক নজরে অনেকগুলো commit দেখতে</td><td>প্রতি commit এক লাইনে (short hash + message)</td></tr>
+<tr><td><code>git log --oneline --graph --all</code></td><td>একাধিক branch কীভাবে diverge/merge হয়েছে তা visually দেখতে</td><td>ASCII গ্রাফ দিয়ে branch/merge structure দেখায় — সব branch-সহ</td></tr>
+<tr><td><code>git log -p -- &lt;file&gt;</code></td><td>একটা নির্দিষ্ট ফাইলের প্রতিটা commit-এ ঠিক কী বদলেছে দেখতে</td><td>সেই ফাইল-সংক্রান্ত প্রতিটা commit-এর full diff দেখায়</td></tr>
+<tr><td><code>git show &lt;commit&gt;</code></td><td>একটা নির্দিষ্ট commit-এ ঠিক কী বদলেছিল দেখতে</td><td>সেই commit-এর metadata + diff দেখায়; কিছু বদলায় না</td></tr>
+<tr><td><code>git blame &lt;file&gt;</code></td><td>ফাইলের প্রতিটা লাইন সর্বশেষ কোন commit/author বদলেছে জানতে</td><td>প্রতি লাইনের পাশে commit hash + author + date দেখায় — debugging-এ "এই বাগ কে আনলো" খুঁজতে দারুণ কাজে লাগে</td></tr>
+</table>
+
+<h3>.gitignore</h3>
+<p>যেসব ফাইল কখনো track করতে চান না (build output, secret, IDE config) সেগুলো <code>.gitignore</code>-এ লিখে রাখুন:</p>
+<pre><span class="c"># .gitignore</span>
+bin/
+obj/
+node_modules/
+*.log
+.env
+.vs/
+.idea/</pre>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+কোনো ফাইল একবার commit হয়ে গেলে, পরে <code>.gitignore</code>-এ যোগ করলেও তা track হতে থাকবে — <code>.gitignore</code> শুধু <b>নতুন/untracked</b> ফাইলের জন্য কাজ করে। আগে থেকে track-হওয়া ফাইল বাদ দিতে <code>git rm --cached &lt;file&gt;</code> লাগবে।</div>
+</template>
+
+<template data-page="branching">
+<h2 class="title">৪. Branching · Merge</h2>
+<p class="lead">Branch হলো Git-এর সবচেয়ে শক্তিশালী feature — সমান্তরালে আলাদা আলাদা কাজ করা, তারপর নিরাপদে একত্র করা।</p>
+
+<h3>Branch আসলে কী (recap)</h3>
+<p>একটা branch হলো একটা commit-এর দিকে নির্দেশকারী হালকা, movable pointer। নতুন commit করলে সেই pointer এগিয়ে যায়। এজন্যই branch তৈরি/switch করা প্রায় instant — নতুন কোনো ফাইল কপি হয় না।</p>
+
+<h3>Branch তৈরি ও পরিবর্তন</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git branch</code></td><td>বর্তমান সব local branch তালিকা ও কোনটায় আছেন তা দেখতে</td><td>শুধু তালিকা দেখায়, কিছু বদলায় না</td></tr>
+<tr><td><code>git branch &lt;name&gt;</code></td><td>বর্তমান commit থেকে একটা নতুন branch pointer বানাতে (switch না করে)</td><td>নতুন branch তৈরি হয়, কিন্তু আপনি এখনো আগের branch-এই থাকেন</td></tr>
+<tr><td><code>git switch &lt;name&gt;</code></td><td>ইতিমধ্যে থাকা একটা branch-এ কাজ শুরু করতে</td><td>Working directory সেই branch-এর সর্বশেষ commit অনুযায়ী বদলে যায়; <code>HEAD</code> নতুন branch-কে point করে</td></tr>
+<tr><td><code>git switch -c &lt;name&gt;</code></td><td>নতুন branch বানিয়ে সাথে সাথেই সেখানে চলে যেতে (সবচেয়ে বেশি ব্যবহৃত)</td><td>branch তৈরি + switch — এক কমান্ডে দুটো কাজ</td></tr>
+<tr><td><code>git checkout &lt;name&gt;</code></td><td>(পুরনো syntax) branch পরিবর্তন করতে — <code>switch</code>-এর আগের রূপ</td><td>একই কাজ করে, কিন্তু <code>checkout</code> ফাইল restore-ও করতে পারে বলে দুই-অর্থী ও বিভ্রান্তিকর</td></tr>
+<tr><td><code>git branch -m &lt;new-name&gt;</code></td><td>বর্তমান branch-এর নাম বদলাতে</td><td>local branch-এর নাম বদলায়; remote-এ push করা থাকলে সেখানেও আলাদা করে rename করতে হবে</td></tr>
+<tr><td><code>git branch -d &lt;name&gt;</code></td><td>কাজ শেষ হওয়া, ইতিমধ্যে merge-হওয়া branch পরিষ্কার করতে</td><td>merge-না-হওয়া branch মুছতে <b>refuse</b> করে (নিরাপদ ডিফল্ট)</td></tr>
+<tr><td><code>git branch -D &lt;name&gt;</code></td><td>Merge না হলেও জোর করে branch মুছতে</td><td>সেই branch-এর অনন্য commit-গুলোর কোনো পয়েন্টার আর থাকে না — কিছুদিন পর <code>reflog</code>-এও হারিয়ে যেতে পারে (⚠ সতর্কতার সাথে ব্যবহার করুন)</td></tr>
+</table>
+
+<h3>Fast-Forward বনাম Three-Way Merge</h3>
+<div class="diagram"><pre>
+Fast-forward (main এগোয়নি):        Three-way merge (main-ও এগিয়েছে):
+main       ●──●                     main       ●──●────────●(merge)
+                \                                \          /
+feature          ●──●──●             feature      ●──●──●──
+(শুধু pointer এগিয়ে যায়)            (নতুন merge commit তৈরি হয়, দুই parent)
+</pre></div>
+<table>
+<tr><th></th><th>Fast-forward</th><th>Three-way (recursive) merge</th></tr>
+<tr><td>কখন হয়</td><td>main-এ feature branch তৈরির পর থেকে নতুন কোনো commit পড়েনি</td><td>দুই branch-ই আলাদাভাবে এগিয়েছে</td></tr>
+<tr><td>ফলাফল</td><td>শুধু <code>main</code> pointer এগিয়ে যায় — নতুন commit তৈরি হয় না</td><td>একটা নতুন <b>merge commit</b> তৈরি হয়, যার দুইটা parent থাকে</td></tr>
+<tr><td>History</td><td>সরল, সোজা লাইন</td><td>branch হয়েছিল তা history-তে দৃশ্যমান থাকে</td></tr>
+</table>
+<pre>git switch main
+git merge feature              <span class="c"># সম্ভব হলে fast-forward, নাহলে three-way merge</span>
+git merge --no-ff feature      <span class="c"># fast-forward সম্ভব হলেও জোর করে merge commit বানানো (branch history স্পষ্ট রাখতে)</span></pre>
+
+<h3>Merge Conflict — কেন হয়, কীভাবে সমাধান</h3>
+<p>দুই branch <b>একই ফাইলের একই লাইনে</b> ভিন্ন পরিবর্তন করলে Git নিজে সিদ্ধান্ত নিতে পারে না — conflict marker বসিয়ে আপনাকে সিদ্ধান্ত নিতে বলে:</p>
+<pre>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+const PORT = 8080;
+=======
+const PORT = process.env.PORT;
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature-branch</pre>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td>ফাইল হাতে edit করা</td><td>সঠিক ফলাফল বেছে নেওয়া/লেখা, marker (<code>&lt;&lt;&lt;</code>, <code>===</code>, <code>&gt;&gt;&gt;</code>) মুছে ফেলা</td><td>ফাইলের চূড়ান্ত রূপ ঠিক হয়</td></tr>
+<tr><td><code>git add &lt;file&gt;</code></td><td>Conflict সমাধান হয়ে গেছে তা Git-কে জানাতে</td><td>ফাইলটা "resolved" হিসেবে stage হয়</td></tr>
+<tr><td><code>git commit</code></td><td>Merge সম্পূর্ণ করতে</td><td>merge commit তৈরি হয় (message আগে থেকেই auto-generate করা থাকে)</td></tr>
+<tr><td><code>git merge --abort</code></td><td>Conflict জটিল মনে হলে merge শুরুর আগের অবস্থায় ফিরে যেতে</td><td>merge সম্পূর্ণ বাতিল হয়, working directory merge-শুরুর আগের অবস্থায় ফেরত যায়</td></tr>
+</table>
+<div class="callout best"><span class="tag">Conflict কমানোর উপায়</span>
+ছোট, ঘন ঘন commit + নিয়মিত <code>main</code>-কে নিজের branch-এ merge/rebase করা conflict-এর আকার ও সংখ্যা কমায়। একটা branch যত বেশিদিন <code>main</code> থেকে দূরে থাকে, conflict তত বড় হয়।</div>
+</template>
+
+<template data-page="rebase">
+<h2 class="title">৫. Rebase · Interactive Rebase · Cherry-pick</h2>
+<p class="lead">Rebase দিয়ে history পরিষ্কার/সরলরৈখিক রাখা যায় — কিন্তু ভুল জায়গায় ব্যবহার করলে বিপজ্জনকও।</p>
+
+<h3>Rebase কী করে</h3>
+<p><code>git rebase main</code> (feature branch-এ থেকে) আপনার branch-এর প্রতিটা commit-কে <b>এক এক করে replay</b> করে, কিন্তু এবার <code>main</code>-এর সর্বশেষ commit-কে নতুন ভিত্তি (base) ধরে। ফলাফল: history <b>সরলরেখা</b> দেখায়, যেন আপনি <code>main</code>-এর সর্বশেষ পয়েন্ট থেকেই কাজ শুরু করেছিলেন — কোনো merge commit ছাড়াই।</p>
+<div class="diagram"><pre>
+আগে:                                 rebase পরে:
+main     ●──●──●                     main     ●──●──●
+              \                                      \
+feature        ●──●                  feature          ●'──●'   (নতুন hash, replay করা)
+</pre></div>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git rebase main</code></td><td>merge commit ছাড়া পরিষ্কার, সরলরৈখিক history রাখতে</td><td>feature branch-এর প্রতিটা commit-এর <b>নতুন hash</b> তৈরি হয় (কন্টেন্ট এক হলেও parent বদলেছে)</td></tr>
+<tr><td><code>git rebase --continue</code></td><td>Rebase-এর মাঝে conflict সমাধান করে পরের commit-এ এগোতে</td><td>বর্তমান conflict resolve করা ধরে নেয়, পরের commit replay করে</td></tr>
+<tr><td><code>git rebase --abort</code></td><td>Rebase জটিল মনে হলে rebase শুরুর আগের অবস্থায় ফিরতে</td><td>branch rebase-শুরুর আগের commit-এ পুরোপুরি ফেরত যায়</td></tr>
+<tr><td><code>git rebase --skip</code></td><td>একটা নির্দিষ্ট commit-এর পরিবর্তন আর দরকার নেই মনে হলে বাদ দিয়ে এগোতে</td><td>বর্তমান commit বাদ দিয়ে পরেরটা replay করে — সেই commit-এর পরিবর্তন হারিয়ে যায়</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">সবচেয়ে গুরুত্বপূর্ণ নিয়ম</span>
+<b>যে branch অন্যরা ইতিমধ্যে pull করেছে/ব্যবহার করছে, তা কখনো rebase করবেন না</b> ("Golden Rule of Rebasing")। Rebase পুরনো commit-কে নতুন hash দিয়ে প্রতিস্থাপন করে — অন্য কারো কাছে থাকা কপির সাথে history মিলবে না, ফলে জটিল duplicate commit ও conflict তৈরি হয়। নিজের local/না-শেয়ার-করা branch-এ rebase করুন; shared branch-এ merge ব্যবহার করুন।</div>
+
+<h3>Interactive Rebase — history পরিষ্কার করা</h3>
+<p><code>git rebase -i HEAD~4</code> চালালে সাম্প্রতিক ৪টা commit নিয়ে একটা editor খোলে, যেখানে প্রতিটার পাশে action বসাতে পারেন:</p>
+<pre>pick a1b2c3 Add login form
+squash d4e5f6 Fix typo in login form     <span class="c"># আগের commit-এর সাথে মিশে যাবে</span>
+reword 7g8h9i Add validation             <span class="c"># শুধু message বদলাবে</span>
+drop   j0k1l2 Debug console.log          <span class="c"># commit-টাই বাদ যাবে</span></pre>
+<table>
+<tr><th>Action</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>pick</code></td><td>commit-টা যেমন আছে তেমনি রাখতে</td><td>কোনো পরিবর্তন হয় না (নতুন hash হলেও)</td></tr>
+<tr><td><code>squash</code> (<code>s</code>)</td><td>ছোট ছোট "fix typo", "WIP" commit-কে মূল commit-এর সাথে একত্র করতে (PR review-এর আগে পরিষ্কার history)</td><td>এই commit আগেরটার সাথে মিশে একটাই commit হয়ে যায়; message একত্র করার সুযোগ দেয়</td></tr>
+<tr><td><code>fixup</code> (<code>f</code>)</td><td>squash-এর মতোই, কিন্তু এই commit-এর message পুরোপুরি বাদ দিতে চাইলে</td><td>একত্র হয়ে যায়, কিন্তু এর message রাখা হয় না</td></tr>
+<tr><td><code>reword</code> (<code>r</code>)</td><td>শুধু commit message ভুল ছিল, কোড ঠিক আছে</td><td>নতুন message জিজ্ঞেস করে, content অপরিবর্তিত</td></tr>
+<tr><td><code>edit</code> (<code>e</code>)</td><td>সেই নির্দিষ্ট commit-এ থেমে ফাইল/কোড বদলাতে চাইলে</td><td>rebase সেই commit-এ থেমে যায়; বদলে <code>git commit --amend</code> + <code>rebase --continue</code></td></tr>
+<tr><td>লাইনের ক্রম বদলানো</td><td>Commit-এর order বদলাতে চাইলে</td><td>editor-এ লাইন উপর-নিচ করলেই commit সেই ক্রমে replay হয় (conflict হতে পারে)</td></tr>
+</table>
+
+<h3>Cherry-pick</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git cherry-pick &lt;hash&gt;</code></td><td>অন্য একটা branch-এর সম্পূর্ণ merge না করেই তার থেকে <b>শুধু একটা নির্দিষ্ট commit</b> নিজের branch-এ আনতে (যেমন hotfix)</td><td>সেই commit-এর পরিবর্তন বর্তমান branch-এ একটা <b>নতুন commit</b> (নতুন hash) হিসেবে যোগ হয়</td></tr>
+</table>
+<div class="callout why"><span class="tag">সাধারণ ব্যবহার</span>
+Production-এ জরুরি bugfix লাগলে কিন্তু পুরো feature branch এখনো ready নয় — bugfix commit-টা আলাদাভাবে cherry-pick করে সরাসরি <code>main</code>/release branch-এ পাঠানো যায়, বাকি অসম্পূর্ণ কাজ ছাড়াই।</div>
+
+<h3>Rebase বনাম Merge — কখন কোনটা</h3>
+<table>
+<tr><th></th><th>Merge</th><th>Rebase</th></tr>
+<tr><td>History</td><td>আসল branch structure দেখা যায় (কখন branch হয়েছিল)</td><td>সরলরৈখিক, "যেন এক লাইনেই লেখা হয়েছে"</td></tr>
+<tr><td>নিরাপত্তা</td><td>Shared branch-এও নিরাপদ — পুরনো commit বদলায় না</td><td>Shared branch-এ বিপজ্জনক — history rewrite করে</td></tr>
+<tr><td>কখন ব্যবহার</td><td>shared/public branch একত্র করতে (<code>feature → main</code>)</td><td>নিজের local feature branch-কে push করার আগে পরিষ্কার করতে</td></tr>
+</table>
+</template>
+
+<template data-page="remote">
+<h2 class="title">৬. Remote · Collaboration</h2>
+<p class="lead">Local repository-কে GitHub/GitLab-এর মতো remote-এর সাথে sync করা, আর অন্যদের সাথে নিরাপদে কাজ ভাগ করা।</p>
+
+<h3>Remote যোগ ও দেখা</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git remote -v</code></td><td>এই repo কোন remote(s)-এর সাথে যুক্ত তা দেখতে</td><td>remote নাম + URL (fetch ও push আলাদা করে) দেখায়</td></tr>
+<tr><td><code>git remote add origin &lt;url&gt;</code></td><td>নতুন local repo-কে প্রথমবার একটা remote-এর সাথে যুক্ত করতে</td><td><code>origin</code> নামে একটা remote সংরক্ষিত হয় local config-এ</td></tr>
+<tr><td><code>git remote remove origin</code></td><td>ভুল remote যুক্ত হলে বা remote বদলাতে চাইলে</td><td>সংযোগ মুছে যায়; local history/branch অক্ষত থাকে</td></tr>
+</table>
+
+<h3>Fetch বনাম Pull</h3>
+<div class="callout why"><span class="tag">সবচেয়ে গুরুত্বপূর্ণ পার্থক্য</span>
+<code>git fetch</code> শুধু remote-এর নতুন commit local-এ <b>নামিয়ে আনে</b> (<code>origin/main</code> pointer আপডেট হয়) — আপনার বর্তমান কাজের ফাইল বদলায় না, merge হয় না। <code>git pull</code> আসলে <code>fetch</code> + <code>merge</code> (বা <code>--rebase</code> দিলে <code>fetch</code> + <code>rebase</code>) একসাথে করে — সাথে সাথেই আপনার বর্তমান branch-এ merge/rebase করে ফেলে, যা মাঝে মাঝে অপ্রত্যাশিত conflict নিয়ে আসতে পারে।</div>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git fetch origin</code></td><td>অন্যরা কী push করেছে তা <b>দেখতে</b> চান, কিন্তু নিজের branch এখনই বদলাতে চান না</td><td>local-এ <code>origin/main</code>-এর মতো remote-tracking branch আপডেট হয়; নিজের <code>main</code> অপরিবর্তিত</td></tr>
+<tr><td><code>git pull</code></td><td>সরাসরি নিজের বর্তমান branch-কে remote-এর latest-এর সাথে sync করতে</td><td>fetch + merge (default) — conflict হলে সমাধান করতে হবে</td></tr>
+<tr><td><code>git pull --rebase</code></td><td>Merge commit ছাড়াই সরলরৈখিক history বজায় রেখে sync করতে</td><td>fetch + rebase — নিজের local commit remote-এর সর্বশেষ commit-এর উপর replay হয়</td></tr>
+</table>
+
+<h3>Push ও Tracking Branch</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git push origin main</code></td><td>Local commit remote-এ পাঠাতে, অন্যরা যেন দেখতে পায়</td><td>remote-এর <code>main</code> branch আপনার local commit দিয়ে এগিয়ে যায় (ff হলে)</td></tr>
+<tr><td><code>git push -u origin feature</code></td><td>প্রথমবার একটা নতুন branch push করার সময় local ↔ remote branch-কে "লিংক" করতে</td><td>পরের বার থেকে শুধু <code>git push</code>/<code>git pull</code> লিখলেই চলবে (upstream মনে রাখে)</td></tr>
+<tr><td><code>git push</code> (উপরেরটার পর)</td><td>একই linked branch-এ পরের পরিবর্তন পাঠাতে</td><td>tracked upstream branch-এ push হয়</td></tr>
+<tr><td><code>git push --force-with-lease</code></td><td>নিজের rebase/amend করা branch remote-এ আপডেট করতে (নিজের feature branch-এ)</td><td>remote branch-কে নিজের local history দিয়ে <b>প্রতিস্থাপন</b> করে — কিন্তু remote-এ যদি আপনার অজান্তে কেউ নতুন কমিট push করে থাকে, safety check ব্যর্থ হয়ে থেমে যায়</td></tr>
+<tr><td><code>git push --force</code></td><td>(এড়িয়ে চলুন যদি না নিশ্চিত)</td><td>remote branch-কে বিনাশর্তে প্রতিস্থাপন করে — অন্য কারো নতুন commit থাকলেও তা <b>মুছে যেতে পারে</b></td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Force-push বিপদ</span>
+Shared branch (<code>main</code>, <code>develop</code>)-এ কখনো <code>--force</code> push করবেন না — টিমের অন্যদের কাজ মুছে যেতে পারে। নিজের feature branch-এ rebase-এর পর push করতে হলে সবসময় <code>--force-with-lease</code> ব্যবহার করুন — এটা remote-এ কারো নতুন কাজ থাকলে push আটকে দেয়।</div>
+
+<h3>Pull Request / Merge Request Workflow (concept)</h3>
+<p>GitHub/GitLab-এ সরাসরি <code>main</code>-এ push না করে সাধারণত এই ধারা মেনে চলা হয়:</p>
+<ol>
+<li><code>git switch -c feature/login</code> — নিজের branch বানান</li>
+<li>কাজ করে commit + push (<code>-u</code> দিয়ে প্রথমবার)</li>
+<li>GitHub/GitLab-এ Pull Request (PR) খুলুন — team review করে, CI চলে</li>
+<li>Approve হলে PR merge (squash/rebase/merge commit — টিমের নীতি অনুযায়ী)</li>
+<li>feature branch মুছে ফেলুন (<code>git branch -d</code>, ও remote-এ <code>git push origin --delete feature/login</code>)</li>
+</ol>
+</template>
+
+<template data-page="stashtags">
+<h2 class="title">৭. Stash · Tags</h2>
+<p class="lead">Stash দিয়ে অসম্পূর্ণ কাজ সাময়িকভাবে সরিয়ে রাখা, tag দিয়ে কোনো commit-কে স্থায়ী নাম (যেমন version) দেওয়া।</p>
+
+<h3>Stash — কাজ অসম্পূর্ণ রেখেই branch পাল্টাতে হলে</h3>
+<div class="callout why"><span class="tag">কেন দরকার</span>
+Git অসম্পূর্ণ (uncommitted) পরিবর্তন নিয়ে branch switch করতে বাধা দেয় (conflict এড়াতে)। কিন্তু commit করাও ঠিক মনে হচ্ছে না (কাজ অর্ধেক)। <code>stash</code> পরিবর্তনগুলো একটা আলাদা জায়গায় সাময়িকভাবে "সরিয়ে" রাখে, working directory পরিষ্কার করে দেয়।</div>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git stash</code></td><td>Uncommitted পরিবর্তন সরিয়ে রেখে সাময়িকভাবে অন্য কাজে (branch বদল, urgent fix) যেতে</td><td>staged + unstaged পরিবর্তন একটা stash entry-তে সংরক্ষিত হয়, working directory শেষ commit-এর মতো পরিষ্কার হয়ে যায়</td></tr>
+<tr><td><code>git stash -u</code></td><td>নতুন (untracked) ফাইলসহ সব সরিয়ে রাখতে</td><td>উপরেরটার মতোই, কিন্তু untracked ফাইলও stash-এ যায়</td></tr>
+<tr><td><code>git stash list</code></td><td>কতগুলো stash জমা আছে দেখতে</td><td>শুধু তালিকা দেখায়</td></tr>
+<tr><td><code>git stash pop</code></td><td>সর্বশেষ stash ফেরত এনে কাজ চালিয়ে যেতে</td><td>stash-এর পরিবর্তন working directory-তে ফেরত আসে, আর stash তালিকা থেকে মুছে যায় (conflict হলে stash থেকেই যায়)</td></tr>
+<tr><td><code>git stash apply</code></td><td>Stash ফেরত আনতে চান কিন্তু তালিকা থেকে এখনই মুছতে চান না (একাধিক branch-এ প্রয়োগ করতে চাইলে)</td><td>পরিবর্তন ফেরত আসে, কিন্তু stash তালিকায় থেকে যায়</td></tr>
+<tr><td><code>git stash drop</code></td><td>একটা নির্দিষ্ট stash আর দরকার নেই বুঝলে</td><td>সেই stash entry স্থায়ীভাবে মুছে যায়</td></tr>
+</table>
+
+<h3>Tags — কোনো commit-কে স্থায়ী নাম দেওয়া</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git tag v1.0.0</code></td><td>Quick, lightweight marker (branch-এর মতো, কিন্তু নড়ে না)</td><td>নির্দিষ্ট commit-কে একটা static নাম দেওয়া হয় — metadata (author/date/message) থাকে না</td></tr>
+<tr><td><code>git tag -a v1.0.0 -m "First release"</code></td><td>Release-এর মতো গুরুত্বপূর্ণ পয়েন্ট চিহ্নিত করতে, সাথে কারণ/নোট রাখতে</td><td><b>Annotated tag</b> তৈরি হয় — নিজের author, date, message, ও (চাইলে) GPG signature সহ একটা পূর্ণাঙ্গ object</td></tr>
+<tr><td><code>git push origin v1.0.0</code></td><td>Tag remote-এ পাঠাতে (default push tag পাঠায় না)</td><td>শুধু ওই tag remote-এ যায়</td></tr>
+<tr><td><code>git push --tags</code></td><td>একসাথে সব local tag remote-এ পাঠাতে</td><td>সব tag push হয়ে যায়</td></tr>
+<tr><td><code>git tag -d v1.0.0</code></td><td>ভুল tag মুছতে (local)</td><td>শুধু local tag মুছে যায়; remote-এ থাকলে সেখানে আলাদা করে <code>git push origin --delete tag v1.0.0</code> লাগবে</td></tr>
+</table>
+<div class="callout best"><span class="tag">Semantic Versioning-এর সাথে ব্যবহার</span>
+Production release চিহ্নিত করতে annotated tag ব্যবহার করুন (<code>v1.4.2</code>) — কোন commit ঠিক কোন version হিসেবে release হয়েছিল তা স্পষ্ট থাকে, rollback-ও সহজ (<code>git checkout v1.3.0</code>)।</div>
+</template>
+
+<template data-page="undo">
+<h2 class="title">৮. Undo · Recovery</h2>
+<p class="lead">ভুল করলে ঘাবড়াবেন না — Git-এ প্রায় সবকিছুই ফেরানো যায়। কোন কমান্ড কোন স্তরে কাজ করে সেটা বোঝাই আসল কথা।</p>
+
+<h3>Reset — তিন মোড, তিন রকম প্রভাব</h3>
+<p><code>git reset</code> বর্তমান branch-এর pointer-কে অন্য কোনো commit-এ সরিয়ে দেয়, কিন্তু <b>কতটা</b> বদলাবে তা নির্ভর করে flag-এর উপর:</p>
+<table>
+<tr><th>Command</th><th>Branch pointer</th><th>Staging Area</th><th>Working Directory</th></tr>
+<tr><td><code>git reset --soft &lt;commit&gt;</code></td><td>বদলায়</td><td>অপরিবর্তিত (আগের মতোই staged থাকে)</td><td>অপরিবর্তিত</td></tr>
+<tr><td><code>git reset --mixed &lt;commit&gt;</code> (default)</td><td>বদলায়</td><td>খালি হয়ে যায় (unstaged)</td><td>অপরিবর্তিত (ফাইল ঠিকই থাকে)</td></tr>
+<tr><td><code>git reset --hard &lt;commit&gt;</code></td><td>বদলায়</td><td>খালি হয়ে যায়</td><td><b>মুছে যায়</b> — ফাইলের কন্টেন্টও সেই commit-এর মতো হয়ে যায়</td></tr>
+</table>
+<div class="callout why"><span class="tag">কখন কোনটা</span>
+<code>--soft</code>: কয়েকটা commit একসাথে মিশিয়ে নতুন করে commit করতে চাইলে (commit বাতিল কিন্তু কাজ staged-ই থাকুক)। <code>--mixed</code>: commit বাতিল করে আবার নতুন করে বেছে বেছে stage করতে চাইলে। <code>--hard</code>: সেই commit থেকে সবকিছু — commit ও ফাইলের পরিবর্তন — পুরোপুরি বাতিল করতে চাইলে।</div>
+<div class="callout mistake"><span class="tag">Common mistake — --hard-এর বিপদ</span>
+<code>git reset --hard</code> uncommitted কাজ <b>স্থায়ীভাবে মুছে দেয়</b> — কোনো commit হয়নি এমন পরিবর্তন <code>reflog</code>-এও ফিরে পাওয়া যায় না। চালানোর আগে <code>git status</code>/<code>git diff</code> দিয়ে নিশ্চিত হয়ে নিন কিছু হারানোর ঝুঁকি নেই, বা আগে <code>git stash</code> করুন।</div>
+
+<h3>Revert — নিরাপদ, shared branch-বান্ধব Undo</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git revert &lt;commit&gt;</code></td><td>ইতিমধ্যে push/shared হয়ে যাওয়া একটা commit বাতিল করতে (history rewrite না করে)</td><td>পুরনো commit মোছে না — বরং তার <b>উল্টো পরিবর্তন</b> নিয়ে একটা <b>নতুন commit</b> তৈরি হয়</td></tr>
+</table>
+<div class="callout why"><span class="tag">Reset বনাম Revert</span>
+<code>reset</code> history <b>মুছে/পাল্টে</b> দেয় — শুধু local/না-শেয়ার-করা branch-এ নিরাপদ। <code>revert</code> পুরনো history অক্ষত রেখে তার বিপরীত একটা নতুন commit যোগ করে — তাই shared/production branch-এ bug ছড়িয়ে পড়া commit বাতিল করার সঠিক উপায় সবসময় <code>revert</code>।</div>
+
+<h3>Reflog — শেষ ভরসা</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git reflog</code></td><td>ভুলবশত branch মুছে ফেলা/reset --hard করার পর commit "হারিয়ে" গেলে খুঁজে বের করতে</td><td>HEAD কোথায় কোথায় গিয়েছিল তার সময়ানুক্রমিক তালিকা দেখায় (সাধারণত ~৯০ দিন স্থানীয়ভাবে সংরক্ষিত)</td></tr>
+<tr><td><code>git reset --hard HEAD@{2}</code></td><td>Reflog-এ পাওয়া পুরনো অবস্থায় ফিরে যেতে</td><td>branch সেই মুহূর্তের commit-এ ফিরে যায় — "হারানো" commit উদ্ধার হয়</td></tr>
+<tr><td><code>git branch recovered &lt;hash&gt;</code></td><td>Reflog-এ পাওয়া "orphan" commit-কে একটা branch-এর নিচে স্থায়ী করতে</td><td>নতুন branch সেই commit-কে point করে — এখন থেকে garbage collection-এ মুছে যাবে না</td></tr>
+</table>
+<div class="callout best"><span class="tag">সবচেয়ে গুরুত্বপূর্ণ নিরাপত্তা জাল</span>
+Git-এ commit করা কোনো কাজ প্রায় কখনোই সত্যিকারভাবে সাথে সাথে হারায় না — <code>reflog</code> local HEAD movement-এর ইতিহাস রাখে। "সব শেষ!" মনে হলে প্রথমেই <code>git reflog</code> চালান।</div>
+
+<h3>ফাইল-স্তরের Undo</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git restore &lt;file&gt;</code></td><td>একটা ফাইলে করা uncommitted পরিবর্তন বাতিল করে শেষ commit-এর অবস্থায় ফিরতে</td><td>working directory-র ফাইল শেষ commit-এর কন্টেন্ট দিয়ে প্রতিস্থাপিত হয় — <b>edit হারিয়ে যায়</b></td></tr>
+<tr><td><code>git checkout &lt;commit&gt; -- &lt;file&gt;</code></td><td>একটা পুরনো commit থেকে শুধু একটা ফাইল ফিরিয়ে আনতে (পুরো checkout না করে)</td><td>working directory-তে সেই ফাইল পুরনো commit-এর অবস্থায় বসে যায় (staged থাকে)</td></tr>
+<tr><td><code>git clean -fd</code></td><td>Untracked ফাইল/ফোল্ডার (build artifact, ভুলে তৈরি ফাইল) সব মুছে working directory পরিষ্কার করতে</td><td>Git-এ কখনো add না-হওয়া সব ফাইল <b>স্থায়ীভাবে মুছে যায়</b> — <code>reflog</code>-এও ফেরত পাওয়া যায় না</td></tr>
+<tr><td><code>git clean -n</code></td><td><code>clean</code> আসলে কী মুছবে আগে দেখে নিতে (dry-run)</td><td>শুধু তালিকা দেখায়, কিছু মোছে না — <code>-fd</code> চালানোর আগে সবসময় এটা দিয়ে যাচাই করুন</td></tr>
+</table>
+</template>
+
+<template data-page="advanced">
+<h2 class="title">৯. Advanced — Submodule · Worktree · Bisect · Hooks</h2>
+<p class="lead">বড় বা জটিল প্রজেক্টে কাজে লাগে এমন কিছু কম-ব্যবহৃত কিন্তু শক্তিশালী টুল।</p>
+
+<h3>Submodules — repo-এর ভেতরে repo</h3>
+<div class="callout why"><span class="tag">কেন দরকার</span>
+একটা shared library/component আলাদা repo-তে maintain হয়, কিন্তু আপনার মূল প্রজেক্টে সেটার একটা নির্দিষ্ট commit ব্যবহার করতে চান — পুরো কোড কপি-পেস্ট না করে। Submodule মূল repo-তে শুধু "অন্য repo-র এই commit-টা এখানে থাকুক" — এই রেফারেন্সটুকু রাখে।</div>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git submodule add &lt;url&gt; libs/shared</code></td><td>একটা বাইরের repo-কে নিজের প্রজেক্টের ভেতরে নির্দিষ্ট path-এ যুক্ত করতে</td><td><code>.gitmodules</code> ফাইলে entry যোগ হয়; মূল repo শুধু সেই submodule-এর নির্দিষ্ট commit hash মনে রাখে</td></tr>
+<tr><td><code>git clone --recurse-submodules &lt;url&gt;</code></td><td>মূল repo clone করার সাথে সাথেই সব submodule-ও আনতে</td><td>সব submodule যার-যার রেফারেন্স করা commit-এ checkout হয়ে যায়</td></tr>
+<tr><td><code>git submodule update --init --recursive</code></td><td>আগে থেকে clone করা repo-তে submodule ফাঁকা থাকলে পূরণ করতে</td><td>প্রতিটা submodule ফোল্ডার সঠিক commit দিয়ে populate হয়</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+Submodule কঠিন মনে হওয়ার প্রধান কারণ: এটা branch ট্র্যাক করে না, একটা <b>নির্দিষ্ট commit</b> ট্র্যাক করে। submodule-এর ভেতরে গিয়ে নতুন commit করলেও মূল repo সেটা auto-detect করে না — মূল repo-তে ফিরে এসে আলাদা করে <code>git add libs/shared</code> করে সেই নতুন reference commit করতে হয়। অনেক টিম এই জটিলতা এড়াতে <b>monorepo</b> বা package manager (npm/NuGet) পছন্দ করে।</div>
+
+<h3>Worktree — একই repo, একাধিক working directory</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git worktree add ../hotfix hotfix-branch</code></td><td>বর্তমান কাজ (uncommitted/stash) না ঘেঁটে সমান্তরালে অন্য একটা branch-এ (যেমন urgent hotfix) কাজ করতে</td><td>একই <code>.git</code> history শেয়ার করে একটা সম্পূর্ণ আলাদা ফোল্ডারে সেই branch checkout হয় — দুই ফোল্ডারেই একই সময়ে কাজ করা যায়</td></tr>
+<tr><td><code>git worktree list</code></td><td>এই repo-র জন্য কতগুলো worktree সক্রিয় আছে দেখতে</td><td>path ও branch-সহ তালিকা দেখায়</td></tr>
+<tr><td><code>git worktree remove ../hotfix</code></td><td>কাজ শেষে অতিরিক্ত worktree পরিষ্কার করতে</td><td>ফোল্ডার ও তার registration মুছে যায় (uncommitted পরিবর্তন থাকলে আগে সামলান)</td></tr>
+</table>
+<div class="callout why"><span class="tag">Stash-এর তুলনায় সুবিধা</span>
+<code>git stash</code> দিয়ে branch বদলানো যায়, কিন্তু IDE/build/running server আবার নতুন করে সেটআপ করতে হয়। <code>worktree</code> দিয়ে দুইটা ভিন্ন branch দুইটা ভিন্ন ফোল্ডারে <b>একই সাথে খোলা</b> রাখা যায় — একটাতে feature build চলছে, আরেকটাতে hotfix — কোনোটাই বন্ধ না করে।</div>
+
+<h3>Bisect — কোন commit বাগ আনলো</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
+<tr><td><code>git bisect start</code></td><td>শত শত commit-এর মধ্যে থেকে ঠিক কোনটা একটা bug চালু করেছে তা খুঁজতে</td><td>Binary-search মোড চালু হয়</td></tr>
+<tr><td><code>git bisect bad</code> / <code>git bisect good &lt;hash&gt;</code></td><td>বর্তমান commit-এ bug আছে/নেই তা জানাতে</td><td>Git প্রতিবার মাঝামাঝি একটা commit checkout করে দেয়, আপনি টেস্ট করে good/bad বলেন</td></tr>
+<tr><td><code>git bisect reset</code></td><td>খোঁজ শেষে আগের branch-এ ফিরতে</td><td>bisect মোড বন্ধ হয়ে যায়, আগের HEAD-এ ফেরত আসেন</td></tr>
+</table>
+<div class="callout best"><span class="tag">O(log n) খোঁজ</span>
+১০০০ commit-এর মধ্যেও bisect মাত্র ~১০ বার test করেই দোষী commit খুঁজে বের করে (log₂1000 ≈ ১০) — একে একে সব commit চেক করার চেয়ে বহুগুণ দ্রুত। <code>git bisect run &lt;script&gt;</code> দিয়ে পুরো প্রক্রিয়া automate-ও করা যায় (script exit code 0/1 দিয়ে good/bad বলে)।</div>
+
+<h3>Hooks — automation ট্রিগার</h3>
+<p><code>.git/hooks/</code>-এ script রেখে Git-এর নির্দিষ্ট মুহূর্তে (commit-এর আগে, push-এর আগে ইত্যাদি) কোড auto-চালানো যায়:</p>
+<table>
+<tr><th>Hook</th><th>কখন চলে</th><th>সাধারণ ব্যবহার</th></tr>
+<tr><td><code>pre-commit</code></td><td>commit তৈরির ঠিক আগে</td><td>lint/format check — ব্যর্থ হলে commit আটকে যায়</td></tr>
+<tr><td><code>commit-msg</code></td><td>message লেখার পর, commit চূড়ান্ত হওয়ার আগে</td><td>message format যাচাই (যেমন conventional commits প্যাটার্ন মানছে কিনা)</td></tr>
+<tr><td><code>pre-push</code></td><td>push শুরুর আগে</td><td>push-এর আগে পুরো test suite চালানো</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+<code>.git/hooks/</code> নিজে <b>commit হয় না</b> (এটা <code>.git</code>-এর ভেতরে, ট্র্যাক হয় না) — তাই টিমের সবাই আলাদাভাবে hook বসাতে ভুলে যায়। এজন্য <b>Husky</b>-র মতো tool (JS প্রজেক্টে) বা repo-তে rakEEP করা shared script + setup instruction ব্যবহার করা হয়, যাতে hook পুরো টিমে consistent থাকে।</div>
+
+<h3>.gitattributes</h3>
+<p><code>.gitignore</code> ঠিক করে কী ট্র্যাক হবে না; <code>.gitattributes</code> ঠিক করে ট্র্যাক-হওয়া ফাইল Git কীভাবে <b>handle</b> করবে:</p>
+<pre><span class="c"># .gitattributes</span>
+* text=auto eol=lf              <span class="c"># সব platform এ line-ending সমান রাখা (Windows CRLF সমস্যা এড়ানো)</span>
+*.png binary                    <span class="c"># binary ফাইল diff/merge চেষ্টা না করা</span>
+*.sql linguist-generated=true   <span class="c"># GitHub-এ language stats এ বাদ দেওয়া</span></pre>
+</template>
+
+<template data-page="workflow">
+<h2 class="title">১০. Team Workflow · Best Practices</h2>
+<p class="lead">কমান্ড জানা এক জিনিস, টিমে সুশৃঙ্খলভাবে ব্যবহার করা আরেক জিনিস — branching model, commit convention, review culture।</p>
+
+<h3>জনপ্রিয় Branching Model</h3>
+<table>
+<tr><th>Model</th><th>কীভাবে কাজ করে</th><th>কখন উপযুক্ত</th></tr>
+<tr><td><span class="kw">Trunk-based</span></td><td>সবাই <code>main</code>-এর সাথে ঘনিষ্ঠভাবে কাজ করে; ছোট, স্বল্পস্থায়ী feature branch (১-২ দিন) দ্রুত merge হয়</td><td>দ্রুত-গতির টিম, শক্তিশালী CI/CD, feature flag ব্যবহার করে</td></tr>
+<tr><td><span class="kw">Git Flow</span></td><td><code>main</code> (production) + <code>develop</code> + feature/release/hotfix branch — কাঠামোবদ্ধ, একাধিক স্তর</td><td>নির্ধারিত release cycle-ওয়ালা প্রজেক্ট (যেমন desktop software, ছাপা রিলিজ)</td></tr>
+<tr><td><span class="kw">GitHub Flow</span></td><td><code>main</code> + feature branch + PR + merge — সরল, একস্তরীয়</td><td>Continuous deployment করা ওয়েব/SaaS প্রজেক্ট (সবচেয়ে বেশি ব্যবহৃত আজকাল)</td></tr>
+</table>
+<div class="callout best"><span class="tag">সুপারিশ</span>
+ছোট-মাঝারি টিমে যেখানে প্রতিদিন deploy হয়, সেখানে <b>GitHub Flow</b>-ই সবচেয়ে কম ঘর্ষণে কাজ করে — জটিল Git Flow-এর branch-স্তর অনেক সময় অতিরিক্ত overhead হয়ে দাঁড়ায়।</div>
+
+<h3>Conventional Commits</h3>
+<p>Commit message-এ একটা কাঠামো মেনে চললে changelog auto-generate করা ও history স্ক্যান করা সহজ হয়:</p>
+<pre>feat: add JWT refresh token endpoint
+fix: prevent null reference in OrderService
+docs: update README with docker-compose steps
+refactor: extract validation logic to separate class
+chore: bump dependency versions</pre>
+<table>
+<tr><th>Prefix</th><th>মানে</th></tr>
+<tr><td><code>feat</code></td><td>নতুন feature</td></tr>
+<tr><td><code>fix</code></td><td>bug fix</td></tr>
+<tr><td><code>docs</code></td><td>শুধু ডকুমেন্টেশন</td></tr>
+<tr><td><code>refactor</code></td><td>আচরণ না বদলে কোড পুনর্গঠন</td></tr>
+<tr><td><code>chore</code></td><td>build/tooling/dependency-জাতীয় কাজ</td></tr>
+</table>
+
+<h3>Pull Request Review Culture</h3>
+<div class="callout best"><span class="tag">Checklist</span>
+<ul style="margin:4px 0">
+<li>PR ছোট রাখুন (যত ছোট, তত দ্রুত ও ভালো review হয়) — ৪০০ লাইনের বেশি diff review-এর মান কমিয়ে দেয়।</li>
+<li>Self-review আগে করুন — নিজের diff একবার নিজে পড়ে, তারপর পাঠান।</li>
+<li>CI green না হলে review request করবেন না — reviewer-এর সময় বাঁচান।</li>
+<li>Merge করার আগে <code>main</code>-এর latest নিয়ে rebase/merge করে conflict-মুক্ত করুন।</li>
+</ul></div>
+
+<h3>Merge বনাম Squash বনাম Rebase-merge (GitHub PR বাটন)</h3>
+<table>
+<tr><th>Strategy</th><th>ফলাফল</th><th>কখন</th></tr>
+<tr><td><span class="kw">Merge commit</span></td><td>feature branch-এর সব commit + একটা নতুন merge commit</td><td>প্রতিটা commit আলাদাভাবে অর্থবহ, history পুরো রাখতে চাইলে</td></tr>
+<tr><td><span class="kw">Squash and merge</span></td><td>পুরো PR-এর সব commit মিশে <code>main</code>-এ একটাই commit হয়</td><td>PR-এর ভেতরের "WIP", "fix typo" commit দেখতে না চাইলে — সবচেয়ে জনপ্রিয় default</td></tr>
+<tr><td><span class="kw">Rebase and merge</span></td><td>প্রতিটা commit আলাদা থেকে যায়, কিন্তু merge commit ছাড়াই সরলরেখায় বসে</td><td>প্রতিটা commit আলাদা রাখতে চান, তবু সরলরৈখিক history চান</td></tr>
+</table>
+</template>
+
+<template data-page="troubleshoot">
+<h2 class="title">১১. Troubleshooting</h2>
+<p class="lead">যা প্রায়ই ভুল হয়, কেন হয়, আর কীভাবে সহজে সমাধান করবেন।</p>
+
+<h3>সাধারণ সমস্যা ও সমাধান</h3>
+<table>
+<tr><th>উপসর্গ</th><th>কারণ</th><th>সমাধান</th></tr>
+<tr><td>"fatal: refusing to merge unrelated histories"</td><td>দুইটা repo-র history আলাদাভাবে শুরু হয়েছিল (কমন ancestor নেই)</td><td><code>git merge --allow-unrelated-histories</code> (সতর্কতার সাথে, সাধারণত একবারই দরকার হয়)</td></tr>
+<tr><td>"Your branch is ahead/behind by N commits"</td><td>Local ও remote branch sync-এ নেই</td><td>ahead হলে <code>git push</code>; behind হলে <code>git pull</code></td></tr>
+<tr><td>ভুল branch-এ commit করে ফেলেছেন</td><td>commit করার আগে branch check করেননি</td><td><code>git branch new-branch</code> (এখনকার commit-এ) → <code>git reset --hard HEAD~1</code> পুরনো branch-এ → পরে <code>new-branch</code> switch করে কাজ চালান</td></tr>
+<tr><td>বিশাল ফাইল ভুলে commit হয়ে গেছে</td><td>বড় binary/log ফাইল <code>.gitignore</code>-এ ছিল না</td><td>এখনো push না হলে <code>git reset --soft HEAD~1</code>; push হয়ে গেলে <code>git filter-repo</code>/BFG দিয়ে history থেকে সরাতে হবে (দলের সাথে সমন্বয় করে)</td></tr>
+<tr><td>Line ending সমস্যা (পুরো ফাইল diff দেখাচ্ছে)</td><td>Windows (CRLF) ও Linux/Mac (LF) মিশে গেছে</td><td><code>.gitattributes</code>-এ <code>* text=auto eol=lf</code> সেট করুন, ও <code>git config core.autocrlf</code> ঠিক করুন</td></tr>
+<tr><td>"detached HEAD" অবস্থায় আটকে গেছেন</td><td>সরাসরি একটা commit/tag checkout করেছেন, branch নয়</td><td>কাজ রাখতে চাইলে <code>git switch -c recovered-branch</code>; না চাইলে <code>git switch main</code></td></tr>
+</table>
+
+<h3>Diagnostic Commands</h3>
+<pre>git status                     <span class="c"># সবার আগে এটা — এখন কী অবস্থা</span>
+git log --oneline --graph --all -20   <span class="c"># সাম্প্রতিক branch/commit গঠন</span>
+git reflog                     <span class="c"># HEAD কোথায় কোথায় গিয়েছিল</span>
+git fsck --lost-found          <span class="c"># orphan/dangling object খুঁজে বের করা</span>
+git diff HEAD                  <span class="c"># শেষ commit থেকে এখন পর্যন্ত কী বদলেছে</span></pre>
+
+<h3>Production Best Practices — সারসংক্ষেপ</h3>
+<div class="callout best"><span class="tag">Checklist</span>
+<ul style="margin:4px 0">
+<li>Shared branch-এ rebase/force-push কখনো নয়; নিজের local branch-এ প্রয়োজনে rebase।</li>
+<li>Commit ছোট, একক-উদ্দেশ্যের, imperative message-সহ।</li>
+<li>Secret/credential কখনো commit-এ নয় — <code>.gitignore</code> + <code>.env</code>।</li>
+<li>Production release-এ annotated tag; hotfix-এ cherry-pick।</li>
+<li>প্রতিটা repo-তে <code>.gitattributes</code> দিয়ে line-ending নিয়ন্ত্রণ (cross-platform টিমে)।</li>
+<li>বিপজ্জনক কমান্ডের (<code>reset --hard</code>, <code>clean -fd</code>, <code>push --force</code>) আগে সবসময় dry-run/status দিয়ে যাচাই।</li>
+</ul></div>
+</template>
+
+<template data-page="cli">
+<h2 class="title">১২. Essential CLI Commands — কেন ও প্রভাব সহ</h2>
+<p class="lead">রোজকার ব্যবহারের কমান্ড category অনুযায়ী — প্রতিটার পাশে <b>কেন ব্যবহার করবেন</b> আর <b>চালালে ঠিক কী ঘটে</b>, যাতে মুখস্থ না করে বুঝে ব্যবহার করতে পারেন।</p>
+
+<div class="callout best"><span class="tag">সবচেয়ে বেশি ব্যবহৃত ১০টা command</span>
+<code>git status</code> · <code>git add</code> · <code>git commit</code> · <code>git push</code> · <code>git pull</code> · <code>git log</code> · <code>git diff</code> · <code>git branch</code>/<code>switch</code> · <code>git merge</code> · <code>git stash</code> — এই দশটা দিয়েই দৈনন্দিন কাজের বড় অংশ চলে।
+</div>
+
+<h3>⚙️ Setup &amp; Config</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার</th><th>প্রভাব</th></tr>
+<tr><td><code>git init</code></td><td>নতুন প্রজেক্ট track শুরু করতে</td><td><code>.git</code> ফোল্ডার তৈরি হয়, কোনো commit নেই এখনো</td></tr>
+<tr><td><code>git clone &lt;url&gt;</code></td><td>বিদ্যমান remote repo থেকে কাজ শুরু করতে</td><td>পুরো history ডাউনলোড, <code>origin</code> remote auto-সেট, default branch checkout</td></tr>
+<tr><td><code>git config --global user.name/email</code></td><td>commit-এ সঠিক পরিচয় যেতে</td><td><code>~/.gitconfig</code>-এ global-ভাবে সংরক্ষিত</td></tr>
+<tr><td><code>git config --global init.defaultBranch main</code></td><td>নতুন repo-র default branch নাম ঠিক করতে</td><td>এরপর থেকে <code>git init</code> করলেই <code>main</code> নামে branch শুরু হবে (<code>master</code> নয়)</td></tr>
+<tr><td><code>git config --global core.editor "code --wait"</code></td><td>commit message লেখার editor বদলাতে</td><td>editor প্রয়োজন হলে (যেমন <code>git commit</code> বিনা <code>-m</code>) এই editor খুলবে</td></tr>
+</table>
+
+<h3>📸 Snapshotting</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার</th><th>প্রভাব</th></tr>
+<tr><td><code>git status</code></td><td>বর্তমান অবস্থা যাচাই</td><td>শুধু তথ্য — নিরাপদ, কিছু বদলায় না</td></tr>
+<tr><td><code>git add &lt;file&gt;</code> / <code>git add .</code></td><td>পরের commit-এ কী যাবে বাছাই করতে</td><td>staging area-তে কপি হয়</td></tr>
+<tr><td><code>git add -p</code></td><td>ফাইলের অংশবিশেষ stage করতে</td><td>hunk-ভিত্তিক interactive stage</td></tr>
+<tr><td><code>git commit -m "..."</code></td><td>Snapshot স্থায়ী করতে</td><td>নতুন commit object, branch pointer এগোয়, staging খালি হয়</td></tr>
+<tr><td><code>git commit --amend</code></td><td>শেষ commit ঠিক করতে</td><td>শেষ commit প্রতিস্থাপিত হয়, নতুন hash পায়</td></tr>
+<tr><td><code>git diff</code> / <code>git diff --staged</code></td><td>commit করার আগে পরিবর্তন review</td><td>শুধু দেখায়, কিছু বদলায় না</td></tr>
+<tr><td><code>git log --oneline --graph</code></td><td>history দ্রুত দেখতে</td><td>শুধু দেখায়</td></tr>
+<tr><td><code>git show &lt;commit&gt;</code></td><td>নির্দিষ্ট commit-এর বিস্তারিত দেখতে</td><td>শুধু দেখায়</td></tr>
+<tr><td><code>git blame &lt;file&gt;</code></td><td>প্রতি লাইন কে/কখন বদলেছে জানতে</td><td>শুধু দেখায় — debugging-এ সহায়ক</td></tr>
+</table>
+
+<h3>🌳 Branching &amp; Merging</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার</th><th>প্রভাব</th></tr>
+<tr><td><code>git branch</code></td><td>branch তালিকা দেখতে</td><td>শুধু দেখায়</td></tr>
+<tr><td><code>git switch -c &lt;name&gt;</code></td><td>নতুন branch বানিয়ে সেখানে যেতে</td><td>নতুন pointer তৈরি + HEAD সেখানে সরে যায়</td></tr>
+<tr><td><code>git branch -d</code> / <code>-D &lt;name&gt;</code></td><td>ব্যবহার শেষ হওয়া branch পরিষ্কার করতে</td><td><code>-d</code> merge-না-হলে আটকায় (নিরাপদ); <code>-D</code> জোর করে মোছে</td></tr>
+<tr><td><code>git merge &lt;branch&gt;</code></td><td>দুই branch একত্র করতে</td><td>ff সম্ভব হলে pointer এগোয়, নাহলে নতুন merge commit তৈরি হয়</td></tr>
+<tr><td><code>git merge --no-ff</code></td><td>branch হয়েছিল তা history-তে স্পষ্ট রাখতে</td><td>ff সম্ভব হলেও জোর করে merge commit তৈরি</td></tr>
+<tr><td><code>git merge --abort</code></td><td>জটিল conflict থেকে বেরিয়ে আসতে</td><td>merge শুরুর আগের অবস্থায় সম্পূর্ণ ফেরত</td></tr>
+</table>
+
+<h3>🔀 Rebase &amp; Cherry-pick</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার</th><th>প্রভাব</th></tr>
+<tr><td><code>git rebase main</code></td><td>সরলরৈখিক history রাখতে (নিজের local branch-এ)</td><td>নিজের commit-গুলোর নতুন hash তৈরি হয়, <code>main</code>-এর উপর replay হয়</td></tr>
+<tr><td><code>git rebase -i HEAD~N</code></td><td>Push করার আগে commit history পরিষ্কার/সাজাতে</td><td>squash/reword/drop/reorder — commit-গুলো পুনর্গঠিত হয়</td></tr>
+<tr><td><code>git cherry-pick &lt;hash&gt;</code></td><td>অন্য branch থেকে একটা নির্দিষ্ট commit আনতে</td><td>একটা নতুন commit যোগ হয় (নতুন hash, একই পরিবর্তন)</td></tr>
+</table>
+
+<h3>⏪ Undo &amp; Recovery</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার</th><th>প্রভাব</th></tr>
+<tr><td><code>git restore &lt;file&gt;</code></td><td>uncommitted পরিবর্তন বাতিল করতে</td><td>ফাইল শেষ commit-এর অবস্থায় ফেরে (edit হারায়)</td></tr>
+<tr><td><code>git restore --staged &lt;file&gt;</code></td><td>ভুল stage করা ফাইল unstage করতে</td><td>working directory অক্ষত, শুধু staging থেকে সরে</td></tr>
+<tr><td><code>git reset --soft/--mixed/--hard</code></td><td>commit বাতিল করতে (কতটা মুছবে তার উপর নির্ভর করে বেছে নিন)</td><td>soft: staged থেকে যায়; mixed: unstaged হয়; hard: ফাইলও মুছে যায়</td></tr>
+<tr><td><code>git revert &lt;commit&gt;</code></td><td>Shared/production branch-এ safe undo</td><td>পুরনো history অক্ষত, বিপরীত পরিবর্তনসহ নতুন commit তৈরি</td></tr>
+<tr><td><code>git reflog</code></td><td>"হারানো" commit খুঁজতে</td><td>HEAD movement history দেখায় — কিছু বদলায় না</td></tr>
+<tr><td><code>git clean -n</code> / <code>-fd</code></td><td>Untracked ফাইল পরিষ্কার করতে (আগে dry-run দিয়ে যাচাই)</td><td><code>-n</code> শুধু দেখায়; <code>-fd</code> স্থায়ীভাবে মুছে দেয়</td></tr>
+</table>
+
+<h3>☁️ Remote</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার</th><th>প্রভাব</th></tr>
+<tr><td><code>git remote -v</code></td><td>কোন remote যুক্ত আছে দেখতে</td><td>শুধু দেখায়</td></tr>
+<tr><td><code>git fetch</code></td><td>Remote-এর নতুন কিছু আছে কিনা দেখতে (নিজের branch না বদলিয়ে)</td><td>remote-tracking branch আপডেট, নিজের branch অপরিবর্তিত</td></tr>
+<tr><td><code>git pull</code></td><td>নিজের branch remote-এর সাথে sync করতে</td><td>fetch + merge (conflict হতে পারে)</td></tr>
+<tr><td><code>git pull --rebase</code></td><td>merge commit ছাড়া sync করতে</td><td>fetch + rebase</td></tr>
+<tr><td><code>git push -u origin &lt;branch&gt;</code></td><td>নতুন branch প্রথমবার publish + link করতে</td><td>remote branch তৈরি + upstream tracking সেট</td></tr>
+<tr><td><code>git push --force-with-lease</code></td><td>rebase/amend করা নিজের branch আপডেট পাঠাতে</td><td>remote history প্রতিস্থাপিত হয়, কিন্তু অন্য কারো নতুন commit থাকলে safety-তে আটকায়</td></tr>
+</table>
+
+<h3>📦 Stash &amp; Tags</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার</th><th>প্রভাব</th></tr>
+<tr><td><code>git stash</code></td><td>অসম্পূর্ণ কাজ সরিয়ে branch বদলাতে</td><td>uncommitted পরিবর্তন সরে যায়, working directory পরিষ্কার হয়</td></tr>
+<tr><td><code>git stash pop</code></td><td>Stash করা কাজ ফেরত আনতে</td><td>পরিবর্তন ফেরে, stash তালিকা থেকে মুছে যায়</td></tr>
+<tr><td><code>git tag -a v1.0.0 -m "..."</code></td><td>Release/গুরুত্বপূর্ণ commit চিহ্নিত করতে</td><td>metadata-সহ স্থায়ী annotated tag তৈরি হয়</td></tr>
+<tr><td><code>git push --tags</code></td><td>Tag remote-এ পাঠাতে</td><td>সব local tag remote-এ যায় (default push tag পাঠায় না)</td></tr>
+</table>
+
+<h3>🧪 Advanced</h3>
+<table>
+<tr><th>Command</th><th>কেন ব্যবহার</th><th>প্রভাব</th></tr>
+<tr><td><code>git worktree add ../path branch</code></td><td>সমান্তরালে দুইটা branch-এ একসাথে কাজ করতে</td><td>একই history শেয়ার করা নতুন ফোল্ডার তৈরি হয়</td></tr>
+<tr><td><code>git submodule add &lt;url&gt; path</code></td><td>বাইরের repo নিজের প্রজেক্টে নির্দিষ্ট commit হিসেবে যুক্ত করতে</td><td><code>.gitmodules</code>-এ reference যোগ হয়</td></tr>
+<tr><td><code>git bisect start/good/bad</code></td><td>Binary-search করে bug আনা commit খুঁজতে</td><td>log(n) ধাপে দোষী commit শনাক্ত হয়</td></tr>
+<tr><td><code>git gc</code></td><td>অব্যবহৃত/loose object compress করে repo ছোট করতে</td><td>disk space বাঁচে, পারফরম্যান্স উন্নত হয় — কোনো history হারায় না</td></tr>
+<tr><td><code>git fsck</code></td><td>repo-র object integrity যাচাই করতে বা dangling commit খুঁজতে</td><td>সমস্যাযুক্ত/orphan object তালিকা দেখায়, কিছু বদলায় না</td></tr>
+</table>
+
+<h3>📋 এক নজরে</h3>
+<pre>git init / clone              git config --global user.name/email
+git status                    git add . / -p
+git commit -m "msg"           git commit --amend
+git log --oneline --graph     git diff / --staged
+git switch -c branch          git branch -d/-D
+git merge / --no-ff           git rebase -i HEAD~N
+git cherry-pick hash          git stash / pop
+git tag -a v1.0.0              git push --tags
+git fetch / pull / pull --rebase
+git push -u origin branch     git push --force-with-lease
+git reset --soft/mixed/hard   git revert hash
+git reflog                    git clean -n / -fd</pre>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>
