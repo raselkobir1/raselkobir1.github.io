@@ -119,6 +119,7 @@ const pages = [
   {id:"compose",      icon:"🧩", title:"Docker Compose"},
   {id:"dotnet",       icon:"💜", title:"Docker for .NET"},
   {id:"prod",         icon:"🏦", title:"Troubleshooting · Best Practices"},
+  {id:"cli",          icon:"⌨️", title:"Essential CLI Commands"},
 ];
 </script>
 
@@ -458,6 +459,56 @@ docker run -d --tmpfs /tmp:size=64m myapi:1.0</pre>
 <div class="callout best"><span class="tag">Named volume বনাম bind mount</span>
 Production-এ database/persistent data-র জন্য <b>named volume</b> (Docker manage করে, পোর্টেবল, backup সহজ)। Development-এ code live reload-এর জন্য <b>bind mount</b> (host-এর ফাইল সরাসরি container-এ)।</div>
 
+<h3><code>-v</code> বনাম <code>--mount</code> — দুই syntax</h3>
+<p>ভলিউম/bind mount attach করার দুইটা flag আছে — একই কাজ, ভিন্ন verbosity:</p>
+<table>
+<tr><th></th><th><code>-v</code> / <code>--volume</code></th><th><code>--mount</code></th></tr>
+<tr><td>Syntax</td><td>সংক্ষিপ্ত, colon-separated: <code>src:dst:opts</code></td><td>verbose, key=value: <code>type=volume,source=src,target=dst</code></td></tr>
+<tr><td>পড়া সহজ?</td><td>ছোট command-এ ঠিক আছে</td><td>স্পষ্ট, Compose-এর মতো — production script-এ ভালো</td></tr>
+<tr><td>Non-existent path</td><td>bind mount-এ path না থাকলে <b>auto-create</b> করে ফেলে (ভুল হলে বোঝা কঠিন)</td><td>একই আচরণ, তবে <code>type=bind</code> explicit বলে ভুল কম হয়</td></tr>
+</table>
+<pre><span class="c"># দুটোই একই কাজ করে:</span>
+docker run -d -v pgdata:/var/lib/postgresql/data postgres:16
+docker run -d --mount type=volume,source=pgdata,target=/var/lib/postgresql/data postgres:16
+
+<span class="c"># bind mount, --mount দিয়ে:</span>
+docker run -d --mount type=bind,source=/home/rasel/app,target=/app myapi:1.0</pre>
+
+<h3>Named বনাম Anonymous Volume</h3>
+<p>শুধু container path দিলে (নাম ছাড়া) Docker একটা <b>anonymous volume</b> বানায় — একটা এলোমেলো hash নাম পায়, কোনো কিছুর সাথে সহজে যুক্ত করা যায় না, আর সাধারণত container মুছলে হারিয়ে যায়/orphan হয়ে থাকে। এজন্য প্রায় সবসময় নাম দিয়ে <b>named volume</b> ব্যবহার করুন।</p>
+<pre><span class="c"># Anonymous volume — নাম নেই, ট্র্যাক করা কঠিন (এড়িয়ে চলুন)</span>
+docker run -d -v /var/lib/postgresql/data postgres:16
+
+<span class="c"># Named volume — স্পষ্ট নাম, পরে সহজে খুঁজে/backup করা যায়</span>
+docker run -d -v pgdata:/var/lib/postgresql/data postgres:16</pre>
+<div class="callout why"><span class="tag">Dockerfile-এর <code>VOLUME</code> instruction সাবধানে</span>
+Dockerfile-এ <code>VOLUME /data</code> লিখলে সেই path থেকে <b>প্রতিটা container run-এ</b> একটা anonymous volume auto-তৈরি হয় — এমনকি আপনি নিজে <code>-v</code> না দিলেও। এতে অনেক না-দরকারি anonymous volume জমে যায় (<code>docker volume ls</code>-এ dangling দেখবেন)। তাই base image-এ <code>VOLUME</code> থাকলে খেয়াল রাখুন, আর নিজে সবসময় explicit named volume/bind mount দিন।</div>
+
+<h3>Read-only Mount</h3>
+<p>Container-কে data পড়তে দিতে চান কিন্তু বদলাতে দিতে চান না — <code>:ro</code> suffix দিন:</p>
+<pre>docker run -d -v /host/config:/app/config:ro myapi:1.0   <span class="c"># container শুধু পড়তে পারবে, লিখতে পারবে না</span></pre>
+
+<h3>Volume Sharing — একাধিক container একই ডেটা</h3>
+<p>একই named volume একাধিক container-এ mount করলে সবাই একই ডেটা দেখে — যেমন log-writer + log-shipper আলাদা container একই log volume ব্যবহার করা:</p>
+<pre>docker run -d --name writer -v sharedlogs:/var/log/app myapi:1.0
+docker run -d --name shipper -v sharedlogs:/var/log/app:ro fluent/fluent-bit</pre>
+
+<h3>Volume Management Commands</h3>
+<pre>docker volume create pgdata        <span class="c"># তৈরি করুন</span>
+docker volume ls                   <span class="c"># সব volume তালিকা</span>
+docker volume inspect pgdata       <span class="c"># mountpoint, driver, label — JSON</span>
+docker volume rm pgdata            <span class="c"># মুছুন (ব্যবহারে থাকলে error দেবে)</span>
+docker volume prune                <span class="c"># কোনো container ব্যবহার করছে না এমন সব volume মুছুন</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+<code>docker compose down</code> (volume flag ছাড়া) দিলে volume থেকে যায় — এটাই safe default। কিন্তু <code>docker compose down -v</code> দিলে সব named volume-ও মুছে যায় — production-এ ভুলে এটা চালালে <b>পুরো ডেটাবেস হারাতে পারেন</b>। সবসময় দুবার ভাবুন, আর আগে backup নিন।</div>
+
+<h3>Ownership ও Permission সমস্যা</h3>
+<p>Bind mount-এ host আর container-এর user ID (UID) না মিললে <b>Permission denied</b> দেখা যায় — কারণ container-এর ভেতরের user সেই host file-এর owner নয়। সমাধান: container-এ host-এর মতো একই UID দিয়ে user বানানো, বা <code>--user</code> দিয়ে UID মিলিয়ে চালানো।</p>
+<pre>docker run -d --user $(id -u):$(id -g) -v /home/rasel/app:/app myapi:1.0</pre>
+
+<h3>Volume Drivers</h3>
+<p>Default <code>local</code> driver host disk-এ ডেটা রাখে। বড় setup-এ plugin driver দিয়ে network storage-এও volume রাখা যায় — যেমন NFS, বা cloud driver দিয়ে EBS/Azure Disk। Volume driver বদলালেও app কোড অপরিবর্তিত থাকে — শুধু data আসলে কোথায় সংরক্ষিত হচ্ছে তা বদলায়।</p>
+
 <h3>Container Backup &amp; Restore</h3>
 <p>Volume backup করার সহজ কৌশল — একটা অস্থায়ী container দিয়ে volume-কে tar করা:</p>
 <pre><span class="c"># backup: pgdata volume কে tar এ</span>
@@ -492,12 +543,79 @@ docker run -d --name api --network appnet myapi:1.0
 <div class="callout why"><span class="tag">এজন্যই Compose সহজ</span>
 Docker Compose প্রতিটা project-এর জন্য একটা user-defined network বানায়, তাই service-রা একে অপরকে service-নাম দিয়ে ডাকতে পারে (<code>db</code>, <code>redis</code>, <code>rabbitmq</code>) — কোনো IP মনে রাখতে হয় না।</div>
 
+<h3>Default Bridge বনাম User-defined Bridge</h3>
+<p>ইনস্টলের সাথেই একটা default network থাকে যার নাম <code>bridge</code> — কিন্তু এখানে <b>DNS কাজ করে না</b>, শুধু IP দিয়ে যোগাযোগ, আর <code>--link</code> (legacy, deprecated) ছাড়া নাম দিয়ে খোঁজা যায় না। এজন্যই সবসময় নিজের <b>user-defined bridge</b> বানানো উচিত।</p>
+<table>
+<tr><th></th><th>default <code>bridge</code></th><th>user-defined bridge (<code>docker network create</code>)</th></tr>
+<tr><td>DNS (নাম দিয়ে খোঁজা)</td><td>❌ নেই</td><td>✅ built-in embedded DNS (<code>127.0.0.11</code>)</td></tr>
+<tr><td>Isolation</td><td>একই host-এর সব container একসাথে দেখে</td><td>শুধু একই network-এর container একে অপরকে দেখে</td></tr>
+<tr><td>Container সংযোগ বিচ্ছিন্ন/যুক্ত করা</td><td>কঠিন (restart লাগে)</td><td><code>docker network connect/disconnect</code> — চলন্ত container-এও</td></tr>
+</table>
+<div class="callout behind"><span class="tag">Embedded DNS কীভাবে কাজ করে</span>
+প্রতিটা user-defined network-এ Docker একটা internal DNS server চালায় (container-এর ভেতর থেকে <code>127.0.0.11:53</code>-এ দেখা যায়)। Container যখন <code>db</code>-এর মতো নাম resolve করতে চায়, request প্রথমে এই embedded DNS-এ যায় — সেটা network-এর সব container-container name ↔ IP মিলিয়ে জবাব দেয়; না মিললে বাইরের DNS (host-এর resolver)-এ পাঠায়। তাই internal service-নাম আর external domain (যেমন <code>api.stripe.com</code>) দুটোই একই container থেকে resolve হয়।</div>
+
+<h3>একটা Container একাধিক Network-এ</h3>
+<p>একটা container একসাথে একাধিক network-এ যুক্ত থাকতে পারে — যেমন <code>api</code> একদিকে <code>appnet</code> (db/cache-এর সাথে) আর অন্যদিকে <code>edgenet</code> (reverse proxy-র সাথে) — এভাবে network segmentation করা যায় (DB network কখনো সরাসরি internet-facing proxy-র সাথে থাকে না)।</p>
+<pre>docker network create appnet
+docker network create edgenet
+docker run -d --name api --network appnet myapi:1.0
+docker network connect edgenet api        <span class="c"># চলন্ত container-কে দ্বিতীয় network-এ যুক্ত করা</span>
+docker network disconnect appnet api      <span class="c"># বিচ্ছিন্ন করা</span></pre>
+
+<h3>Custom Subnet ও Gateway</h3>
+<p>Default-এ Docker নিজে থেকে subnet বেছে নেয়; নির্দিষ্ট IP range দরকার হলে (যেমন অন্য network-এর সাথে সংঘর্ষ এড়াতে) নিজে দিতে পারেন:</p>
+<pre>docker network create --driver bridge \
+  --subnet 172.28.0.0/16 --gateway 172.28.0.1 appnet
+
+docker run -d --name db --network appnet --ip 172.28.0.10 postgres:16   <span class="c"># static IP (কমই লাগে)</span></pre>
+
+<h3>Network Management Commands</h3>
+<pre>docker network ls                  <span class="c"># সব network তালিকা</span>
+docker network inspect appnet      <span class="c"># subnet, gateway, যুক্ত container, IP — JSON</span>
+docker network rm appnet           <span class="c"># মুছুন (কোনো container যুক্ত থাকলে আগে disconnect)</span>
+docker network prune               <span class="c"># কোনো container ব্যবহার করছে না এমন সব network মুছুন</span></pre>
+
 <h3>Port Mapping</h3>
 <p>Container-এর port host-এ প্রকাশ করতে <code>-p host:container</code>:</p>
 <pre>docker run -d -p 8080:8080 myapi:1.0    <span class="c"># host:8080 → container:8080</span>
-docker run -d -p 5432:5432 postgres:16  <span class="c"># বাইরে থেকে DB access</span></pre>
+docker run -d -p 5432:5432 postgres:16  <span class="c"># বাইরে থেকে DB access</span>
+docker run -d -p 127.0.0.1:5432:5432 postgres:16   <span class="c"># শুধু localhost-এ bind (নিরাপদ)</span>
+docker run -d -p 8000-8010:8000-8010 myapi:1.0      <span class="c"># port range</span>
+docker run -d -p 9999:9999/udp myapi:1.0            <span class="c"># UDP port (default TCP)</span>
+docker run -d -P myapi:1.0              <span class="c"># EXPOSE করা সব port host-এ random port-এ auto-publish</span></pre>
 <div class="callout mistake"><span class="tag">EXPOSE ≠ publish</span>
 Dockerfile-এর <code>EXPOSE</code> শুধু documentation — এটা নিজে থেকে port খুলে দেয় না। বাইরে থেকে access পেতে <code>docker run -p</code> (বা Compose-এ <code>ports:</code>) লাগবেই।</div>
+
+<h3><code>host</code> ও <code>none</code> network — কখন ব্যবহার</h3>
+<div class="grid2">
+<div class="box"><b><code>--network host</code></b><br>
+container সরাসরি host-এর network stack ব্যবহার করে — কোনো port mapping লাগে না, app যে port-এ শোনে সেটাই host-এ খোলে। সুবিধা: সর্বোচ্চ performance (NAT overhead নেই)। অসুবিধা: isolation নেই, port conflict host-এর অন্য process-এর সাথে হতে পারে। Linux-এ কাজ করে; Docker Desktop (Mac/Windows)-এ সীমিত সাপোর্ট।</div>
+<div class="box"><b><code>--network none</code></b><br>
+কোনো network interface-ই নেই (শুধু loopback)। সম্পূর্ণ network-isolated batch job/security-sensitive processing-এ ব্যবহার হয়, যেখানে container-এর বাইরে কোনো communication দরকার নেই।</div>
+</div>
+<pre>docker run -d --network host myapi:1.0     <span class="c"># host এর port সরাসরি ব্যবহার</span>
+docker run --rm --network none alpine ping 8.8.8.8   <span class="c"># fail করবে — কোনো network নেই</span></pre>
+
+<h3>extra_hosts / <code>--add-host</code></h3>
+<p>Container-এর ভেতর থেকে host machine-কে বা কোনো কাস্টম নামকে নির্দিষ্ট IP-তে resolve করাতে চাইলে:</p>
+<pre>docker run -d --add-host=host.docker.internal:host-gateway myapi:1.0
+<span class="c"># Linux-এ container থেকে host machine-এ পৌঁছানোর সহজ উপায় (Mac/Windows-এ এটা built-in)</span></pre>
+
+<h3>Overlay ও Macvlan — বহু-host নেটওয়ার্ক (concept)</h3>
+<table>
+<tr><th>Driver</th><th>কোথায় ব্যবহার</th></tr>
+<tr><td><span class="kw">overlay</span></td><td>একাধিক Docker host জুড়ে (Swarm/cluster) — একই virtual network-এ container, host ভিন্ন হলেও</td></tr>
+<tr><td><span class="kw">macvlan</span></td><td>container-কে সরাসরি একটা physical MAC/IP দেওয়া — legacy app যেটা network-এ সরাসরি device হিসেবে দৃশ্যমান হতে হবে</td></tr>
+</table>
+<p>Single-host dev/small production-এ এগুলো সাধারণত লাগে না — <b>bridge</b> দিয়েই কাজ চলে। Kubernetes/Swarm-এর মতো multi-host orchestration-এ overlay গুরুত্বপূর্ণ হয়ে ওঠে।</p>
+
+<h3>Network Troubleshooting</h3>
+<pre>docker network inspect appnet | grep -A3 Containers   <span class="c"># কোন container, কোন IP</span>
+docker exec -it api ping db                            <span class="c"># DNS + reachability টেস্ট</span>
+docker exec -it api sh -c "cat /etc/resolv.conf"        <span class="c"># container কোন DNS ব্যবহার করছে</span>
+docker port api                                         <span class="c"># container এর কোন port host এ map হয়েছে</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+দুই container ভিন্ন network-এ থাকা অবস্থায় নাম দিয়ে একে অপরকে খুঁজতে যাওয়া — DNS resolve fail করবে। <code>docker network inspect</code> দিয়ে নিশ্চিত করুন দুটোই একই user-defined network-এ আছে।</div>
 </template>
 
 <template data-page="security">
@@ -925,6 +1043,131 @@ docker compose up -d / down          docker compose logs -f</pre>
 </div>
 </div>
 </div>
+</template>
+
+<template data-page="cli">
+<h2 class="title">১৩. Essential CLI Commands — নিত্যদিনের Docker</h2>
+<p class="lead">রোজকার কাজে যে command গুলো বারবার লাগবে — category অনুযায়ী সাজানো quick-reference। মুখস্থ করার দরকার নেই, দরকার হলে এই পাতায় ফিরে আসুন।</p>
+
+<div class="callout best"><span class="tag">সবচেয়ে বেশি ব্যবহৃত ৮টা command</span>
+<code>docker build</code> · <code>docker run</code> · <code>docker ps</code> · <code>docker logs</code> · <code>docker exec</code> · <code>docker stop</code>/<code>rm</code> · <code>docker compose up</code>/<code>down</code> · <code>docker system prune</code> — এই আটটা দিয়েই দৈনন্দিন কাজের ৯০% চলে।</div>
+
+<h3>🖼️ Images</h3>
+<table>
+<tr><th>Command</th><th>কাজ</th></tr>
+<tr><td><code>docker build -t name:tag .</code></td><td>Dockerfile থেকে image build (<code>.</code> = build context)</td></tr>
+<tr><td><code>docker build --no-cache -t name:tag .</code></td><td>cache ছাড়া পুরোপুরি নতুন করে build</td></tr>
+<tr><td><code>docker images</code> / <code>docker image ls</code></td><td>local image তালিকা</td></tr>
+<tr><td><code>docker tag src:tag dst:tag</code></td><td>image-কে নতুন নাম/tag দেওয়া (push-এর আগে দরকার)</td></tr>
+<tr><td><code>docker rmi name:tag</code></td><td>local image মুছুন (<code>-f</code> জোর করে)</td></tr>
+<tr><td><code>docker image prune</code></td><td>dangling (নাম-ছাড়া) image মুছুন</td></tr>
+<tr><td><code>docker image prune -a</code></td><td>কোনো container ব্যবহার করছে না এমন <b>সব</b> image মুছুন</td></tr>
+<tr><td><code>docker history name:tag</code></td><td>image-এর প্রতিটা layer ও তার সাইজ দেখুন</td></tr>
+<tr><td><code>docker inspect name:tag</code></td><td>image-এর metadata (env, entrypoint, layers) — JSON</td></tr>
+<tr><td><code>docker save -o out.tar name:tag</code></td><td>image-কে tar ফাইলে export (offline transfer)</td></tr>
+<tr><td><code>docker load -i out.tar</code></td><td>tar থেকে image আবার import</td></tr>
+</table>
+
+<h3>🚢 Containers — চালানো ও নিয়ন্ত্রণ</h3>
+<table>
+<tr><th>Command</th><th>কাজ</th></tr>
+<tr><td><code>docker run -d -p 8080:8080 --name api myapi:1.0</code></td><td>detached mode-এ চালু (background)</td></tr>
+<tr><td><code>docker run -it ubuntu bash</code></td><td>interactive shell নিয়ে চালু</td></tr>
+<tr><td><code>docker run --rm alpine echo hi</code></td><td>থেমে গেলেই auto-remove (one-off কাজ)</td></tr>
+<tr><td><code>docker ps</code></td><td>চলমান container তালিকা</td></tr>
+<tr><td><code>docker ps -a</code></td><td>সব container (থেমে যাওয়া সহ)</td></tr>
+<tr><td><code>docker stop api</code></td><td>SIGTERM পাঠিয়ে graceful থামানো (grace period পরে SIGKILL)</td></tr>
+<tr><td><code>docker kill api</code></td><td>সাথে সাথেই SIGKILL — জোর করে থামানো</td></tr>
+<tr><td><code>docker start api</code></td><td>থেমে থাকা container আবার চালু</td></tr>
+<tr><td><code>docker restart api</code></td><td>stop + start একসাথে</td></tr>
+<tr><td><code>docker rm api</code></td><td>থেমে থাকা container মুছুন (<code>-f</code> চলমান হলেও জোর করে)</td></tr>
+<tr><td><code>docker rename old new</code></td><td>container-এর নাম বদলান</td></tr>
+<tr><td><code>docker pause</code> / <code>unpause api</code></td><td>process freeze/resume (কাজ বন্ধ না করেই)</td></tr>
+</table>
+
+<h3>🔍 দেখা ও Debug করা</h3>
+<table>
+<tr><th>Command</th><th>কাজ</th></tr>
+<tr><td><code>docker logs -f api</code></td><td>live stdout/stderr (<code>--tail 100</code> দিয়ে শেষ N লাইন)</td></tr>
+<tr><td><code>docker exec -it api sh</code></td><td>চলমান container-এ shell খুলুন (debug-এর প্রধান হাতিয়ার)</td></tr>
+<tr><td><code>docker exec api env</code></td><td>এক-লাইন command চালিয়ে ফলাফল দেখা (shell ছাড়াই)</td></tr>
+<tr><td><code>docker inspect api</code></td><td>IP, mount, env, state — সম্পূর্ণ JSON</td></tr>
+<tr><td><code>docker stats</code></td><td>সব চলমান container-এর live CPU/RAM/network</td></tr>
+<tr><td><code>docker top api</code></td><td>container-এর ভেতরের process তালিকা</td></tr>
+<tr><td><code>docker diff api</code></td><td>image-এর তুলনায় container-এ কী ফাইল বদলেছে</td></tr>
+<tr><td><code>docker cp api:/app/log.txt .</code></td><td>container থেকে host-এ ফাইল কপি (উল্টো দিকেও চলে)</td></tr>
+<tr><td><code>docker port api</code></td><td>কোন container port কোন host port-এ map হয়েছে</td></tr>
+<tr><td><code>docker events</code></td><td>daemon-এর real-time event stream</td></tr>
+</table>
+
+<h3>💾 Volumes</h3>
+<table>
+<tr><th>Command</th><th>কাজ</th></tr>
+<tr><td><code>docker volume create pgdata</code></td><td>named volume তৈরি</td></tr>
+<tr><td><code>docker volume ls</code></td><td>সব volume তালিকা</td></tr>
+<tr><td><code>docker volume inspect pgdata</code></td><td>mountpoint ও driver দেখা</td></tr>
+<tr><td><code>docker volume rm pgdata</code></td><td>volume মুছুন</td></tr>
+<tr><td><code>docker volume prune</code></td><td>ব্যবহার-না-হওয়া সব volume মুছুন</td></tr>
+</table>
+
+<h3>🌐 Networks</h3>
+<table>
+<tr><th>Command</th><th>কাজ</th></tr>
+<tr><td><code>docker network create appnet</code></td><td>user-defined bridge network তৈরি</td></tr>
+<tr><td><code>docker network ls</code></td><td>সব network তালিকা</td></tr>
+<tr><td><code>docker network inspect appnet</code></td><td>subnet, gateway, যুক্ত container দেখা</td></tr>
+<tr><td><code>docker network connect appnet api</code></td><td>চলমান container-কে network-এ যুক্ত করা</td></tr>
+<tr><td><code>docker network disconnect appnet api</code></td><td>বিচ্ছিন্ন করা</td></tr>
+<tr><td><code>docker network rm appnet</code></td><td>network মুছুন</td></tr>
+<tr><td><code>docker network prune</code></td><td>ব্যবহার-না-হওয়া সব network মুছুন</td></tr>
+</table>
+
+<h3>🗄️ Registry — Login, Tag, Push/Pull</h3>
+<table>
+<tr><th>Command</th><th>কাজ</th></tr>
+<tr><td><code>docker login</code></td><td>Docker Hub/registry-তে login</td></tr>
+<tr><td><code>docker pull name:tag</code></td><td>registry থেকে image download</td></tr>
+<tr><td><code>docker push name:tag</code></td><td>registry-তে image upload</td></tr>
+<tr><td><code>docker logout</code></td><td>registry থেকে logout</td></tr>
+</table>
+
+<h3>🧩 Docker Compose</h3>
+<table>
+<tr><th>Command</th><th>কাজ</th></tr>
+<tr><td><code>docker compose up -d</code></td><td>সব service background-এ চালু</td></tr>
+<tr><td><code>docker compose up -d --build</code></td><td>rebuild করে চালু (Dockerfile বদলালে দরকার)</td></tr>
+<tr><td><code>docker compose down</code></td><td>সব service থামিয়ে container/network মুছুন (volume থেকে যায়)</td></tr>
+<tr><td><code>docker compose down -v</code></td><td>একই সাথে named volume-ও মুছুন (⚠ ডেটা হারাবে)</td></tr>
+<tr><td><code>docker compose ps</code></td><td>service-দের status</td></tr>
+<tr><td><code>docker compose logs -f api</code></td><td>নির্দিষ্ট service-এর live log</td></tr>
+<tr><td><code>docker compose exec api sh</code></td><td>service-এর ভেতরে shell</td></tr>
+<tr><td><code>docker compose restart api</code></td><td>একটা service restart</td></tr>
+<tr><td><code>docker compose config</code></td><td>সব file merge হয়ে চূড়ান্ত config কী দাঁড়ালো দেখা</td></tr>
+<tr><td><code>docker compose pull</code></td><td>সব service-এর image latest ভার্সন টানা</td></tr>
+</table>
+
+<h3>🧹 System Cleanup</h3>
+<table>
+<tr><th>Command</th><th>কাজ</th></tr>
+<tr><td><code>docker system df</code></td><td>image/container/volume কতটা disk খাচ্ছে তার সারসংক্ষেপ</td></tr>
+<tr><td><code>docker system prune</code></td><td>থেমে থাকা container + dangling image + অব্যবহৃত network মুছুন</td></tr>
+<tr><td><code>docker system prune -a</code></td><td>+ ব্যবহার-না-হওয়া <b>সব</b> image-ও মুছুন (⚠ বেশি আক্রমণাত্মক)</td></tr>
+<tr><td><code>docker system prune -a --volumes</code></td><td>উপরেরটা + অব্যবহৃত volume-ও (⚠⚠ সবচেয়ে ধ্বংসাত্মক — সাবধান)</td></tr>
+<tr><td><code>docker info</code></td><td>daemon-এর সম্পূর্ণ কনফিগ/সিস্টেম তথ্য</td></tr>
+<tr><td><code>docker version</code></td><td>client ও server (daemon)-এর version</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+<code>docker system prune -a --volumes</code> কোনো confirmation ছাড়াই স্ক্রিপ্টে/cron-এ রাখা — এটা চলমান নয় এমন প্রতিটা image আর volume মুছে দেয়। CI/CD বা automation-এ চালানোর আগে নিশ্চিত হয়ে নিন কোনটা আসলে দরকার নেই।</div>
+
+<h3>📋 এক নজরে — category cheat sheet</h3>
+<pre>docker build -t myapi:1.0 .          docker images
+docker run -d -p 8080:8080 myapi     docker ps        (-a সব)
+docker stop / start / restart api    docker rm api    (-f জোর করে)
+docker logs -f api                   docker rmi img
+docker exec -it api sh               docker pull/push repo:tag
+docker volume ls / prune             docker network ls
+docker system df                     docker system prune -a   (⚠ সব unused মুছবে)
+docker compose up -d / down          docker compose logs -f</pre>
 </template>
 
 <!-- ============================ RENDER ============================ -->
