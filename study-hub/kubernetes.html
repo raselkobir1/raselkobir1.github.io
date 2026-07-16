@@ -120,6 +120,7 @@ const pages = [
   {id:"dotnet",      icon:"💜", title:"ASP.NET Core on Kubernetes"},
   {id:"troubleshoot",icon:"🛠️", title:"Troubleshooting"},
   {id:"cli",         icon:"⌨️", title:"Essential kubectl Commands"},
+  {id:"gitops",      icon:"🚀", title:"GitOps · Argo CD/Flux · CI/CD Tooling"},
 ];
 </script>
 
@@ -263,6 +264,69 @@ Kubernetes object একে অপরকে সরাসরি reference কর�
 <p><span class="kw">Namespace</span> একটা cluster-কে একাধিক ভার্চুয়াল অংশে ভাগ করে — <code>dev</code>, <code>staging</code>, <code>production</code> namespace আলাদা রাখলে নাম সংঘর্ষ এড়ানো যায়, আর RBAC দিয়ে কোন টিম কোন namespace-এ কী করতে পারবে তা সীমিত করা যায়।</p>
 <pre>kubectl get pods -n production      <span class="c"># নির্দিষ্ট namespace-এর Pod দেখা</span>
 kubectl config set-context --current --namespace=dev   <span class="c"># ডিফল্ট namespace বদলানো</span></pre>
+
+<h3>Job — একবার-চালিয়ে-শেষ করা কাজ</h3>
+<p>Deployment-এর Pod সবসময় চলতে থাকার কথা (web server) — কিন্তু database migration, batch report, বা একবারের ডেটা প্রসেসিং-এর মতো কাজ <b>শেষ হয়ে যাওয়াই</b> সফলতার সংজ্ঞা। <span class="kw">Job</span> ঠিক এই ধরনের কাজের জন্য — এটা এক বা একাধিক Pod চালায়, সফলভাবে শেষ (exit code 0) না হওয়া পর্যন্ত পুনরায় চেষ্টা করে, আর শেষ হলে Pod পুনরায় চালায় না।</p>
+<pre>apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+spec:
+  completions: 1                <span class="c"># মোট কতবার সফলভাবে শেষ হতে হবে</span>
+  backoffLimit: 3                <span class="c"># কতবার fail-এর পর হাল ছেড়ে দেবে</span>
+  template:
+    spec:
+      restartPolicy: OnFailure    <span class="c"># Job-এ Always ব্যবহার করা যায় না</span>
+      containers:
+        - name: migrate
+          image: myregistry/myapi:1.4.2
+          command: ["dotnet", "MyApi.dll", "--migrate-only"]</pre>
+<div class="callout mistake"><span class="tag">Common mistake — Job-এ <code>restartPolicy: Always</code> রাখা</span>
+Deployment-এর ডিফল্ট <code>restartPolicy</code> হলো <code>Always</code> — কিন্তু Job-এ এটা ব্যবহার করলে API Server reject করবে, কারণ Job-এর পুরো ধারণাটাই "একবার শেষ হয়ে থামা"। Job-এ শুধু <code>OnFailure</code> (ব্যর্থ হলে পুনরায় চেষ্টা) বা <code>Never</code> (ব্যর্থ Pod রেখেই নতুন Pod তৈরি) ব্যবহারযোগ্য।</div>
+
+<h3>CronJob — নির্দিষ্ট সময়ে বারবার চালানো Job</h3>
+<p><span class="kw">CronJob</span> একটা cron schedule অনুযায়ী স্বয়ংক্রিয়ভাবে নতুন Job তৈরি করে — যেমন প্রতি রাতে একটা report generate করা, বা প্রতি ঘণ্টায় stale data cleanup।</p>
+<pre>apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nightly-report
+spec:
+  schedule: "0 2 * * *"           <span class="c"># প্রতিদিন রাত ২টায় (UTC)</span>
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: report
+              image: myregistry/myapi:1.4.2
+              command: ["dotnet", "MyApi.dll", "--generate-report"]</pre>
+<div class="callout why"><span class="tag">কেন app-এর ভেতরে নিজস্ব scheduler (Hangfire/Quartz) না রেখে CronJob?</span>
+.NET app-এর ভেতরে Hangfire/Quartz দিয়ে scheduling করলে সেই logic app running থাকার ওপর নির্ভরশীল — app স্কেল করলে (৩টা replica) একই কাজ ৩ বার চলার ঝুঁকি থাকে (distributed lock ছাড়া)। CronJob cluster-স্তরে, app-এর lifecycle থেকে আলাদাভাবে, নির্দিষ্ট সময়ে ঠিক একটা Pod চালায় — schedule আর app scaling সম্পূর্ণ আলাদা উদ্বেগ থাকে।</div>
+
+<h3>DaemonSet — প্রতিটা Node-এ ঠিক একটা Pod</h3>
+<p>Deployment-এ আপনি বলেন "মোট N-টা Pod চাই, যেকোনো node-এ" — কিন্তু কিছু কাজ (log shipping, monitoring agent, CNI network plugin) এমন যে <b>প্রতিটা node-এই</b> ঠিক একটা কপি চলতে হবে, node সংখ্যা যতই বাড়ুক/কমুক। <span class="kw">DaemonSet</span> ঠিক এই guarantee দেয় — নতুন node cluster-এ যোগ হলেই, DaemonSet স্বয়ংক্রিয়ভাবে সেখানেও একটা Pod তৈরি করে।</p>
+<pre>apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluent-bit
+spec:
+  selector: { matchLabels: { app: fluent-bit } }
+  template:
+    metadata: { labels: { app: fluent-bit } }
+    spec:
+      containers:
+        - name: fluent-bit
+          image: fluent/fluent-bit:2.2</pre>
+<div class="callout why"><span class="tag">Observability চ্যাপ্টারের সাথে সংযোগ</span>
+পরে Observability চ্যাপ্টারে দেখবেন প্রতিটা node-এ একটা log-shipping DaemonSet চালানোর কথা বলা হয়েছে — এখন বোঝা গেল ঠিক কেন DaemonSet (Deployment নয়): log agent-কে প্রতিটা node-এর local log file/container log-এ access পেতে হয়, তাই node-প্রতি ঠিক একটাই কপি চাই, কম-বেশি নয়।</div>
+<table>
+<tr><th>Workload</th><th>Pod সংখ্যা নির্ধারণ করে</th><th>ব্যবহার</th></tr>
+<tr><td>Deployment</td><td>আপনি নির্দিষ্ট সংখ্যা বলেন (<code>replicas</code>)</td><td>Stateless app (web API)</td></tr>
+<tr><td>StatefulSet</td><td>আপনি নির্দিষ্ট সংখ্যা বলেন, প্রতিটার নিজস্ব পরিচয়/storage-সহ</td><td>Database, distributed system</td></tr>
+<tr><td>DaemonSet</td><td>Cluster নিজেই ঠিক করে — প্রতি node-এ ১টা</td><td>Log agent, monitoring agent, network plugin</td></tr>
+<tr><td>Job / CronJob</td><td>একবার (বা নির্দিষ্ট সময়ে) শেষ হয়ে থেমে যায়</td><td>Migration, batch task, scheduled report</td></tr>
+</table>
 </template>
 
 <template data-page="networking">
@@ -304,6 +368,22 @@ Service তৈরি হলে, প্রতিটা worker node-এর <code>k
 curl http://myapi-svc/orders</pre>
 <div class="callout why"><span class="tag">Docker Compose-এর সাথে মিল</span>
 এটা ঠিক Docker Compose-এর user-defined network DNS-এর মতোই ধারণা (Docker কোর্সে দেখেছেন) — শুধু scale করা হয়েছে পুরো cluster জুড়ে, একাধিক namespace-সহ।</div>
+
+<h3>Headless Service — প্রতিটা Pod-এর নিজস্ব DNS নাম</h3>
+<p>এতক্ষণ যে Service দেখলেন তার DNS নাম একটা <b>একক</b> ভার্চুয়াল IP-তে resolve হয় — কোন আসল Pod-এ ট্রাফিক গেল সেটা kube-proxy ঠিক করে, client জানে না। কিন্তু database cluster-এর মতো ক্ষেত্রে (পরের চ্যাপ্টারে StatefulSet) client-কে নির্দিষ্টভাবে <code>db-0</code>-তেই (primary) সংযোগ দিতে হতে পারে, লোড-ব্যালেন্সড যেকোনো Pod-এ নয়। <code>clusterIP: None</code> সেট করলে Service-টা <span class="kw">headless</span> হয়ে যায় — তখন DNS lookup একটা single virtual IP না দিয়ে, সদস্য প্রতিটা Pod-এর <b>নিজস্ব IP আলাদা আলাদাভাবে</b> ফেরত দেয়, আর StatefulSet-এর Pod-গুলোর প্রতিটার একটা পৃথক, স্থায়ী DNS নামও তৈরি হয়।</p>
+<pre>apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  clusterIP: None                <span class="c"># এটাই headless বানায়</span>
+  selector: { app: postgres }
+  ports: [{ port: 5432 }]</pre>
+<pre><span class="c"># StatefulSet-এর প্রতিটা Pod-এর নিজস্ব resolvable নাম পাওয়া যায়:</span>
+db-0.db.production.svc.cluster.local
+db-1.db.production.svc.cluster.local</pre>
+<div class="callout why"><span class="tag">Storage চ্যাপ্টারের StatefulSet-এর সাথে সংযোগ</span>
+StatefulSet Pod-গুলো ক্রমিক, স্থায়ী নাম পায় (<code>db-0</code>, <code>db-1</code>) তা পরের চ্যাপ্টারে দেখবেন — কিন্তু সেই নাম দিয়ে network-এ আসলে পৌঁছানো সম্ভব হয় একটা headless Service-এর মাধ্যমেই। StatefulSet তৈরি করার সময় <code>serviceName</code> ফিল্ডে একটা headless Service-এর নাম বলে দিতে হয় — এই দুটো একসাথেই "প্রতিটা Pod পৃথকভাবে খুঁজে পাওয়া যায়" এই guarantee তৈরি করে।</div>
 
 <h3>Ingress — HTTP(S)-এর জন্য L7 রাউটিং</h3>
 <p>প্রতিটা Service-এর জন্য আলাদা LoadBalancer (এবং আলাদা cloud cost) তৈরি করা অপচয়। <span class="kw">Ingress</span> একটাই entry point দিয়ে path/host-ভিত্তিক routing দেয় — একাধিক Service-কে একটাই external IP-এর পেছনে রাখে।</p>
@@ -388,6 +468,8 @@ Deployment-এর সব Pod <b>একে অপরের সাথে বিন
 <tr><td>Startup order</td><td>সমান্তরালে, যেকোনো ক্রমে</td><td>ক্রমানুসারে (<code>db-0</code> আগে, তারপর <code>db-1</code>...)</td></tr>
 <tr><td>ব্যবহার</td><td>Stateless app (web API)</td><td>Database, message queue, distributed cache (Redis Cluster, Kafka, PostgreSQL)</td></tr>
 </table>
+<div class="callout behind"><span class="tag">নেটওয়ার্কে পৌঁছানো — <code>serviceName</code> ও Headless Service</span>
+StatefulSet-এর প্রতিটা Pod (<code>db-0</code>, <code>db-1</code>...) এই স্থায়ী নাম দিয়ে network-এ আসলে পৌঁছানো যায় একটা <span class="kw">headless Service</span> (<code>clusterIP: None</code>)-এর মাধ্যমে, যা StatefulSet spec-এর <code>serviceName</code> ফিল্ডে বলে দিতে হয় — বিস্তারিত আগের (Networking) চ্যাপ্টারে দেখুন।</div>
 </template>
 
 <template data-page="config">
@@ -554,6 +636,21 @@ Rolling update-এ নতুন Pod তখনই "রেডি" ধরা হয
 kubectl rollout undo deployment/myapi             <span class="c"># ঠিক আগের revision-এ ফেরা</span>
 kubectl rollout undo deployment/myapi --to-revision=3   <span class="c"># নির্দিষ্ট revision-এ ফেরা</span>
 kubectl rollout status deployment/myapi           <span class="c"># rollout শেষ হয়েছে কিনা দেখা</span></pre>
+
+<h3>PodDisruptionBudget (PDB) — Voluntary Disruption-এর সময় সুরক্ষা</h3>
+<div class="callout why"><span class="tag">Voluntary বনাম Involuntary Disruption</span>
+Pod হারানোর দুই ধরনের কারণ আছে। <b>Involuntary</b> — hardware fail, kernel panic, OOMKilled — এসব ঠেকানো যায় না, শুধু resilient (replica) থাকা যায়। <b>Voluntary</b> — কেউ ইচ্ছাকৃতভাবে node drain করছে (cluster upgrade, node maintenance), বা Cluster Autoscaler node কমাচ্ছে। এই দ্বিতীয় ধরনটা এড়ানো না গেলেও, <b>নিয়ন্ত্রণ</b> করা যায় — PodDisruptionBudget ঠিক এই নিয়ন্ত্রণ দেয়।</div>
+<p><span class="kw">PodDisruptionBudget</span> বলে দেয় voluntary disruption-এর সময় একটা app-এর ন্যূনতম কতগুলো Pod সবসময় available থাকতেই হবে — <code>kubectl drain</code> বা Cluster Autoscaler এই সীমা মেনে চলতে বাধ্য, প্রয়োজনে অপেক্ষা করে বা অন্য node খুঁজে।</p>
+<pre>apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: myapi-pdb
+spec:
+  minAvailable: 2          <span class="c"># অথবা maxUnavailable: 1 — সবসময় অন্তত ২টা Pod available থাকবে</span>
+  selector:
+    matchLabels: { app: myapi }</pre>
+<div class="callout mistake"><span class="tag">Common mistake — PDB ছাড়া multi-node cluster upgrade</span>
+PDB না থাকলে, cluster upgrade-এর সময় একটা node drain করলে Kubernetes সেই node-এর সব Pod একসাথেই সরিয়ে ফেলতে পারে — যদি দুর্ভাগ্যক্রমে একটা app-এর প্রায় সব replica একই node-এ থাকে (podAntiAffinity না থাকলে সম্ভব), পুরো app সাময়িকভাবে downtime-এ পড়তে পারে, যদিও Pod নিজেই সুস্থ ছিল। PDB এই ঝুঁকি থেকে সরাসরি সুরক্ষা দেয়।</div>
 </template>
 
 <template data-page="packaging">
@@ -734,6 +831,25 @@ spec:
   selector: { app: myapi }
   ports: [{ port: 80, targetPort: 8080 }]</pre>
 
+<h3>Configuration — Options Pattern দিয়ে ConfigMap/Secret বাইন্ডিং</h3>
+<p>উপরের YAML-এ <code>envFrom.configMapRef</code> ও <code>secretKeyRef</code> দিয়ে যা ইনজেক্ট হলো, সেগুলো শুধু environment variable — কিন্তু ASP.NET Core-এর configuration system স্বয়ংক্রিয়ভাবেই environment variable একটা configuration provider হিসেবে পড়ে, আর ডাবল-আন্ডারস্কোর (<code>__</code>)-কে nested key-এর কোলন (<code>:</code>)-এর সমতুল্য ধরে।</p>
+<pre><span class="c"># ConfigMap-এ</span>
+data:
+  MyApi__RetryCount: "3"
+  MyApi__TimeoutSeconds: "30"</pre>
+<pre><span class="c">// Program.cs — Options Pattern দিয়ে strongly-typed বাইন্ডিং</span>
+builder.Services.Configure&lt;MyApiOptions&gt;(builder.Configuration.GetSection("MyApi"));
+
+<span class="c">// ব্যবহার — constructor injection-এ IOptions&lt;T&gt;</span>
+public class OrdersService(IOptions&lt;MyApiOptions&gt; options)
+{
+    private readonly MyApiOptions _opts = options.Value;
+}</pre>
+<div class="callout why"><span class="tag">Configuration Precedence — Image একই থেকেও Environment ভিন্ন আচরণ</span>
+ASP.NET Core config source ক্রমানুসারে layer হয়ে ওঠে: <code>appsettings.json</code> (image-এর ভেতরে বেক করা ডিফল্ট) → <code>appsettings.{Environment}.json</code> → <b>environment variable</b> (ConfigMap/Secret এখানেই ইনজেক্ট হয়) → command-line argument — পরের layer আগেরটাকে override করে। এই কারণেই একই container image dev/staging/production-এ ভিন্ন আচরণ করতে পারে — image-এর ভেতরে কিছুই বদলায় না, শুধু বাইরের ConfigMap/Secret বদলায়। ঠিক Config চ্যাপ্টারের সেই "image বদলানো ছাড়াই configure করা" নীতিরই বাস্তবায়ন।</div>
+<div class="callout mistake"><span class="tag">Common mistake — key নাম ভুল করে single underscore বা colon লেখা</span>
+YAML-এ <code>MyApi:RetryCount</code> লিখলে সেটা একটা invalid environment variable নাম (shell/container env var-এ কোলন চলে না) — .NET সেটা আলাদা key হিসেবে পড়বে, nested হবে না। সবসময় ডাবল-আন্ডারস্কোর (<code>__</code>) ব্যবহার করুন — .NET config provider নিজেই সেটাকে কোলনে রূপান্তর করে।</div>
+
 <h3>দুইটা আলাদা Health Endpoint কেন দরকার</h3>
 <p>ASP.NET Core-এর <code>Microsoft.Extensions.Diagnostics.HealthChecks</code> দিয়ে সহজেই দুটো আলাদা endpoint বানানো যায়:</p>
 <pre><span class="c">// Program.cs</span>
@@ -756,6 +872,41 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 <div class="callout mistake"><span class="tag">একটা সূক্ষ্ম কিন্তু গুরুত্বপূর্ণ race condition</span>
 Pod বন্ধ হওয়ার নির্দেশ এলে, Kubernetes <b>একই সাথে</b> দুটো কাজ শুরু করে: (১) Pod-কে Service-এর endpoint তালিকা থেকে সরানো, (২) container-কে SIGTERM পাঠানো। কিন্তু endpoint তালিকা আপডেট cluster-জুড়ে ছড়াতে (kube-proxy পর্যন্ত পৌঁছাতে) কিছুটা সময় লাগে — এই সংক্ষিপ্ত সময়ে নতুন request এখনো সেই Pod-এ আসতে পারে, যদিও সেটা ইতিমধ্যে বন্ধ হওয়ার প্রক্রিয়ায়। <code>preStop</code> hook-এ একটা ছোট <code>sleep</code> (৩-৫ সেকেন্ড) যোগ করলে — SIGTERM পাঠানোর আগে এই সময়টুকু অপেক্ষা করা হয়, যতক্ষণে endpoint তালিকা updates পুরো cluster-এ ছড়িয়ে যায়, নতুন traffic আসা বন্ধ হয় — তারপর আসল graceful shutdown শুরু হয়।</div>
 
+<h3>Graceful Shutdown-এর সম্পূর্ণ Timeline</h3>
+<p>আগের <code>preStop</code> callout-এ endpoint removal বনাম SIGTERM-এর race condition দেখেছেন। পুরো shutdown প্রক্রিয়াটা ধাপে ধাপে দেখা যাক:</p>
+<div class="diagram"><pre>
+Pod delete/scale-down নির্দেশ
+      │
+      ├─▶ (সমান্তরালে) Service endpoint তালিকা থেকে Pod সরানো শুরু
+      │
+      ▼
+preStop hook চলে (sleep 3-5s) — endpoint বাদ ছড়িয়ে যাওয়ার সময় দেয়
+      │
+      ▼
+kubelet container-কে SIGTERM পাঠায়
+      │
+      ▼
+IHostApplicationLifetime.ApplicationStopping ট্রিগার হয়
+      │  ← ইতিমধ্যে চলমান request শেষ হওয়ার সুযোগ পায় (in-flight drain)
+      │  ← নতুন request আসা ইতিমধ্যেই বন্ধ (endpoint সরে গেছে)
+      ▼
+HostOptions.ShutdownTimeout পার হওয়ার আগেই process স্বাভাবিকভাবে exit করলে ভালো
+      │
+      ▼
+terminationGracePeriodSeconds (ডিফল্ট ৩০s) পার হয়ে গেলে kubelet SIGKILL পাঠায় — জোরপূর্বক বন্ধ
+</pre></div>
+<pre><span class="c">// Program.cs</span>
+builder.Services.Configure&lt;HostOptions&gt;(opts =&gt;
+{
+    opts.ShutdownTimeout = TimeSpan.FromSeconds(20);   <span class="c">// terminationGracePeriodSeconds-এর চেয়ে কম রাখুন</span>
+});
+
+var lifetime = app.Services.GetRequiredService&lt;IHostApplicationLifetime&gt;();
+lifetime.ApplicationStopping.Register(() =&gt;
+    logger.LogInformation("SIGTERM পাওয়া গেছে — in-flight request শেষ হওয়ার অপেক্ষায়..."));</pre>
+<div class="callout mistake"><span class="tag">Common mistake — ShutdownTimeout, preStop sleep, আর terminationGracePeriodSeconds-এর হিসাব না মেলানো</span>
+এই তিনটা সংখ্যা একসাথে বাজেট করতে হয়: <code>terminationGracePeriodSeconds</code> (মোট বরাদ্দ সময়) ≥ <code>preStop sleep</code> + <code>ShutdownTimeout</code>। উদাহরণ: <code>terminationGracePeriodSeconds: 30</code>, <code>preStop sleep 5</code>, <code>ShutdownTimeout 20</code> — মোট ২৫s, ৫s বাফার থাকে। এই বাজেট না মেলালে app graceful shutdown শেষ করার আগেই SIGKILL এসে হার্ড-কিল করে দেয় — in-flight request/DB transaction অসম্পূর্ণ অবস্থায় কাটা পড়তে পারে।</div>
+
 <h3>Init Container — App শুরুর আগে Migration</h3>
 <p>Docker কোর্সে দেখা "migration আলাদা করে একবার চালানো" নীতি Kubernetes-এ <span class="kw">initContainer</span> দিয়ে বাস্তবায়িত হয় — মূল container শুরুর আগে সম্পূর্ণ হতেই হবে:</p>
 <pre>spec:
@@ -766,6 +917,105 @@ Pod বন্ধ হওয়ার নির্দেশ এলে, Kubernetes 
   containers:
     - name: myapi
       image: myregistry/myapi:1.4.2</pre>
+
+<h3>Migration Pattern তুলনা — Init Container বনাম Job বনাম Startup Migration</h3>
+<table>
+<tr><th>পদ্ধতি</th><th>কখন চলে</th><th>সুবিধা/ঝুঁকি</th></tr>
+<tr><td>Init Container</td><td>প্রতিটা Pod স্টার্টের আগে (প্রতি replica-তেই)</td><td>সহজ, উপরে দেখানো হয়েছে — কিন্তু rolling update-এ N replica মানে migration N বার চেষ্টা হয় (concurrent) — migration idempotent/lock-সুরক্ষিত না হলে ঝুঁকিপূর্ণ</td></tr>
+<tr><td>আলাদা Job (Helm pre-upgrade hook / Argo CD PreSync)</td><td>Deploy-এর ঠিক আগে, ঠিক একবার</td><td>সবচেয়ে পরিষ্কার — migration আর app scaling সম্পূর্ণ আলাদা; production-এ প্রস্তাবিত পদ্ধতি</td></tr>
+<tr><td>App startup-এ migration (<code>Program.cs</code>-এ সরাসরি)</td><td>প্রতিটা Pod-এর app শুরুর সময়</td><td>দ্রুত prototype/dev-এ সহজ, কিন্তু Init Container-এর মতোই concurrent-migration ঝুঁকি, আর app startup ধীর হয়ে readinessProbe-এ দেরি করাতে পারে</td></tr>
+</table>
+<div class="callout best"><span class="tag">Production সুপারিশ</span>
+EF Core migration নিজেই সাধারণত transaction ও migration-history table দিয়ে idempotent (দ্বিতীয়বার চালালে কিছুই বদলায় না) — তাই Init Container পদ্ধতি ছোট app-এ নিরাপদ। কিন্তু বড় টিমে, Packaging চ্যাপ্টারের Helm hook (<code>helm.sh/hook: pre-upgrade</code>) বা GitOps চ্যাপ্টারের Argo CD <code>PreSync</code> hook দিয়ে migration-কে একটা আলাদা, ঠিক-একবার-চলা Job হিসেবে আলাদা করাই সবচেয়ে নিরাপদ — deploy pipeline নিজেই migration সফল হওয়া নিশ্চিত না হলে rollout এগোয় না।</div>
+
+<h3>GC ও Resource Tuning — Container-এর ভেতরে .NET-এর আচরণ</h3>
+<p>Scheduling চ্যাপ্টারে দেখেছেন <code>limits.memory</code> সরাসরি cgroup memory limit সেট করে, যা .NET-এর GC পড়ে। এখানে গভীরে গিয়ে দেখা যাক ঠিক কী ঘটে।</p>
+<table>
+<tr><th>GC Mode</th><th>আচরণ</th><th>Container-এ কখন উপযুক্ত</th></tr>
+<tr><td><span class="kw">Workstation GC</span></td><td>একটা heap, কম মেমরি ওভারহেড, latency-অগ্রাধিকার</td><td>ছোট resource limit (≤ ১ CPU, কম মেমরি)-ওয়ালা Pod — বেশিরভাগ web API microservice</td></tr>
+<tr><td><span class="kw">Server GC</span></td><td>প্রতি CPU core-এ একটা heap+thread, বেশি throughput কিন্তু বেশি baseline মেমরি ব্যবহার করে</td><td>বেশি CPU বরাদ্দ, throughput-critical workload — কিন্তু ছোট container-এ Pod-প্রতি অপ্রয়োজনীয় মেমরি নষ্ট করতে পারে</td></tr>
+</table>
+<pre><span class="c">&lt;!-- .csproj --&gt;</span>
+&lt;PropertyGroup&gt;
+  &lt;ServerGarbageCollection&gt;false&lt;/ServerGarbageCollection&gt;   <span class="c">&lt;!-- ছোট Pod-এ Workstation GC বেছে নিন --&gt;</span>
+  &lt;ConcurrentGarbageCollection&gt;true&lt;/ConcurrentGarbageCollection&gt;
+&lt;/PropertyGroup&gt;</pre>
+<div class="callout mistake"><span class="tag">Common mistake — .NET-এর auto-detection-কে অন্ধভাবে বিশ্বাস করা</span>
+.NET Core 3.0+ container-এর CPU quota দেখে নিজে থেকেই GC mode বেছে নেয় (১ CPU-এর বেশি থাকলে সাধারণত Server GC)। কিন্তু এই auto-detection সবসময় আপনার actual traffic pattern-এর সাথে মেলে না — অনেক ছোট, বেশি-replica microservice-এ explicit-ভাবে Workstation GC সেট করে, replica সংখ্যা বাড়িয়ে scale করাই বেশি memory-efficient হয়, একটা বড় Server-GC Pod-এর চেয়ে। Load test করে সিদ্ধান্ত নিন, ডিফল্ট অন্ধভাবে মেনে নেবেন না।</div>
+
+<h3>Structured Logging — stdout-এই কেন, আর Pod Metadata কীভাবে জুড়বেন</h3>
+<p>Observability চ্যাপ্টারে দেখেছেন Pod মুছে গেলে ভেতরের ফাইলও হারায় — তাই container-এর ভেতরে log file-এ লেখা (যেমন <code>Serilog.Sinks.File</code>) ভুল পদ্ধতি। সবসময় <b>stdout/stderr</b>-এ লিখুন, node-এর DaemonSet (Fluent Bit) সেটা তুলে কেন্দ্রীয় সিস্টেমে পাঠাবে।</p>
+<pre><span class="c">// Program.cs</span>
+builder.Host.UseSerilog((context, config) =&gt;
+{
+    config.WriteTo.Console(new Serilog.Formatting.Json.JsonFormatter())   <span class="c">// plain text নয়, JSON — Loki/Elasticsearch parse করতে পারে</span>
+          .Enrich.WithProperty("PodName", Environment.GetEnvironmentVariable("POD_NAME"))
+          .Enrich.WithProperty("Namespace", Environment.GetEnvironmentVariable("POD_NAMESPACE"));
+});</pre>
+<div class="callout why"><span class="tag">Config চ্যাপ্টারের Downward API-এর সাথে সরাসরি সংযোগ</span>
+Config চ্যাপ্টারে দেখা <code>POD_NAME</code>/<code>POD_NAMESPACE</code> env var (Downward API দিয়ে ইনজেক্ট করা) এখানে প্রতিটা log line-এ field হিসেবে জুড়ে দেওয়া হচ্ছে। ফলে centralized log system-এ (Loki/Elasticsearch) ঠিক কোন Pod থেকে কোন log এসেছে তা ফিল্টার করা যায় — এমনকি সেই Pod অনেক আগে মুছে গেলেও, কারণ log ইতিমধ্যে কেন্দ্রীয় সিস্টেমে সংরক্ষিত।</div>
+
+<h3>Data Protection API — Multi-replica-তে একটা নীরব বাগ</h3>
+<div class="callout mistake"><span class="tag">সবচেয়ে বেশি অবাক-করা প্রোডাকশন বাগ — replica বাড়ালেই cookie/antiforgery ভাঙে</span>
+ASP.NET Core-এর <b>Data Protection API</b> cookie authentication, antiforgery token, TempData এনক্রিপ্ট করতে ব্যবহৃত হয়। ডিফল্টভাবে এনক্রিপশন key প্রতিটা instance আলাদাভাবে মেমরি/লোকাল ফাইলে রাখে। একটা মাত্র replica-তে (local dev) এটা সমস্যা করে না — কিন্তু ৩টা replica-ওয়ালা Deployment-এ, request Service-এর মাধ্যমে round-robin ভাবে ভিন্ন ভিন্ন Pod-এ যায়। Pod A-এর ইস্যু করা cookie/token Pod B যাচাই করতে পারে না (আলাদা key) — user মাঝে মাঝেই "logged out" হয়ে যায় বা antiforgery validation fail করে, একদম randomly, নির্ভর করে কোন Pod request handle করলো তার ওপর।</div>
+<pre><span class="c">// Program.cs — সব replica একই key শেয়ার করবে</span>
+builder.Services.AddDataProtection()
+    .PersistKeysToStackExchangeRedis(redisConnection, "DataProtection-Keys")
+    .SetApplicationName("MyApi");   <span class="c">// একই app-এর সব replica identical name ব্যবহার করবে</span></pre>
+<div class="callout why"><span class="tag">কেন এটা প্রায়ই দেরিতে ধরা পড়ে</span>
+Local dev-এ ১টা instance, staging-এও হয়তো ১টা replica — তাই বাগটা দেখা যায় না। Production-এ HPA দিয়ে ৩+ replica-তে scale হওয়ার পরই এলোমেলোভাবে দেখা দেয় — precisely যে কারণে এই ডকুমেন্ট শুরু থেকেই বলছে "Pod interchangeable কিন্তু state শেয়ার করে না" ধরে নিয়ে ডিজাইন করুন।</div>
+
+<h3>Distributed Cache ও Session — Sticky Session নেই বলেই দরকার</h3>
+<p>Networking চ্যাপ্টারে দেখেছেন Service ডিফল্টভাবে sticky নয় — প্রতিটা request ভিন্ন Pod-এ যেতে পারে। তাই in-memory <code>IMemoryCache</code> বা in-memory session state ব্যবহার করলে একই user-এর দুই consecutive request দুই ভিন্ন "মেমরি" দেখতে পারে। সমাধান — <span class="kw">IDistributedCache</span>, একটা শেয়ার্ড ব্যাকএন্ডে (সাধারণত Redis) ব্যাক করা:</p>
+<pre><span class="c">// Program.cs</span>
+builder.Services.AddStackExchangeRedisCache(options =&gt;
+{
+    options.Configuration = builder.Configuration["Redis:ConnectionString"];   <span class="c">// redis-svc.production.svc.cluster.local</span>
+});
+builder.Services.AddSession();   <span class="c">// এখন সব replica একই Redis-ব্যাকড session দেখবে</span></pre>
+<div class="callout behind"><span class="tag">Redis নিজে Kubernetes-এ কীভাবে চলে</span>
+Redis নিজেই সাধারণত Storage চ্যাপ্টারের <code>StatefulSet</code> (persistent data, স্থায়ী পরিচয়) দিয়ে, আর Networking চ্যাপ্টারের <code>headless Service</code> দিয়ে (client-side ভাবে সঠিক replica/primary খুঁজে পেতে) deploy করা হয় — এই ডকুমেন্টের প্রায় প্রতিটা আগের ধারণা এখানে একসাথে ব্যবহৃত হচ্ছে।</div>
+
+<h3>Resilience — HttpClientFactory + Polly দিয়ে Service-to-Service কল</h3>
+<p>Networking চ্যাপ্টারে দেখা Service DNS (<code>http://order-svc</code>) দিয়ে অন্য একটা internal API কল করা খুবই সাধারণ — কিন্তু rolling update, Pod restart, বা সাময়িক node সমস্যার সময় একটা কল মাঝেমধ্যে ব্যর্থ হতেই পারে। সরাসরি fail না করে retry/circuit-breaker যোগ করা উচিত:</p>
+<pre><span class="c">// Program.cs (.NET 8+ built-in resilience, Polly-ভিত্তিক)</span>
+builder.Services.AddHttpClient&lt;OrdersClient&gt;(client =&gt;
+{
+    client.BaseAddress = new Uri("http://order-svc");
+})
+.AddStandardResilienceHandler();   <span class="c">// retry + circuit breaker + timeout — ডিফল্ট সেন্সিবল ভ্যালুসহ</span></pre>
+<div class="callout why"><span class="tag">Rolling Update চ্যাপ্টারের readinessProbe-এর সাথে সংযোগ</span>
+Rolling update-এর সময় পুরনো Pod endpoint তালিকা থেকে সরে যাওয়া আর নতুন কিছু client-এর connection pool/DNS cache আপডেট হওয়ার মধ্যে একটা সংক্ষিপ্ত ফাঁক থাকতে পারে (ঠিক preStop hook-এ দেখা race condition-এরই আরেক রূপ, কিন্তু এবার caller-এর দিক থেকে)। একটা ভালো retry policy এই সংক্ষিপ্ত ফাঁকটা user-facing error না বানিয়ে নিঃশব্দে সামলে নেয়।</div>
+
+<h3>Forwarded Headers — Ingress-এর পেছনে সঠিক IP/Scheme জানা</h3>
+<p>Networking চ্যাপ্টারে দেখা Ingress Controller TLS terminate করে, plain HTTP দিয়ে app-এর কাছে request forward করে। App নিজে থেকে দেখলে মনে হবে request scheme <code>http</code> (আসলে client HTTPS ব্যবহার করেছিল), আর client IP মনে হবে Ingress Controller-এর নিজের internal IP (আসল client IP নয়) — এটা secure cookie logic, HTTPS redirect, বা rate-limiting/logging-কে ভুল পথে চালাতে পারে।</p>
+<pre><span class="c">// Program.cs</span>
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});</pre>
+<div class="callout mistake"><span class="tag">Common mistake — শুধু enable করে ফেলা, network trust boundary না ভাবা</span>
+<code>ForwardedHeaders</code> মিডলওয়্যার ডিফল্টভাবে শুধু লোকাল নেটওয়ার্ক থেকে আসা header বিশ্বাস করে — cluster-এর ভেতরের network topology-তে <code>KnownNetworks</code>/<code>KnownProxies</code> ঠিকভাবে সেট না করলে headers বাদ পড়ে যেতে পারে। তবে যেহেতু Security চ্যাপ্টারে দেখা <code>ClusterIP</code> Service সরাসরি বাইরে থেকে অ্যাক্সেসযোগ্য নয় (শুধু Ingress দিয়েই ট্রাফিক ঢোকে), Pod-এ পৌঁছানো প্রতিটা request নিশ্চিতভাবেই Ingress Controller থেকে এসেছে ধরে নেওয়া নিরাপদ — যতক্ষণ না কেউ ভুলে সেই Service-কে <code>NodePort</code>/<code>LoadBalancer</code> দিয়েও সরাসরি বাইরে expose করে ফেলে।</div>
+
+<h3>gRPC on Kubernetes — HTTP/2 ও Load Balancing বিবেচনা</h3>
+<p>gRPC HTTP/2-এর ওপর নির্ভরশীল, আর HTTP/2 connection দীর্ঘ সময় ধরে খোলা থাকে (multiplexed streams)। এর মানে, সাধারণ Service round-robin আসলে <b>connection</b>-স্তরে হয়, প্রতিটা আলাদা RPC call-এ নয় — একবার একটা client একটা Pod-এর সাথে HTTP/2 connection খুললে, সেই connection বন্ধ না হওয়া পর্যন্ত সব RPC সেই একই Pod-এ যেতে থাকে, load ভারসাম্যহীন হয়ে যেতে পারে।</p>
+<table>
+<tr><th>বিবেচ্য বিষয়</th><th>সমাধান</th></tr>
+<tr><td>Ingress Controller HTTP/2 সাপোর্ট করে কিনা</td><td>NGINX Ingress-এ <code>nginx.ingress.kubernetes.io/backend-protocol: "GRPC"</code> annotation প্রয়োজন</td></tr>
+<tr><td>Connection-স্তরে load balancing অসম হওয়া</td><td>Networking চ্যাপ্টারের <b>headless Service</b> ব্যবহার করে client-side load balancing (প্রতিটা RPC-তে নতুন Pod বেছে নেওয়া), অথবা service mesh (Istio/Linkerd) দিয়ে L7-স্তরে সমাধান</td></tr>
+</table>
+
+<h3>Startup Performance — ReadyToRun ও Native AOT</h3>
+<p>Cold start সময় সরাসরি Kubernetes-এর সাথে সম্পর্কিত: নতুন Pod-এর readinessProbe pass করতে যত দেরি, HPA scale-up-এর সময় ততক্ষণ traffic spike-এ user অপেক্ষা করে, rolling update-ও ততই ধীর।</p>
+<pre>dotnet publish -c Release -r linux-x64 -p:PublishReadyToRun=true   <span class="c"># বিল্ড-টাইমে বেশিরভাগ কোড pre-JIT — দ্রুত স্টার্ট, ইমেজ একটু বড়</span>
+dotnet publish -c Release -r linux-x64 -p:PublishAot=true          <span class="c"># সম্পূর্ণ JIT-বিহীন — startup মিলিসেকেন্ডে, ইমেজ সবচেয়ে ছোট</span></pre>
+<div class="callout why"><span class="tag">HPA চ্যাপ্টারের সাথে সরাসরি সম্পর্ক</span>
+Scaling চ্যাপ্টারে HPA দেখেছেন replica সংখ্যা বাড়ানোর সিদ্ধান্ত নেয় — কিন্তু সিদ্ধান্ত নেওয়া আর নতুন capacity আসলে কাজ শুরু করা এক জিনিস নয়। একটা app normal JIT-এ কোল্ড স্টার্টে ১-২ সেকেন্ড নিলে, Native AOT-তে সেটা কয়েক মিলিসেকেন্ডে নেমে আসতে পারে — traffic spike-এর সময় এই পার্থক্যটাই user-facing latency-র বড় অংশ।</div>
+<div class="callout mistake"><span class="tag">Common mistake — সব লাইব্রেরির সাথে AOT compatible ধরে নেওয়া</span>
+Native AOT reflection-নির্ভর কিছু লাইব্রেরি/প্যাটার্ন (কিছু পুরনো AutoMapper/JSON serialization কনফিগারেশন, dynamic proxy-নির্ভর ORM feature)-এর সাথে সরাসরি কাজ নাও করতে পারে। বড় বিদ্যমান app AOT-তে migrate করার আগে অবশ্যই পুরো test suite চালিয়ে যাচাই করুন — শুধু production-এ দেখে বোঝার আগেই।</div>
+
+<h3>Local Development Inner Loop — Real Cluster-এ দ্রুত Iterate করা</h3>
+<p>প্রতিটা ছোট কোড বদলে পুরো image build → push → <code>kubectl apply</code> → Pod restart চক্র চালানো ধীর। <span class="kw">Tilt</span>, <span class="kw">Skaffold</span>, বা <span class="kw">Bridge to Kubernetes</span>/<code>mirrord</code>-এর মতো টুল লোকাল কোড বদল স্বয়ংক্রিয়ভাবে real cluster-এর একটা Pod-এ sync/redirect করে দেয় — আসল Service DNS, আসল dependency (database, অন্য microservice)-সহ, কিন্তু iterate করার গতি প্রায় লোকাল development-এর কাছাকাছি।</p>
 </template>
 
 <template data-page="troubleshoot">
@@ -841,6 +1091,97 @@ kubectl get endpoints <service>        kubectl top pods / nodes
 kubectl config use-context <name>      kubectl config set-context --current --namespace=<ns></pre>
 <div class="callout best"><span class="tag">সংক্ষেপে — পুরো কোর্সের সারাংশ</span>
 সবকিছু declarative — আপনি কাঙ্ক্ষিত অবস্থা ঘোষণা করেন, control loop সেটা বজায় রাখে। Pod ক্ষণস্থায়ী, তাই Deployment/StatefulSet দিয়ে পরিচালনা করুন, কখনো সরাসরি Pod নয়। Service দিয়ে স্থির ঠিকানা, Ingress দিয়ে HTTP routing। readinessProbe/livenessProbe আলাদা রাখুন। resources.requests সবসময় দিন। Secret এনক্রিপ্টেড ভাবা বন্ধ করুন — RBAC ও least privilege দিয়ে সুরক্ষিত করুন।</div>
+</template>
+
+<template data-page="gitops">
+<h2 class="title">১৪. GitOps · Argo CD/Flux · CI/CD Tooling</h2>
+<p class="lead">এই ডকুমেন্ট এতক্ষণ ধরে নিয়েছে <code>kubectl apply</code>/<code>helm upgrade</code> হাতে চালানো হচ্ছে। বাস্তব প্রোডাকশন টিমে deploy করা স্বয়ংক্রিয়, audit-যোগ্য একটা pipeline-এর অংশ হয় — এই চ্যাপ্টার সেই বাস্তব DevOps টুলচেইন নিয়ে।</p>
+
+<h3>GitOps — Git-ই একমাত্র সত্য</h3>
+<div class="callout why"><span class="tag">Push বনাম Pull deployment মডেল</span>
+প্রথাগত CI pipeline (Jenkins/GitHub Actions) নিজেই cluster credential নিয়ে সরাসরি <code>kubectl apply</code>/<code>helm upgrade</code> চালায় — এটা <b>push</b> মডেল: CI-এর হাতে cluster-এ write করার ক্ষমতা থাকে। <span class="kw">GitOps</span> এটা উল্টে দেয় — cluster-এর ভেতরে একটা controller (Argo CD/Flux) ক্রমাগত একটা Git repo (যেখানে YAML/Helm chart/Kustomize overlay-এ কাঙ্ক্ষিত অবস্থা লেখা আছে) পর্যবেক্ষণ করে, আর নিজেই সেটার সাথে cluster-কে মিলিয়ে দেয় — এটা <b>pull</b> মডেল। এটা ঠিক Foundation চ্যাপ্টারের সেই control loop-এর নীতিই — শুধু এবার "কাঙ্ক্ষিত অবস্থা" এক YAML ফাইলে না থেকে একটা পুরো Git repo-তে থাকে।</div>
+<table>
+<tr><th></th><th>Push (traditional CI deploy)</th><th>Pull (GitOps)</th></tr>
+<tr><td>Cluster credential কার হাতে</td><td>CI system-এর হাতে (বাইরের)</td><td>শুধু in-cluster controller-এর হাতে</td></tr>
+<tr><td>সত্যের উৎস</td><td>CI pipeline-এর যা রান হলো তাই</td><td>Git repo — সবসময় দেখা যায় কী deploy হওয়ার কথা</td></tr>
+<tr><td>Drift (কেউ manual <code>kubectl edit</code> করলে)</td><td>ধরা পড়ে না</td><td>পরের sync-এ controller নিজে থেকেই আগের অবস্থায় ফিরিয়ে দেয়</td></tr>
+<tr><td>Rollback</td><td>পুরনো pipeline run খুঁজে আবার চালানো</td><td><code>git revert</code> — Argo CD/Flux বাকিটা করে</td></tr>
+</table>
+
+<h3>Argo CD — সবচেয়ে জনপ্রিয় GitOps টুল</h3>
+<p><span class="kw">Argo CD</span> নিজেই cluster-এর ভেতর চলা একটা Kubernetes controller — একটা <code>Application</code> object দিয়ে বলে দেওয়া হয় কোন Git repo/path পর্যবেক্ষণ করবে, আর কোন cluster/namespace-এ সেটা sync করবে।</p>
+<pre>apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: myapi
+  namespace: argocd
+spec:
+  source:
+    repoURL: https://github.com/mycompany/myapi-manifests.git
+    targetRevision: main
+    path: overlays/production        <span class="c"># Kustomize overlay বা Helm chart path</span>
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+  syncPolicy:
+    automated:
+      prune: true                    <span class="c"># Git থেকে সরানো resource cluster থেকেও মুছে দেবে</span>
+      selfHeal: true                  <span class="c"># manual drift ধরা পড়লেই আবার Git-এর অবস্থায় ফেরাবে</span></pre>
+<div class="callout best"><span class="tag">Argo CD-এর UI যা দেখায়</span>
+Argo CD-এর dashboard প্রতিটা <code>Application</code>-এর জন্য দুটো অবস্থা পাশাপাশি দেখায়: <b>Synced</b>/<b>OutOfSync</b> (Git বনাম live cluster মিলছে কিনা) আর <b>Healthy</b>/<b>Degraded</b> (Deployment/Pod আসলে সুস্থভাবে চলছে কিনা)। কোনো deploy আটকে গেলে ঠিক কোন resource-এ কী পার্থক্য আছে তা visually diff হিসেবে দেখা যায় — <code>kubectl diff</code>-এর মতোই, কিন্তু পুরো app-এর জন্য একসাথে।</div>
+
+<h3>Flux — বিকল্প GitOps টুল</h3>
+<p><span class="kw">Flux</span> একই GitOps দর্শন অনুসরণ করে, তবে হালকা, পুরোপুরি CLI/CRD-চালিত (আলাদা ভারী UI ছাড়া), আর Helm/Kustomize-এর সাথে নেটিভভাবে বেশি গভীরভাবে যুক্ত। দুটোর মধ্যে choice মূলত টিমের পছন্দ — দুটোই একই সমস্যা সমাধান করে।</p>
+
+<h3>CI বনাম CD — আলাদা দুই দায়িত্ব</h3>
+<div class="callout behind"><span class="tag">GitOps pipeline-এ আসলে কী ঘটে</span>
+১) Developer কোড push করে। ২) CI (GitHub Actions/Jenkins) — build, test, নতুন image tag build করে registry-তে push করে। ৩) CI তারপর <b>শুধু</b> manifest repo-তে image tag বদলে একটা commit করে (cluster স্পর্শ করে না)। ৪) Argo CD/Flux সেই commit দেখে, নতুন tag-সহ Deployment cluster-এ apply করে। এভাবে "কোড বিল্ড করা" (CI) আর "cluster বদলানো" (CD) সম্পূর্ণ আলাদা সিস্টেম, আলাদা credential — CI pipeline compromise হলেও সরাসরি cluster-এ write করার ক্ষমতা তার হাতে থাকে না।</div>
+
+<h3>Secrets — GitOps-এ Base64 Secret আর যথেষ্ট নয়</h3>
+<p>যেহেতু GitOps-এ <b>সবকিছুই</b> Git-এ থাকে, Config চ্যাপ্টারে দেখা base64-encoded Secret সরাসরি commit করা মানেই পুরো secret leak — Git history থেকে চিরকালের জন্য মুছে ফেলাও কঠিন। দুটো সাধারণ সমাধান:</p>
+<table>
+<tr><th>টুল</th><th>পদ্ধতি</th></tr>
+<tr><td><span class="kw">Sealed Secrets</span> (Bitnami)</td><td>Secret-কে client-side asymmetric key দিয়ে এনক্রিপ্ট করে একটা <code>SealedSecret</code> object বানানো হয় — এনক্রিপ্টেড ব্লবটাই Git-এ commit করা নিরাপদ, শুধু cluster-এর ভেতরের controller-ই সেটা decrypt করতে পারে</td></tr>
+<tr><td><span class="kw">External Secrets Operator</span></td><td>Git-এ শুধু একটা <b>reference</b> থাকে (কোন Vault/AWS Secrets Manager/Azure Key Vault পাথ থেকে আনতে হবে) — আসল মান কখনো Git-এ যায় না, controller লাইভ external store থেকে টেনে এনে একটা সাধারণ Kubernetes Secret বানিয়ে দেয়</td></tr>
+</table>
+
+<h3>Policy Enforcement — নিয়ম মানুষ মনে রাখা নয়, cluster বাধ্য করা</h3>
+<p>এই ডকুমেন্টের বিভিন্ন চ্যাপ্টারে "Common mistake" callout-এ যেসব ভুল এড়াতে বলা হয়েছে (resources.requests না দেওয়া, root user-এ চালানো, <code>:latest</code> tag ব্যবহার) — সেগুলো মানুষ মনে রাখার বদলে <span class="kw">admission policy</span> দিয়ে cluster-স্তরেই বাধ্যতামূলক করা যায়:</p>
+<table>
+<tr><th>টুল</th><th>কাজ</th></tr>
+<tr><td><span class="kw">OPA Gatekeeper</span></td><td>Open Policy Agent-ভিত্তিক — Rego ভাষায় নীতি লিখে, নিয়ম-বহির্ভূত resource তৈরির চেষ্টা হলেই admission webhook সেটা reject করে</td></tr>
+<tr><td><span class="kw">Kyverno</span></td><td>একই কাজ, কিন্তু নীতি plain YAML-এ লেখা যায় (আলাদা ভাষা শেখার দরকার নেই) — Kubernetes টিমের কাছে সাধারণত সহজবোধ্য</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Policy না থাকলে কী হয়</span>
+Policy engine ছাড়া, "resources.requests সবসময় দিন" শুধুই একটা code-review checklist আইটেম — কেউ ভুলে গেলে বা তাড়াহুড়ায় বাদ দিলে, সেই Pod cluster-এ ঢুকে যায় ধরা ছাড়াই, আর Scheduling চ্যাপ্টারে দেখা BestEffort QoS সমস্যা তখন প্রোডাকশনে ধরা পড়ে। Gatekeeper/Kyverno policy থাকলে এমন Deployment API Server-স্তরেই reject হয়ে যায়, deploy হওয়ার আগেই।</div>
+
+<h3>Infrastructure as Code — Cluster নিজেই কীভাবে তৈরি হয়</h3>
+<p>এই পুরো ডকুমেন্ট ধরে নিয়েছে cluster-টা ইতিমধ্যে আছে। বাস্তবে cluster, node pool, load balancer, database-এর মতো cloud resource নিজেই <span class="kw">Terraform</span> (বা Pulumi) দিয়ে declaratively সংজ্ঞায়িত ও তৈরি হয় — ঠিক Kubernetes YAML-এর মতোই declarative, কিন্তু এক স্তর নিচে (Kubernetes-এর <b>ভেতরের</b> resource নয়, Kubernetes <b>যার উপর চলে</b> সেই infrastructure)।</p>
+
+<h3>সম্পূর্ণ Toolchain — একসাথে সাজিয়ে দেখা</h3>
+<div class="diagram"><pre>
+Developer কোড push করে
+      │
+      ▼
+CI (GitHub Actions)  ── build/test/push image ──▶ Container Registry
+      │
+      └── manifest repo-তে নতুন image tag commit করে (cluster ছোঁয় না)
+                              │
+                              ▼
+                    Argo CD / Flux (in-cluster)
+                    Git দেখে, cluster-এর সাথে diff করে, sync করে
+                              │
+                              ▼
+                         Kubernetes Cluster
+              (Terraform দিয়ে provision করা, Kyverno policy-সুরক্ষিত,
+               External Secrets দিয়ে secret injected)
+                              │
+                              ▼
+              Prometheus/Grafana + Loki + OpenTelemetry
+                     (Observability চ্যাপ্টারের টুল দিয়ে monitor)
+</pre></div>
+<div class="callout best"><span class="tag">এই চ্যাপ্টারের সারাংশ</span>
+GitOps মূলত Foundation চ্যাপ্টারের সেই মূল নীতিরই সম্প্রসারণ — declarative state + reconciliation loop — শুধু "state" এখন একটা Git repo, আর "reconciler" এখন Argo CD/Flux। বাকি সব টুল (Terraform, Sealed Secrets/External Secrets, Kyverno, Prometheus stack) একেকটা নির্দিষ্ট উদ্বেগ (infrastructure, secret, policy, observability)-কে এই একই declarative মডেলে নিয়ে আসে।</div>
 </template>
 
 <!-- ============================ RENDER ============================ -->
