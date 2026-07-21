@@ -112,6 +112,7 @@ const pages = [
   {id:"tokenization", icon:"🔤", title:"Tokenization ও Context Window"},
   {id:"prompting",    icon:"✍️", title:"Prompt Engineering Fundamentals"},
   {id:"advprompting", icon:"🧩", title:"Advanced Prompting ও Reasoning Pattern"},
+  {id:"contextengineering", icon:"🗃️", title:"Context Engineering — Context Window সাজানো"},
   {id:"embeddings",   icon:"📐", title:"Embeddings ও Semantic Similarity"},
   {id:"vectordb",     icon:"🗂️", title:"Vector Database ও Retrieval"},
   {id:"rag",          icon:"📚", title:"RAG — Retrieval-Augmented Generation"},
@@ -345,8 +346,66 @@ Final Answer: বর্তমানে ১ ডলার সমান ১১৯.�
 "এই ডকুমেন্ট পড়ো, সারমর্ম করো, ৫টা প্রশ্ন বানাও, sentiment বের করো, আর JSON-এ ফেরত দাও" — একসাথে এতগুলো ভিন্ন কাজ একটা prompt-এ দিলে মডেল প্রায়ই একটা অংশ ভুলে যায় বা মান কমে যায়। প্রতিটা sub-task আলাদা, focused call-এ ভেঙে নিলে প্রতিটার output গুণমান স্বতন্ত্রভাবে বাড়ানো ও পরীক্ষা করা যায়।</div>
 </template>
 
+<template data-page="contextengineering">
+<h2 class="title">৬. Context Engineering — Context Window সাজানো</h2>
+<p class="lead">Prompt engineering একটা <b>একক request</b>-এর শব্দ চয়ন নিয়ে ভাবে। কিন্তু একটা বাস্তব agent বা multi-turn application-এ প্রশ্ন অনেক বড় হয়ে যায়: প্রতিটা call-এ ঠিক কোন কোন তথ্য — system prompt, tool definition, conversation history, retrieved document — পাঠানো হবে, আর কোনটা বাদ দেওয়া হবে? এই সামগ্রিক কিউরেশনকে বলা হয় <span class="kw">context engineering</span> — এটা prompt engineering-এর একটা superset, এবং RAG, tool calling, agent-এর মতো পরের প্রতিটা অধ্যায়ের ভিত্তি।</p>
+
+<h3>Context Window একটা সসীম, ক্রমাগত অবনতিশীল সম্পদ</h3>
+<p>স্বজ্ঞাতভাবে মনে হতে পারে "যত বেশি প্রাসঙ্গিক তথ্য context-এ দেওয়া যায় তত ভালো" — কিন্তু বাস্তবে তা নয়। Context window যত ভরে ওঠে, মডেলের পক্ষে সবচেয়ে গুরুত্বপূর্ণ অংশে মনোযোগ ধরে রাখা তত কঠিন হয় (Tokenization অধ্যায়ে উল্লেখিত "lost in the middle" সমস্যা), আর অপ্রাসঙ্গিক/পুরনো তথ্য মডেলকে বিভ্রান্ত করতে পারে — একে বলা হয় <span class="kw">context rot</span>। তাই লক্ষ্য শুধু "সব তথ্য ঢুকিয়ে দেওয়া" নয়, বরং প্রতিটা মুহূর্তে কাজের জন্য ঠিক যতটুকু দরকার ততটুকুই, সবচেয়ে প্রাসঙ্গিক আকারে দেওয়া।</p>
+<div class="callout why"><span class="tag">কেন "বেশি tool/document দিলে ক্ষতি নেই" ভুল ধারণা</span>
+একটা agent-কে ৫০টা tool একসাথে দিলে, প্রতিটা tool-এর নাম/বিবরণ context-এ জায়গা নেয়, আর মডেলের পক্ষে সঠিক tool বাছাই করা কঠিন হয়ে যায় (অনেকগুলো একই-রকম বিকল্পের মধ্যে গুলিয়ে ফেলা)। একইভাবে conversation history-তে পুরনো, এখন-অপ্রাসঙ্গিক tool result জমতে থাকলে সেগুলো নতুন সিদ্ধান্তে "শব্দ-দূষণ" (noise) হিসেবে কাজ করে। কম কিন্তু সুনির্বাচিত tool/context প্রায়ই বেশি কিন্তু অপ্রাসঙ্গিক তথ্যের চেয়ে ভালো ফল দেয়।</div>
+
+<h3>Context-এর চারটা মূল উপাদান</h3>
+<table>
+<tr><th>উপাদান</th><th>ভূমিকা</th><th>Engineering বিবেচনা</th></tr>
+<tr><td><span class="kw">System Prompt/Instructions</span></td><td>মডেলের আচরণ, persona, নিয়মাবলী</td><td>"সঠিক উচ্চতা" (right altitude) — খুব অস্পষ্ট না, আবার প্রতিটা edge case-এর জন্য ভঙ্গুর if-else নিয়মের তালিকাও না</td></tr>
+<tr><td>Tools/Tool Definitions</td><td>মডেল কোন action নিতে পারে তার schema</td><td>শুধু বর্তমান টাস্কের জন্য প্রাসঙ্গিক tool-ই expose করা, প্রতিটা বিবরণ স্পষ্ট ও একে অপর থেকে স্পষ্টভাবে আলাদা</td></tr>
+<tr><td>Message History</td><td>এখন পর্যন্ত conversation ও tool result</td><td>পুরনো/বড় tool output compact/summarize করা, প্রাসঙ্গিকতা হারানো অংশ ছেঁটে ফেলা</td></tr>
+<tr><td>Retrieved Knowledge (RAG)</td><td>External/private জ্ঞান</td><td>শুধু top-প্রাসঙ্গিক chunk, ভালো chunking ও reranking (RAG অধ্যায়ে বিস্তারিত)</td></tr>
+</table>
+
+<h3>System Prompt-এর "Right Altitude" — না খুব অস্পষ্ট, না খুব ভঙ্গুর</h3>
+<p>একটা ভালো system prompt একদম শুরুতে সাধারণ উচ্চ-স্তরের নির্দেশনা দিয়ে শুরু করে, তারপর প্রয়োজনমতো নির্দিষ্ট heuristic ও কংক্রিট উদাহরণ যোগ করে — প্রতিটা সম্ভাব্য পরিস্থিতির জন্য আলাদা নিয়ম গণনা করার চেষ্টা করে না।</p>
+<div class="callout mistake"><span class="tag">Common mistake — system prompt-কে "if-else-এর তালিকা" বানানো</span>
+"যদি ব্যবহারকারী X বলে তাহলে Y করো, যদি Z বলে তাহলে W করো..." — এভাবে শত শত নির্দিষ্ট নিয়ম জমা করা system prompt বাস্তবে ভঙ্গুর (brittle): নতুন, অদেখা পরিস্থিতিতে মডেল কী করবে অনির্ধারিত থেকে যায়, আর prompt maintain করা ক্রমশ কঠিন হয়ে ওঠে। এর বদলে সাধারণ নীতি ("সবসময় সংক্ষিপ্ত বাংলায় উত্তর দাও, অনিশ্চিত হলে স্পষ্টীকরণ প্রশ্ন করো") আর ২-৩টা প্রতিনিধিত্বমূলক উদাহরণ (few-shot) দিয়ে মডেলকে নিজে সাধারণীকরণ করতে দেওয়া বেশি নির্ভরযোগ্য।</div>
+
+<h3>Just-in-Time Context বনাম Upfront Context</h3>
+<p>সব সম্ভাব্য প্রাসঙ্গিক তথ্য আগে থেকেই একবারে prompt-এ ভরে দেওয়া যায় (<span class="kw">upfront/precomputed context</span>) — সহজ ও predictable, কিন্তু নষ্ট token বেশি (যা লাগবেই না তাও পাঠানো) আর ডেটা হালনাগাদ না-ও থাকতে পারে। বিকল্প হলো <span class="kw">just-in-time context</span> — agent-কে শুধু হালকা identifier/reference (যেমন একটা ফাইলের পাথ, একটা order ID) দিয়ে দেওয়া, আর দরকার হলে সে নিজেই একটা tool call করে প্রকৃত তথ্য টেনে আনে।</p>
+<div class="diagram"><pre>
+Upfront context:                          Just-in-time context:
+──────────────────────────                ──────────────────────────
+সব ৫০টা ফাইলের পুরো কন্টেন্ট              শুধু ফাইলের তালিকা/পাথ দেওয়া হয়
+prompt-এ আগে থেকেই ঢুকিয়ে দেওয়া           agent দরকার হলে read_file(path)
+                                            tool call করে সেটাই পড়ে
+
+→ বেশি token, স্থবির ডেটা                 → কম token, সবসময় আপ-টু-ডেট,
+                                             কিন্তু extra round-trip lag
+</pre></div>
+<div class="callout why"><span class="tag">মানুষের সাথে তুলনা</span>
+একজন মানুষ কর্মী কখনো পুরো কোম্পানির ফাইল সিস্টেম মুখস্থ রাখে না — বরং প্রয়োজন হলে সঠিক ফোল্ডার খুঁজে খুলে দেখে। Just-in-time context ঠিক এই আচরণ মডেল করে — agent-কে একটা "সবকিছু জানা" সত্তা বানানোর চেষ্টার বদলে, দরকারমতো সঠিক তথ্য খুঁজে নেওয়ার ক্ষমতা (tool access) দেওয়া হয়। বাস্তবে বেশিরভাগ production agent দুটোরই মিশ্রণ ব্যবহার করে — খুব ঘন ঘন লাগা ছোট তথ্য upfront, বিরল/বড় তথ্য just-in-time।</div>
+
+<h3>দীর্ঘ-চলমান Agent-এ Context Compaction</h3>
+<p>একটা agent যত বেশি ধাপ (iteration) চালায়, তার message history তত বড় হতে থাকে — একসময় context window পূর্ণ হয়ে যাওয়ার ঝুঁকি তৈরি হয়। এর দুইটা সাধারণ সমাধান:</p>
+<ul>
+<li><b>Summarization/Compaction:</b> পুরনো conversation turn/tool result-কে periodically একটা সংক্ষিপ্ত সারমর্মে রূপান্তর করে, বিস্তারিত মূল টেক্সট বাদ দিয়ে দেওয়া।</li>
+<li><b>Sub-agent isolation:</b> একটা বড় sub-task একটা আলাদা sub-agent-কে দেওয়া হয়, যে নিজের আলাদা, পরিষ্কার context-এ কাজ করে এবং শুধু চূড়ান্ত সারমর্ম প্রধান agent-কে ফেরত দেয় — মূল agent-এর context-এ সেই sub-task-এর সব খুঁটিনাটি (intermediate tool call, ভুল চেষ্টা) কখনো ঢোকেই না (Multi-Agent অধ্যায়ে বিস্তারিত)।</li>
+</ul>
+<div class="callout mistake"><span class="tag">Common mistake — বিশাল raw tool output সরাসরি context-এ রেখে দেওয়া</span>
+একটা API call যদি হাজার লাইনের JSON ফেরত দেয়, সেই পুরো output অপরিবর্তিতভাবে conversation history-তে রেখে দিলে প্রতিটা পরবর্তী LLM call-এ সেই বিশাল ব্লক আবার পাঠাতে হয় — cost ও latency অকারণে বাড়ে, আর মডেলের attention সেই "শব্দ-দূষণ"-এ ভাগ হয়ে যায়। এর বদলে tool-এর wrapper code-এই ফলাফল থেকে শুধু প্রাসঙ্গিক অংশ extract/summarize করে (অথবা একটা সংক্ষিপ্ত reference/ID রেখে, ফাইলে পূর্ণ ডেটা সংরক্ষণ করে) context-এ যোগ করা উচিত।</div>
+
+<h3>ব্যবহারিক নির্দেশনা — Claude বা যেকোনো Agent-কে ভালো Context কীভাবে দেবেন</h3>
+<div class="grid2">
+  <div class="box"><b>নির্দিষ্ট থাকুন, কিন্তু ভঙ্গুর নয়</b><br>স্পষ্ট লক্ষ্য ও সীমা বলুন, কিন্তু প্রতিটা সিদ্ধান্ত নিজে হাতে না লিখে মডেলকে সাধারণীকরণের সুযোগ দিন।</div>
+  <div class="box"><b>"কী" নয়, "কেন"-ও বলুন</b><br>একটা নিয়মের পেছনের কারণ ব্যাখ্যা করলে মডেল অদেখা পরিস্থিতিতেও সেই নিয়তের সাথে সামঞ্জস্যপূর্ণ সিদ্ধান্ত নিতে পারে।</div>
+  <div class="box"><b>Delimiter দিয়ে গঠন স্পষ্ট রাখুন</b><br>Instruction, data, tool output, history — প্রতিটাকে স্পষ্টভাবে আলাদা রাখুন (Prompting অধ্যায়ে বর্ণিত)।</div>
+  <div class="box"><b>Tool result কিউরেট করুন</b><br>Raw output সরাসরি ফেরত না দিয়ে, শুধু প্রাসঙ্গিক অংশ ফরম্যাট করে দিন — কম কিন্তু প্রাসঙ্গিক সবসময় বেশি কিন্তু raw-এর চেয়ে ভালো।</div>
+  <div class="box"><b>নিয়মিত ছাঁটাই করুন</b><br>লম্বা session-এ পুরনো, এখন-অপ্রাসঙ্গিক history/tool result সরিয়ে ফেলুন বা সংক্ষেপ করুন।</div>
+  <div class="box"><b>বাস্তব-স্কেলে টেস্ট করুন</b><br>একটা ছোট demo prompt-এ ভালো কাজ করলেও, বাস্তব দীর্ঘ session/বড় context-এ একই আচরণ থাকবে তার নিশ্চয়তা নেই — evaluation-এ (পরে বিস্তারিত) দীর্ঘ, বাস্তবসম্মত scenario অন্তর্ভুক্ত করুন।</div>
+</div>
+</template>
+
 <template data-page="embeddings">
-<h2 class="title">৬. Embeddings ও Semantic Similarity</h2>
+<h2 class="title">৭. Embeddings ও Semantic Similarity</h2>
 <p class="lead">Embedding হলো AI Engineering-এর দ্বিতীয় মূল স্তম্ভ (প্রথমটা text generation) — এটা টেক্সটের "অর্থ"-কে সংখ্যায় রূপান্তর করে, যা দিয়ে semantic search, RAG, clustering, recommendation বানানো যায়।</p>
 
 <h3>Embedding আসলে কী</h3>
@@ -386,7 +445,7 @@ def cosine_similarity(a, b):
 </template>
 
 <template data-page="vectordb">
-<h2 class="title">৭. Vector Database ও Retrieval</h2>
+<h2 class="title">৮. Vector Database ও Retrieval</h2>
 <p class="lead">লাখো embedding-এর মধ্যে থেকে প্রতি query-তে সবচেয়ে কাছেরগুলো মিলিসেকেন্ডে খুঁজে বের করা একটা আলাদা ইঞ্জিনিয়ারিং সমস্যা — এখানেই vector database-এর ভূমিকা।</p>
 
 <h3>কেন Brute-Force যথেষ্ট নয়</h3>
@@ -432,7 +491,7 @@ LIMIT 5;</pre>
 </template>
 
 <template data-page="rag">
-<h2 class="title">৮. RAG — Retrieval-Augmented Generation</h2>
+<h2 class="title">৯. RAG — Retrieval-Augmented Generation</h2>
 <p class="lead">RAG হলো আজকের AI Engineering-এর সবচেয়ে ব্যবহৃত প্যাটার্ন — LLM-কে তার training data-র বাইরের, হালনাগাদ, বা প্রাইভেট জ্ঞান দিয়ে উত্তর দিতে সক্ষম করা, fine-tuning ছাড়াই।</p>
 
 <h3>সমস্যা — কেন RAG দরকার</h3>
@@ -504,7 +563,7 @@ Context-এ উত্তর না থাকলেও LLM প্রায়ই 
 </template>
 
 <template data-page="toolcalling">
-<h2 class="title">৯. Function/Tool Calling ও Structured Output</h2>
+<h2 class="title">১০. Function/Tool Calling ও Structured Output</h2>
 <p class="lead">LLM নিজে থেকে ডাটাবেস query করতে পারে না, API call করতে পারে না, বা real-time ডেটা আনতে পারে না। <span class="kw">Tool calling</span> এই সীমাবদ্ধতা ভাঙে — মডেলকে "কোন ফাংশন কল করা উচিত ও কী argument দিয়ে" তা বলার ক্ষমতা দিয়ে, বাস্তবায়ন আপনার code-এ রেখে।</p>
 
 <h3>কীভাবে কাজ করে — মডেল কখনো সরাসরি কোড চালায় না</h3>
@@ -560,7 +619,7 @@ while (true) {
 </template>
 
 <template data-page="agents">
-<h2 class="title">১০. AI Agents ও Agentic Workflow</h2>
+<h2 class="title">১১. AI Agents ও Agentic Workflow</h2>
 <p class="lead">যখন একটা LLM নিজে থেকে একাধিক ধাপে চিন্তা করে, tool ব্যবহার করে, ফলাফল দেখে পরবর্তী পদক্ষেপ ঠিক করে — মানুষ প্রতিটা ধাপে হস্তক্ষেপ না করেই — তখন সেটাকে একটা <span class="kw">AI Agent</span> বলা হয়।</p>
 
 <h3>Agent বনাম সাধারণ LLM Call — মূল পার্থক্য</h3>
@@ -605,7 +664,7 @@ while (true) {
 </template>
 
 <template data-page="multiagent">
-<h2 class="title">১১. Multi-Agent System ও Orchestration</h2>
+<h2 class="title">১২. Multi-Agent System ও Orchestration</h2>
 <p class="lead">একটা একক agent যখন খুব বেশি দায়িত্ব সামলাতে গিয়ে বিভ্রান্ত হয়ে যায়, তখন কাজটাকে ভাগ করে একাধিক বিশেষায়িত agent-এর মধ্যে সমন্বয় করাটাই যুক্তিসঙ্গত হয়ে ওঠে।</p>
 
 <h3>কেন একটা Single Agent সবসময় যথেষ্ট নয়</h3>
@@ -642,7 +701,7 @@ Agent loop, tool-call parsing, retry, state management — এগুলো ন�
 </template>
 
 <template data-page="finetuning">
-<h2 class="title">১২. Fine-tuning বনাম RAG বনাম Prompting</h2>
+<h2 class="title">১৩. Fine-tuning বনাম RAG বনাম Prompting</h2>
 <p class="lead">AI Engineering-এ সবচেয়ে বেশি ভুল হওয়া সিদ্ধান্তগুলোর একটা: "মডেলকে আমার ডেটা শেখানোর জন্য fine-tune করব"। বেশিরভাগ ক্ষেত্রেই এটা ভুল টুল বাছাই।</p>
 
 <h3>তিনটা পদ্ধতির মূল পার্থক্য</h3>
@@ -677,7 +736,7 @@ Fine-tuning মূলত মডেলকে <b>নতুন প্যাটা�
 </template>
 
 <template data-page="evaluation">
-<h2 class="title">১৩. Evaluation ও Testing — LLM App Quality</h2>
+<h2 class="title">১৪. Evaluation ও Testing — LLM App Quality</h2>
 <p class="lead">একটা প্রথাগত software-এ unit test-এর input/output নির্দিষ্ট (deterministic)। একটা LLM feature-এ output প্রতিবার সামান্য বদলাতে পারে — তাই "কীভাবে টেস্ট করব" প্রশ্নটার উত্তর ভিন্নভাবে ভাবতে হয়।</p>
 
 <h3>Offline Evaluation — Golden Dataset দিয়ে</h3>
@@ -717,7 +776,7 @@ Fine-tuning মূলত মডেলকে <b>নতুন প্যাটা�
 </template>
 
 <template data-page="safety">
-<h2 class="title">১৪. Safety, Security ও Guardrails</h2>
+<h2 class="title">১৫. Safety, Security ও Guardrails</h2>
 <p class="lead">LLM-চালিত ফিচার প্রথাগত software-এর তুলনায় নতুন ধরনের আক্রমণ-তল (attack surface) খুলে দেয় — কারণ ইনপুট নিজেই "কোড"-এর মতো আচরণ প্রভাবিত করতে পারে। OWASP-এর LLM Top 10 এই ঝুঁকিগুলো ক্যাটাগরি করে।</p>
 
 <h3>OWASP Top 10 for LLM Applications (সংক্ষিপ্ত)</h3>
@@ -753,7 +812,7 @@ Fine-tuning মূলত মডেলকে <b>নতুন প্যাটা�
 </template>
 
 <template data-page="production">
-<h2 class="title">১৫. Production Engineering — Latency, Cost, Caching</h2>
+<h2 class="title">১৬. Production Engineering — Latency, Cost, Caching</h2>
 <p class="lead">একটা LLM feature demo-তে ভালো কাজ করা আর হাজার হাজার ব্যবহারকারীর জন্য সাশ্রয়ী, দ্রুত, নির্ভরযোগ্যভাবে চালানো — দুইটা সম্পূর্ণ আলাদা চ্যালেঞ্জ।</p>
 
 <h3>Streaming — কেন perceived latency আসল latency-এর চেয়ে গুরুত্বপূর্ণ</h3>
@@ -794,7 +853,7 @@ builder.Services.AddHttpClient&lt;IChatCompletionService, OpenAiChatService&gt;(
 </template>
 
 <template data-page="integration">
-<h2 class="title">১৬. Backend/.NET Integration — বাস্তবে AI Feature বসানো</h2>
+<h2 class="title">১৭. Backend/.NET Integration — বাস্তবে AI Feature বসানো</h2>
 <p class="lead">এখন পর্যন্ত শেখা সব ধারণা একটা বাস্তব ব্যাকএন্ড architecture-এ কীভাবে বসে — এই অধ্যায়ে সেটাই সংযুক্ত করা হবে, .NET-কেন্দ্রিক দৃষ্টিভঙ্গিতে।</p>
 
 <h3>Architecture Pattern — কখনো Frontend থেকে সরাসরি নয়</h3>
@@ -853,7 +912,7 @@ API key কখনো <code>appsettings.json</code>-এ commit করবেন �
 <p>প্রতিটা unit test-এ আসল LLM API call করা ধীর, ব্যয়বহুল, এবং flaky (output প্রতিবার বদলাতে পারে)। এর বদলে <code>IChatCompletionService</code> interface-টা mock করে বিজনেস লজিক (যেমন "AI response থেকে সঠিক field extract হচ্ছে কিনা") deterministic ভাবে টেস্ট করুন। প্রকৃত prompt quality/model behavior টেস্ট করার জন্য আলাদা, কম ঘনঘন চলা eval suite রাখুন (Evaluation অধ্যায়ে বর্ণিত golden dataset পদ্ধতিতে) — এই দুই স্তরের টেস্টিং একে অপরের বিকল্প নয়, পরিপূরক।</p>
 
 <h3>সবকিছু একসাথে — একটা এন্ড-টু-এন্ড ফিচারের চিত্র</h3>
-<p>ধরুন আপনি একটা "ডকুমেন্ট থেকে প্রশ্নোত্তর" ফিচার বানাচ্ছেন একটা ASP.NET Core backend-এ। পুরো প্রবাহ এই কোর্সের প্রতিটা অধ্যায়কে ছুঁয়ে যায়: ডকুমেন্ট আপলোড হলে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয় (অধ্যায় ৬-৮); ব্যবহারকারীর প্রশ্ন এলে backend সেই প্রশ্ন embed করে প্রাসঙ্গিক chunk retrieve করে (অধ্যায় ৭); একটা grounded prompt বানিয়ে LLM-কে পাঠানো হয়, প্রয়োজনে একটা tool দিয়ে অতিরিক্ত ডেটা আনা হয় (অধ্যায় ৪,৫,৯); output নিরাপত্তা ও PII guardrail দিয়ে যাচাই করা হয় (অধ্যায় ১৪); response streaming-এ ফেরত পাঠানো হয়, আর প্রতিটা call-এর token/cost/latency log হয় (অধ্যায় ১৫); নিয়মিত golden dataset-এর উপর eval চালিয়ে regression যাচাই করা হয় (অধ্যায় ১৩)। এই পুরো চিত্রটাই আসলে "AI Engineering" মানে কী তার সংক্ষিপ্ত রূপ — একটা LLM-কে ঘিরে বানানো নির্ভরযোগ্য, পর্যবেক্ষণযোগ্য, নিরাপদ software।</p>
+<p>ধরুন আপনি একটা "ডকুমেন্ট থেকে প্রশ্নোত্তর" ফিচার বানাচ্ছেন একটা ASP.NET Core backend-এ। পুরো প্রবাহ এই কোর্সের প্রতিটা অধ্যায়কে ছুঁয়ে যায়: ডকুমেন্ট আপলোড হলে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয় (অধ্যায় ৭-৯); ব্যবহারকারীর প্রশ্ন এলে backend সেই প্রশ্ন embed করে প্রাসঙ্গিক chunk retrieve করে (অধ্যায় ৮); একটা grounded prompt বানিয়ে LLM-কে পাঠানো হয়, context engineering নীতি মেনে শুধু প্রাসঙ্গিক অংশ কিউরেট করে পাঠানো হয় (অধ্যায় ৬), প্রয়োজনে একটা tool দিয়ে অতিরিক্ত ডেটা আনা হয় (অধ্যায় ৪,৫,১০); output নিরাপত্তা ও PII guardrail দিয়ে যাচাই করা হয় (অধ্যায় ১৫); response streaming-এ ফেরত পাঠানো হয়, আর প্রতিটা call-এর token/cost/latency log হয় (অধ্যায় ১৬); নিয়মিত golden dataset-এর উপর eval চালিয়ে regression যাচাই করা হয় (অধ্যায় ১৪)। এই পুরো চিত্রটাই আসলে "AI Engineering" মানে কী তার সংক্ষিপ্ত রূপ — একটা LLM-কে ঘিরে বানানো নির্ভরযোগ্য, পর্যবেক্ষণযোগ্য, নিরাপদ software।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->
