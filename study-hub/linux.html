@@ -1518,6 +1518,44 @@ sdb       8:16   0   100G  0 disk
 <tr><td><span class="kw">btrfs</span></td><td>বিল্ট-ইন snapshot, checksum, ও copy-on-write সমর্থন করে — কিন্তু ext4/xfs-এর চেয়ে কম battle-tested প্রোডাকশনে</td></tr>
 </table>
 
+<h3>Partition তৈরি করা — <code>fdisk</code> ও <code>parted</code></h3>
+<p>একটা নতুন disk attach করার পর সেটা partition করতে দুটো প্রধান টুল আছে। <span class="kw">fdisk</span> ইন্টারঅ্যাকটিভ, menu-চালিত — ছোট, GPT/MBR উভয় সমর্থন করে আধুনিক সংস্করণে। <span class="kw">parted</span> স্ক্রিপ্টেবল ও বড় (২TB+) ডিস্ক/GPT-এর জন্য বেশি স্বাভাবিক পছন্দ।</p>
+<pre><span class="c">$ sudo fdisk /dev/sdb</span>
+Command (m for help): n        <span class="c"># নতুন partition</span>
+Partition type: p              <span class="c"># primary</span>
+Partition number: 1
+First sector: (enter চাপলে default)
+Last sector: +50G              <span class="c"># সাইজ নির্দিষ্ট করে দেওয়া</span>
+Command (m for help): w        <span class="c"># write — এখানেই আসল পরিবর্তন ডিস্কে লেখা হয়</span>
+
+<span class="c">$ sudo parted /dev/sdb --script mklabel gpt mkpart primary ext4 0% 100%</span>
+<span class="c"># parted-এ একই কাজ non-interactive script হিসেবে — automation/Ansible-এ এই ফর্মই বেশি ব্যবহৃত</span></pre>
+<div class="callout mistake"><span class="tag">সবচেয়ে বিপজ্জনক ভুল — ভুল disk-এ partition করা</span>
+<code>fdisk</code>/<code>parted</code> সরাসরি raw disk-এর partition table-এ লেখে — <code>w</code> (write) কমান্ড চালানোর পর সেই ডিস্কের আগের partition table মুছে যায়, কোনো নিশ্চিতকরণ ছাড়াই। <code>/dev/sdb</code>-এর বদলে ভুল করে <code>/dev/sda</code> (root disk) লিখলে পুরো running system-এর partition table নষ্ট হতে পারে। প্রতিবার চালানোর আগে <code>lsblk</code>/<code>fdisk -l</code> দিয়ে ডাবল-চেক করা আবশ্যক — কোন disk-এ root (<code>/</code>) mount করা আছে সেটা নিশ্চিত হয়ে তবেই এগোনো উচিত।</div>
+
+<h3>Filesystem তৈরি করা — <code>mkfs</code></h3>
+<p>Partition তৈরি হওয়ার পর সেটা এখনো খালি raw space — একটা filesystem "স্ট্যাম্প" না করা পর্যন্ত ব্যবহারযোগ্য নয়। এই কাজটাই করে <span class="kw">mkfs</span> পরিবার।</p>
+<pre><span class="c">$ sudo mkfs.ext4 /dev/sdb1     </span><span class="c"># ext4 filesystem তৈরি — এই partition-এর আগের যেকোনো ডেটা মুছে যায়</span>
+<span class="c">$ sudo mkfs.xfs -f /dev/sdb1   </span><span class="c"># xfs — আগে থেকে filesystem থাকলে -f (force) দিয়ে overwrite নিশ্চিত করতে হয়</span></pre>
+<p>এরপরই আগে দেখা <code>mount</code>/<code>/etc/fstab</code> প্রক্রিয়া দিয়ে সেটাকে ডিরেক্টরি tree-তে যুক্ত করা যায়।</p>
+
+<h3>Swap Space তৈরি ও পরিচালনা</h3>
+<p>Swap হলো disk-এর একটা অংশ যা RAM ভরে গেলে kernel সাময়িকভাবে কম-ব্যবহৃত মেমরি পেজ সেখানে সরিয়ে রাখে — একটা dedicated partition দিয়ে, অথবা cloud VM-এ প্রায়ই একটা সাধারণ <b>swapfile</b> দিয়ে বানানো হয় (disk পুনরায় partition করা যেখানে ঝামেলার)।</p>
+<pre><span class="c"># dedicated swap partition</span>
+$ sudo mkswap /dev/sdb2
+$ sudo swapon /dev/sdb2
+
+<span class="c"># অথবা একটা সাধারণ ফাইল দিয়ে swap (cloud VM-এ সাধারণ পদ্ধতি)</span>
+$ sudo fallocate -l 4G /swapfile
+$ sudo chmod 600 /swapfile      <span class="c"># শুধু root পড়তে/লিখতে পারবে — এতে মেমরির sensitive ডেটা swap-এ safe থাকে</span>
+$ sudo mkswap /swapfile
+$ sudo swapon /swapfile
+
+<span class="c"># স্থায়ী করতে /etc/fstab-এ যোগ করা</span>
+$ echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab</pre>
+<div class="callout why"><span class="tag"><code>swappiness</code> — কতটা আগ্রহ নিয়ে kernel swap করবে</span>
+<code>vm.swappiness</code> (০–১০০, sysctl দিয়ে নিয়ন্ত্রিত) নির্ধারণ করে RAM ফাঁকা থাকা সত্ত্বেও kernel কতটা আগ্রহ নিয়ে পেজ swap-এ পাঠাবে — ডিফল্ট প্রায়ই ৬০। ডাটাবেস/latency-sensitive সার্ভারে এই মান কম (১০ বা তারও কম) রাখা প্রচলিত, যাতে RAM যথেষ্ট থাকা অবস্থায়ও kernel অকারণে ডিস্ক-এ swap করে latency spike না বাড়ায়। Swap সম্পূর্ণ বন্ধ করা (<code>0</code>) সবসময় নিরাপদ নয় — হঠাৎ মেমরি চাপে OOM killer আরও আক্রমণাত্মকভাবে process মারতে পারে।</div>
+
 <h3>Inode — ফাইলের আসল পরিচয়পত্র, নাম নয়</h3>
 <p>একটা সাধারণ ভুল ধারণা হলো ফাইলের নাম-ই ফাইলের পরিচয়। বাস্তবে filesystem একটা ফাইলের সব metadata (permission, owner, size, timestamp, আর ডেটা কোন disk block-এ আছে তার pointer) রাখে একটা <span class="kw">inode</span>-এ — কিন্তু inode-এর ভেতরে ফাইলের <b>নাম থাকে না</b>। নাম থাকে ডিরেক্টরির ভেতরে, যেটা আসলে একটা mapping টেবিল: filename → inode number।</p>
 <pre><span class="c">$ ls -i notes.txt</span>
@@ -1589,6 +1627,40 @@ nginx     2311  www-data  13w   REG  8,2  2147483648  1548210 /var/log/nginx/acc
 <div class="callout why"><span class="tag">এত স্তর কেন — মূল সুবিধা হলো resize</span>
 সরাসরি partition-এ filesystem বসালে সেটা বড় করতে পাশে ফাঁকা contiguous জায়গা লাগে, যা সবসময় থাকে না। LVM-এ একটা LV-কে বড় করতে শুধু তার VG-তে জায়গা থাকলেই চলে — সেই জায়গা যেকোনো PV থেকে আসতে পারে, এমনকি নতুন করে যোগ করা একটা নতুন disk থেকেও। এই কারণেই cloud/VM পরিবেশে LVM এত দরকারি: একটা নতুন disk attach করে সেটাকে বিদ্যমান VG-তে যোগ করে দিলেই, downtime ছাড়া চলমান LV বড় করা যায় — বাস্তব disk-এর সীমানা user-এর কাছে অদৃশ্য হয়ে যায়।</div>
 
+<h3>Resize করা — শুধু Partition/LV বড় করলেই যথেষ্ট নয়</h3>
+<p>একটা সাধারণ ভুল ধারণা হলো underlying block device বড় করলেই filesystem নিজে থেকে সেই নতুন জায়গা ব্যবহার শুরু করবে। বাস্তবে <b>দুই ধাপে</b> কাজ করতে হয় — প্রথমে block-level (partition/LV) বড় করা, তারপর আলাদাভাবে filesystem-কে বলা "এখন আরও জায়গা আছে, নিজেকে বড় করো"।</p>
+<pre><span class="c"># ধাপ ১ — LV বড় করা (LVM ব্যবহার করলে)</span>
+$ sudo lvextend -L +20G /dev/myvg/mylv
+
+<span class="c"># cloud VM-এ underlying cloud disk resize করার পর partition table-কেও জানাতে হয়</span>
+$ sudo growpart /dev/sda 1        <span class="c"># /dev/sda1 partition-কে ডিস্কের নতুন পুরো জায়গা পর্যন্ত বড় করা</span>
+
+<span class="c"># ধাপ ২ — filesystem-কে বড় জায়গা ব্যবহার করতে বলা (filesystem type অনুযায়ী আলাদা কমান্ড)</span>
+$ sudo resize2fs /dev/myvg/mylv   <span class="c"># ext4-এর জন্য</span>
+$ sudo xfs_growfs /               <span class="c"># xfs-এর জন্য — mount point দিয়ে চালাতে হয়, device path দিয়ে নয়</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake — শুধু <code>lvextend</code>/<code>growpart</code> চালিয়ে থেমে যাওয়া</span>
+<code>lvextend</code> বা cloud provider-এর ডিস্ক resize UI দিয়ে underlying device বড় করার পর <code>df -h</code>-এ সাইজ না বদলালে অনেকে ধরে নেন resize ব্যর্থ হয়েছে। আসলে দ্বিতীয় ধাপ (<code>resize2fs</code>/<code>xfs_growfs</code>) বাদ পড়েছে — filesystem-এর নিজস্ব metadata-তে এখনো পুরনো সাইজ লেখা আছে, নতুন block পাওয়া গেলেও filesystem নিজে থেকে তা "দাবি" করে না যতক্ষণ না স্পষ্টভাবে বলা হয়। উল্টো দিকে ছোট করা (shrink) আরও ঝুঁকিপূর্ণ — <code>ext4</code> shrink করা যায় (আগে <code>resize2fs</code> ছোট, পরে <code>lvreduce</code>), কিন্তু <code>xfs</code> shrink করা যায়ই না — শুধু বড় করা যায়, তাই xfs partition ছোট করতে চাইলে নতুন করে backup/restore ছাড়া উপায় নেই।</div>
+
+<h3>RAID — একাধিক Disk জুড়ে Redundancy/Performance</h3>
+<p><span class="kw">RAID</span> (<code>mdadm</code> দিয়ে software RAID) একাধিক physical disk-কে একসাথে একটা logical device হিসেবে দেখায় — উদ্দেশ্য redundancy (একটা disk মরলেও ডেটা বাঁচা) বা performance (parallel read/write), অথবা দুটোই।</p>
+<table>
+<tr><th>RAID Level</th><th>ধারণা</th><th>Trade-off</th></tr>
+<tr><td>RAID 0</td><td>ডেটা সব disk জুড়ে striping — কোনো redundancy নেই</td><td>সর্বোচ্চ speed, কিন্তু একটা disk মরলে সব ডেটা হারায়</td></tr>
+<tr><td>RAID 1</td><td>Mirroring — প্রতিটা disk-এ হুবহু একই ডেটা</td><td>একটা disk মরলেও ডেটা অক্ষত, কিন্তু usable space অর্ধেক</td></tr>
+<tr><td>RAID 10</td><td>Mirror + Stripe-এর সমন্বয় (কমপক্ষে ৪টা disk)</td><td>speed ও redundancy দুটোই, কিন্তু বেশি disk লাগে</td></tr>
+</table>
+<div class="callout why"><span class="tag">Cloud-এ RAID-এর ভূমিকা বদলে গেছে</span>
+Cloud environment-এ (AWS EBS, Azure Managed Disk) underlying storage ইতিমধ্যে provider-side redundancy সহ আসে — তাই redundancy-এর জন্য RAID 1 বসানো প্রায়ই অপ্রয়োজনীয় বাড়তি জটিলতা। তবে অনেক ছোট disk জুড়ে একটাতে বেশি throughput/IOPS পাওয়ার জন্য RAID 0 এখনো ব্যবহৃত হয় — শুধু মনে রাখতে হবে RAID 0-এ redundancy শূন্য, তাই backup আলাদাভাবে অপরিহার্য।</div>
+
+<h3>Disk Encryption — LUKS</h3>
+<p>Compliance বা sensitive ডেটার জন্য disk-at-rest encryption দরকার হলে <span class="kw">LUKS</span> (Linux Unified Key Setup, <code>cryptsetup</code> দিয়ে ব্যবহৃত) হলো standard পদ্ধতি — একটা partition/LV-কে পুরোপুরি এনক্রিপ্ট করে, তার ওপর filesystem বসানো হয়।</p>
+<pre><span class="c">$ sudo cryptsetup luksFormat /dev/sdb1     </span><span class="c"># পাসফ্রেজ সেট করে partition এনক্রিপ্ট করা</span>
+$ sudo cryptsetup luksOpen /dev/sdb1 secure_data  <span class="c"># unlock করে /dev/mapper/secure_data হিসেবে expose</span>
+$ sudo mkfs.ext4 /dev/mapper/secure_data   <span class="c"># unlocked ম্যাপিং-এর ওপর সাধারণ filesystem</span>
+$ sudo mount /dev/mapper/secure_data /mnt/secure</pre>
+<div class="callout best"><span class="tag">Best practice — key management বাস্তব চ্যালেঞ্জ</span>
+LUKS নিজে শক্তিশালী, কিন্তু আসল জটিলতা key management-এ — boot-এ যদি প্রতিবার হাতে পাসফ্রেজ দিতে হয়, unattended reboot (যেমন cloud auto-scaling) কাজ করবে না। প্রোডাকশনে তাই প্রায়ই একটা keyfile (নিজেই root-only permission দিয়ে সুরক্ষিত, বা একটা external secret manager/TPM-এ রাখা) ব্যবহার করা হয় যাতে boot স্বয়ংক্রিয় থাকে, অথবা cloud provider-এর নিজস্ব managed disk encryption (যা key management আলাদাভাবে সামলায়) বেছে নেওয়া হয়।</div>
+
 <h3>পুরো পথ — Raw Disk থেকে User-এর দেখা File Path</h3>
 <div class="diagram"><pre>
  Block Device            Partition          (ঐচ্ছিক) LVM স্তর            Filesystem        Mount Point
@@ -1643,10 +1715,10 @@ nginx     2311  www-data  13w   REG  8,2  2147483648  1548210 /var/log/nginx/acc
 <div class="box"><b>Symbolic link</b><br>আলাদা ছোট ফাইল, শুধু path string ধরে রাখে। যেকোনো filesystem/mount জুড়ে কাজ করে। টার্গেট মুছলে বা সরালে link ভেঙে যায় (dangling)।</div>
 </div>
 
-<span class="badge">lsblk</span> <span class="badge">df -i</span> <span class="badge">ln -s</span> <span class="badge">/etc/fstab</span> <span class="badge">lsof | grep deleted</span> <span class="badge">LVM</span>
+<span class="badge">lsblk</span> <span class="badge">fdisk/parted</span> <span class="badge">mkfs</span> <span class="badge">df -i</span> <span class="badge">ln -s</span> <span class="badge">/etc/fstab</span> <span class="badge">lsof | grep deleted</span> <span class="badge">LVM</span> <span class="badge">mdadm</span> <span class="badge">cryptsetup</span>
 
 <div class="callout best"><span class="tag">এই চ্যাপ্টারের সারাংশ</span>
-Storage-এর হায়ারার্কি মনে রাখুন: block device → partition → (ঐচ্ছিক LVM: PV → VG → LV) → filesystem → mount point। Inode-ই ফাইলের আসল পরিচয় (নাম নয়), তাই hard link সম্ভব আর inode ফুরিয়ে গেলেও "no space" এরর আসতে পারে। <code>df -h</code> সামগ্রিক filesystem ব্যবহার দেখায়, <code>du -sh</code> নির্দিষ্ট ডিরেক্টরি — আর দুটো না মিললে <code>lsof | grep deleted</code> দিয়ে "খোলা রাখা মুছে ফেলা ফাইল" খুঁজুন। পরের চ্যাপ্টারে (৯. systemd ও Service Management) দেখব কীভাবে Linux-এ প্রতিটা service বুট হওয়া থেকে চলতে থাকা পর্যন্ত পরিচালিত হয় — <code>systemctl</code>, unit file, আর dependency-চালিত startup order — যেখানে একটা service কীভাবে তার log/data file (এই চ্যাপ্টারেরই বিষয়) খোলা-বন্ধ করে তাও প্রাসঙ্গিক হয়ে উঠবে।</div>
+Storage-এর হায়ারার্কি মনে রাখুন: block device → partition (<code>fdisk</code>/<code>parted</code> দিয়ে তৈরি) → (ঐচ্ছিক LVM: PV → VG → LV, বা RAID: <code>mdadm</code>) → filesystem (<code>mkfs</code> দিয়ে স্ট্যাম্প করা, ঐচ্ছিকভাবে LUKS দিয়ে এনক্রিপ্টেড) → mount point। Inode-ই ফাইলের আসল পরিচয় (নাম নয়), তাই hard link সম্ভব আর inode ফুরিয়ে গেলেও "no space" এরর আসতে পারে। <code>df -h</code> সামগ্রিক filesystem ব্যবহার দেখায়, <code>du -sh</code> নির্দিষ্ট ডিরেক্টরি — আর দুটো না মিললে <code>lsof | grep deleted</code> দিয়ে "খোলা রাখা মুছে ফেলা ফাইল" খুঁজুন। Resize করার সময় মনে রাখবেন block-level বড় করা (<code>lvextend</code>/<code>growpart</code>) আর filesystem-level বড় করা (<code>resize2fs</code>/<code>xfs_growfs</code>) — দুটো আলাদা ধাপ। পরের চ্যাপ্টারে (৯. systemd ও Service Management) দেখব কীভাবে Linux-এ প্রতিটা service বুট হওয়া থেকে চলতে থাকা পর্যন্ত পরিচালিত হয় — <code>systemctl</code>, unit file, আর dependency-চালিত startup order — যেখানে একটা service কীভাবে তার log/data file (এই চ্যাপ্টারেরই বিষয়) খোলা-বন্ধ করে তাও প্রাসঙ্গিক হয়ে উঠবে।</div>
 </template>
 
 <template data-page="systemd">
