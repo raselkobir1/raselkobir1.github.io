@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DevOps Mastery — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#38bdf8; --accent2:#7dd3fc;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --blue:#4aa3ff;
+    --code-bg:#0b0f14; --kw:#38bdf8;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(56,189,248,.22),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#04222f}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--blue)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--blue)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#7dd3fc}
+  .viz{background:var(--code-bg); border:1px solid var(--border); border-radius:12px; padding:20px 18px 12px; margin:18px 0}
+  .viz svg{width:100%; height:auto; display:block; overflow:visible}
+  .viz figcaption{color:var(--muted); font-size:13px; margin-top:10px; text-align:center; line-height:1.5}
+  .viz text{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .viz .bn{font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla",sans-serif}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>♾️ DevOps Mastery</h1>
+      <p>Beginner → Advanced • বাংলায়</p>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",     icon:"♾️", title:"Foundation — Culture, CALMS ও DORA Metrics"},
+  {id:"ci",             icon:"🔁", title:"Continuous Integration — Pipeline মেকানিক্স"},
+  {id:"cd",             icon:"🚀", title:"Continuous Delivery/Deployment ও Release Strategy"},
+  {id:"iac",            icon:"🏗️", title:"Infrastructure as Code — Terraform"},
+  {id:"configmgmt",     icon:"🧰", title:"Configuration Management — Ansible"},
+  {id:"gitops",         icon:"🔄", title:"GitOps — Argo CD/Flux"},
+  {id:"secrets",        icon:"🔐", title:"Secrets Management"},
+  {id:"observability",  icon:"🔭", title:"Observability — Metrics, Logs, Traces"},
+  {id:"sre",            icon:"📈", title:"SRE Practices — SLI/SLO/Error Budget"},
+  {id:"incident",       icon:"🚨", title:"Incident Management ও Postmortem"},
+  {id:"security",       icon:"🛡️", title:"DevSecOps — Shift-Left Security"},
+  {id:"artifact",       icon:"📦", title:"Artifact ও Environment Promotion"},
+  {id:"platform",       icon:"🛤️", title:"Platform Engineering ও Developer Experience"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Foundation — Culture, CALMS ও DORA Metrics</h2>
+<p class="lead">DevOps কোনো একটা টুল, প্ল্যাটফর্ম, বা পদবি না কিনে আনা যায় এমন জিনিস নয় — এটা একটা <b>সাংস্কৃতিক ও প্রকৌশলগত অনুশীলন</b>, যার লক্ষ্য দ্রুত, নির্ভরযোগ্যভাবে সফটওয়্যার ডেলিভার করা। এই কোর্স জুড়ে CI/CD, Infrastructure as Code, GitOps, Observability, SRE — প্রতিটা টুল আসলে এই একই লক্ষ্যের একেকটা বাস্তবায়ন।</p>
+
+<h3>যে সমস্যা থেকে DevOps-এর জন্ম — Dev বনাম Ops-এর দেয়াল</h3>
+<p>ঐতিহ্যগতভাবে Development টিমের লক্ষ্য ছিল দ্রুত নতুন ফিচার শিপ করা, আর Operations টিমের লক্ষ্য ছিল সিস্টেম স্থিতিশীল রাখা — এই দুই লক্ষ্য প্রায়ই সাংঘর্ষিক মনে হতো। Dev একটা release "দেয়ালের ওপর দিয়ে ছুঁড়ে দিত" (throw it over the wall) Ops-এর দিকে, Ops সেটা প্রোডাকশনে বসাত, আর কিছু ভুল হলে দুই টিম একে অপরকে দোষারোপ করত — কারণ কেউই পুরো জীবনচক্রের (build → test → deploy → operate) দায়িত্ব নিত না।</p>
+<div class="callout why"><span class="tag">DevOps আসলে কী সমাধান করে</span>
+DevOps একটা টিমকে পুরো জীবনচক্রের মালিকানা দেয় — "আপনি যা বানান তাই আপনি চালান" (you build it, you run it)। এটা সম্ভব হয় automation দিয়ে (manual hand-off কমিয়ে), আর দুই পক্ষের মধ্যে ভাগাভাগি করা মেট্রিক দিয়ে (শুধু "কত ফিচার শিপ হলো" নয়, "কতটা নির্ভরযোগ্যভাবে" তাও)। এটা কোনো একটা টুল না — এটা একটা দায়িত্ব-বণ্টনের দর্শন, যা এই কোর্সের প্রতিটা টুল/practice দিয়ে বাস্তবায়িত হয়।</p></div>
+
+<h3>CALMS — DevOps সংস্কৃতির পাঁচটা স্তম্ভ</h3>
+<table>
+<tr><th>উপাদান</th><th>মানে</th></tr>
+<tr><td><span class="kw">Culture</span></td><td>দোষারোপ নয়, সহযোগিতা — ব্যর্থতাকে শেখার সুযোগ হিসেবে দেখা (Incident Management অধ্যায়ে "blameless postmortem" বিস্তারিত)</td></tr>
+<tr><td><span class="kw">Automation</span></td><td>যা কিছু বারবার হাতে করা হয় (build, test, deploy, provisioning) তা script/pipeline-এ রূপান্তর করা</td></tr>
+<tr><td><span class="kw">Lean</span></td><td>ছোট ছোট ব্যাচে কাজ করা, দ্রুত feedback loop — বিশাল "big-bang" release-এর বদলে ঘন ঘন ছোট change</td></tr>
+<tr><td><span class="kw">Measurement</span></td><td>ধারণার বদলে ডেটা দিয়ে সিদ্ধান্ত নেওয়া — DORA metrics (নিচে), SLI/SLO (SRE অধ্যায়ে)</td></tr>
+<tr><td><span class="kw">Sharing</span></td><td>জ্ঞান ও দায়িত্ব সাইলো-তে আটকে না রেখে টিম জুড়ে ছড়িয়ে দেওয়া</td></tr>
+</table>
+
+<h3>DORA Metrics — DevOps performance মাপার চারটা প্রমাণিত সূচক</h3>
+<p>Google-এর DORA (DevOps Research and Assessment) গবেষণা বছরের পর বছর ডেটা বিশ্লেষণ করে চারটা মেট্রিক identify করেছে যেগুলো সরাসরি organizational performance-এর সাথে সম্পর্কিত।</p>
+<table>
+<tr><th>Metric</th><th>মাপে কী</th><th>Elite performer</th></tr>
+<tr><td><span class="kw">Deployment Frequency</span></td><td>কত ঘন ঘন প্রোডাকশনে deploy হয়</td><td>দিনে একাধিকবার (on-demand)</td></tr>
+<tr><td><span class="kw">Lead Time for Changes</span></td><td>কোড commit থেকে প্রোডাকশনে পৌঁছানো পর্যন্ত সময়</td><td>এক ঘণ্টার কম</td></tr>
+<tr><td><span class="kw">Change Failure Rate</span></td><td>কত শতাংশ deploy production incident/rollback ঘটায়</td><td>০–১৫%</td></tr>
+<tr><td><span class="kw">Time to Restore Service (MTTR)</span></td><td>একটা outage হলে সার্ভিস আবার সুস্থ করতে কত সময় লাগে</td><td>এক ঘণ্টার কম</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common misconception — গতি বনাম স্থিতিশীলতা পরস্পরবিরোধী</span>
+অনেকে ধরে নেন দ্রুত deploy করলে stability কমবেই। DORA-এর গবেষণার সবচেয়ে গুরুত্বপূর্ণ ফলাফল ঠিক এর উল্টো — যেসব টিম বেশি ঘন ঘন, ছোট ব্যাচে deploy করে (উচ্চ Deployment Frequency), তাদেরই Change Failure Rate সাধারণত কম থাকে। কারণ ছোট change ধরা-ছাড়া সহজ, আর সমস্যা হলে rollback-ও দ্রুত ও কম-ঝুঁকির — এই কোর্স জুড়ে (CI, CD, Observability) যা শেখানো হবে তার প্রায় সবই এই দুই মেট্রিক একসাথে ভালো করার দিকে লক্ষ্য রাখে।</div>
+
+<h3>DevOps বনাম SRE বনাম Platform Engineering — সংক্ষিপ্ত মানচিত্র</h3>
+<p>এই তিনটা শব্দ প্রায়ই গুলিয়ে ফেলা হয় — এই কোর্সে প্রতিটাই আলাদা অধ্যায়ে বিস্তারিত আসবে, কিন্তু শুরুতেই একটা সংক্ষিপ্ত orientation:</p>
+<div class="grid2">
+  <div class="box"><b>DevOps</b><br>একটা দর্শন/practice-এর সেট — Dev ও Ops একত্রে কাজ করবে, automation দিয়ে। কোনো নির্দিষ্ট job title নয়, একটা সাংগঠনিক পদ্ধতি।</div>
+  <div class="box"><b>SRE (Site Reliability Engineering)</b><br>Google-এর তৈরি, DevOps দর্শনের একটা নির্দিষ্ট, পরিমাপযোগ্য বাস্তবায়ন — SLI/SLO/Error Budget দিয়ে "কতটা নির্ভরযোগ্যতা যথেষ্ট" তা সংখ্যায় সংজ্ঞায়িত করে (৯ নম্বর অধ্যায়ে বিস্তারিত)।</div>
+  <div class="box"><b>Platform Engineering</b><br>DevOps-এর practice-গুলোকে একটা reusable, self-service internal platform-এ প্যাকেজ করা, যাতে প্রতিটা প্রোডাক্ট টিমকে নিজে থেকে Terraform/Kubernetes শিখতে না হয় (১৩ নম্বর, শেষ অধ্যায়ে বিস্তারিত)।</div>
+</div>
+</template>
+
+<template data-page="ci">
+<h2 class="title">২. Continuous Integration — Pipeline মেকানিক্স</h2>
+<p class="lead">Continuous Integration (CI) মানে প্রতিটা ছোট কোড পরিবর্তন ঘন ঘন একটা shared branch-এ merge করা, আর প্রতিবার merge/push-এ স্বয়ংক্রিয়ভাবে build ও test চালানো — যাতে সমস্যা দিনের পর দিন জমে "integration hell" তৈরি না করে, ধরা পড়ে ঘণ্টার মধ্যেই।</p>
+
+<h3>CI Pipeline-এর কাঠামো — Trigger → Jobs → Steps</h3>
+<p>একটা CI pipeline তিনটা স্তরে সংগঠিত হয়: একটা <span class="kw">trigger</span> (কী ঘটনায় pipeline চালু হবে — push, pull request, schedule, manual), তারপর এক বা একাধিক <span class="kw">job</span> (যেগুলো ডিফল্টভাবে সমান্তরালে চলে, প্রতিটার নিজস্ব fresh runner/VM), আর প্রতিটা job-এর ভেতরে ক্রমিক <span class="kw">step</span> (checkout, dependency install, build, test, ইত্যাদি)।</p>
+<pre><span class="c"># .github/workflows/ci.yml — একটা ASP.NET Core app-এর CI pipeline</span>
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ hashFiles('**/*.csproj') }}   <span class="c"># lock/csproj হ্যাশ বদলালেই cache invalidate</span>
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --logger trx --results-directory TestResults
+
+      - name: Publish test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults
+
+  build-and-push-image:
+    needs: build-and-test              <span class="c"># আগের job সফল না হলে এই job শুরুই হবে না</span>
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ghcr.io/mycompany/myapi:${{ github.sha }}
+          cache-from: type=gha            <span class="c"># আগের build-এর layer পুনর্ব্যবহার</span>
+          cache-to: type=gha,mode=max</pre>
+<p>লক্ষ করুন <code>needs: build-and-test</code> — এটাই dependency graph তৈরি করে: image build/push তখনই চলবে যখন build-test job সফলভাবে শেষ হয়েছে, আর <code>if: github.ref == 'refs/heads/main'</code> নিশ্চিত করে PR-এ শুধু test চলবে, image push শুধু <code>main</code>-এ merge হওয়ার পরেই।</p>
+
+<h3>Caching — CI-এর গতি বাঁচানোর প্রধান কৌশল</h3>
+<table>
+<tr><th>Cache ধরন</th><th>কী cache হয়</th><th>Key strategy</th></tr>
+<tr><td>Dependency cache</td><td>NuGet/npm/pip package</td><td>lock file (<code>packages.lock.json</code>, <code>package-lock.json</code>)-এর hash — dependency না বদলালে cache hit</td></tr>
+<tr><td>Docker layer cache</td><td>Dockerfile-এর প্রতিটা স্তর (Docker কোর্সে বিস্তারিত layer caching-এর নীতি)</td><td>প্রতিটা layer-এর instruction+content hash — শুধু বদলানো layer-ই পুনরায় build হয়</td></tr>
+<tr><td>Build output cache</td><td>compiled artifact/incremental build state</td><td>source file hash</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন caching এত গুরুত্বপূর্ণ — feedback loop-এর গতি</span>
+CI-এর মূল মূল্য হলো দ্রুত feedback — একটা bug যত দ্রুত ধরা পড়ে তত সস্তায় ঠিক করা যায়। প্রতিবার শূন্য থেকে সব dependency ডাউনলোড ও পুরো Docker image rebuild করলে একটা pipeline ১৫-২০ মিনিট লাগতে পারে, যেখানে ভালো caching দিয়ে সেটা ২-৩ মিনিটে নেমে আসতে পারে। ধীর CI মানুষকে ছোট, ঘন ঘন commit করতে নিরুৎসাহিত করে (DORA-এর Deployment Frequency-কে সরাসরি ক্ষতিগ্রস্ত করে) — তাই caching শুধু "সময় বাঁচানো" নয়, এটা DevOps culture-কেই প্রভাবিত করে।</div>
+
+<h3>Matrix Build — একই Pipeline, একাধিক Variant সমান্তরালে</h3>
+<pre><span class="c"># একই test suite একাধিক .NET version-এ সমান্তরালে চালানো</span>
+jobs:
+  test:
+    strategy:
+      matrix:
+        dotnet-version: ['6.0.x', '8.0.x']
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+      - run: dotnet test</pre>
+<p>এই একটা সংজ্ঞা থেকেই CI ৪টা (২ version × ২ OS) সমান্তরাল job চালাবে — লাইব্রেরি বা cross-platform tool-এ compatibility নিশ্চিত করার সবচেয়ে কার্যকর উপায়।</p>
+
+<h3>Secrets ও Runner বাছাই</h3>
+<div class="grid2">
+  <div class="box"><b>GitHub-hosted runner</b><br>প্রতিটা job-এ একটা fresh, ephemeral VM — maintenance-মুক্ত, কিন্তু compute/network কাস্টমাইজেশন সীমিত, আর প্রতিটা মিনিট বিল হয়।</div>
+  <div class="box"><b>Self-hosted runner</b><br>নিজের infrastructure-এ চলে — বিশেষ hardware (GPU), internal network access, বা বেশি ভলিউমে খরচ কমাতে ব্যবহৃত হয়; কিন্তু patching/security নিজেকে সামলাতে হয়।</div>
+</div>
+<div class="callout best"><span class="tag">Best practice — long-lived cloud credential এড়িয়ে OIDC ব্যবহার</span>
+CI pipeline-এ cloud provider access দরকার হলে (যেমন S3-তে artifact আপলোড, বা AWS resource deploy) একটা static access key CI secret হিসেবে জমা রাখার বদলে, GitHub Actions-এর <span class="kw">OIDC federation</span> ব্যবহার করা নিরাপদ — pipeline চলার সময় একটা স্বল্পস্থায়ী (short-lived) token ইস্যু হয়, যা কয়েক মিনিট পরই মেয়াদ শেষ হয়ে যায়। এতে কোনো static secret leak হওয়ার ঝুঁকিই থাকে না, কারণ কোনো static secret জমাই নেই।</div>
+
+<h3>Branch Protection ও Required Checks — Merge হওয়ার আগে Gate</h3>
+<p>একটা CI pipeline সবুজ (green) হলেও, সেটা কার্যকর হওয়ার জন্য repository-তে <span class="kw">branch protection rule</span> দরকার — যা বলে দেয় CI pass না করলে, বা প্রয়োজনীয় code review approval না থাকলে, <code>main</code>-এ merge করাই সম্ভব হবে না (Git কোর্সে আলোচিত trunk-based/GitHub Flow branching model-এর সাথে সরাসরি যুক্ত)।</p>
+<div class="callout mistake"><span class="tag">Common mistake — ধীর/flaky CI-কে বাইপাস করা</span>
+CI pipeline যদি ঘন ঘন flaky (এলোমেলোভাবে fail) হয় বা অত্যন্ত ধীর হয়, ডেভেলপাররা ধীরে ধীরে সেটাকে উপেক্ষা করা শুরু করেন — "আবার চালাও, এমনিই fail করে", বা লোকাল test না চালিয়েই push করা। CI-এর পুরো মূল্য নির্ভর করে তার প্রতি আস্থার ওপর — একবার সেই আস্থা হারালে গোটা practice-টাই অকার্যকর হয়ে যায়। flaky test দ্রুত চিহ্নিত করে ঠিক/quarantine করা, আর pipeline-এর গতি নিয়মিত পর্যবেক্ষণ করা তাই একটা চলমান দায়িত্ব, একবার সেটআপ করে ভুলে যাওয়ার জিনিস নয়।</div>
+</template>
+
+<template data-page="cd">
+<h2 class="title">৩. Continuous Delivery/Deployment ও Release Strategy</h2>
+<p class="lead">CI নিশ্চিত করে কোড build/test-যোগ্য। CD নিশ্চিত করে সেই কোড আসলে ব্যবহারকারীর কাছে নিরাপদে পৌঁছায় — আর এখানেই "deploy করা" (কোড প্রোডাকশনে বসানো) আর "release করা" (ব্যবহারকারী সেটা দেখতে পারা) আলাদা করার আসল শক্তি লুকিয়ে।</p>
+
+<h3>CI বনাম Continuous Delivery বনাম Continuous Deployment — তিনটা আলাদা স্তর</h3>
+<table>
+<tr><th>স্তর</th><th>মানে</th></tr>
+<tr><td><span class="kw">Continuous Integration</span></td><td>প্রতিটা commit স্বয়ংক্রিয়ভাবে build/test হয় (আগের অধ্যায়)</td></tr>
+<tr><td><span class="kw">Continuous Delivery</span></td><td>প্রতিটা successful build-ই সবসময় প্রোডাকশনে deploy করার জন্য প্রস্তুত থাকে — কিন্তু আসল deploy একটা ম্যানুয়াল বাটন-চাপে হয়</td></tr>
+<tr><td><span class="kw">Continuous Deployment</span></td><td>প্রতিটা successful build স্বয়ংক্রিয়ভাবেই প্রোডাকশনে চলে যায়, কোনো মানুষের অনুমোদন ছাড়াই</td></tr>
+</table>
+<div class="callout why"><span class="tag">Deploy বনাম Release — কেন আলাদা করা জরুরি</span>
+<b>Deploy</b> মানে নতুন কোড প্রোডাকশন সার্ভারে চলছে। <b>Release</b> মানে ব্যবহারকারী সেই নতুন আচরণ দেখতে পাচ্ছেন। এই দুইটা এক মনে হলেও আলাদা করলে বিশাল সুবিধা — feature flag (নিচে) দিয়ে কোড deploy করে রাখা যায় কিন্তু release বন্ধ রাখা যায়, ফলে "deploy করাটা কি নিরাপদ" প্রশ্নটা "feature-টা কি প্রস্তুত" প্রশ্ন থেকে সম্পূর্ণ বিচ্ছিন্ন হয়ে যায় — deploy ঘন ঘন, ছোট, low-risk হতে পারে, release যখন business-এর জন্য সঠিক সময় তখন হতে পারে।</div>
+
+<h3>Deployment Strategies</h3>
+<table>
+<tr><th>কৌশল</th><th>কীভাবে কাজ করে</th><th>Downtime</th><th>Rollback গতি</th></tr>
+<tr><td><span class="kw">Recreate</span></td><td>পুরনো version বন্ধ করে, তারপর নতুন version চালু</td><td>আছে</td><td>ধীর — আবার পুরনো version deploy করতে হয়</td></tr>
+<tr><td><span class="kw">Rolling Update</span></td><td>ধাপে ধাপে পুরনো instance বদলে নতুন instance আনা (Kubernetes কোর্সে গভীরভাবে আলোচিত)</td><td>নেই (ঠিকমতো করলে)</td><td>মাঝারি — বিপরীত দিকে rolling করতে হয়</td></tr>
+<tr><td><span class="kw">Blue-Green</span></td><td>সম্পূর্ণ দুইটা identical environment — traffic এক ধাক্কায় পুরনো (blue) থেকে নতুন (green)-এ সুইচ</td><td>নেই</td><td>সবচেয়ে দ্রুত — traffic আবার blue-তে ফিরিয়ে দিলেই হয়</td></tr>
+<tr><td><span class="kw">Canary</span></td><td>প্রথমে সামান্য শতাংশ (৫%) traffic নতুন version-এ পাঠিয়ে metric পর্যবেক্ষণ, ধীরে ধীরে শতাংশ বাড়ানো</td><td>নেই</td><td>দ্রুত — শুধু canary-তে থাকা ছোট অংশ প্রভাবিত হয়</td></tr>
+</table>
+<div class="callout behind"><span class="tag">Blue-Green-এর আসল খরচ</span>
+Blue-Green-এর rollback সবচেয়ে দ্রুত মনে হলেও এর গোপন মূল্য হলো — যেকোনো মুহূর্তে দ্বিগুণ infrastructure চালু রাখতে হয় (blue ও green দুটোই পুরোপুরি running থাকে সুইচের মুহূর্তে)। ছোট, কম-ট্রাফিক সার্ভিসে এই বাড়তি খরচ গ্রহণযোগ্য, কিন্তু বড়, ব্যয়বহুল infrastructure-ভিত্তিক সিস্টেমে এই দ্বিগুণ খরচ প্রায়ই Canary বা Rolling Update-এর দিকে ঝোঁকায়।</div>
+
+<h3>Feature Flags — Deploy থেকে Release আলাদা করার হাতিয়ার</h3>
+<p>একটা <span class="kw">feature flag</span> হলো কোডে একটা runtime-configurable if-condition — নতুন ফিচারের কোড production-এ deploy হয়ে যায়, কিন্তু একটা flag বন্ধ থাকা অবস্থায় সেটা আসলে কার্যকর হয় না।</p>
+<pre><span class="c">// C# — feature flag-এর সরল উদাহরণ (Microsoft.FeatureManagement)</span>
+if (await featureManager.IsEnabledAsync("NewCheckoutFlow"))
+{
+    return await newCheckoutService.ProcessAsync(order);
+}
+return await legacyCheckoutService.ProcessAsync(order);</pre>
+<div class="grid2">
+  <div class="box"><b>Percentage rollout</b><br>প্রথমে ৫% ব্যবহারকারীর জন্য flag চালু করে metric দেখা, ধীরে ধীরে ১০০%-এ নেওয়া — কোনো নতুন deploy ছাড়াই।</div>
+  <div class="box"><b>Kill switch</b><br>একটা নতুন ফিচারে সমস্যা দেখা দিলে, পুরো rollback/redeploy ছাড়াই শুধু flag বন্ধ করে সাথে সাথে আগের আচরণে ফিরে যাওয়া — MTTR (DORA metric) নাটকীয়ভাবে কমায়।</div>
+</div>
+
+<h3>Progressive Delivery — স্বয়ংক্রিয় Canary বিশ্লেষণ</h3>
+<p>ম্যানুয়ালি canary-এর metric দেখে ধীরে ধীরে শতাংশ বাড়ানোর বদলে, <span class="kw">Argo Rollouts</span>/<span class="kw">Flagger</span>-এর মতো টুল স্বয়ংক্রিয়ভাবে error rate/latency পর্যবেক্ষণ করে — কোনো অস্বাভাবিকতা দেখলে নিজে থেকেই rollout থামিয়ে আগের version-এ ফিরিয়ে দেয়, মানুষের হস্তক্ষেপ ছাড়াই। এটা Observability অধ্যায়ে আলোচিত metric-এর ওপরই নির্ভর করে।</p>
+
+<h3>Rollback Strategy — কেন এটা "শেষ মুহূর্তে ভাবা" জিনিস নয়</h3>
+<div class="callout mistake"><span class="tag">Common mistake — Database Migration যা Rollback ভেঙে দেয়</span>
+Application code rollback করা সহজ (আগের image/artifact আবার deploy করা), কিন্তু একই সাথে যদি একটা destructive database migration চলে যায় (একটা column রিনেম বা মুছে ফেলা), তাহলে পুরনো code version নতুন schema-র সাথে কাজ করবে না — rollback আর সম্ভবই থাকে না। সমাধান হলো <span class="kw">expand-contract pattern</span>: প্রথমে নতুন column যোগ করা (পুরনোটা রেখেই — "expand"), দুই ভার্সন কোডকেই কিছুদিন সহাবস্থান করতে দেওয়া, তারপর সব ট্রাফিক নতুন column-এ চলে গেলে পুরনোটা মুছে ফেলা ("contract") — কখনো এক deploy-এ break করা পরিবর্তন না আনা।</div>
+</template>
+
+<template data-page="iac">
+<h2 class="title">৪. Infrastructure as Code — Terraform</h2>
+<p class="lead">CI/CD পাইপলাইন যে সার্ভার/cluster/database-এ deploy করে, সেই infrastructure নিজেই যদি কেউ manually cloud console-এ ক্লিক করে বানায় ("ClickOps"), তাহলে সেটা reproduce করা, review করা, বা track করা প্রায় অসম্ভব হয়ে যায়। Infrastructure as Code (IaC) infrastructure-কেও ভার্সন-নিয়ন্ত্রিত কোড হিসেবে treat করে।</p>
+
+<h3>কেন Infrastructure-কে "কোড" হিসেবে লেখা হয়</h3>
+<div class="callout why"><span class="tag">ClickOps-এর আসল সমস্যা</span>
+Cloud console-এ ম্যানুয়ালি একটা VM/database তৈরি করলে, এক সপ্তাহ পর কেউ মনে রাখে না ঠিক কোন সেটিংস দেওয়া হয়েছিল — disaster recovery-তে (পুরো environment আবার বানাতে হলে) এটা একটা দুঃস্বপ্ন হয়ে দাঁড়ায়। IaC-এ পুরো infrastructure একটা text ফাইলে ঘোষিত থাকে — Git-এ commit হয়, PR-এ review হয়, আর প্রয়োজনে হুবহু পুনরায় তৈরি করা যায় একটা কমান্ডেই। এটা ঠিক Kubernetes-এর declarative model-এরই এক স্তর নিচে প্রয়োগ — Kubernetes cluster-এর <b>ভেতরের</b> resource নয়, cluster <b>যার উপর চলে</b> সেই infrastructure।</div>
+
+<h3>Terraform-এর মূল ধারণা — Provider, Resource, State</h3>
+<pre><span class="c"># main.tf — একটা সাধারণ AWS EC2 instance ঘোষণা</span>
+terraform {
+  required_providers {
+    aws = { source = "hashicorp/aws" }
+  }
+}
+
+provider "aws" {
+  region = "ap-southeast-1"
+}
+
+resource "aws_instance" "web" {
+  ami           = "ami-0abcd1234"
+  instance_type = "t3.medium"
+  tags = {
+    Name = "myapi-server"
+  }
+}</pre>
+<table>
+<tr><th>ধারণা</th><th>ভূমিকা</th></tr>
+<tr><td><span class="kw">Provider</span></td><td>কোন cloud/সেবার সাথে কথা বলবে (AWS, Azure, GCP, এমনকি Kubernetes/GitHub-ও একটা provider)</td></tr>
+<tr><td><span class="kw">Resource</span></td><td>একটা নির্দিষ্ট জিনিস যা তৈরি/পরিচালনা করা হবে (VM, database, DNS record)</td></tr>
+<tr><td><span class="kw">State</span></td><td>Terraform নিজে যা তৈরি করেছে তার একটা রেকর্ড (<code>terraform.tfstate</code>) — বর্তমান বাস্তব অবস্থা কী তা মনে রাখার একমাত্র উপায়</td></tr>
+</table>
+
+<h3>Plan → Apply — Dry-Run-এর গুরুত্ব</h3>
+<div class="diagram"><pre>
+terraform plan   ──▶  বর্তমান state + .tf ফাইল তুলনা করে দেখায় ঠিক কী কী বদলাবে (dry-run, কিছুই বদলায় না)
+                        │
+                        ▼ (মানুষ review করে)
+terraform apply  ──▶  plan-এ দেখানো পরিবর্তন সত্যিই cloud-এ প্রয়োগ করে, state আপডেট করে
+</pre></div>
+<div class="callout mistake"><span class="tag">Common mistake — Terraform-এর তৈরি resource ম্যানুয়ালি এডিট করা</span>
+কেউ যদি cloud console-এ গিয়ে Terraform-তৈরি একটা resource সরাসরি বদলে দেয় (drift), তাহলে state ফাইল আর বাস্তব অবস্থা অসামঞ্জস্যপূর্ণ হয়ে যায় — পরের <code>terraform apply</code> সেই ম্যানুয়াল পরিবর্তন বাতিল করে আগের অবস্থায় ফিরিয়ে দিতে পারে, বা confusing conflict দেখাতে পারে। একবার IaC দিয়ে একটা resource তৈরি হলে, সেটার সব পরবর্তী পরিবর্তন <b>সবসময় কোড দিয়েই</b> হওয়া উচিত — এটাই GitOps অধ্যায়ে আলোচিত একই নীতির (Git-ই একমাত্র সত্য) infrastructure-স্তরের সংস্করণ।</div>
+
+<h3>Modules — পুনর্ব্যবহারযোগ্য Infrastructure Building Block</h3>
+<p>প্রতিটা environment-এ (dev/staging/prod) একই ধরনের resource বারবার হাতে লেখার বদলে, একটা <span class="kw">module</span>-এ সাধারণ প্যাটার্ন প্যাকেজ করে parameter দিয়ে reuse করা যায় — ঠিক function-এর মতোই, কিন্তু infrastructure-এর জন্য।</p>
+
+<h3>Remote State ও Locking — Team Collaboration</h3>
+<p>Local ফাইলে state রাখলে একসাথে দুইজন <code>apply</code> চালালে state file corrupt হয়ে যাওয়ার ঝুঁকি থাকে। Production-এ state একটা shared remote backend-এ (যেমন S3 + DynamoDB lock table) রাখা হয় — যা একই সময়ে শুধু একজনকেই <code>apply</code> চালাতে দেয় (lock), আর টিমের সবাই একই, সবসময় হালনাগাদ state দেখে।</p>
+</template>
+
+<template data-page="configmgmt">
+<h2 class="title">৫. Configuration Management — Ansible</h2>
+<p class="lead">Terraform একটা VM <b>তৈরি</b> করে। কিন্তু সেই VM-এ কোন প্যাকেজ ইনস্টল হবে, কোন ইউজার তৈরি হবে, কোন কনফিগ ফাইল বসবে — এটা একটা আলাদা সমস্যা, যাকে বলে <span class="kw">configuration management</span>।</p>
+
+<h3>Provisioning বনাম Configuration — দুইটা আলাদা স্তর</h3>
+<table>
+<tr><th>স্তর</th><th>টুল উদাহরণ</th><th>প্রশ্নের উত্তর দেয়</th></tr>
+<tr><td>Provisioning</td><td>Terraform, Pulumi</td><td>"কোন resource-টা exist করবে?" (VM, network, database)</td></tr>
+<tr><td>Configuration</td><td>Ansible, Chef, Puppet</td><td>"সেই resource-এর ভেতরে কী থাকবে?" (package, file, service state)</td></tr>
+</table>
+
+<h3>Ansible-এর মূল ধারণা — Inventory, Playbook, Idempotency</h3>
+<pre><span class="c"># inventory.ini — কোন সার্ভারে চালানো হবে</span>
+[webservers]
+web1.example.com
+web2.example.com
+
+<span class="c"># playbook.yml — কী করতে হবে তার ঘোষণা</span>
+- hosts: webservers
+  become: true
+  tasks:
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present     <span class="c"># "থাকতে হবে" — ইতিমধ্যে থাকলে কিছুই করবে না</span>
+
+    - name: Copy nginx config
+      copy:
+        src: nginx.conf
+        dest: /etc/nginx/nginx.conf
+      notify: restart nginx
+
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted</pre>
+<div class="callout why"><span class="tag">Idempotency — বারবার চালালেও একই ফলাফল</span>
+লক্ষ করুন <code>state: present</code> — এটা "nginx ইনস্টল করো" কমান্ড নয়, বরং "nginx-এর অস্তিত্ব নিশ্চিত করো" ঘোষণা। এই playbook একবার চালান বা একশবার চালান, ফলাফল একই থাকবে — এটাই <span class="kw">idempotency</span>। এটা ঠিক Kubernetes-এর declarative reconciliation-এরই ধারণা, শুধু এবার প্রয়োগ হচ্ছে একটা running VM-এর ভেতরের অবস্থার ওপর। Idempotency ছাড়া বারবার script চালালে (যেমন একটা নির্দিষ্ট লাইন <code>echo >> file</code> দিয়ে append করা) প্রতিবার নতুন করে ক্ষতি হতে পারে।</div>
+
+<h3>Push (Ansible) বনাম Pull (Chef/Puppet) মডেল</h3>
+<table>
+<tr><th>টুল</th><th>মডেল</th><th>বৈশিষ্ট্য</th></tr>
+<tr><td><span class="kw">Ansible</span></td><td>Push — একটা কেন্দ্রীয় মেশিন থেকে SSH দিয়ে সরাসরি কমান্ড পাঠায়</td><td>Agentless (টার্গেট মেশিনে কিছু ইনস্টল করা লাগে না), শেখা সহজ, YAML-ভিত্তিক</td></tr>
+<tr><td>Chef / Puppet</td><td>Pull — প্রতিটা সার্ভারে একটা agent চলে যা periodically কেন্দ্রীয় সার্ভার থেকে configuration টেনে আনে</td><td>বড় ফ্লিটে বেশি স্কেলযোগ্য, কিন্তু agent maintain করতে হয়, শেখার curve বেশি</td></tr>
+</table>
+<div class="callout best"><span class="tag">আধুনিক প্র্যাকটিসে Configuration Management-এর ভূমিকা কমছে কেন</span>
+Immutable infrastructure (Docker image-এর ভেতরেই সব dependency বেক করা, VM-কে "বদলানো" না গিয়ে পুরো নতুন image দিয়ে replace করা) জনপ্রিয় হওয়ার সাথে সাথে, running সার্ভারে configuration management চালানোর দরকার কমে গেছে — বেশিরভাগ পরিবর্তন এখন একটা নতুন container image build করেই আসে (Docker কোর্সে আলোচিত)। তবু bare-metal/VM-ভিত্তিক infrastructure, বা একটা VM-এর initial bootstrap (Terraform দিয়ে তৈরি হওয়ার ঠিক পরে)-এ Ansible এখনো ব্যাপকভাবে ব্যবহৃত হয়।</div>
+</template>
+
+<template data-page="gitops">
+<h2 class="title">৬. GitOps — Argo CD/Flux</h2>
+<p class="lead">প্রথাগত CD-তে CI pipeline নিজেই cluster credential নিয়ে সরাসরি deploy চালায় — এটা <span class="kw">push</span> মডেল। GitOps এটা উল্টে দেয়: cluster-এর ভেতরে একটা controller ক্রমাগত Git repo পর্যবেক্ষণ করে, নিজেই cluster-কে তার সাথে মিলিয়ে দেয় — এটা <span class="kw">pull</span> মডেল।</p>
+
+<h3>Push বনাম Pull Deployment</h3>
+<table>
+<tr><th></th><th>Push (traditional CI deploy)</th><th>Pull (GitOps)</th></tr>
+<tr><td>Cluster credential কার হাতে</td><td>CI system-এর হাতে (বাইরের)</td><td>শুধু in-cluster controller-এর হাতে</td></tr>
+<tr><td>সত্যের উৎস</td><td>CI pipeline-এর যা রান হলো তাই</td><td>Git repo — সবসময় দেখা যায় কী deploy হওয়ার কথা</td></tr>
+<tr><td>Drift (কেউ manual পরিবর্তন করলে)</td><td>ধরা পড়ে না</td><td>পরের sync-এ controller নিজে থেকেই আগের অবস্থায় ফিরিয়ে দেয়</td></tr>
+<tr><td>Rollback</td><td>পুরনো pipeline run খুঁজে আবার চালানো</td><td><code>git revert</code> — controller বাকিটা করে</td></tr>
+</table>
+<div class="callout why"><span class="tag">নিরাপত্তার দিক থেকে Pull মডেলের সুবিধা</span>
+Push মডেলে CI pipeline compromise হলে আক্রমণকারী সরাসরি production cluster-এ write access পেয়ে যায় — CI system-টাই তখন সবচেয়ে বড় আক্রমণ-তল। Pull মডেলে CI-এর হাতে কোনো cluster credential-ই থাকে না (শুধু image build/push আর manifest repo-তে commit করার অনুমতি) — cluster-এ write করার একমাত্র পথ in-cluster controller, যা বাইরে থেকে সরাসরি আক্রমণযোগ্য নয়।</div>
+
+<h3>Argo CD — একটা বাস্তব উদাহরণ</h3>
+<pre>apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: myapi
+  namespace: argocd
+spec:
+  source:
+    repoURL: https://github.com/mycompany/myapi-manifests.git
+    targetRevision: main
+    path: overlays/production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+  syncPolicy:
+    automated:
+      prune: true          <span class="c"># Git থেকে সরানো resource cluster থেকেও মুছে দেবে</span>
+      selfHeal: true        <span class="c"># manual drift ধরা পড়লেই আবার Git-এর অবস্থায় ফেরাবে</span></pre>
+<p>Flux একই দর্শন অনুসরণ করে, তবে হালকা, CLI/CRD-চালিত — বাছাই মূলত টিমের পছন্দ।</p>
+
+<h3>পুরো CI+GitOps Handoff — একসাথে সাজিয়ে দেখা</h3>
+<div class="diagram"><pre>
+Developer কোড push করে
+      │
+      ▼
+CI (২ নম্বর অধ্যায়)  ── build/test/push image ──▶ Container Registry
+      │
+      └── manifest repo-তে নতুন image tag commit করে (cluster ছোঁয় না)
+                              │
+                              ▼
+                    Argo CD / Flux (in-cluster)
+                    Git দেখে, cluster-এর সাথে diff করে, sync করে
+                              │
+                              ▼
+                         Kubernetes Cluster
+</pre></div>
+<div class="callout best"><span class="tag">গভীরে যেতে চাইলে</span>
+এই কোর্সের Kubernetes-ভিত্তিক বিস্তারিত (Sealed Secrets/External Secrets দিয়ে GitOps-এ secret সামলানো, OPA Gatekeeper/Kyverno দিয়ে policy enforcement, পুরো Argo CD UI walkthrough) Kubernetes কোর্সের "GitOps · CI/CD Tooling" অধ্যায়ে পাওয়া যাবে — এই অধ্যায় GitOps-এর সাধারণ নীতি cover করে, সেটা .NET/Kubernetes-নির্দিষ্ট প্রয়োগ cover করে।</div>
+</template>
+
+<template data-page="secrets">
+<h2 class="title">৭. Secrets Management</h2>
+<p class="lead">API key, database password, TLS certificate — এই সংবেদনশীল ডেটা কোড বা CI config-এ hardcode করলে তা Git history-তে চিরকালের জন্য থেকে যায়, এমনকি পরে মুছে ফেললেও। Secrets management এই সমস্যার একটা systematic সমাধান।</p>
+
+<h3>সমস্যা — Secret Leak কীভাবে ঘটে</h3>
+<ul>
+<li>একটা connection string সরাসরি <code>appsettings.json</code>-এ commit করা</li>
+<li>একটা Docker image-এর ভেতরে <code>ENV API_KEY=...</code> বেক করা — <code>docker history</code> দিয়ে সেই layer-এর কমান্ড দেখা যায়</li>
+<li>CI log-এ ভুলবশত একটা secret print হয়ে যাওয়া</li>
+</ul>
+<div class="callout mistake"><span class="tag">Common mistake — Docker Image Layer-এ Secret বেক করা</span>
+Build-এর সময় একটা secret ব্যবহার করে পরের layer-এ সেটা <code>unset</code>/মুছে দিলেও, Docker-এর layer-ভিত্তিক ফাইলসিস্টেমে সেই আগের layer-টা এখনো image-এর মধ্যে থেকে যায় — <code>docker history</code> বা image layer extract করলেই secret বেরিয়ে আসে। সঠিক পদ্ধতি হলো build-time secret-এর জন্য Docker BuildKit-এর <code>--secret</code> mount ব্যবহার করা, যা কোনো layer-এই secret persist করে না।</div>
+
+<h3>Vault — Dynamic Secrets ও Centralized Access</h3>
+<p><span class="kw">HashiCorp Vault</span> secret-কে কেন্দ্রীয়ভাবে সংরক্ষণ ও access-নিয়ন্ত্রণ করে, কিন্তু এর আসল শক্তি <span class="kw">dynamic secrets</span>-এ — একটা app database-এ কানেক্ট করতে চাইলে Vault একটা নতুন, স্বল্পস্থায়ী (যেমন ১ ঘণ্টা মেয়াদি) credential তৈরি করে দেয়, যা মেয়াদ শেষে নিজে থেকেই অকার্যকর হয়ে যায় — একটা static, চিরস্থায়ী password-এর বদলে।</p>
+
+<h3>Cloud-নেটিভ Secret Store</h3>
+<table>
+<tr><th>সেবা</th><th>বৈশিষ্ট্য</th></tr>
+<tr><td><span class="kw">AWS Secrets Manager</span></td><td>স্বয়ংক্রিয় rotation সমর্থন করে (RDS credential-এর জন্য বিল্ট-ইন)</td></tr>
+<tr><td><span class="kw">Azure Key Vault</span></td><td>Secret, key, ও certificate একসাথে; Managed Identity দিয়ে .NET app-এর সাথে গভীর সংযোগ</td></tr>
+<tr><td><span class="kw">GCP Secret Manager</span></td><td>IAM-ভিত্তিক access control, versioning বিল্ট-ইন</td></tr>
+</table>
+
+<h3>Secret Rotation — কেন static secret ঝুঁকিপূর্ণ</h3>
+<div class="callout best"><span class="tag">Best practice — Rotation স্বয়ংক্রিয় করুন</span>
+একটা secret যত বেশিদিন অপরিবর্তিত থাকে, তার leak হওয়ার সঞ্চিত ঝুঁকি তত বাড়ে (কতজনের access ছিল, কতগুলো log/backup-এ ছড়িয়েছে)। Rotation ম্যানুয়াল প্রক্রিয়া হলে তা প্রায়ই "পরে করব" বলে পিছিয়ে যায় — cloud secret manager-এর বিল্ট-ইন rotation feature বা Vault-এর dynamic secrets ব্যবহার করে rotation-কে infrastructure-এর অংশ বানিয়ে ফেলা উচিত, মানুষের মনে রাখার ওপর নির্ভর না করে।</div>
+</template>
+
+<template data-page="observability">
+<h2 class="title">৮. Observability — Metrics, Logs, Traces</h2>
+<p class="lead">Monitoring বলে দেয় "সিস্টেম কি ভালো আছে" (পূর্ব-নির্ধারিত প্রশ্নের উত্তর)। <span class="kw">Observability</span> এর চেয়ে বেশি কিছু দেয় — এমন প্রশ্নেরও উত্তর দিতে পারা যা আগে থেকে ভাবাই হয়নি ("এই নির্দিষ্ট ব্যবহারকারীর এই নির্দিষ্ট request কেন ধীর হলো")।</p>
+
+<h3>তিনটা স্তম্ভ</h3>
+<table>
+<tr><th>স্তম্ভ</th><th>কী ধরে রাখে</th><th>সবচেয়ে ভালো উত্তর দেয় যে প্রশ্নের</th></tr>
+<tr><td><span class="kw">Metrics</span></td><td>সময়ের সাথে সংখ্যা (request/sec, error rate, latency percentile)</td><td>"কতটা খারাপ, কখন থেকে শুরু হলো"</td></tr>
+<tr><td><span class="kw">Logs</span></td><td>বিচ্ছিন্ন, timestamped ইভেন্ট রেকর্ড</td><td>"ঠিক কী ঘটেছিল এই নির্দিষ্ট মুহূর্তে"</td></tr>
+<tr><td><span class="kw">Traces</span></td><td>একটা একক request একাধিক service জুড়ে কীভাবে ভ্রমণ করল তার সম্পূর্ণ পথ</td><td>"কোন service-এ, কেন এই নির্দিষ্ট request ধীর হলো"</td></tr>
+</table>
+
+<h3>Metrics — Prometheus/Grafana</h3>
+<p><span class="kw">Prometheus</span> নিয়মিত ইন্টারভ্যালে প্রতিটা service থেকে metric "স্ক্র্যাপ" করে টাইম-সিরিজ ডেটাবেসে জমা রাখে; <span class="kw">Grafana</span> সেই ডেটা visualize করে ড্যাশবোর্ড বানায়, আর নির্দিষ্ট threshold ছাড়ালে alert পাঠায়।</p>
+
+<h3>Logs — Structured Logging ও Centralized Aggregation</h3>
+<p>শত শত container/instance জুড়ে ছড়িয়ে থাকা plain-text log ফাইল ম্যানুয়ালি খুঁজে দেখা অব্যবহারিক। <span class="kw">Structured logging</span> (JSON ফরম্যাটে, প্রতিটা field আলাদাভাবে searchable) আর একটা centralized aggregator (Loki, ELK stack) সব সার্ভিসের log একটা জায়গায় এনে query করার সুযোগ দেয়।</p>
+<div class="callout why"><span class="tag">কেন plain-text log যথেষ্ট নয়</span>
+<code>"User 4521 login failed from 10.2.3.4"</code>-এর মতো একটা plain-text লাইন মানুষ পড়তে পারে, কিন্তু "গত ঘণ্টায় কোন IP থেকে সবচেয়ে বেশি failed login হয়েছে" — এই প্রশ্নের উত্তর প্রোগ্রামেটিকভাবে বের করা কঠিন, কারণ ফিল্ডগুলো structured নয়। একই লগ যদি <code>{"event":"login_failed","user_id":4521,"ip":"10.2.3.4"}</code> আকারে লেখা হয়, তাহলে aggregator-এ সরাসরি <code>ip</code> ফিল্ড দিয়ে group/count করা যায় — এই পার্থক্যটাই "log" আর "queryable telemetry"-এর মধ্যে ফারাক তৈরি করে।</div>
+
+<h3>Traces — OpenTelemetry ও Distributed Tracing</h3>
+<p>একটা single user request প্রায়ই একাধিক microservice ছুঁয়ে যায় (API gateway → auth service → order service → payment service)। <span class="kw">Distributed tracing</span>-এ প্রতিটা request একটা অভিন্ন <code>trace ID</code> বহন করে, প্রতিটা service নিজের কাজের সময়কে একটা <code>span</code> হিসেবে রেকর্ড করে — সবগুলো span একসাথে জোড়া দিলে পুরো request-এর end-to-end যাত্রাপথ, আর কোন অংশে কত সময় লাগল তা স্পষ্ট হয়ে যায়। <span class="kw">OpenTelemetry</span> এই instrumentation-এর একটা vendor-neutral, শিল্প-মানদণ্ড হয়ে উঠেছে।</p>
+<div class="diagram"><pre>
+trace_id=abc123
+├─ span: API Gateway            (২ms)
+│   └─ span: Auth Service        (৮ms)
+│       └─ span: Order Service   (১২০ms)  ◄── এখানেই আসল ধীরগতি
+│           └─ span: Payment DB Query (১১০ms)
+</pre></div>
+<div class="callout best"><span class="tag">Best practice — তিনটাই একসাথে দরকার, একটাতে থামবেন না</span>
+শুধু metric দিয়ে বোঝা যায় "latency বেড়েছে", শুধু log দিয়ে বোঝা যায় একটা নির্দিষ্ট error message, কিন্তু কোন service-এ, কার জন্য, ঠিক কেন ধীর — এই সম্পূর্ণ ছবি পেতে trace দরকার। প্রোডাকশন-গ্রেড observability মানে তিনটা স্তম্ভকেই একসাথে, আর সম্ভব হলে একই <code>trace_id</code>/correlation ID দিয়ে পরস্পরের সাথে যুক্ত রাখা — একটা alert থেকে সরাসরি সংশ্লিষ্ট trace, সেখান থেকে সংশ্লিষ্ট log-এ যাওয়া যায়।</div>
+</template>
+
+<template data-page="sre">
+<h2 class="title">৯. SRE Practices — SLI/SLO/Error Budget</h2>
+<p class="lead">"সিস্টেমটা নির্ভরযোগ্য রাখুন" — একটা অস্পষ্ট, বিতর্কযোগ্য লক্ষ্য। Site Reliability Engineering (SRE) এই লক্ষ্যকে সংখ্যায় রূপান্তর করে, যাতে "যথেষ্ট নির্ভরযোগ্য" একটা measurable, আলোচনাযোগ্য সিদ্ধান্ত হয়ে ওঠে।</p>
+
+<h3>SLI, SLO, SLA — তিনটা স্তর</h3>
+<table>
+<tr><th>শব্দ</th><th>মানে</th><th>উদাহরণ</th></tr>
+<tr><td><span class="kw">SLI</span> (Indicator)</td><td>প্রকৃত পরিমাপ করা মেট্রিক</td><td>"গত ৫ মিনিটে ৯৯.৫% request ২০০ ms-এর মধ্যে সফল হয়েছে"</td></tr>
+<tr><td><span class="kw">SLO</span> (Objective)</td><td>SLI-এর জন্য টিমের অভ্যন্তরীণ লক্ষ্য</td><td>"৩০ দিনে ৯৯.৯% request সফল হবে"</td></tr>
+<tr><td><span class="kw">SLA</span> (Agreement)</td><td>গ্রাহকের সাথে চুক্তিবদ্ধ প্রতিশ্রুতি, না মানলে জরিমানা/refund</td><td>"৯৯.৫% uptime, নাহলে ক্রেডিট ফেরত"</td></tr>
+</table>
+<div class="callout why"><span class="tag">SLO সবসময় SLA-এর চেয়ে কঠোর কেন রাখা হয়</span>
+SLO-কে ইচ্ছাকৃতভাবে SLA-এর চেয়ে কঠোর (যেমন SLA ৯৯.৫% হলে SLO ৯৯.৯%) রাখা হয়, যাতে চুক্তি ভাঙার আগেই টিম নিজে সমস্যা টের পেয়ে ঠিক করার সুযোগ পায় — SLA ভাঙা মানে আসলে ইতিমধ্যে দেরি হয়ে গেছে।</div>
+
+<h3>Error Budget — গতি বনাম স্থিতিশীলতার সিদ্ধান্তকে ডেটা-চালিত করা</h3>
+<p>SLO ৯৯.৯% হলে, তার মানে বাকি ০.১% হলো <span class="kw">error budget</span> — এই সময়টুকু "ব্যর্থ" হতে পারার অনুমোদিত বাজেট। এই একটা সংখ্যা একটা কঠিন প্রশ্নের উত্তর সহজ করে দেয়: "এই ঝুঁকিপূর্ণ deploy-টা কি এখন করা উচিত?"</p>
+<div class="callout behind"><span class="tag">Error Budget কীভাবে সিদ্ধান্তে ব্যবহার হয়</span>
+Budget এখনো অনেকখানি অবশিষ্ট থাকলে, টিম দ্রুত গতিতে নতুন ফিচার শিপ করতে পারে — কিছুটা ঝুঁকি নেওয়ার "সামর্থ্য" আছে। কিন্তু budget প্রায় শেষ হয়ে গেলে (সাম্প্রতিক incident-এ অনেক burn হয়ে গেছে), টিম স্বয়ংক্রিয়ভাবে ঝুঁকিপূর্ণ deploy স্থগিত রেখে শুধু reliability-সংক্রান্ত কাজে মনোযোগ দেয় — এটাই DevOps-এর সেই "গতি বনাম স্থিতিশীলতা" বিতর্ককে সংখ্যা দিয়ে সমাধান করে, ব্যক্তিগত মতামত দিয়ে নয়।</div>
+
+<h3>Toil — যে কাজ কমানোই লক্ষ্য</h3>
+<p><span class="kw">Toil</span> মানে ম্যানুয়াল, পুনরাবৃত্তিমূলক, automation-যোগ্য কাজ যা করলে দীর্ঘমেয়াদী কোনো উন্নতি হয় না (যেমন প্রতিদিন হাতে একটা log পরিষ্কার করা)। SRE practice-এ ইঞ্জিনিয়ারদের সময়ের একটা অংশ (প্রায়ই ৫০%-এর সীমা) নির্দিষ্টভাবে toil কমানোর automation-এ ব্যয় করার নিয়ম রাখা হয় — নাহলে toil ধীরে ধীরে পুরো টিমের সময় গ্রাস করে ফেলে, নতুন কিছু বানানোর সময়ই থাকে না।</p>
+</template>
+
+<template data-page="incident">
+<h2 class="title">১০. Incident Management ও Postmortem</h2>
+<p class="lead">সবচেয়ে ভালো টিমও production incident এড়াতে পারে না — আসল পার্থক্য তৈরি হয় কত দ্রুত সেটা ধরা পড়ে, কত দ্রুত ঠিক হয়, আর তার থেকে টিম আসলে কতটা শেখে।</p>
+
+<h3>Incident Lifecycle</h3>
+<div class="diagram"><pre>
+Detect  →  Triage  →  Mitigate  →  Resolve  →  Postmortem
+(alert     (severity   (দ্রুত ক্ষতি      (মূল কারণ      (কী ঘটেছিল,
+ ফায়ার      নির্ধারণ,    কমানো —       ঠিক করা)      কেন, ভবিষ্যতে
+ হয়)        কে দায়িত্বে)  rollback/     )              কীভাবে রোধ)
+                          feature flag off)
+</pre></div>
+
+<h3>Alerting — Actionable বনাম Noise</h3>
+<div class="callout mistake"><span class="tag">Common mistake — Alert Fatigue</span>
+প্রতিটা সামান্য anomaly-তে alert পাঠালে on-call ইঞ্জিনিয়ার ধীরে ধীরে alert-কে উপেক্ষা করতে শুরু করেন — একেই বলে <span class="kw">alert fatigue</span>। একটা ভালো alert তিনটা শর্ত পূরণ করে: এটা <b>actionable</b> (কেউ কিছু একটা করতে পারবে), <b>urgent</b> (এখনই না দেখলে ক্ষতি হবে), আর সঠিক ব্যক্তির কাছে পৌঁছায়। SRE অধ্যায়ের error budget burn rate-এর ওপর ভিত্তি করে alert threshold সেট করা ("গত ১ ঘণ্টায় budget-এর ৫% পুড়ে গেছে") অনেক বেশি অর্থবহ একটা single metric threshold-এর চেয়ে।</div>
+
+<h3>Blameless Postmortem — শেখার সংস্কৃতি</h3>
+<p>একটা incident-এর পর লক্ষ্য "কার ভুল" খুঁজে বের করা নয় — বরং সিস্টেম/প্রক্রিয়ায় কোন দুর্বলতা এই ভুলকে সম্ভব করেছে তা বের করা। একজন ব্যক্তিকে দোষারোপ করলে ভবিষ্যতে মানুষ সমস্যা লুকাতে শুরু করে, খোলাখুলি রিপোর্ট করা বন্ধ করে দেয়।</p>
+<table>
+<tr><th>Postmortem-এর অংশ</th><th>উদ্দেশ্য</th></tr>
+<tr><td>Timeline</td><td>ঠিক কখন কী ঘটেছিল, মিনিট বাই মিনিট — কোনো ব্যাখ্যা ছাড়া, শুধু ঘটনা</td></tr>
+<tr><td>Root cause (5 Whys)</td><td>"কেন" প্রশ্ন বারবার করে উপরিভাগের লক্ষণ থেকে প্রকৃত মূল কারণে পৌঁছানো</td></tr>
+<tr><td>Action items</td><td>নির্দিষ্ট, owner ও deadline-সহ পরিবর্তন — যাতে একই কারণে আবার incident না ঘটে</td></tr>
+</table>
+<div class="callout why"><span class="tag">"Human Error" root cause হিসেবে যথেষ্ট নয় কেন</span>
+একটা postmortem-এ "ইঞ্জিনিয়ার ভুল কমান্ড চালিয়েছিল" লিখে থামলে প্রকৃত সমস্যা অধরাই থেকে যায় — মানুষ সবসময় ভুল করবে, এটা একটা ধ্রুবক। আসল প্রশ্ন: কেন সিস্টেম সেই ভুল কমান্ডকে এত সহজে চালাতে দিল? Confirmation prompt ছিল না কেন? Production access-এ কেন এত সহজে পৌঁছানো গেল? ভালো postmortem "human error"-কে শুরুর বিন্দু ধরে, শেষ উত্তর হিসেবে নয়।</div>
+</template>
+
+<template data-page="security">
+<h2 class="title">১১. DevSecOps — Shift-Left Security</h2>
+<p class="lead">ঐতিহ্যগতভাবে security review হতো release-এর ঠিক আগে, একটা আলাদা টিমের হাতে — যা প্রায়ই দেরি করে দিত এবং দামী সমস্যা খুঁজে বের করত। <span class="kw">DevSecOps</span> security-কে জীবনচক্রের শুরুর দিকে ("বামে" — shift-left) নিয়ে আসে, CI pipeline-এরই একটা অংশ বানিয়ে।</p>
+
+<h3>Shift-Left — কেন আগে ধরা সস্তা</h3>
+<div class="callout why"><span class="tag">খরচের পার্থক্য — কোড লেখার সময় বনাম প্রোডাকশনে ধরা পড়া</span>
+একটা নিরাপত্তা দুর্বলতা যদি একজন ডেভেলপার নিজের IDE-তেই ধরতে পারে (SAST tool চলছে), সেটা ঠিক করতে কয়েক মিনিট লাগে। একই দুর্বলতা যদি প্রোডাকশনে exploited হওয়ার পর ধরা পড়ে, তখন incident response, ডেটা লিক assessment, গ্রাহক বিজ্ঞপ্তি, এবং জরুরি patch — সব মিলিয়ে খরচ শত-হাজার গুণ বেড়ে যায়। CI pipeline-এ security scan যোগ করা তাই খরচ কমানোর সবচেয়ে কার্যকর একক পদক্ষেপ।</div>
+
+<h3>স্বয়ংক্রিয় Security Scanning — CI-তে কোথায় বসে</h3>
+<table>
+<tr><th>Scan ধরন</th><th>কী খুঁজে বের করে</th><th>কখন চলে</th></tr>
+<tr><td><span class="kw">SAST</span> (Static Application Security Testing)</td><td>নিজের কোডে দুর্বলতার প্যাটার্ন (SQL injection-প্রবণ কোড, hardcoded secret)</td><td>প্রতিটা commit/PR-এ, কোড কম্পাইলও করতে হয় না</td></tr>
+<tr><td><span class="kw">Dependency Scanning</span></td><td>ব্যবহৃত third-party লাইব্রেরির পরিচিত (CVE) দুর্বলতা</td><td>প্রতিটা PR-এ, dependency বদলালে বিশেষভাবে</td></tr>
+<tr><td><span class="kw">Container Image Scanning</span></td><td>Docker image-এর base layer/OS প্যাকেজে পরিচিত দুর্বলতা</td><td>image build হওয়ার পরপরই, push করার আগে</td></tr>
+<tr><td><span class="kw">DAST</span> (Dynamic Application Security Testing)</td><td>চলমান অ্যাপ্লিকেশনে বাইরে থেকে আক্রমণ চালিয়ে দুর্বলতা খোঁজা</td><td>staging environment-এ deploy হওয়ার পর</td></tr>
+</table>
+
+<h3>Software Supply Chain — SBOM ও Image Signing</h3>
+<p>আধুনিক অ্যাপ্লিকেশন কয়েকশো third-party dependency-এর ওপর নির্ভর করে — এদের যেকোনো একটাতে দুর্বলতা (বা ইচ্ছাকৃত malicious কোড) থাকলে তা পুরো supply chain-এ ছড়িয়ে পড়তে পারে। একটা <span class="kw">SBOM</span> (Software Bill of Materials) একটা অ্যাপ্লিকেশনের ভেতরে ঠিক কোন কোন dependency, কোন version-এ আছে তার একটা সম্পূর্ণ তালিকা — নতুন কোনো CVE প্রকাশিত হলে সাথে সাথে জানা যায় সেটা আপনাকে প্রভাবিত করে কিনা।</p>
+<pre><span class="c"># cosign দিয়ে একটা image সাইন করা — নিশ্চিত করে image build করার পর কেউ বদলায়নি</span>
+$ cosign sign --key cosign.key ghcr.io/mycompany/myapi:1.4.2
+$ cosign verify --key cosign.pub ghcr.io/mycompany/myapi:1.4.2</pre>
+<div class="callout mistake"><span class="tag">Supply Chain আক্রমণের বাস্তবতা</span>
+সাম্প্রতিক বছরগুলোতে একাধিক হাই-প্রোফাইল আক্রমণ (যেমন একটা জনপ্রিয় IT management টুলের বিল্ড সিস্টেমে malicious কোড ঢুকিয়ে হাজার হাজার গ্রাহকের কাছে পৌঁছে দেওয়া) দেখিয়েছে — আপনার নিজের কোড নিরাপদ হলেও, dependency বা build pipeline compromise হলে পুরো নিরাপত্তা ভেঙে পড়তে পারে। Image signing (কে বানিয়েছে তা cryptographically যাচাই), SBOM (কী আছে তার সম্পূর্ণ তালিকা), আর CI pipeline নিজেই hardened (least-privilege token, OIDC) রাখা — এই তিনটা একসাথে <span class="kw">SLSA</span>-এর মতো framework-এর ভিত্তি তৈরি করে।</div>
+</template>
+
+<template data-page="artifact">
+<h2 class="title">১২. Artifact ও Environment Promotion</h2>
+<p class="lead">CI-তে একটা build তৈরি হওয়ার পর সেটা dev, staging, প্রোডাকশন — একাধিক environment দিয়ে যাত্রা করে। এই যাত্রায় একটা মৌলিক নীতি ভাঙলে "staging-এ কাজ করেছিল, প্রোডাকশনে করল না" জাতীয় সমস্যা তৈরি হয়।</p>
+
+<h3>Build Once, Promote Everywhere</h3>
+<div class="callout why"><span class="tag">কেন প্রতিটা Environment-এর জন্য আলাদা Build করা ভুল</span>
+যদি dev, staging, প্রোডাকশন-এর জন্য প্রতিটাতে আলাদা করে rebuild করা হয় (এমনকি একই কোড থেকে), compiler version, dependency resolution-এর সামান্য পার্থক্য, বা build-এর সময়কার environment variable-এর তারতম্যে দুইটা "একই" build আসলে সামান্য ভিন্ন বাইনারি হয়ে যেতে পারে — তখন "staging-এ টেস্ট করা জিনিসটাই" প্রোডাকশনে আসলে যাচ্ছে না, এই গ্যারান্টি হারিয়ে যায়। সঠিক পদ্ধতি: <b>একবার build করা</b> একটা immutable artifact (Docker image, একটা নির্দিষ্ট tag/digest সহ), আর সেই একই artifact-কে dev → staging → production ক্রমে <b>promote</b> করা — শুধু configuration (env var, secret) পরিবর্তন হবে, বাইনারি নয়।</div>
+
+<h3>Artifact Repository</h3>
+<table>
+<tr><th>টুল</th><th>কী রাখে</th></tr>
+<tr><td><span class="kw">GitHub Container Registry / Docker Hub</span></td><td>Container image</td></tr>
+<tr><td><span class="kw">Nexus / JFrog Artifactory</span></td><td>NuGet/npm package, Docker image, generic binary — সব ধরনের artifact একসাথে</td></tr>
+</table>
+
+<h3>Semantic Versioning ও Tagging Strategy</h3>
+<p><code>MAJOR.MINOR.PATCH</code> (যেমন <code>2.4.1</code>) — MAJOR বাড়ে breaking change-এ, MINOR নতুন backward-compatible ফিচারে, PATCH শুধু bug fix-এ। CI-তে প্রতিটা image-কে গিট commit SHA দিয়ে ট্যাগ করা (traceability-এর জন্য) আর release-এর সময় একটা semantic version tag-ও যোগ করা — দুটোই একসাথে ব্যবহার করা প্রচলিত প্র্যাকটিস।</p>
+<div class="callout mistake"><span class="tag">Common mistake — <code>:latest</code> ট্যাগের ওপর নির্ভর করা প্রোডাকশনে</span>
+<code>:latest</code> একটা মিউটেবল ট্যাগ — এটা কোন নির্দিষ্ট build নির্দেশ করে না, যেকোনো সময় নতুন push-এ বদলে যায়। প্রোডাকশন deployment সবসময় একটা নির্দিষ্ট, অপরিবর্তনীয় ট্যাগ বা digest ব্যবহার করা উচিত (Docker কোর্সে বিস্তারিত) — নাহলে "গতকালের সেই কাজ করা deployment" আজ আবার চালাতে গেলে ভিন্ন কিছু আসতে পারে।</div>
+
+<h3>Environment Parity — "আমার মেশিনে তো চলছিল"</h3>
+<p>dev/staging/production-এর মধ্যে যত বেশি অসামঞ্জস্য (ভিন্ন OS version, ভিন্ন config পদ্ধতি, dev-এ mock service কিন্তু prod-এ আসল), ততই "staging-এ ঠিক ছিল" জাতীয় surprise বাড়ে। Twelve-Factor App methodology-এর একটা মূল নীতি হলো — কোড ও dependency সব environment-এ অভিন্ন রাখা, শুধু <b>config</b> (env var দিয়ে) environment-ভেদে বদলানো, কখনো আলাদা কোড পাথ নয়।</p>
+</template>
+
+<template data-page="platform">
+<h2 class="title">১৩. Platform Engineering ও Developer Experience</h2>
+<p class="lead">এই কোর্সের প্রতিটা টুল (CI, Terraform, Kubernetes, Observability) শক্তিশালী, কিন্তু প্রতিটা প্রোডাক্ট টিমকে যদি এই সবগুলো আলাদাভাবে শিখে, নিজের মতো করে সেটআপ করতে হয় — সেটা organization-ব্যাপী বিশাল পুনরাবৃত্তি ও অসামঞ্জস্যতা তৈরি করে। এখানেই <span class="kw">Platform Engineering</span>-এর জন্ম।</p>
+
+<h3>DevOps ক্লান্তি — কেন Platform Engineering-এর উত্থান</h3>
+<div class="callout why"><span class="tag">"You Build It, You Run It"-এর লুকানো খরচ</span>
+DevOps-এর "পুরো দায়িত্ব একই টিমের" দর্শন চমৎকার, কিন্তু বাস্তবে এর মানে দাঁড়ায় প্রতিটা ছোট প্রোডাক্ট টিমকেও Kubernetes YAML, Terraform মডিউল, CI pipeline, Observability সেটআপ — সব শিখতে হয়। ডজন খানেক টিমে এই একই deep infrastructure knowledge বারবার পুনরাবৃত্তি হয়, প্রতিটা টিম কিছুটা ভিন্নভাবে জিনিস সেটআপ করে (অসামঞ্জস্যতা), আর আসল প্রোডাক্ট ফিচার বানানোর সময় কমে যায়। Platform Engineering এই সমস্যার উত্তর — এই সব জটিলতা একটা কেন্দ্রীয় প্ল্যাটফর্ম টিম একবার সঠিকভাবে বানায়, প্রোডাক্ট টিম শুধু তার সরল ইন্টারফেস ব্যবহার করে।</div>
+
+<h3>Internal Developer Platform (IDP) — Self-Service Golden Path</h3>
+<p>একটা IDP প্রোডাক্ট টিমকে একটা সরল, স্ব-সেবা ইন্টারফেস দেয় — যেমন একটা নতুন সার্ভিস বানাতে ডেভেলপার শুধু একটা ফর্ম পূরণ করে বা একটা simple config লেখে ("আমার একটা .NET API দরকার, PostgreSQL সহ"), আর প্ল্যাটফর্ম নিজে থেকেই এর পেছনে Terraform, Kubernetes manifest, CI pipeline, monitoring dashboard — সবকিছু সঠিক convention অনুযায়ী তৈরি করে দেয়। <span class="kw">Backstage</span> (Spotify-এর তৈরি, open-source) এই ধরনের IDP বানানোর সবচেয়ে জনপ্রিয় framework।</p>
+
+<h3>Golden Path — সীমাবদ্ধতা যা আসলে স্বাধীনতা দেয়</h3>
+<div class="callout best"><span class="tag">"Paved Road" দর্শন</span>
+একটা Golden Path মানে "এই কাজটা করার জন্য সবচেয়ে সহজ, সবচেয়ে সমর্থিত পথ" — এটা কোনোভাবে বাধ্যতামূলক নয় (টিম চাইলে ভিন্ন পথে যেতে পারে), কিন্তু সেই পথে হাঁটলে security scanning, observability, CI/CD — সবকিছু বিনামূল্যে, স্বয়ংক্রিয়ভাবে পাওয়া যায়। এই কোর্সে শেখা প্রতিটা practice (CI gate, IaC, GitOps, secrets, observability, DevSecOps scanning) একটা ভালো golden path-এর অংশ — Platform Engineering মূলত এই সবগুলোকে একসাথে প্যাকেজ করে একটা প্রোডাক্ট হিসেবে ভেতরের ডেভেলপারদের কাছে পরিবেশন করার অনুশীলন।</div>
+
+<h3>সবকিছু একসাথে — এই কোর্সের সম্পূর্ণ চিত্র</h3>
+<p>একজন ডেভেলপার কোড commit করেন → CI pipeline build/test করে, image push করে (২ নম্বর) → manifest repo-তে commit যায়, Argo CD/Flux সেটা cluster-এ sync করে (৬ নম্বর), deployment strategy অনুযায়ী নিরাপদে rollout হয় (৩ নম্বর) → Observability সবকিছু পর্যবেক্ষণ করে (৮ নম্বর), SLO-এর বিপরীতে error budget ট্র্যাক হয় (৯ নম্বর) → কোনো সমস্যা হলে incident lifecycle অনুসরণ করে দ্রুত সমাধান ও শেখা হয় (১০ নম্বর) → পুরো সময় জুড়ে security scanning ও secrets management প্রতিটা স্তরে সক্রিয় থাকে (৭ ও ১১ নম্বর) — আর একটা Platform Engineering টিম এই পুরো প্রবাহকে একটা সহজ, স্ব-সেবা golden path হিসেবে সব প্রোডাক্ট টিমের জন্য উপলব্ধ করে। এটাই আধুনিক DevOps-এর সম্পূর্ণ ছবি — একটা টুল নয়, একটা সংযুক্ত সিস্টেম।</p>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>
