@@ -121,12 +121,1020 @@ const pages = [
   {id:"patterns",      icon:"🧩", title:"Component Design Patterns"},
   {id:"a11y",          icon:"♿", title:"Accessibility ও Styling"},
   {id:"production",    icon:"🚀", title:"Production Concerns"},
+  {id:"interview",     icon:"❓", title:"Interview প্রশ্নোত্তর — কোড সহ"},
 ];
 </script>
 
 <!-- ============================ CONTENT ============================ -->
 
-<!--CHAPTER_SLOT-->
+<template data-page="foundations">
+<h2 class="title">১. React Foundations — JSX, Components, Rendering</h2>
+<p class="lead">React একটা লাইব্রেরি, ফ্রেমওয়ার্ক নয় — এর একমাত্র কাজ হলো state (ডেটা) থেকে UI বানানো, আর state বদলালে সেই UI-কে দক্ষতার সাথে আপডেট করা। এই একটা বাক্যেই React-এর পুরো মানসিকতা লুকিয়ে — <b>UI = f(state)</b>। এই অধ্যায়ে বোঝা যাবে JSX আসলে কী compile হয়, কম্পোনেন্ট কীভাবে কম্পোজ হয়, আর একটা render আসলে ব্রাউজারে কীভাবে পৌঁছায়।</p>
+
+<h3>JSX আসলে JavaScript — HTML নয়</h3>
+<p>JSX দেখতে HTML-এর মতো হলেও এটা আসলে <code>React.createElement()</code> কলের জন্য syntactic sugar। Babel/TypeScript compiler JSX-কে প্লেইন function call-এ রূপান্তর করে দেয়।</p>
+<pre><span class="c">// আপনি যা লেখেন</span>
+function Greeting({ name }) {
+  return &lt;h1 className="title"&gt;Hello, {name}&lt;/h1&gt;;
+}
+
+<span class="c">// Babel যা compile করে (React 17+ automatic JSX runtime)</span>
+import { jsx as _jsx } from "react/jsx-runtime";
+function Greeting({ name }) {
+  return _jsx("h1", { className: "title", children: "Hello, " + name });
+}</pre>
+<div class="callout why"><span class="tag">কেন এটা জানা গুরুত্বপূর্ণ</span>
+JSX যেহেতু আসলে একটা <b>function call</b>, তাই এটা একটা expression — <code>if/else</code> statement সরাসরি JSX-এর ভেতরে লেখা যায় না, কিন্তু ternary (<code>condition ? &lt;A/&gt; : &lt;B/&gt;</code>) বা <code>&&</code> ব্যবহার করা যায়, কারণ সেগুলো expression। আর <code>&lt;h1 className=...&gt;</code> ফাংশনে একটা plain object (props) আর children পাঠায় — এই "props হলো একটা object" ধারণাটাই পুরো কম্পোনেন্ট মডেলের ভিত্তি।</div>
+
+<h3>Component — একটা Function যা JSX রিটার্ন করে</h3>
+<pre>function UserCard({ user, onSelect }) {
+  return (
+    &lt;div className="card" onClick={() =&gt; onSelect(user.id)}&gt;
+      &lt;img src={user.avatar} alt={user.name} /&gt;
+      &lt;h3&gt;{user.name}&lt;/h3&gt;
+      &lt;p&gt;{user.role}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}
+
+<span class="c">// ব্যবহার — composition দিয়ে ছোট কম্পোনেন্ট জোড়া দিয়ে বড় UI বানানো</span>
+function UserList({ users, onSelect }) {
+  return (
+    &lt;div className="grid"&gt;
+      {users.map(u =&gt; &lt;UserCard key={u.id} user={u} onSelect={onSelect} /&gt;)}
+    &lt;/div&gt;
+  );
+}</pre>
+<div class="callout mistake"><span class="tag">Common mistake — key হিসেবে array index ব্যবহার</span>
+<code>users.map((u, i) =&gt; &lt;UserCard key={i} /&gt;)</code> কাজ করে মনে হয়, কিন্তু list পুনর্বিন্যস্ত হলে (sort/filter/insert) React ভুলভাবে পুরনো DOM node আর component state-কে নতুন item-এর সাথে মিলিয়ে ফেলতে পারে — কারণ index অবস্থান বোঝায়, item-এর পরিচয় নয়। key সবসময় হওয়া উচিত item-এর একটা stable, unique id (যেমন <code>u.id</code>), যা list পুনর্বিন্যস্ত হলেও সেই আইটেমের সাথেই লেগে থাকে।</div>
+
+<h3>Virtual DOM ও Reconciliation — কেন এটা দ্রুত</h3>
+<p>প্রতিবার render হলে React সরাসরি real DOM বদলায় না — প্রথমে একটা lightweight JS object tree (virtual DOM) বানায়, তারপর আগের tree-এর সাথে তুলনা করে (<span class="kw">diffing</span>) শুধু যা আসলে বদলেছে সেটুকু real DOM-এ প্রয়োগ করে। এই তুলনা-প্রক্রিয়াকেই বলে <span class="kw">reconciliation</span>।</p>
+<div class="diagram"><pre>
+state বদলাল
+    │
+    ▼
+render phase   ── নতুন virtual DOM tree বানানো (pure, side-effect-free JS)
+    │
+    ▼
+diffing        ── আগের tree বনাম নতুন tree তুলনা (Fiber reconciler)
+    │
+    ▼
+commit phase   ── শুধু বদলানো অংশটুকু real DOM-এ প্রয়োগ, effect চালানো
+</pre></div>
+<div class="callout behind"><span class="tag">Fiber — React 16+ এর reconciliation engine</span>
+পুরনো (React 15) reconciler পুরো tree একবারে, synchronously diff করত — বড় tree হলে এটা মূল থ্রেড ব্লক করে দিত (janky UI)। Fiber reconciler কাজটাকে ছোট ছোট unit-এ ভাগ করে, incremental ভাবে করে, এবং প্রয়োজনে বেশি priority-এর কাজ (যেমন একটা input-এর keystroke) এসে গেলে কম priority-এর render (যেমন একটা বড় list) মাঝপথে থামিয়ে দিতে পারে — এটাই React 18-এর Concurrent Rendering-এর ভিত্তি।</div>
+
+<h3>Render Phase বনাম Commit Phase</h3>
+<table>
+<tr><th>ধাপ</th><th>কী ঘটে</th><th>বৈশিষ্ট্য</th></tr>
+<tr><td><span class="kw">Render</span></td><td>Component function কল হয়ে নতুন JSX tree তৈরি হয়</td><td>Pure হওয়া উচিত — কোনো side effect (DOM মোছা, API call) নয়, একাধিকবার চলতে পারে (Strict Mode-এ ইচ্ছাকৃতভাবে দুইবার)</td></tr>
+<tr><td><span class="kw">Commit</span></td><td>Diff অনুযায়ী real DOM আপডেট, ref সংযুক্ত, effect চালানো</td><td>Side effect এখানেই ঘটে — DOM mutation, <code>useEffect</code> callback</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — render-এর ভেতরে side effect</span>
+রেন্ডার ফাংশনের ভেতরে সরাসরি <code>fetch()</code>, <code>localStorage.setItem()</code>, বা কোনো mutable variable বদলানো — এগুলো Strict Mode-এ ডাবল-ইনভোক হয়ে বাগ তৈরি করে, আর concurrent rendering-এ অপ্রত্যাশিত আচরণ ঘটাতে পারে (render মাঝপথে বাতিল/পুনরায় শুরু হতে পারে)। Side effect সবসময় <code>useEffect</code>-এর ভেতরে বা event handler-এ থাকা উচিত, কখনো component body-তে সরাসরি নয়।</div>
+
+<h3>&lt;React.StrictMode&gt; — বাগ ধরার Development Tool</h3>
+<p>StrictMode প্রোডাকশনে কিছু করে না, কিন্তু development-এ ইচ্ছাকৃতভাবে component function ও কিছু effect দুইবার চালায় — যদি আপনার কোড pure না হয় (side effect থাকে render-এ, বা effect cleanup ভুল থাকে), তাহলে সেটা দ্রুত ধরা পড়ে যায়, প্রোডাকশনে যাওয়ার আগেই।</p>
+</template>
+
+<template data-page="hooks">
+<h2 class="title">২. Hooks Foundations — useState, useEffect</h2>
+<p class="lead">Hooks (React 16.8+) function component-কে নিজস্ব state ও lifecycle রাখার ক্ষমতা দেয়, class component ছাড়াই। <code>useState</code> আর <code>useEffect</code> এই দুইটাই প্রায় ৮০% দৈনন্দিন React কোডের ভিত্তি — তাই এদের সঠিক mental model থাকা অত্যাবশ্যক।</p>
+
+<h3>useState — Render-এর মধ্যে "স্মৃতি" রাখা</h3>
+<pre>function Counter() {
+  const [count, setCount] = useState(0);   <span class="c">// প্রাথমিক মান শুধু প্রথম render-এ ব্যবহৃত হয়</span>
+
+  return (
+    &lt;button onClick={() =&gt; setCount(count + 1)}&gt;
+      Clicked {count} times
+    &lt;/button&gt;
+  );
+}</pre>
+<div class="callout why"><span class="tag">setState asynchronous/batched কেন</span>
+<code>setCount(count + 1)</code> কল করার সাথে সাথেই <code>count</code> variable বদলে যায় না — React একটা re-render schedule করে, নতুন render-এ নতুন <code>count</code> value পাওয়া যাবে। একই event handler-এ একাধিক <code>setState</code> কল React একসাথে ব্যাচ করে ফেলে (React 18-এ সব জায়গায়, আগে শুধু event handler-এ) — এতে অপ্রয়োজনীয় একাধিক render এড়ানো যায়।</div>
+
+<h3>Functional Update — পুরনো State-এর উপর নির্ভরশীল Update</h3>
+<pre><span class="c">// ভুল হতে পারে — একই event-এ একাধিকবার কল করলে stale closure সমস্যা</span>
+function increment3() {
+  setCount(count + 1);
+  setCount(count + 1);
+  setCount(count + 1);   <span class="c">// ফলাফল +1, +3 নয় — তিনটাই একই "stale" count দেখে</span>
+}
+
+<span class="c">// সঠিক — updater function, সবসময় সর্বশেষ state পায়</span>
+function increment3Fixed() {
+  setCount(c =&gt; c + 1);
+  setCount(c =&gt; c + 1);
+  setCount(c =&gt; c + 1);   <span class="c">// ফলাফল +3 — প্রতিটা কল আগেরটার আপডেটেড মান পায়</span>
+}</pre>
+<div class="callout mistake"><span class="tag">Common mistake — নতুন state আগের state-এর ওপর নির্ভর করলে সরাসরি ভ্যালু ব্যবহার</span>
+<code>setCount(count + 1)</code> ঠিক আছে যদি একবারই কল হয়, কিন্তু যেকোনো জায়গায় যেখানে নতুন state আগের state থেকে গণনা করা হয়, functional update (<code>c =&gt; c + 1</code>) ব্যবহার করা নিরাপদ অভ্যাস — এটা closure-এর stale value সমস্যা সম্পূর্ণ এড়িয়ে যায়।</div>
+
+<h3>Lazy Initial State — ভারী গণনা একবারই চালানো</h3>
+<pre><span class="c">// ভুল — প্রতিটা render-এই expensiveCompute() কল হয়, ফলাফল ফেলে দেওয়া হয়</span>
+const [data, setData] = useState(expensiveCompute());
+
+<span class="c">// সঠিক — function পাস করলে React এটা শুধু প্রথম render-এ কল করে</span>
+const [data, setData] = useState(() =&gt; expensiveCompute());</pre>
+
+<h3>useEffect — Component-কে বাইরের জগতের সাথে সিঙ্ক করা</h3>
+<pre>function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+
+  useEffect(() =&gt; {
+    let cancelled = false;
+    fetchUser(userId).then(data =&gt; {
+      if (!cancelled) setUser(data);
+    });
+    return () =&gt; { cancelled = true; };   <span class="c">// cleanup — পুরনো fetch-এর ফলাফল প্রয়োগ ঠেকায়</span>
+  }, [userId]);   <span class="c">// dependency array — userId বদলালেই effect আবার চলবে</span>
+
+  if (!user) return &lt;p&gt;Loading…&lt;/p&gt;;
+  return &lt;h2&gt;{user.name}&lt;/h2&gt;;
+}</pre>
+<table>
+<tr><th>Dependency array</th><th>Effect কখন চলে</th></tr>
+<tr><td>বাদ দেওয়া (নেই)</td><td>প্রতিটা render-এর পরেই — প্রায় কখনোই কাম্য নয়</td></tr>
+<tr><td><code>[]</code></td><td>শুধু প্রথম render-এর পরে (mount)</td></tr>
+<tr><td><code>[userId]</code></td><td>প্রথম render-এর পরে, আর <code>userId</code> বদলালে</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — Dependency Array-এ কিছু বাদ দেওয়া (exhaustive-deps ভাঙা)</span>
+Effect-এর ভেতরে ব্যবহৃত কোনো variable/prop/state dependency array-তে না থাকলে, সেই effect পুরনো (stale) মান নিয়ে কাজ করতে থাকে — একটা ক্লাসিক বাগের উৎস। <code>eslint-plugin-react-hooks</code>-এর <code>exhaustive-deps</code> rule এই ভুল কম্পাইল-টাইমেই ধরিয়ে দেয়; একে সবসময় চালু রাখা উচিত, আর warning আসলে dependency যোগ করা উচিত — বাদ দেওয়া নয়।</div>
+
+<h3>Cleanup Function — Memory Leak ও Race Condition ঠেকানো</h3>
+<p><code>useEffect</code>-এর return করা function টা <b>cleanup</b> — component unmount হওয়ার আগে, বা dependency বদলে effect আবার চলার ঠিক আগে এটা চলে। Subscription, timer, event listener — এসবের জন্য cleanup বাধ্যতামূলক।</p>
+<pre>useEffect(() =&gt; {
+  const id = setInterval(() =&gt; setTick(t =&gt; t + 1), 1000);
+  return () =&gt; clearInterval(id);   <span class="c">// না করলে প্রতিবার re-run-এ নতুন interval জমতে থাকবে</span>
+}, []);</pre>
+
+<h3>useEffect বনাম useLayoutEffect</h3>
+<div class="grid2">
+  <div class="box"><b>useEffect</b><br>Browser paint-এর <b>পরে</b>, asynchronously চলে — বেশিরভাগ ক্ষেত্রে (data fetching, subscription) এটাই ব্যবহার করা উচিত, কারণ এটা UI ব্লক করে না।</div>
+  <div class="box"><b>useLayoutEffect</b><br>Browser paint-এর <b>আগে</b>, synchronously চলে — শুধু তখনই দরকার যখন DOM measurement (যেমন element-এর height মাপা) করে সাথে সাথে সেটার ওপর ভিত্তি করে আরেকটা DOM mutation করতে হয়, যাতে ব্যবহারকারী flicker না দেখেন।</div>
+</div>
+</template>
+
+<template data-page="advhooks">
+<h2 class="title">৩. Advanced Hooks — useMemo, useCallback, useRef, Custom Hooks</h2>
+<p class="lead">এই hooks গুলো দৈনন্দিন প্রতিটা কম্পোনেন্টে দরকার হয় না, কিন্তু performance optimization, DOM অ্যাক্সেস, আর যুক্তি পুনর্ব্যবহারের জন্য অপরিহার্য। ভুল ব্যবহারও এখানেই সবচেয়ে বেশি দেখা যায় — বিশেষ করে "referential equality" না বুঝলে।</p>
+
+<h3>Referential Equality Problem — কেন useMemo/useCallback দরকার হয়</h3>
+<pre>function Parent() {
+  const [count, setCount] = useState(0);
+  const config = { theme: "dark" };            <span class="c">// প্রতি render-এ নতুন object তৈরি হয়</span>
+  const handleClick = () =&gt; console.log("clicked");  <span class="c">// প্রতি render-এ নতুন function</span>
+
+  return &lt;ExpensiveChild config={config} onClick={handleClick} /&gt;;
+}
+
+const ExpensiveChild = React.memo(function ExpensiveChild({ config, onClick }) {
+  <span class="c">// React.memo prop-এর shallow comparison (===) করে —</span>
+  <span class="c">// কিন্তু config/onClick প্রতিবার নতুন reference, তাই memo কখনোই re-render আটকাতে পারে না!</span>
+  return &lt;div&gt;...&lt;/div&gt;;
+});</pre>
+<div class="callout why"><span class="tag">JavaScript-এ Object/Function সমতা রেফারেন্স দিয়ে মাপা হয়</span>
+<code>{} === {}</code> সবসময় <code>false</code> — কনটেন্ট একই হলেও দুইটা আলাদা object আলাদা reference। প্রতিটা render নতুন function/object body চালায়, তাই প্রতিবার নতুন reference তৈরি হয়। <code>React.memo</code> prop তুলনা করে <code>===</code> দিয়ে (shallow), তাই object/function prop-কে "স্থির" রাখতে হলে সেটাকে render-জুড়ে একই reference-এ ধরে রাখতে হয় — এটাই <code>useMemo</code>/<code>useCallback</code>-এর একমাত্র কাজ।</div>
+
+<pre><span class="c">// সমাধান — dependency না বদলালে একই reference ধরে রাখা</span>
+function Parent() {
+  const [count, setCount] = useState(0);
+  const config = useMemo(() =&gt; ({ theme: "dark" }), []);      <span class="c">// value memoize</span>
+  const handleClick = useCallback(() =&gt; console.log("clicked"), []); <span class="c">// function memoize</span>
+
+  return &lt;ExpensiveChild config={config} onClick={handleClick} /&gt;;
+}</pre>
+<div class="callout mistake"><span class="tag">Common mistake — সবকিছুতেই useMemo/useCallback বসিয়ে দেওয়া</span>
+<code>useMemo</code>/<code>useCallback</code> নিজেরাই বিনামূল্যে নয় — প্রতিটা কলে dependency array তুলনা করতে হয়, আর একটা memoized value নিজেই মেমোরিতে থাকে। যদি child component <code>React.memo</code> দিয়ে wrap করা না থাকে, বা child rendering এমনিতেই সস্তা, তাহলে memoization বাড়তি overhead ছাড়া কোনো লাভ দেয় না। নিয়ম: প্রথমে profile করুন (Performance অধ্যায়ে React DevTools Profiler), তারপর প্রমাণিত bottleneck-এ memoize করুন — অন্ধভাবে সব জায়গায় নয়।</div>
+
+<h3>useRef — DOM Access ও "Render-এর বাইরের" Mutable Value</h3>
+<pre>function TextInputWithFocus() {
+  const inputRef = useRef(null);
+
+  useEffect(() =&gt; { inputRef.current.focus(); }, []);
+
+  return &lt;input ref={inputRef} /&gt;;
+}
+
+function StopwatchWithRef() {
+  const intervalRef = useRef(null);   <span class="c">// এই মান বদলালে re-render হয় না — যা চাই</span>
+  const [elapsed, setElapsed] = useState(0);
+
+  function start() {
+    intervalRef.current = setInterval(() =&gt; setElapsed(e =&gt; e + 1), 1000);
+  }
+  function stop() { clearInterval(intervalRef.current); }
+
+  return (&lt;&gt;&lt;p&gt;{elapsed}s&lt;/p&gt;&lt;button onClick={start}&gt;Start&lt;/button&gt;&lt;button onClick={stop}&gt;Stop&lt;/button&gt;&lt;/&gt;);
+}</pre>
+<div class="callout why"><span class="tag">useState বনাম useRef — কখন কোনটা</span>
+<code>useRef</code>-এর মান বদলালে component re-render <b>হয় না</b>, আর <code>.current</code> সরাসরি mutate করা যায় — এজন্য এটা DOM node reference, timer ID, বা "যা আমার UI-তে দেখানো লাগবে না কিন্তু render জুড়ে টিকে থাকতে হবে" এমন মানের জন্য উপযুক্ত। যা কিছু UI-তে প্রতিফলিত হওয়া দরকার তার জন্য <code>useState</code> — যা শুধু "মনে রাখা" দরকার তার জন্য <code>useRef</code>।</div>
+
+<h3>Custom Hooks — যুক্তি পুনর্ব্যবহারের সঠিক উপায়</h3>
+<pre><span class="c">// useLocalStorage.js — একটা পুনর্ব্যবহারযোগ্য custom hook</span>
+function useLocalStorage(key, initialValue) {
+  const [value, setValue] = useState(() =&gt; {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : initialValue;
+  });
+
+  useEffect(() =&gt; {
+    localStorage.setItem(key, JSON.stringify(value));
+  }, [key, value]);
+
+  return [value, setValue];
+}
+
+<span class="c">// ব্যবহার — ঠিক useState-এর মতোই দেখতে, কিন্তু persistence যুক্ত</span>
+function Settings() {
+  const [theme, setTheme] = useLocalStorage("theme", "dark");
+  return &lt;button onClick={() =&gt; setTheme(t =&gt; t === "dark" ? "light" : "dark")}&gt;{theme}&lt;/button&gt;;
+}</pre>
+<div class="callout best"><span class="tag">Custom Hook Naming Convention — "use" prefix বাধ্যতামূলক কেন</span>
+React-এর ESLint plugin ও React নিজে <code>use</code> দিয়ে শুরু হওয়া function-কেই hook হিসেবে চেনে, আর সেই অনুযায়ী "Rules of Hooks" (নিচে) প্রয়োগ করে। <code>use</code> prefix না দিলে ESLint সেই function-এর ভেতরে অন্য hook কল থাকলে ভুল ধরতে পারবে না — শুধু কনভেনশন নয়, এটা টুলিং-এর সঠিক কাজের পূর্বশর্ত।</div>
+
+<h3>Rules of Hooks — কেন এগুলো Non-Negotiable</h3>
+<div class="callout mistake"><span class="tag">Common mistake — Condition/Loop-এর ভেতরে Hook কল করা</span>
+<pre>if (isLoggedIn) {
+  const [user, setUser] = useState(null);   <span class="c">// ❌ ভুল — conditional hook call</span>
+}</pre>
+React hooks-এর state internally একটা <b>linked list/array</b>-এ, কল করার <b>ক্রম অনুযায়ী</b> সংরক্ষণ করে — নাম দিয়ে নয়। যদি কোনো render-এ একটা hook কল skip হয়ে যায় (condition-এর কারণে), তাহলে পরের সব hook-এর index শিফট হয়ে যায়, আর React ভুল state-কে ভুল hook-এর সাথে মিলিয়ে ফেলে। তাই hook সবসময় component-এর <b>টপ লেভেলে</b>, প্রতিটা render-এ ঠিক একই ক্রমে কল করতে হবে — condition ভেতরে (hook-এর বডিতে) রাখা যায়, hook কলের বাইরে নয়।</div>
+</template>
+
+<template data-page="context">
+<h2 class="title">৪. Context API ও State Lifting</h2>
+<p class="lead">যখন দুইটা sibling component-এর একই state দরকার, বা একটা deeply nested component-এর কোনো prop উপরের দিক থেকে বহুস্তর পার হয়ে আসতে হয়, তখন দুইটা টুল কাজে লাগে — state lifting আর Context। কোনটা কখন, আর Context-এর লুকানো performance ফাঁদ — এই অধ্যায়ের মূল বিষয়।</p>
+
+<h3>Prop Drilling সমস্যা</h3>
+<pre><span class="c">// theme, user — App শুধু pass-through করছে, নিজে ব্যবহার করছে না</span>
+function App() {
+  const [theme, setTheme] = useState("dark");
+  const [user, setUser] = useState(null);
+  return &lt;Layout theme={theme} user={user} /&gt;;
+}
+function Layout({ theme, user }) {
+  return &lt;Sidebar theme={theme} user={user} /&gt;;   <span class="c">// শুধু forward করছে</span>
+}
+function Sidebar({ theme, user }) {
+  return &lt;UserBadge theme={theme} user={user} /&gt;;  <span class="c">// আবার forward</span>
+}
+function UserBadge({ theme, user }) {
+  return &lt;div className={theme}&gt;{user.name}&lt;/div&gt;;  <span class="c">// অবশেষে ব্যবহৃত</span>
+}</pre>
+<div class="callout why"><span class="tag">State Lifting — কখন যথেষ্ট, Context কখন দরকার</span>
+যদি শুধু এক-দুই স্তর নিচে prop পাঠাতে হয়, সরাসরি props pass করাই সবচেয়ে সহজ ও ট্রেসযোগ্য — একে বলে "state lifting" (দুই sibling-এর common ancestor-এ state রাখা)। কিন্তু যখন prop অনেকগুলো স্তর পার হয়ে যায়, আর মাঝের কম্পোনেন্টগুলো সেটা শুধু <b>forward</b> করে নিজে ব্যবহার করে না (উপরের উদাহরণ) — তখন এটাই "prop drilling", আর Context এর সঠিক সমাধান।</div>
+
+<h3>Context তৈরি ও ব্যবহার</h3>
+<pre><span class="c">// ThemeContext.js</span>
+const ThemeContext = createContext(null);
+
+function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState("dark");
+  const value = useMemo(() =&gt; ({ theme, setTheme }), [theme]);
+  return &lt;ThemeContext.Provider value={value}&gt;{children}&lt;/ThemeContext.Provider&gt;;
+}
+
+function useTheme() {
+  const ctx = useContext(ThemeContext);
+  if (!ctx) throw new Error("useTheme must be used within ThemeProvider");
+  return ctx;
+}
+
+<span class="c">// ব্যবহার — যেকোনো গভীরতার child সরাসরি অ্যাক্সেস করতে পারে, prop drilling ছাড়াই</span>
+function UserBadge() {
+  const { theme } = useTheme();
+  return &lt;div className={theme}&gt;...&lt;/div&gt;;
+}</pre>
+
+<h3>Context-এর লুকানো Performance ফাঁদ</h3>
+<div class="callout mistake"><span class="tag">Common mistake — একটা বড় Context-এ সবকিছু একসাথে রাখা</span>
+Context value বদলালে, সেই Context-এর <b>প্রতিটা</b> consumer re-render হয় — এমনকি যদি consumer শুধু value-এর একটা অংশ ব্যবহার করে যেটা আসলে বদলায়নি। যদি <code>{ user, theme, notifications }</code> সব একই Context-এ রাখা হয়, আর শুধু <code>notifications</code> ঘন ঘন বদলায়, তাহলে যে component শুধু <code>theme</code> পড়ে সেটাও প্রতিবার অপ্রয়োজনীয়ভাবে re-render হবে। সমাধান — কম ঘন ঘন বদলানো ডেটা আর ঘন ঘন বদলানো ডেটার জন্য <b>আলাদা Context</b> তৈরি করা।</div>
+<div class="callout best"><span class="tag">Best practice — Provider-এর value সবসময় memoize করা</span>
+উপরের <code>ThemeProvider</code>-এ <code>useMemo</code> লক্ষ করুন — এটা ছাড়া প্রতিবার <code>ThemeProvider</code> re-render হলে <code>{ theme, setTheme }</code> একটা নতুন object হয়ে যেত, ফলে প্রতিটা consumer অপ্রয়োজনীয়ভাবে re-render হতো, এমনকি <code>theme</code> আসলে না বদলালেও।</div>
+
+<h3>Context বনাম External State Library — কখন কোনটা</h3>
+<table>
+<tr><th></th><th>Context API</th><th>Redux/Zustand (পরের অধ্যায়ে)</th></tr>
+<tr><td>Setup</td><td>Built-in, কোনো dependency লাগে না</td><td>বাড়তি লাইব্রেরি</td></tr>
+<tr><td>ঘন ঘন-বদলানো state</td><td>দুর্বল — re-render নিয়ন্ত্রণ সীমিত</td><td>Selector দিয়ে fine-grained subscription</td></tr>
+<tr><td>DevTools/Time-travel debugging</td><td>নেই</td><td>Redux DevTools-এ পুরো support</td></tr>
+<tr><td>উপযুক্ত ক্ষেত্র</td><td>Theme, auth user, locale — কম ঘন ঘন বদলানো "global" ডেটা</td><td>জটিল, ঘন ঘন আপডেট হওয়া app-wide state</td></tr>
+</table>
+</template>
+
+<template data-page="statemgmt">
+<h2 class="title">৫. State Management at Scale — Redux Toolkit, Zustand</h2>
+<p class="lead">অ্যাপ যত বড় হয়, ততই "কোন component-এ কোন state আছে" আর "কে সেটা বদলাচ্ছে" ট্রেস করা কঠিন হয়ে যায়। Redux Toolkit ও Zustand দুইটা ভিন্ন দর্শনের সমাধান — একটা কড়াকড়ি, predictable কিন্তু বেশি boilerplate; আরেকটা ন্যূনতম, নমনীয়।</p>
+
+<h3>Redux-এর মূল দর্শন — Single Source of Truth, Unidirectional Flow</h3>
+<div class="diagram"><pre>
+UI event (button click)
+    │
+    ▼
+dispatch(action)   ──▶  { type: "cart/addItem", payload: item }
+    │
+    ▼
+reducer(state, action)  ──▶  পুরনো state + action থেকে নতুন state (pure function, mutate নয়)
+    │
+    ▼
+store আপডেট  ──▶  subscribed component গুলো re-render
+</pre></div>
+
+<h3>Redux Toolkit — Boilerplate কমানোর আধুনিক উপায়</h3>
+<pre><span class="c">// cartSlice.js — Redux Toolkit-এ Immer ব্যবহৃত হয়, তাই "mutate" লেখা গেলেও আসলে immutable update হয়</span>
+import { createSlice } from "@reduxjs/toolkit";
+
+const cartSlice = createSlice({
+  name: "cart",
+  initialState: { items: [] },
+  reducers: {
+    addItem(state, action) {
+      state.items.push(action.payload);   <span class="c">// দেখতে mutation, Immer-এর কারণে আসলে immutable</span>
+    },
+    removeItem(state, action) {
+      state.items = state.items.filter(i =&gt; i.id !== action.payload);
+    },
+  },
+});
+
+export const { addItem, removeItem } = cartSlice.actions;
+export default cartSlice.reducer;
+
+<span class="c">// store.js</span>
+import { configureStore } from "@reduxjs/toolkit";
+export const store = configureStore({ reducer: { cart: cartSlice.reducer } });
+
+<span class="c">// Component-এ ব্যবহার</span>
+function AddToCartButton({ product }) {
+  const dispatch = useDispatch();
+  return &lt;button onClick={() =&gt; dispatch(addItem(product))}&gt;Add to Cart&lt;/button&gt;;
+}
+function CartCount() {
+  const count = useSelector(state =&gt; state.cart.items.length);  <span class="c">// শুধু cart.items বদলালেই re-render</span>
+  return &lt;span&gt;{count}&lt;/span&gt;;
+}</pre>
+<div class="callout why"><span class="tag">useSelector-এর Fine-Grained Subscription — Context-এর সমস্যার সমাধান</span>
+<code>useSelector</code> শুধু সেই slice of state-এর সাথে subscribe করে যেটা selector function রিটার্ন করে — <code>state.cart.items.length</code> না বদলালে <code>CartCount</code> re-render হবে না, এমনকি store-এর অন্য কোনো অংশ বদলালেও। এটাই আগের অধ্যায়ে আলোচিত Context-এর "সব consumer re-render" সমস্যার সমাধান — Redux fine-grained subscription দেয়, Context দেয় না।</div>
+
+<h3>Zustand — ন্যূনতম Boilerplate-এর বিকল্প</h3>
+<pre><span class="c">// store.js — কোনো Provider, কোনো action type string লাগে না</span>
+import { create } from "zustand";
+
+const useCartStore = create((set) =&gt; ({
+  items: [],
+  addItem: (item) =&gt; set((state) =&gt; ({ items: [...state.items, item] })),
+  removeItem: (id) =&gt; set((state) =&gt; ({ items: state.items.filter(i =&gt; i.id !== id) })),
+}));
+
+<span class="c">// Component-এ ব্যবহার — সরাসরি hook, কোনো Provider wrap করা লাগে না</span>
+function AddToCartButton({ product }) {
+  const addItem = useCartStore((s) =&gt; s.addItem);
+  return &lt;button onClick={() =&gt; addItem(product)}&gt;Add to Cart&lt;/button&gt;;
+}
+function CartCount() {
+  const count = useCartStore((s) =&gt; s.items.length);   <span class="c">// এখানেও fine-grained subscription</span>
+  return &lt;span&gt;{count}&lt;/span&gt;;
+}</pre>
+
+<h3>Redux Toolkit বনাম Zustand বনাম Context — সিদ্ধান্ত নেওয়ার মানদণ্ড</h3>
+<table>
+<tr><th>মানদণ্ড</th><th>Context</th><th>Zustand</th><th>Redux Toolkit</th></tr>
+<tr><td>Boilerplate</td><td>কম</td><td>খুবই কম</td><td>মাঝারি (RTK আগের Redux থেকে অনেক কম)</td></tr>
+<tr><td>DevTools/Time-travel</td><td>নেই</td><td>Middleware দিয়ে সম্ভব</td><td>প্রথম-শ্রেণির support</td></tr>
+<tr><td>দলের আকার/জটিলতা</td><td>ছোট app, কম state</td><td>ছোট-মাঝারি টিম, দ্রুত ডেভেলপমেন্ট</td><td>বড় টিম, কড়া convention দরকার এমন প্রজেক্ট</td></tr>
+<tr><td>Ecosystem (middleware, persistence)</td><td>নিজে বানাতে হয়</td><td>হালকা middleware আছে</td><td>বিশাল ecosystem (RTK Query, persist)</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — সবসময় library দিয়ে শুরু করার দরকার নেই</span>
+অনেক প্রজেক্ট Redux/Zustand ছাড়াই ভালোভাবে চলে — <code>useState</code> + state lifting + Context যথেষ্ট, যতক্ষণ না "prop drilling ছাড়াই অনেক জায়গা থেকে একই মিউটেবল state অ্যাক্সেস করা লাগছে, আর সেই state ঘন ঘন বদলাচ্ছে" এমন সুনির্দিষ্ট ব্যথা অনুভূত হয়। প্রথমেই একটা global store বসিয়ে দেওয়ার বদলে, প্রয়োজন দেখা দিলে ঢোকানোই ভালো অভ্যাস।</div>
+</template>
+
+<template data-page="datafetch">
+<h2 class="title">৬. Data Fetching — React Query, SWR</h2>
+<p class="lead"><code>useEffect</code> দিয়ে সরাসরি <code>fetch</code> করা কাজ করে, কিন্তু caching, race condition, retry, background refetch — এসব হাতে ঠিকভাবে লেখা কঠিন ও error-prone। React Query (TanStack Query) ও SWR এই পুরো সমস্যাটাকেই সমাধান করা একটা "server state" লাইব্রেরি হিসেবে দেখে।</p>
+
+<h3>useEffect দিয়ে Fetch করার লুকানো সমস্যাগুলো</h3>
+<pre><span class="c">// নিষ্পাপ দেখতে, কিন্তু একাধিক বাগ-প্রবণ সমস্যা লুকানো</span>
+function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() =&gt; {
+    setLoading(true);
+    fetch(`/api/users/${userId}`).then(r =&gt; r.json()).then(data =&gt; {
+      setUser(data);          <span class="c">// ❌ race condition: userId দ্রুত বদলালে পুরনো response পরে এসে নতুন state ওভাররাইট করতে পারে</span>
+      setLoading(false);
+    });
+  }, [userId]);
+  <span class="c">// এছাড়াও: কোনো caching নেই (একই userId-তে ফিরে এলে আবার fetch), কোনো retry নেই, error handling নেই</span>
+}</pre>
+
+<h3>React Query — Server State-কে প্রথম-শ্রেণির নাগরিক হিসেবে দেখা</h3>
+<pre>function UserProfile({ userId }) {
+  const { data: user, isLoading, error } = useQuery({
+    queryKey: ["user", userId],              <span class="c">// cache key — userId বদলালে আলাদা cache entry</span>
+    queryFn: () =&gt; fetch(`/api/users/${userId}`).then(r =&gt; r.json()),
+    staleTime: 60_000,                       <span class="c">// ৬০ সেকেন্ড পর্যন্ত ডেটা "fresh" ধরা হয়, রি-ফেচ হবে না</span>
+  });
+
+  if (isLoading) return &lt;p&gt;Loading…&lt;/p&gt;;
+  if (error) return &lt;p&gt;Error: {error.message}&lt;/p&gt;;
+  return &lt;h2&gt;{user.name}&lt;/h2&gt;;
+}
+
+<span class="c">// Mutation — server state বদলানো, সফল হলে cache invalidate</span>
+function useUpdateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (updates) =&gt; fetch(`/api/users/${updates.id}`, { method: "PATCH", body: JSON.stringify(updates) }),
+    onSuccess: (_, updates) =&gt; {
+      queryClient.invalidateQueries({ queryKey: ["user", updates.id] });  <span class="c">// পুরনো cache বাতিল, নতুন fetch trigger</span>
+    },
+  });
+}</pre>
+<div class="callout why"><span class="tag">queryKey-ই React Query-এর মূল ধারণা</span>
+প্রতিটা <code>queryKey</code> একটা স্বতন্ত্র cache entry চিহ্নিত করে — একই <code>["user", 5]</code> key দিয়ে অ্যাপের একাধিক জায়গা থেকে <code>useQuery</code> কল করলে সবাই একই cached ডেটা শেয়ার করে, আর একটা জায়গায় fetch সফল হলে বাকিরাও আপডেটেড ডেটা পায় — deduplication স্বয়ংক্রিয়ভাবেই ঘটে, আলাদা কোনো কোড ছাড়াই।</div>
+
+<h3>React Query যেসব সমস্যা স্বয়ংক্রিয়ভাবে সমাধান করে</h3>
+<table>
+<tr><th>সমস্যা</th><th>Manual useEffect</th><th>React Query</th></tr>
+<tr><td>Caching/Deduplication</td><td>নিজে বানাতে হবে</td><td>Built-in, queryKey ভিত্তিক</td></tr>
+<tr><td>Race condition</td><td>নিজে cancel/cleanup লিখতে হবে</td><td>স্বয়ংক্রিয়ভাবে পুরনো request-এর ফলাফল বাতিল</td></tr>
+<tr><td>Background refetch</td><td>নেই (নিজে লিখতে হবে)</td><td>Window focus/reconnect-এ স্বয়ংক্রিয় refetch (কনফিগারযোগ্য)</td></tr>
+<tr><td>Retry with backoff</td><td>নেই</td><td>Built-in, কনফিগারযোগ্য</td></tr>
+<tr><td>Loading/error state</td><td>নিজে track করতে হবে</td><td><code>isLoading</code>/<code>error</code> স্বয়ংক্রিয়ভাবে পাওয়া যায়</td></tr>
+</table>
+
+<h3>SWR — একই দর্শন, হালকা API</h3>
+<pre>import useSWR from "swr";
+const fetcher = (url) =&gt; fetch(url).then(r =&gt; r.json());
+
+function UserProfile({ userId }) {
+  const { data: user, error, isLoading } = useSWR(`/api/users/${userId}`, fetcher);
+  if (isLoading) return &lt;p&gt;Loading…&lt;/p&gt;;
+  return &lt;h2&gt;{user.name}&lt;/h2&gt;;
+}</pre>
+<p>SWR-এর মূল দর্শনও একই ("stale-while-revalidate" — পুরনো ডেটা সাথে সাথে দেখানো, ব্যাকগ্রাউন্ডে নতুন ডেটা আনা), API আরও ছোট আর opinionated কম; React Query বেশি ফিচার-সমৃদ্ধ (mutation, pagination helper, devtools)। বেশিরভাগ নতুন প্রজেক্ট এখন React Query বেছে নেয় তার richer ecosystem-এর কারণে।</p>
+</template>
+
+<template data-page="routing">
+<h2 class="title">৭. React Router</h2>
+<p class="lead">React নিজে কোনো routing solution দেয় না — Single Page Application-এ URL-এর সাথে UI মেলানোর দায়িত্ব React Router (বা Next.js-এর নিজস্ব router)-এর। এই অধ্যায়ে React Router v6.4+ (data router)-এর মূল প্যাটার্ন।</p>
+
+<h3>বেসিক সেটআপ — Routes, Route, Link</h3>
+<pre>import { createBrowserRouter, RouterProvider, Link, Outlet } from "react-router-dom";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: &lt;RootLayout /&gt;,
+    children: [
+      { index: true, element: &lt;Home /&gt; },
+      { path: "products", element: &lt;ProductList /&gt; },
+      { path: "products/:productId", element: &lt;ProductDetail /&gt; },   <span class="c">// dynamic segment</span>
+      { path: "*", element: &lt;NotFound /&gt; },                          <span class="c">// catch-all 404</span>
+    ],
+  },
+]);
+
+function RootLayout() {
+  return (
+    &lt;&gt;
+      &lt;nav&gt;&lt;Link to="/"&gt;Home&lt;/Link&gt; &lt;Link to="/products"&gt;Products&lt;/Link&gt;&lt;/nav&gt;
+      &lt;Outlet /&gt;   <span class="c">// child route এখানে render হবে — nested layout-এর ভিত্তি</span>
+    &lt;/&gt;
+  );
+}
+
+function App() { return &lt;RouterProvider router={router} /&gt;; }</pre>
+
+<h3>useParams, useNavigate, useSearchParams</h3>
+<pre>function ProductDetail() {
+  const { productId } = useParams();          <span class="c">// URL-এর dynamic অংশ পড়া</span>
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();  <span class="c">// ?sort=price ইত্যাদি</span>
+
+  function handleDelete() {
+    deleteProduct(productId).then(() =&gt; navigate("/products"));  <span class="c">// প্রোগ্রাম্যাটিক নেভিগেশন</span>
+  }
+
+  return &lt;div&gt;Product #{productId}, sort: {searchParams.get("sort")}&lt;/div&gt;;
+}</pre>
+
+<h3>Data Router — Loader দিয়ে Render-এর আগেই Data Fetch</h3>
+<pre>const router = createBrowserRouter([
+  {
+    path: "products/:productId",
+    element: &lt;ProductDetail /&gt;,
+    loader: async ({ params }) =&gt; {
+      const res = await fetch(`/api/products/${params.productId}`);
+      if (!res.ok) throw new Response("Not Found", { status: 404 });
+      return res.json();
+    },
+  },
+]);
+
+function ProductDetail() {
+  const product = useLoaderData();   <span class="c">// component render হওয়ার আগেই ডেটা প্রস্তুত — loading spinner লাগে না</span>
+  return &lt;h2&gt;{product.name}&lt;/h2&gt;;
+}</pre>
+<div class="callout why"><span class="tag">Loader প্যাটার্নের সুবিধা — Render-then-Fetch থেকে Fetch-then-Render</span>
+পুরনো প্যাটার্নে (component mount হয়ে <code>useEffect</code>-এ fetch শুরু) UI প্রথমে খালি/loading অবস্থায় render হয়, তারপর ডেটা এলে আবার render হয় — এটা "render-then-fetch"। Loader দিয়ে navigation শুরু হওয়ার সাথে সাথেই ডেটা fetch শুরু হয়, component render হয় শুধু ডেটা প্রস্তুত হলে — এটা "fetch-then-render", যা perceived performance ভালো করে এবং loading spinner-এর ঝাপটানি কমায়।</div>
+
+<h3>Protected Routes — Authentication Gate</h3>
+<pre>function RequireAuth({ children }) {
+  const { user } = useAuth();
+  const location = useLocation();
+  if (!user) {
+    return &lt;Navigate to="/login" state={{ from: location }} replace /&gt;;   <span class="c">// login-এর পর ফিরে আসার জন্য location মনে রাখা</span>
+  }
+  return children;
+}
+
+<span class="c">// রাউটে ব্যবহার</span>
+{ path: "dashboard", element: &lt;RequireAuth&gt;&lt;Dashboard /&gt;&lt;/RequireAuth&gt; }</pre>
+<div class="callout mistake"><span class="tag">Common mistake — শুধু Client-Side রাউট গার্ড দিয়ে নিরাপত্তা নিশ্চিত মনে করা</span>
+<code>RequireAuth</code> শুধু UI-স্তরে navigation আটকায় — ব্যবহারকারী browser DevTools দিয়ে JS বাইপাস করতে পারেন, বা সরাসরি API endpoint কল করতে পারেন। প্রকৃত নিরাপত্তা সবসময় <b>সার্ভার-সাইডে</b> প্রতিটা API request-এ authentication/authorization যাচাই করে আসতে হবে — client-side route guard শুধু ব্যবহারকারীর অভিজ্ঞতা (UX) ভালো করে, নিরাপত্তা নিশ্চিত করে না।</div>
+</template>
+
+<template data-page="performance">
+<h2 class="title">৮. Performance Optimization</h2>
+<p class="lead">React সাধারণত যথেষ্ট দ্রুত — কিন্তু বড় list, ঘন ঘন re-render হওয়া বড় tree, বা ভারী initial bundle-এ পারফরম্যান্স সমস্যা দেখা দিতে পারে। এই অধ্যায়ের মূল নীতি: <b>প্রথমে measure করুন, তারপর optimize করুন</b> — অনুমান করে নয়।</p>
+
+<h3>React DevTools Profiler — অনুমান নয়, প্রমাণ</h3>
+<div class="callout why"><span class="tag">কেন Profile করা আগে জরুরি</span>
+"এই component-টা নিশ্চয়ই ধীর" এই অনুমান প্রায়ই ভুল হয় — আধুনিক ব্রাউজার আর React-এর reconciliation এতটাই দ্রুত যে বেশিরভাগ re-render আসলে চোখে পড়ার মতো ধীর নয়। React DevTools-এর Profiler ট্যাব প্রতিটা render-এর সময় ও কারণ (কোন state/prop বদলে render হলো) সরাসরি দেখায় — optimize করার আগে এটা দিয়ে আসল bottleneck চিহ্নিত করা উচিত, নাহলে ভুল জায়গায় জটিলতা (memoization) যোগ হয়ে কোড পড়া কঠিন হয়ে যায়, লাভ ছাড়াই।</div>
+
+<h3>React.memo — Prop না বদলালে Re-render আটকানো</h3>
+<pre>const ProductRow = React.memo(function ProductRow({ product, onSelect }) {
+  console.log("rendering", product.id);
+  return &lt;tr onClick={() =&gt; onSelect(product.id)}&gt;&lt;td&gt;{product.name}&lt;/td&gt;&lt;/tr&gt;;
+});
+
+<span class="c">// Parent-এ prop স্থির রাখা আবশ্যক (আগের অধ্যায়ের useCallback আলোচনা মনে করুন)</span>
+function ProductTable({ products }) {
+  const handleSelect = useCallback((id) =&gt; console.log(id), []);
+  return products.map(p =&gt; &lt;ProductRow key={p.id} product={p} onSelect={handleSelect} /&gt;);
+}</pre>
+
+<h3>Code Splitting ও Lazy Loading — ছোট Initial Bundle</h3>
+<pre><span class="c">// পুরো Dashboard bundle-টা শুধু route ভিজিট হলেই লোড হবে, প্রাথমিক bundle-এ নয়</span>
+const Dashboard = React.lazy(() =&gt; import("./Dashboard"));
+
+function App() {
+  return (
+    &lt;Suspense fallback={&lt;p&gt;Loading…&lt;/p&gt;}&gt;
+      &lt;Dashboard /&gt;
+    &lt;/Suspense&gt;
+  );
+}</pre>
+<div class="callout why"><span class="tag">Route-based Splitting — সবচেয়ে বেশি প্রভাব ফেলা সহজ পদ্ধতি</span>
+ব্যবহারকারী যে route ভিজিট করছেন না, তার কোড ডাউনলোড করানোর কোনো মানে নেই। প্রতিটা route-কে <code>React.lazy</code> দিয়ে ভাগ করলে initial JS bundle ছোট হয়ে যায়, প্রথম পেজ দ্রুত interactive হয় (Time to Interactive কমে) — এটা সাধারণত সবচেয়ে কম কষ্টে সবচেয়ে বেশি ফলাফল দেওয়া optimization।</div>
+
+<h3>Virtualization — হাজার হাজার Row রেন্ডার করা এড়ানো</h3>
+<p>একটা ১০,০০০-row টেবিল একবারে render করলে ১০,০০০টা DOM node তৈরি হয় — বেশিরভাগই viewport-এর বাইরে, অদৃশ্য। <span class="kw">react-window</span>/<span class="kw">react-virtual</span>-এর মতো লাইব্রেরি শুধু viewport-এ দৃশ্যমান row-গুলোই DOM-এ রাখে, স্ক্রল হলে সেগুলো পুনর্ব্যবহার (recycle) করে।</p>
+<table>
+<tr><th>কৌশল</th><th>কখন প্রযোজ্য</th></tr>
+<tr><td><code>React.memo</code></td><td>একই prop দিয়ে বারবার re-render হওয়া ব্যয়বহুল component</td></tr>
+<tr><td>Code splitting</td><td>বড়, কম-ব্যবহৃত অংশ (route, modal, heavy chart library)</td></tr>
+<tr><td>Virtualization</td><td>শত-হাজার আইটেমের list/table</td></tr>
+<tr><td><code>useMemo</code> (heavy computation)</td><td>একই input-এ বারবার ভারী গণনা (sort/filter বড় array)</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — Premature Optimization</span>
+ছোট, খুব কম re-render হওয়া component-এও <code>React.memo</code>/<code>useMemo</code> বসিয়ে দেওয়া কোডকে জটিল করে, dependency array ভুল করার ঝুঁকি বাড়ায়, আর প্রায়ই কোনো পরিমাপযোগ্য লাভ দেয় না। "measure first, optimize the proven bottleneck" — এই নীতিই সবচেয়ে বেশি সময় বাঁচায়।</div>
+</template>
+
+<template data-page="servercomp">
+<h2 class="title">৯. Server Components ও Next.js App Router</h2>
+<p class="lead">React Server Components (RSC) React-এর mental model-এ একটা মৌলিক সংযোজন — কিছু কম্পোনেন্ট এখন <b>শুধু সার্ভারে</b> render হতে পারে, client-এ কোনো JS bundle পাঠানো ছাড়াই। Next.js App Router এর সবচেয়ে পরিণত বাস্তবায়ন।</p>
+
+<h3>Server Component বনাম Client Component</h3>
+<table>
+<tr><th></th><th>Server Component (default)</th><th>Client Component (<code>"use client"</code>)</th></tr>
+<tr><td>কোথায় render হয়</td><td>শুধু সার্ভারে</td><td>সার্ভারে (initial HTML) + ক্লায়েন্টে (hydration, পরবর্তী update)</td></tr>
+<tr><td>Client JS bundle-এ যায়?</td><td>না — শূন্য JS পাঠানো হয়</td><td>হ্যাঁ</td></tr>
+<tr><td>State/Effect (<code>useState</code>/<code>useEffect</code>)</td><td>ব্যবহার করা যায় না</td><td>ব্যবহার করা যায়</td></tr>
+<tr><td>সরাসরি Database/Filesystem access</td><td>নিরাপদে করা যায় (async/await সরাসরি)</td><td>করা যায় না — API call করতে হবে</td></tr>
+<tr><td>Event handler (<code>onClick</code>)</td><td>নেই</td><td>আছে</td></tr>
+</table>
+<pre><span class="c">// app/products/page.jsx — ডিফল্টে Server Component, সরাসরি await করা যায়</span>
+async function ProductsPage() {
+  const products = await db.product.findMany();   <span class="c">// সরাসরি DB query — কোনো API layer লাগছে না</span>
+  return (
+    &lt;ul&gt;
+      {products.map(p =&gt; &lt;li key={p.id}&gt;{p.name} — &lt;AddToCartButton productId={p.id} /&gt;&lt;/li&gt;)}
+    &lt;/ul&gt;
+  );
+}
+
+<span class="c">// AddToCartButton.jsx — interactivity লাগে, তাই Client Component</span>
+"use client";
+function AddToCartButton({ productId }) {
+  const [added, setAdded] = useState(false);
+  return &lt;button onClick={() =&gt; setAdded(true)}&gt;{added ? "Added ✓" : "Add to Cart"}&lt;/button&gt;;
+}</pre>
+<div class="callout why"><span class="tag">কেন RSC গুরুত্বপূর্ণ — Zero-Bundle-Size Component</span>
+একটা markdown parser, date formatter, বা heavy data-processing লাইব্রেরি Server Component-এ ব্যবহার করলে সেই লাইব্রেরির কোড client bundle-এ <b>একদমই যায় না</b> — শুধু ফলাফল HTML হিসেবে পাঠানো হয়। traditional client-rendered React-এ পুরো লাইব্রেরিটাই bundle-এ যুক্ত হতো, ব্যবহারকারীর ব্রাউজারে ডাউনলোড হতো। এটা বিশেষ করে content-heavy সাইটে (blog, e-commerce catalog) বিশাল bundle-size সাশ্রয় করে।</div>
+
+<h3>Composition Pattern — Server Component-এর ভেতরে Client Component "Slot" হিসেবে</h3>
+<div class="callout best"><span class="tag">Best practice — Client Component-কে Leaf/ছোট রাখা</span>
+পুরো পেজ <code>"use client"</code> দিয়ে মার্ক করলে RSC-এর পুরো সুবিধাই হারিয়ে যায় — পুরো tree client bundle-এ চলে যায়। বরং ইন্টারঅ্যাক্টিভ অংশটুকু (একটা বাটন, একটা ফর্ম) ছোট leaf Client Component হিসেবে বের করে, বাকি পুরো পেজ (layout, data display) Server Component রাখাই সঠিক প্যাটার্ন — উপরের উদাহরণে পুরো <code>ProductsPage</code> নয়, শুধু <code>AddToCartButton</code>-ই client।</div>
+
+<h3>Streaming ও Suspense — ধাপে ধাপে HTML পাঠানো</h3>
+<pre>async function DashboardPage() {
+  return (
+    &lt;&gt;
+      &lt;Header /&gt;                          <span class="c">// দ্রুত render হয়, সাথে সাথেই পাঠানো যায়</span>
+      &lt;Suspense fallback={&lt;Spinner /&gt;}&gt;
+        &lt;SlowAnalyticsWidget /&gt;            <span class="c">// ধীর ডেটা — বাকি পেজ আটকে না রেখে পরে stream হয়ে আসবে</span>
+      &lt;/Suspense&gt;
+    &lt;/&gt;
+  );
+}</pre>
+<p>App Router পুরো পেজ একসাথে তৈরি হওয়ার জন্য অপেক্ষা না করে, দ্রুত অংশ সাথে সাথে পাঠিয়ে ধীর অংশ পরে "stream" করে পাঠাতে পারে — ব্যবহারকারী দ্রুত কিছু একটা দেখতে পান, পুরো পেজ সাদা স্ক্রিনে আটকে থাকে না।</p>
+</template>
+
+<template data-page="forms">
+<h2 class="title">১০. Forms ও Validation</h2>
+<p class="lead">Form React-এ ঐতিহ্যগতভাবে বিরক্তিকর একটা অংশ — প্রতিটা keystroke-এ re-render, validation timing, error message দেখানো। <span class="kw">react-hook-form</span> ও <span class="kw">zod</span> একসাথে এই সমস্যার একটা পরিণত সমাধান দেয়।</p>
+
+<h3>Controlled বনাম Uncontrolled Input</h3>
+<pre><span class="c">// Controlled — React state-ই "single source of truth", প্রতি keystroke-এ re-render</span>
+function ControlledInput() {
+  const [value, setValue] = useState("");
+  return &lt;input value={value} onChange={(e) =&gt; setValue(e.target.value)} /&gt;;
+}
+
+<span class="c">// Uncontrolled — DOM নিজেই value ধরে রাখে, React শুধু ref দিয়ে দরকার হলে পড়ে</span>
+function UncontrolledInput() {
+  const ref = useRef(null);
+  function handleSubmit() { console.log(ref.current.value); }
+  return &lt;input ref={ref} defaultValue="" /&gt;;
+}</pre>
+<div class="callout why"><span class="tag">react-hook-form কেন Uncontrolled-ভিত্তিক দ্রুততর</span>
+Controlled input-এ প্রতিটা keystroke পুরো component (আর তার সাব-ট্রি) re-render trigger করে — একটা ২০-ফিল্ড form-এ এটা লক্ষণীয় ধীরতা আনতে পারে। <code>react-hook-form</code> মূলত uncontrolled input ব্যবহার করে (ref দিয়ে সরাসরি DOM থেকে মান পড়ে), আর React state আপডেট শুধু তখনই trigger করে যখন সত্যিই দরকার (validation error দেখানো, submit) — ফলে বড় form-এও keystroke-এ re-render হয় না।</div>
+
+<h3>react-hook-form + zod — Type-Safe Validation</h3>
+<pre>import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const signupSchema = z.object({
+  email: z.string().email("সঠিক ইমেইল দিন"),
+  password: z.string().min(8, "কমপক্ষে ৮ অক্ষর"),
+  age: z.number().min(18, "বয়স ১৮+ হতে হবে"),
+});
+
+function SignupForm() {
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(signupSchema),   <span class="c">// zod schema দিয়ে validation, react-hook-form-এ প্লাগ করা</span>
+  });
+
+  function onSubmit(data) { console.log("valid data:", data); }
+
+  return (
+    &lt;form onSubmit={handleSubmit(onSubmit)}&gt;
+      &lt;input {...register("email")} /&gt;
+      {errors.email && &lt;p&gt;{errors.email.message}&lt;/p&gt;}
+
+      &lt;input type="password" {...register("password")} /&gt;
+      {errors.password && &lt;p&gt;{errors.password.message}&lt;/p&gt;}
+
+      &lt;button type="submit"&gt;Sign up&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</pre>
+<div class="callout best"><span class="tag">Best practice — Client ও Server-এ একই Schema পুনর্ব্যবহার</span>
+<code>zod</code> schema একটা প্লেইন JS object-ভিত্তিক সংজ্ঞা — একই <code>signupSchema</code> ক্লায়েন্ট-সাইড form validation-এ ব্যবহার করা যায়, আবার সার্ভার-সাইড API route-এও (incoming request body validate করতে)। এতে "validation logic দুই জায়গায় লিখতে হচ্ছে, আর দুই জায়গা সময়ের সাথে বিচ্ছিন্ন (out of sync) হয়ে যাচ্ছে" — এই ক্লাসিক সমস্যা এড়ানো যায়।</div>
+
+<h3>Field-Level বনাম Form-Level Validation Timing</h3>
+<table>
+<tr><th>Mode</th><th>কখন validate হয়</th><th>UX প্রভাব</th></tr>
+<tr><td><code>onSubmit</code> (default)</td><td>শুধু submit করার সময়</td><td>টাইপ করার সময় বিরক্তিকর error দেখায় না, কিন্তু ভুল তথ্য দিলে submit পর্যন্ত জানা যায় না</td></tr>
+<tr><td><code>onBlur</code></td><td>ফিল্ড থেকে ফোকাস সরার সময়</td><td>একটা ভালো মধ্যপন্থা — ব্যবহারকারী ফিল্ড ছাড়ার সাথে সাথেই ফিডব্যাক পান</td></tr>
+<tr><td><code>onChange</code></td><td>প্রতিটা keystroke-এ</td><td>তাৎক্ষণিক ফিডব্যাক, কিন্তু অসম্পূর্ণ input-এও error flash করতে পারে (বিরক্তিকর হতে পারে)</td></tr>
+</table>
+</template>
+
+<template data-page="testing">
+<h2 class="title">১১. Testing — React Testing Library, Jest</h2>
+<p class="lead">React Testing Library (RTL)-এর একটা মূল দর্শন আছে যা প্রথমেই বুঝে নেওয়া দরকার: <b>"যত বেশি সম্ভব আপনার টেস্ট আসল সফটওয়্যার ব্যবহারের সাথে মিলবে, তত বেশি আত্মবিশ্বাস দেবে"</b> — অর্থাৎ implementation detail নয়, ব্যবহারকারী যা দেখেন/করেন সেটাই টেস্ট করা।</p>
+
+<h3>Implementation Detail নয়, Behavior টেস্ট করা</h3>
+<pre><span class="c">// ❌ Implementation-focused — internal state/component নাম নিয়ে ভাবছে</span>
+expect(wrapper.state("isOpen")).toBe(true);
+expect(wrapper.find("SubmitButton").prop("disabled")).toBe(false);
+
+<span class="c">// ✅ Behavior-focused — ব্যবহারকারী যা দেখেন তাই query করা হচ্ছে</span>
+expect(screen.getByRole("dialog")).toBeVisible();
+expect(screen.getByRole("button", { name: /submit/i })).toBeEnabled();</pre>
+<div class="callout why"><span class="tag">কেন এই দর্শন — Refactor-Resistant Test</span>
+যদি টেস্ট internal state বা component নাম নিয়ে ভাবে, তাহলে একটা pure refactor (একই আচরণ, ভিন্ন internal implementation — যেমন <code>useState</code> থেকে <code>useReducer</code>-এ পাল্টানো) টেস্ট ভেঙে দেয়, যদিও ব্যবহারকারীর জন্য কিছুই বদলায়নি। RTL-এর query (role, label, text) শুধু DOM-এ যা দৃশ্যমান তাই দেখে — internal implementation যতই বদলাক, আচরণ একই থাকলে টেস্ট পাস করতেই থাকে।</div>
+
+<h3>একটা পূর্ণাঙ্গ উদাহরণ — render, screen, userEvent</h3>
+<pre>import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import LoginForm from "./LoginForm";
+
+test("সঠিক credential দিলে onSubmit কল হয়", async () =&gt; {
+  const user = userEvent.setup();
+  const handleSubmit = jest.fn();
+  render(&lt;LoginForm onSubmit={handleSubmit} /&gt;);
+
+  await user.type(screen.getByLabelText(/email/i), "a@b.com");
+  await user.type(screen.getByLabelText(/password/i), "secret123");
+  await user.click(screen.getByRole("button", { name: /log in/i }));
+
+  expect(handleSubmit).toHaveBeenCalledWith({ email: "a@b.com", password: "secret123" });
+});
+
+test("ভুল email format-এ error message দেখায়", async () =&gt; {
+  const user = userEvent.setup();
+  render(&lt;LoginForm onSubmit={jest.fn()} /&gt;);
+
+  await user.type(screen.getByLabelText(/email/i), "not-an-email");
+  await user.click(screen.getByRole("button", { name: /log in/i }));
+
+  expect(await screen.findByText(/সঠিক ইমেইল দিন/i)).toBeInTheDocument();  <span class="c">// findBy* = async, DOM আপডেটের জন্য অপেক্ষা করে</span>
+});</pre>
+
+<h3>Query Priority — কোন Query কখন ব্যবহার করা উচিত</h3>
+<table>
+<tr><th>Query</th><th>কখন ব্যবহার করা উচিত</th></tr>
+<tr><td><code>getByRole</code></td><td>সবচেয়ে বেশি অগ্রাধিকার — accessibility tree অনুযায়ী কাজ করে, বাস্তব ব্যবহারকারী/screen reader যেভাবে element চেনে সেভাবেই</td></tr>
+<tr><td><code>getByLabelText</code></td><td>Form field-এর জন্য — label-এর সাথে যুক্ত input খোঁজে</td></tr>
+<tr><td><code>getByText</code></td><td>সাধারণ টেক্সট কনটেন্ট (heading, paragraph)</td></tr>
+<tr><td><code>getByTestId</code></td><td>শেষ অবলম্বন — যখন role/label/text দিয়ে যুক্তিসঙ্গতভাবে element খুঁজে পাওয়া সম্ভব না</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — সব জায়গায় data-testid ব্যবহার করা</span>
+<code>data-testid</code> সহজ মনে হলেও এটা ব্যবহারকারীর অভিজ্ঞতা থেকে সম্পূর্ণ বিচ্ছিন্ন একটা attribute — একটা button-এ <code>aria-label</code> ঠিকভাবে না থাকলেও testid দিয়ে টেস্ট পাস করে যাবে, কিন্তু screen reader ব্যবহারকারী সেই বাটন বুঝতে পারবেন না। <code>getByRole</code>/<code>getByLabelText</code> প্রথমে চেষ্টা করা মানে আপনার টেস্টই accessibility-এর একটা checker হিসেবে কাজ করে।</div>
+
+<h3>Async Utilities ও Mocking</h3>
+<pre><span class="c">// fetch mock করে API-নির্ভর component টেস্ট করা</span>
+global.fetch = jest.fn(() =&gt;
+  Promise.resolve({ json: () =&gt; Promise.resolve({ name: "Alice" }) })
+);
+
+test("ইউজার ডেটা লোড হলে নাম দেখায়", async () =&gt; {
+  render(&lt;UserProfile userId={1} /&gt;);
+  expect(screen.getByText(/loading/i)).toBeInTheDocument();          <span class="c">// প্রথমে loading state</span>
+  expect(await screen.findByText("Alice")).toBeInTheDocument();      <span class="c">// findBy — resolve হওয়া পর্যন্ত অপেক্ষা করে</span>
+});</pre>
+</template>
+
+<template data-page="patterns">
+<h2 class="title">১২. Component Design Patterns</h2>
+<p class="lead">Hooks আসার আগে render props ও Higher-Order Component (HOC) ছিল লজিক পুনর্ব্যবহারের প্রধান উপায়। Custom Hooks বেশিরভাগ ক্ষেত্রেই এখন এদের প্রতিস্থাপন করেছে — কিন্তু নির্দিষ্ট কিছু সমস্যায় (যেমন flexible composition) পুরনো প্যাটার্নগুলো এখনো প্রাসঙ্গিক, বিশেষত library কোডে।</p>
+
+<h3>Higher-Order Component (HOC) — এখন কম ব্যবহৃত, কিন্তু বোঝা জরুরি</h3>
+<pre><span class="c">// withAuth.js — একটা component নিয়ে "বর্ধিত" component রিটার্ন করে</span>
+function withAuth(Component) {
+  return function AuthenticatedComponent(props) {
+    const { user } = useAuth();
+    if (!user) return &lt;Navigate to="/login" /&gt;;
+    return &lt;Component {...props} user={user} /&gt;;
+  };
+}
+
+const ProtectedDashboard = withAuth(Dashboard);</pre>
+<div class="callout mistake"><span class="tag">HOC-এর সমস্যা — "Wrapper Hell" ও Prop-এর অস্পষ্ট উৎস</span>
+একাধিক HOC জোড়া লাগালে (<code>withAuth(withTheme(withLogging(Component)))</code>) React DevTools-এ গভীর nested wrapper component দেখা যায়, আর কোন prop কোন HOC থেকে এসেছে তা ট্রেস করা কঠিন হয়ে পড়ে। Custom Hooks (আগের অধ্যায়ে) একই যুক্তি পুনর্ব্যবহার করে দেয় কোনো wrapper component ছাড়াই — <code>const { user } = useAuth();</code> সরাসরি component-এর ভেতরেই, কোনো wrapping নেই — তাই আধুনিক কোডে HOC-এর জায়গা বেশিরভাগ ক্ষেত্রেই custom hook নিয়েছে।</div>
+
+<h3>Render Props — Custom Hook আসার আগের Composition কৌশল</h3>
+<pre><span class="c">// children একটা function — parent তার internal state child-কে function argument হিসেবে দেয়</span>
+function MouseTracker({ children }) {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  return (
+    &lt;div onMouseMove={(e) =&gt; setPos({ x: e.clientX, y: e.clientY })}&gt;
+      {children(pos)}
+    &lt;/div&gt;
+  );
+}
+
+<span class="c">// ব্যবহার</span>
+&lt;MouseTracker&gt;{(pos) =&gt; &lt;p&gt;Mouse at {pos.x}, {pos.y}&lt;/p&gt;}&lt;/MouseTracker&gt;
+
+<span class="c">// আধুনিক সমতুল্য — একটা custom hook দিয়ে, কোনো wrapper component ছাড়াই</span>
+function useMousePosition() {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  useEffect(() =&gt; {
+    const handler = (e) =&gt; setPos({ x: e.clientX, y: e.clientY });
+    window.addEventListener("mousemove", handler);
+    return () =&gt; window.removeEventListener("mousemove", handler);
+  }, []);
+  return pos;
+}
+function App() { const pos = useMousePosition(); return &lt;p&gt;Mouse at {pos.x}, {pos.y}&lt;/p&gt;; }</pre>
+
+<h3>Compound Components — আজও প্রাসঙ্গিক একটা প্যাটার্ন</h3>
+<pre><span class="c">// Tabs.jsx — parent আর child implicit ভাবে Context দিয়ে সংযুক্ত, কিন্তু JSX-এ flexible composition দেয়</span>
+const TabsContext = createContext(null);
+
+function Tabs({ children, defaultValue }) {
+  const [active, setActive] = useState(defaultValue);
+  return &lt;TabsContext.Provider value={{ active, setActive }}&gt;{children}&lt;/TabsContext.Provider&gt;;
+}
+Tabs.List = function TabsList({ children }) { return &lt;div className="tabs-list"&gt;{children}&lt;/div&gt;; };
+Tabs.Tab = function Tab({ value, children }) {
+  const { active, setActive } = useContext(TabsContext);
+  return &lt;button className={active === value ? "active" : ""} onClick={() =&gt; setActive(value)}&gt;{children}&lt;/button&gt;;
+};
+Tabs.Panel = function TabPanel({ value, children }) {
+  const { active } = useContext(TabsContext);
+  return active === value ? &lt;div&gt;{children}&lt;/div&gt; : null;
+};
+
+<span class="c">// ব্যবহার — ব্যবহারকারী নিজের ইচ্ছামতো ক্রম/গঠনে সাজাতে পারেন, HTML-এর নিজস্ব &lt;select&gt;/&lt;option&gt;-এর মতো</span>
+&lt;Tabs defaultValue="profile"&gt;
+  &lt;Tabs.List&gt;
+    &lt;Tabs.Tab value="profile"&gt;Profile&lt;/Tabs.Tab&gt;
+    &lt;Tabs.Tab value="settings"&gt;Settings&lt;/Tabs.Tab&gt;
+  &lt;/Tabs.List&gt;
+  &lt;Tabs.Panel value="profile"&gt;Profile content&lt;/Tabs.Panel&gt;
+  &lt;Tabs.Panel value="settings"&gt;Settings content&lt;/Tabs.Panel&gt;
+&lt;/Tabs&gt;</pre>
+<div class="callout best"><span class="tag">Compound Components কখন উপযুক্ত</span>
+যখন একটা component-এর ভেতরের অংশগুলো (Tabs → List/Tab/Panel, Select → Trigger/Options) parent-এর সাথে state শেয়ার করা দরকার কিন্তু ব্যবহারকারীকে composition/order-এ স্বাধীনতা দিতে চান (একটামাত্র বড় prop-heavy configuration object-এর বদলে), তখন Compound Components সবচেয়ে পরিষ্কার সমাধান — বেশিরভাগ UI library (Radix, Headless UI) এই প্যাটার্নেই বানানো।</div>
+</template>
+
+<template data-page="a11y">
+<h2 class="title">১৩. Accessibility ও Styling</h2>
+<p class="lead">Accessibility (a11y) কোনো "পরে যোগ করা" ফিচার নয় — শুরু থেকেই semantic HTML ও সঠিক ARIA ব্যবহার করলে বেশিরভাগ কাজ এমনিতেই হয়ে যায়। Styling-এর দিক থেকেও React ecosystem-এ একাধিক পথ আছে, প্রতিটার আলাদা trade-off।</p>
+
+<h3>Semantic HTML — প্রথম ও সবচেয়ে গুরুত্বপূর্ণ a11y পদক্ষেপ</h3>
+<pre><span class="c">// ❌ div দিয়ে সব কিছু বানানো — কোনো built-in keyboard/screen-reader support নেই</span>
+&lt;div onClick={handleClick}&gt;Submit&lt;/div&gt;
+
+<span class="c">// ✅ সঠিক semantic element — keyboard focus, Enter/Space activation, screen reader announcement — সব বিনামূল্যে</span>
+&lt;button onClick={handleClick}&gt;Submit&lt;/button&gt;</pre>
+<div class="callout why"><span class="tag">কেন &lt;div onClick&gt; যথেষ্ট নয়</span>
+একটা <code>&lt;div onClick&gt;</code> মাউস দিয়ে কাজ করে, কিন্তু কিবোর্ড দিয়ে (Tab করে ফোকাস করা, Enter/Space চাপা) কাজ করে না — কারণ div ডিফল্টভাবে focusable নয়, আর screen reader একে "button" হিসেবে ঘোষণাও করবে না। <code>&lt;button&gt;</code> ব্যবহার করলেই focus ring, keyboard activation, আর screen reader-এর জন্য role="button" ঘোষণা — সবকিছু বিনামূল্যে পাওয়া যায়, কোনো অতিরিক্ত কোড ছাড়াই।</div>
+
+<h3>ARIA — শুধু তখনই দরকার যখন HTML যথেষ্ট নয়</h3>
+<pre><span class="c">// একটা কাস্টম dropdown যেখানে semantic HTML element যথেষ্ট নয়</span>
+&lt;button aria-haspopup="listbox" aria-expanded={isOpen} onClick={toggle}&gt;
+  {selected || "Select an option"}
+&lt;/button&gt;
+{isOpen && (
+  &lt;ul role="listbox"&gt;
+    {options.map(o =&gt; (
+      &lt;li key={o.value} role="option" aria-selected={o.value === selected} onClick={() =&gt; select(o.value)}&gt;
+        {o.label}
+      &lt;/li&gt;
+    ))}
+  &lt;/ul&gt;
+)}</pre>
+<div class="callout mistake"><span class="tag">First rule of ARIA — "No ARIA is better than Bad ARIA"</span>
+ARIA attribute ভুলভাবে ব্যবহার করলে (যেমন <code>role="button"</code> বসিয়ে দেওয়া কিন্তু keyboard handler না লেখা) আসলে সাহায্যের বদলে ক্ষতি করে — screen reader ব্যবহারকারী "এটা একটা বাটন" শুনবেন কিন্তু কিবোর্ডে কাজ করবে না, যা confusing। নিয়ম: প্রথমে দেখুন সঠিক semantic HTML element (<code>button</code>, <code>nav</code>, <code>label</code>) দিয়ে কাজ চলে কিনা — ARIA শুধু তখনই যোগ করুন যখন HTML সত্যিই যথেষ্ট নয় (কাস্টম dropdown, tab panel)।</div>
+
+<h3>Focus Management — Modal/Dialog-এর একটা সাধারণ ভুল</h3>
+<div class="callout mistake"><span class="tag">Common mistake — Modal খোলার পর Focus না সরানো</span>
+একটা modal খোলা হলে কিবোর্ড/screen-reader ফোকাস স্বয়ংক্রিয়ভাবে modal-এর ভেতরে না গেলে, ব্যবহারকারী Tab চাপতে থাকলেও পেছনের (background-এর) কনটেন্টেই ফোকাস ঘুরতে থাকে — modal-টা visually দেখা গেলেও কিবোর্ড ব্যবহারকারীর জন্য কার্যত অস্তিত্বহীন। Modal খোলার সাথে সাথে <code>ref.current.focus()</code> দিয়ে প্রথম focusable element-এ ফোকাস সরানো, আর Tab focus modal-এর বাইরে না যাওয়া ("focus trap") নিশ্চিত করা আবশ্যক — <code>focus-trap-react</code>-এর মতো লাইব্রেরি এটা সহজ করে দেয়।</div>
+
+<h3>Styling Approach তুলনা</h3>
+<table>
+<tr><th>পদ্ধতি</th><th>উদাহরণ</th><th>Trade-off</th></tr>
+<tr><td>CSS Modules</td><td><code>styles.card</code></td><td>Scoped class name, বিল্ড-টাইমে resolve — কোনো runtime overhead নেই, কিন্তু dynamic styling (prop-ভিত্তিক) কষ্টকর</td></tr>
+<tr><td>CSS-in-JS (styled-components)</td><td><code>styled.div\`color: ${props =&gt; props.color}\`</code></td><td>Prop-ভিত্তিক dynamic style সহজ, কিন্তু runtime cost আছে, bundle size বাড়ে</td></tr>
+<tr><td>Utility-first (Tailwind)</td><td><code>&lt;div className="flex gap-4 p-2"&gt;</code></td><td>দ্রুত prototyping, কোনো নতুন CSS ফাইল/naming লাগে না, কিন্তু JSX-এ className দীর্ঘ হয়ে যায়</td></tr>
+</table>
+</template>
+
+<template data-page="production">
+<h2 class="title">১৪. Production Concerns</h2>
+<p class="lead">লোকাল মেশিনে কাজ করা কোড আর প্রোডাকশনে নির্ভরযোগ্যভাবে চলা কোড এক জিনিস নয়। Error boundary, environment variable ঠিকভাবে সামলানো, আর runtime error monitoring — এই তিনটা এই অধ্যায়ের মূল বিষয়।</p>
+
+<h3>Error Boundary — একটা Component-এর ক্র্যাশে পুরো App সাদা স্ক্রিন না হওয়া</h3>
+<pre>class ErrorBoundary extends React.Component {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error, info) {
+    logErrorToService(error, info);   <span class="c">// Sentry/monitoring service-এ পাঠানো</span>
+  }
+  render() {
+    if (this.state.hasError) return this.props.fallback;
+    return this.props.children;
+  }
+}
+
+<span class="c">// ব্যবহার — নির্দিষ্ট widget-কে আলাদাভাবে wrap করা, পুরো app নয়</span>
+&lt;ErrorBoundary fallback={&lt;p&gt;এই widget-টা লোড করা যায়নি।&lt;/p&gt;}&gt;
+  &lt;AnalyticsWidget /&gt;
+&lt;/ErrorBoundary&gt;</pre>
+<div class="callout why"><span class="tag">কেন Error Boundary এখনো class Component — আর কেন Granular হওয়া উচিত</span>
+Error Boundary এখনো একমাত্র জায়গা যেখানে class component লেখা লাগে — <code>getDerivedStateFromError</code>/<code>componentDidCatch</code>-এর কোনো hook সমতুল্য নেই। পুরো অ্যাপকে একটামাত্র বড় Error Boundary দিয়ে wrap করলে, একটা ছোট widget crash করলেই পুরো পেজ সাদা হয়ে যায়। বরং প্রতিটা independent widget/section-কে আলাদা Error Boundary দিয়ে wrap করা উচিত — একটা অংশ ভেঙে গেলেও বাকি অ্যাপ স্বাভাবিকভাবে কাজ করতে থাকে।</div>
+
+<h3>Environment Variables — Build-Time বনাম Runtime</h3>
+<div class="callout mistake"><span class="tag">Common mistake — Client Bundle-এ Secret ফাঁস করা</span>
+Create React App/Vite-এ <code>REACT_APP_*</code>/<code>VITE_*</code> prefix দেওয়া যেকোনো env variable বিল্ড-টাইমেই client JavaScript bundle-এ hardcode হয়ে যায় — অর্থাৎ যে কেউ browser DevTools-এ bundle খুলে সেটা প্লেইন টেক্সটে দেখতে পারবেন। কোনো database password, private API key, বা secret এই ধরনের variable-এ রাখা <b>উচিত না</b> — এসব শুধু সার্ভার-সাইড কোডে (Node.js backend, Next.js Server Component/API route) থাকা উচিত, যেখানে client bundle-এ কখনো যায় না।</div>
+
+<h3>Bundle Analysis ও Build Optimization</h3>
+<p>বড় প্রোডাকশন অ্যাপে bundle size পর্যায়ক্রমে বাড়তেই থাকে — <code>source-map-explorer</code>/Next.js-এর <code>@next/bundle-analyzer</code> দিয়ে ঠিক কোন dependency bundle-এর সবচেয়ে বড় অংশ দখল করছে তা visualize করা যায়, যাতে অপ্রয়োজনীয় ভারী লাইব্রেরি চিহ্নিত করে ছোট বিকল্প দিয়ে বদলানো যায় বা lazy-load করা যায় (আগের অধ্যায়ের code splitting)।</p>
+
+<h3>Runtime Error Monitoring — Sentry-এর মতো টুল</h3>
+<pre>import * as Sentry from "@sentry/react";
+Sentry.init({ dsn: "https://...@sentry.io/...", environment: "production" });
+
+<span class="c">// Sentry-এর নিজস্ব Error Boundary — automaticaly error report করে</span>
+&lt;Sentry.ErrorBoundary fallback={&lt;ErrorPage /&gt;}&gt;
+  &lt;App /&gt;
+&lt;/Sentry.ErrorBoundary&gt;</pre>
+<div class="callout best"><span class="tag">Best practice — Source Maps আপলোড করা, কিন্তু Public-এ Serve না করা</span>
+প্রোডাকশন JS bundle সাধারণত minified — একটা error stack trace তখন <code>a.js:1:24501</code>-এর মতো অর্থহীন দেখায়। Source map (minified কোডকে আসল কোডের সাথে ম্যাপ করা ফাইল) Sentry-এর মতো সার্ভিসে আপলোড করলে সেখানে readable stack trace দেখা যায় — কিন্তু সেই source map ফাইল কখনো public-এ (browser থেকে সরাসরি অ্যাক্সেসযোগ্য) serve করা উচিত না, কারণ এতে পুরো আসল, unminified সোর্স কোড ফাঁস হয়ে যায়।</div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৫. Interview প্রশ্নোত্তর — কোড সহ</h2>
+<p class="lead">React ইন্টারভিউতে বারবার ঘুরেফিরে আসা প্রশ্ন — প্রতিটার সংক্ষিপ্ত কোড উদাহরণ + বাংলায় ব্যাখ্যা, basic থেকে advanced পর্যন্ত।</p>
+
+<h3>১) Virtual DOM কী, আর এটা কেন দরকার?</h3>
+<p><b>ব্যাখ্যা:</b> Virtual DOM হলো real DOM-এর একটা lightweight in-memory JS object representation। State বদলালে React সরাসরি real DOM manipulate করে না — প্রথমে নতুন virtual DOM tree বানায়, আগেরটার সাথে diff করে, তারপর শুধু বদলানো অংশটুকু real DOM-এ প্রয়োগ করে (Foundations অধ্যায়ে বিস্তারিত)। Real DOM manipulation ব্যয়বহুল (layout/reflow trigger করে) — তাই সরাসরি DOM বদলানোর বদলে প্রথমে সস্তা JS object তুলনা করে শুধু প্রয়োজনীয় ন্যূনতম DOM update করাই এর মূল কারণ।</p>
+
+<h3>২) useState-এর পরিবর্তন কি synchronous?</h3>
+<pre>function Example() {
+  const [count, setCount] = useState(0);
+  function handleClick() {
+    setCount(count + 1);
+    console.log(count);   <span class="c">// এখনো পুরনো মান দেখাবে, বদলানো মান নয়</span>
+  }
+}</pre>
+<p><b>ব্যাখ্যা:</b> না। <code>setCount</code> কল করলে React একটা re-render <b>schedule</b> করে — সেই মুহূর্তেই <code>count</code> variable বদলায় না, পরের render-এ নতুন মান পাওয়া যায়। React 18-এ সব ইভেন্টেই একাধিক <code>setState</code> কল একসাথে batch হয়ে একটাই re-render trigger করে।</p>
+
+<h3>৩) useEffect-এর dependency array খালি ([]) রাখলে কী হয়, আর একেবারে বাদ দিলে কী হয়?</h3>
+<pre>useEffect(() =&gt; { console.log("A"); });        <span class="c">// প্রতিটা render-এর পরে চলে</span>
+useEffect(() =&gt; { console.log("B"); }, []);    <span class="c">// শুধু প্রথম render-এর পরে (mount) চলে</span>
+useEffect(() =&gt; { console.log("C"); }, [x]);   <span class="c">// mount + x বদলালে চলে</span></pre>
+<p><b>ব্যাখ্যা:</b> Dependency array বাদ দিলে effect প্রতিটা render-এর পরেই চলে — প্রায় সবসময় অনিচ্ছাকৃত। খালি <code>[]</code> মানে effect শুধু একবার, mount হওয়ার পরে চলবে। একটা array-তে variable থাকলে, শুধু সেগুলোর যেকোনো একটা বদলালে effect আবার চলবে।</p>
+
+<h3>৪) Controlled বনাম Uncontrolled Component — পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> Controlled component-এ input-এর value React state দিয়ে নিয়ন্ত্রিত (<code>value={state}</code> + <code>onChange</code>) — React-ই "single source of truth"। Uncontrolled component-এ DOM নিজেই value ধরে রাখে, React শুধু <code>ref</code> দিয়ে প্রয়োজনে সেটা পড়ে (Forms অধ্যায়ে বিস্তারিত)। Controlled component প্রতিটা keystroke-এ validation/conditional logic চালানো সহজ করে, কিন্তু বড় form-এ বেশি re-render ঘটায়।</p>
+
+<h3>৫) key prop কেন দরকার, আর index কে key হিসেবে ব্যবহার করলে কী সমস্যা হতে পারে?</h3>
+<pre><span class="c">// list পুনর্বিন্যস্ত/filter হলে index-ভিত্তিক key ভুল component-এ ভুল state আটকে দিতে পারে</span>
+items.map((item, index) =&gt; &lt;TodoItem key={index} item={item} /&gt;)   <span class="c">// ঝুঁকিপূর্ণ</span>
+items.map((item) =&gt; &lt;TodoItem key={item.id} item={item} /&gt;)        <span class="c">// নিরাপদ</span></pre>
+<p><b>ব্যাখ্যা:</b> React <code>key</code> ব্যবহার করে বোঝে কোন list item কোনটার সাথে "একই পরিচয়ের" (identity) — যাতে re-render-এ সঠিক DOM node/component state পুনর্ব্যবহার করতে পারে। Index পজিশন বোঝায়, item-এর identity নয় — list পুনর্বিন্যস্ত হলে ভুল item-এর সাথে ভুল internal state (যেমন input-এর টাইপ করা টেক্সট) লেগে যেতে পারে।</p>
+
+<h3>৬) useMemo আর useCallback-এর মধ্যে পার্থক্য কী?</h3>
+<pre>const memoizedValue = useMemo(() =&gt; computeExpensive(a, b), [a, b]);   <span class="c">// একটা VALUE মেমোইজ করে</span>
+const memoizedFn = useCallback(() =&gt; doSomething(a, b), [a, b]);       <span class="c">// একটা FUNCTION REFERENCE মেমোইজ করে</span>
+<span class="c">// useCallback(fn, deps) আসলে useMemo(() =&gt; fn, deps)-এর সমতুল্য</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>useMemo</code> একটা গণনার <b>ফলাফল</b> (value) মেমোইজ করে — dependency না বদলালে আবার গণনা না করে আগের ফলাফল ফেরত দেয়। <code>useCallback</code> একটা <b>function</b>-এর reference মেমোইজ করে, যাতে dependency না বদলালে প্রতিটা render-এ নতুন function object তৈরি না হয় (Advanced Hooks অধ্যায়ে referential equality আলোচনা দেখুন)।</p>
+
+<h3>৭) React.memo কীভাবে কাজ করে, আর কেন এটা সবসময় re-render আটকায় না?</h3>
+<pre>const Row = React.memo(function Row({ user }) { return &lt;li&gt;{user.name}&lt;/li&gt;; });
+<span class="c">// prop হিসেবে { name: "Alice" } প্রতিবার নতুন object পাঠালে, React.memo তবু re-render করবে</span>
+&lt;Row user={{ name: "Alice" }} /&gt;   <span class="c">// প্রতি parent render-এ নতুন object reference — memo কাজ করবে না</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>React.memo</code> আগের ও নতুন prop-এর shallow comparison (<code>===</code>) করে — সব prop অপরিবর্তিত থাকলেই re-render skip করে। কিন্তু object/array/function prop প্রতি render-এ নতুন reference হলে (parent-এ inline তৈরি করলে), shallow comparison সবসময় "বদলেছে" দেখাবে — তখন <code>useMemo</code>/<code>useCallback</code> দিয়ে parent-এ সেই prop-কে স্থির রাখা লাগবে।</p>
+
+<h3>৮) Rules of Hooks কী, আর এগুলো ভাঙলে কী সমস্যা হয়?</h3>
+<p><b>ব্যাখ্যা:</b> দুইটা নিয়ম — (১) hook শুধু top level-এ কল করা যাবে, কোনো condition/loop/nested function-এর ভেতরে নয়, আর (২) হুক শুধু React function component বা custom hook-এর ভেতর থেকে কল করা যাবে। React hooks-এর state কল করার <b>ক্রম</b> অনুযায়ী track করে — একটা render-এ condition-এর কারণে কোনো hook skip হয়ে গেলে, পরের সব hook-এর internal index শিফট হয়ে ভুল state ভুল hook-এর সাথে মিলে যায় (Advanced Hooks অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৯) Context ব্যবহার করলে কি সব consumer re-render হয়?</h3>
+<p><b>ব্যাখ্যা:</b> হ্যাঁ — Context value বদলালে সেই Context-এর <b>প্রতিটা</b> consumer re-render হয়, এমনকি সে value-এর যে অংশ ব্যবহার করে সেটা না বদলালেও। এজন্য ঘন ঘন বদলানো ও কম ঘন ঘন বদলানো ডেটা আলাদা Context-এ রাখা উচিত, আর সত্যিকারের fine-grained subscription দরকার হলে Redux/Zustand-এর মতো selector-ভিত্তিক library বেছে নেওয়া ভালো (Context ও State Management অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১০) React 18-এর Concurrent Rendering আসলে কী সমাধান করে?</h3>
+<p><b>ব্যাখ্যা:</b> Concurrent rendering React-কে একটা render কাজ মাঝপথে <b>থামিয়ে</b>, বেশি priority-এর কাজ (যেমন একটা input-এ keystroke) আগে সেরে, তারপর আগের render আবার শুরু/বাতিল করার ক্ষমতা দেয় — Fiber architecture-এর কারণে সম্ভব (Foundations অধ্যায়ে আলোচিত)। <code>useTransition</code>/<code>startTransition</code> দিয়ে ডেভেলপার একটা আপডেটকে "non-urgent" চিহ্নিত করতে পারেন, যাতে বড় list filter/sort হওয়ার সময়ও input typing responsive থাকে।</p>
+
+<h3>১১) useLayoutEffect কখন useEffect-এর বদলে ব্যবহার করা উচিত?</h3>
+<p><b>ব্যাখ্যা:</b> যখন DOM measurement (যেমন একটা element-এর height/width মাপা) করে সেই তথ্যের ওপর ভিত্তি করে সাথে সাথে আরেকটা DOM mutation করতে হয়, যাতে ব্যবহারকারী কোনো visual flicker/jump না দেখেন — যেমন একটা tooltip-কে viewport-এর মধ্যে থাকার জন্য reposition করা। <code>useEffect</code> browser paint-এর পরে চলে (flicker দেখা যেতে পারে), <code>useLayoutEffect</code> paint-এর আগে, synchronously চলে (Hooks Foundations অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১২) React Server Component-এ useState/useEffect ব্যবহার করা যায় না কেন?</h3>
+<p><b>ব্যাখ্যা:</b> Server Component শুধু সার্ভারে একবার render হয় HTML তৈরি করার জন্য — client-এ কোনো JS bundle পাঠানো হয় না, তাই সেখানে কোনো "পরবর্তী re-render" বা browser event-ই নেই যার জন্য state/effect দরকার হতে পারে। Interactivity (state, click handler) দরকার হলে সেই অংশটুকু আলাদা <code>"use client"</code> Component হিসেবে বের করে নিতে হয় (Server Components অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৩) একটা Custom Hook লিখুন যা window resize track করে</h3>
+<pre>function useWindowSize() {
+  const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+
+  useEffect(() =&gt; {
+    function handleResize() {
+      setSize({ width: window.innerWidth, height: window.innerHeight });
+    }
+    window.addEventListener("resize", handleResize);
+    return () =&gt; window.removeEventListener("resize", handleResize);   <span class="c">// cleanup — leak এড়ানো</span>
+  }, []);
+
+  return size;
+}
+
+<span class="c">// ব্যবহার</span>
+function ResponsiveComponent() {
+  const { width } = useWindowSize();
+  return &lt;p&gt;{width &lt; 768 ? "Mobile view" : "Desktop view"}&lt;/p&gt;;
+}</pre>
+<p><b>ব্যাখ্যা:</b> এই প্রশ্নে interviewer দেখতে চান — dependency array সঠিক (<code>[]</code>, কারণ listener একবারই বসানো দরকার), cleanup function আছে কিনা (না থাকলে প্রতিবার re-mount-এ নতুন listener জমতে থাকবে — memory leak), আর hook নামকরণ কনভেনশন (<code>use</code> prefix) মানা হয়েছে কিনা।</p>
+
+<div class="callout best"><span class="tag">Interview-এ সোনালি টিপ</span>
+<ul>
+<li>"কেন re-render হচ্ছে" জাতীয় প্রশ্ন এলেই → <b>referential equality</b> (object/function/array প্রতি render-এ নতুন reference) নিয়ে ভাবুন।</li>
+<li>"State আপডেট আগের state-এর ওপর নির্ভরশীল" শুনলেই → <b>functional update</b> (<code>setX(x =&gt; ...)</code>) মনে করুন।</li>
+<li>Effect নিয়ে যেকোনো প্রশ্নে dependency array আর cleanup function দুটোই উল্লেখ করুন — বেশিরভাগ effect-সংক্রান্ত বাগ এই দুইটার একটায় লুকিয়ে থাকে।</li>
+<li>"Class component-এ এটা কীভাবে করতেন" প্রশ্ন এলে <code>useEffect</code> ≈ <code>componentDidMount</code> + <code>componentDidUpdate</code> + <code>componentWillUnmount</code> এই সমতুল্যতা মনে রাখুন।</li>
+</ul>
+</div>
+</template>
+
 
 <!-- ============================ RENDER ============================ -->
 <script>

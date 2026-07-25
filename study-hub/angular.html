@@ -1,0 +1,937 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Modern Angular Mastery — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#dd0031; --accent2:#ff6f61;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --blue:#4aa3ff;
+    --code-bg:#0b0f14; --kw:#dd0031;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(221,0,49,.22),transparent); color:var(--accent2); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#fff}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent2); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--blue)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--blue)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#ff8a80}
+  .viz{background:var(--code-bg); border:1px solid var(--border); border-radius:12px; padding:20px 18px 12px; margin:18px 0}
+  .viz svg{width:100%; height:auto; display:block; overflow:visible}
+  .viz figcaption{color:var(--muted); font-size:13px; margin-top:10px; text-align:center; line-height:1.5}
+  .viz text{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace}
+  .viz .bn{font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla",sans-serif}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🅰️ Modern Angular Mastery</h1>
+      <p>Beginner → Advanced • বাংলায়</p>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundations",      icon:"🅰️", title:"Angular Foundations — Components, Templates, Standalone"},
+  {id:"signals",          icon:"📶", title:"Signals — Reactive State Fundamentals"},
+  {id:"di",               icon:"💉", title:"Dependency Injection ও Services"},
+  {id:"rxjs",             icon:"🌊", title:"RxJS ও Observables — Angular-এর Reactive Core"},
+  {id:"directives",       icon:"🧩", title:"Directives, Pipes ও Control Flow"},
+  {id:"forms",            icon:"📝", title:"Forms — Template-driven ও Reactive"},
+  {id:"httpclient",       icon:"📡", title:"HttpClient ও Data Fetching"},
+  {id:"routing",          icon:"🧭", title:"Angular Router"},
+  {id:"statemgmt",        icon:"🗃️", title:"State Management — NgRx ও Signal Store"},
+  {id:"changedetection",  icon:"🔍", title:"Change Detection — Zone.js, OnPush, Zoneless"},
+  {id:"performance",      icon:"⚡", title:"Performance Optimization"},
+  {id:"testing",          icon:"🧪", title:"Testing — TestBed, Jasmine"},
+  {id:"a11y",             icon:"♿", title:"Accessibility ও Styling"},
+  {id:"production",       icon:"🚀", title:"Production Concerns"},
+  {id:"interview",        icon:"❓", title:"Interview প্রশ্নোত্তর — কোড সহ"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundations">
+<h2 class="title">১. Angular Foundations — Components, Templates, Standalone</h2>
+<p class="lead">Angular একটা পূর্ণাঙ্গ, opinionated ফ্রেমওয়ার্ক — React-এর মতো শুধু একটা view লাইব্রেরি নয়, বরং routing, DI, forms, HTTP — সবকিছু built-in। Angular 14+ থেকে <span class="kw">standalone components</span> ডিফল্ট হয়ে উঠেছে, যা পুরনো <code>NgModule</code>-ভিত্তিক কাঠামোকে অনেকটাই ঐচ্ছিক করে দিয়েছে — এই কোর্স জুড়ে আধুনিক standalone API-ই ব্যবহার করা হবে।</p>
+
+<h3>একটা Standalone Component — Decorator, Template, Imports</h3>
+<pre><span class="c">// user-card.component.ts</span>
+import { Component, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'app-user-card',
+  standalone: true,               <span class="c">// NgModule-এ ঘোষণা করার দরকার নেই</span>
+  imports: [CommonModule],        <span class="c">// এই component যা যা template-এ ব্যবহার করে, তা এখানেই সরাসরি import</span>
+  template: `
+    &lt;div class="card"&gt;
+      &lt;img [src]="user.avatar" [alt]="user.name" /&gt;
+      &lt;h3&gt;{{ user.name }}&lt;/h3&gt;
+      &lt;p&gt;{{ user.role }}&lt;/p&gt;
+    &lt;/div&gt;
+  `,
+})
+export class UserCardComponent {
+  @Input({ required: true }) user!: { name: string; avatar: string; role: string };
+}</pre>
+<div class="callout why"><span class="tag">Standalone Components কেন — NgModule-এর সমস্যা যা এটা সমাধান করে</span>
+পুরনো Angular-এ প্রতিটা component কোনো না কোনো <code>NgModule</code>-এ <code>declarations</code>-এ ঘোষিত থাকতে হতো, আর সেই component কোথায় ব্যবহার হবে তা বোঝাতে <code>imports</code>/<code>exports</code>-এর একটা জটিল জাল বানাতে হতো — নতুন ডেভেলপারদের জন্য এটা একটা বড় শেখার বাধা ছিল। Standalone component নিজেই তার dependency (অন্য component, directive, pipe) সরাসরি ঘোষণা করে — কোনো central module registry ছাড়াই। React-এর মতোই "একটা কম্পোনেন্ট নিজের dependency নিজে import করে" এই মডেলের কাছাকাছি।</div>
+
+<h3>Template Syntax — Interpolation, Binding, Event</h3>
+<table>
+<tr><th>Syntax</th><th>নাম</th><th>কাজ</th></tr>
+<tr><td><code>{{ user.name }}</code></td><td>Interpolation</td><td>একটা TS expression-এর মান টেক্সট হিসেবে দেখানো</td></tr>
+<tr><td><code>[src]="user.avatar"</code></td><td>Property Binding</td><td>TS variable-কে DOM property-র সাথে সংযুক্ত করা (one-way, TS → DOM)</td></tr>
+<tr><td><code>(click)="onSelect()"</code></td><td>Event Binding</td><td>DOM event ঘটলে TS method কল হওয়া (DOM → TS)</td></tr>
+<tr><td><code>[(ngModel)]="name"</code></td><td>Two-way Binding</td><td>Property + Event binding একসাথে — input বদলালে TS variable বদলায়, আবার TS variable বদলালে input-ও বদলায়</td></tr>
+</table>
+<pre><span class="c">// একই কম্পোনেন্টে তিন ধরনের binding-এর ব্যবহার</span>
+@Component({
+  standalone: true,
+  imports: [FormsModule],
+  template: `
+    &lt;input [(ngModel)]="name" placeholder="আপনার নাম" /&gt;
+    &lt;button [disabled]="!name" (click)="greet()"&gt;Greet&lt;/button&gt;
+    &lt;p&gt;{{ greeting }}&lt;/p&gt;
+  `,
+})
+export class GreeterComponent {
+  name = '';
+  greeting = '';
+  greet() { this.greeting = `Hello, ${this.name}!`; }
+}</pre>
+
+<h3>Component Lifecycle — সংক্ষিপ্ত পরিচিতি</h3>
+<pre>export class UserProfileComponent implements OnInit, OnDestroy {
+  ngOnInit() {
+    <span class="c">// component তৈরি ও প্রথম input বাইন্ড হওয়ার পরে একবার — data fetch শুরু করার সাধারণ জায়গা</span>
+  }
+  ngOnDestroy() {
+    <span class="c">// component DOM থেকে সরে যাওয়ার ঠিক আগে — subscription/timer cleanup এখানে</span>
+  }
+}</pre>
+<div class="callout mistake"><span class="tag">Common mistake — Standalone Component-এ প্রয়োজনীয় Import বাদ দেওয়া</span>
+NgModule-ভিত্তিক পুরনো Angular-এ একবার কোনো module (যেমন <code>CommonModule</code>) declare করলে সেই module-এর সব component-এ <code>*ngIf</code>/<code>*ngFor</code> স্বয়ংক্রিয়ভাবে পাওয়া যেত। Standalone component-এ প্রতিটা component-কে নিজে যা লাগবে (<code>CommonModule</code>, <code>FormsModule</code>, অন্য standalone component/pipe) তার নিজের <code>imports</code> array-তে ঘোষণা করতে হবে — না করলে টেমপ্লেটে compile-time error আসবে, "is not a known element/property" জাতীয়।</div>
+</template>
+
+<template data-page="signals">
+<h2 class="title">২. Signals — Reactive State Fundamentals</h2>
+<p class="lead">Signals (Angular 16+ স্থিতিশীল, 17+ mainstream) হলো Angular-এর নতুন reactivity primitive — একটা mutable, observable "value container" যা বদলালে শুধু সেই মান-নির্ভর অংশটুকুই আপডেট হয়, পুরো Zone.js-চালিত change detection cycle ছাড়াই। এটা React-এর <code>useState</code>-এর অনেকটা কাছাকাছি, কিন্তু component-এর বাইরেও (একটা service-এ) সমানভাবে কাজ করে।</p>
+
+<h3>signal() — একটা Reactive Value Container</h3>
+<pre>import { signal, computed, effect } from '@angular/core';
+
+@Component({ standalone: true, selector: 'app-counter', template: `
+  &lt;p&gt;Count: {{ count() }}&lt;/p&gt;                 <span class="c">&lt;!-- signal পড়তে function-এর মতো কল করতে হয় --&gt;</span>
+  &lt;p&gt;Doubled: {{ doubled() }}&lt;/p&gt;
+  &lt;button (click)="increment()"&gt;+1&lt;/button&gt;
+`})
+export class CounterComponent {
+  count = signal(0);                          <span class="c">// প্রাথমিক মান 0</span>
+  doubled = computed(() =&gt; this.count() * 2); <span class="c">// dependency (count) বদলালেই স্বয়ংক্রিয়ভাবে recompute</span>
+
+  constructor() {
+    effect(() =&gt; console.log('count changed to', this.count()));  <span class="c">// side effect — count বদলালেই চলবে</span>
+  }
+
+  increment() {
+    this.count.update(c =&gt; c + 1);  <span class="c">// আগের মান থেকে নতুন মান গণনা — React-এর functional update-এর সমতুল্য</span>
+  }
+}</pre>
+<table>
+<tr><th>API</th><th>কাজ</th></tr>
+<tr><td><span class="kw">signal(initial)</span></td><td>একটা reactive container তৈরি — পড়তে <code>count()</code> কল করতে হয়, সরাসরি <code>count</code> নয়</td></tr>
+<tr><td><span class="kw">.set(value)</span></td><td>সরাসরি নতুন মান বসানো</td></tr>
+<tr><td><span class="kw">.update(fn)</span></td><td>আগের মান থেকে নতুন মান গণনা করে বসানো (immutable update প্যাটার্ন)</td></tr>
+<tr><td><span class="kw">computed(fn)</span></td><td>এক বা একাধিক signal থেকে derived, automatically re-computed, read-only signal</td></tr>
+<tr><td><span class="kw">effect(fn)</span></td><td>যেকোনো signal dependency বদলালেই একটা side effect চালানো (React-এর <code>useEffect</code>-এর কাছাকাছি, কিন্তু dependency array ম্যানুয়াল লিখতে হয় না — automatically track হয়)</td></tr>
+</table>
+<div class="callout why"><span class="tag">Signal বনাম Observable — একটা মৌলিক পার্থক্য</span>
+Observable (RxJS, পরের অধ্যায়ে) একটা <b>stream</b> — সময়ের সাথে একাধিক ভ্যালু "emit" হয়, subscribe না করলে কিছুই ঘটে না (lazy)। Signal একটা <b>synchronous, সবসময়-উপস্থিত মান</b> — <code>count()</code> কল করলেই সাথে সাথে বর্তমান মান পাওয়া যায়, কোনো subscription লাগে না। Signal মূলত "component state" আর "derived state"-এর জন্য সহজ সমাধান; Observable এখনো asynchronous event stream (HTTP call, keyboard input debounce) সামলাতে বেশি শক্তিশালী।</div>
+
+<h3>Automatic Dependency Tracking — computed()-এর জাদু</h3>
+<div class="callout behind"><span class="tag">কীভাবে computed() জানে কোন Signal-এর ওপর নির্ভর করছে</span>
+<code>computed(() =&gt; this.count() * 2)</code>-এ আমরা কোথাও explicit ভাবে বলিনি "এটা <code>count</code>-এর ওপর নির্ভরশীল" — Angular নিজে থেকেই এটা বুঝে নেয়। যখন <code>computed</code>-এর callback প্রথমবার চলে, Angular ট্র্যাক করে ঠিক কোন কোন signal-এর <code>()</code> কল হলো তার ভেতরে — সেই signal-গুলোই এর dependency হয়ে যায়। এটা React-এর <code>useMemo</code>-তে dependency array ম্যানুয়ালি লেখার চেয়ে কম error-prone, কারণ ভুলে কোনো dependency বাদ দেওয়ার সুযোগই নেই।</div>
+
+<h3>Signal-এর সাথে Zoneless Angular-এর সম্পর্ক</h3>
+<p>Signal-ভিত্তিক reactivity Angular-কে ধীরে ধীরে Zone.js-এর ওপর নির্ভরতা কমাতে সাহায্য করছে — যেহেতু Angular এখন ঠিক জানে কোন signal বদলালে কোন অংশ আপডেট করতে হবে, তাই পুরো অ্যাপ জুড়ে "কিছু একটা ঘটেছে হয়তো, তাই পুরো tree চেক করি" (Zone.js-এর পদ্ধতি) করার দরকার কমে যায় — এই বিষয়টা Change Detection অধ্যায়ে বিস্তারিত আলোচিত হবে।</p>
+</template>
+
+<template data-page="di">
+<h2 class="title">৩. Dependency Injection ও Services</h2>
+<p class="lead">Dependency Injection (DI) Angular-এর সবচেয়ে মৌলিক architectural feature — একটা component/service নিজে তার dependency (যেমন একটা API service) তৈরি করে না, বরং Angular-এর injector সেটা "সরবরাহ" করে। এতে টেস্টিং সহজ হয় (mock injection) আর dependency-র জীবনচক্র কেন্দ্রীয়ভাবে নিয়ন্ত্রিত হয়।</p>
+
+<h3>@Injectable ও providedIn: 'root' — সবচেয়ে সাধারণ প্যাটার্ন</h3>
+<pre><span class="c">// user.service.ts</span>
+@Injectable({ providedIn: 'root' })   <span class="c">// পুরো অ্যাপে একটাই instance (singleton), lazy-created — প্রথমবার কেউ চাইলে তৈরি হয়</span>
+export class UserService {
+  private http = inject(HttpClient);  <span class="c">// Angular 14+ — constructor-এর বদলে inject() function</span>
+
+  getUser(id: number) {
+    return this.http.get&lt;User&gt;(`/api/users/${id}`);
+  }
+}
+
+<span class="c">// component-এ ব্যবহার — constructor injection (ক্লাসিক ধরন) অথবা inject()</span>
+@Component({ standalone: true, ... })
+export class UserProfileComponent {
+  private userService = inject(UserService);   <span class="c">// আধুনিক স্টাইল — property initializer-এই কল করা যায়</span>
+  <span class="c">// constructor(private userService: UserService) {}   // পুরনো, এখনো বৈধ ধরন</span>
+}</pre>
+<div class="callout why"><span class="tag">কেন DI — Tight Coupling ভাঙা ও Testability</span>
+<code>UserProfileComponent</code> যদি নিজেই <code>new UserService()</code> লিখত, তাহলে টেস্টে সেই service-কে mock দিয়ে বদলানো অসম্ভব হতো — component সবসময় আসল HTTP call করত। DI দিয়ে component শুধু বলে "আমার একটা <code>UserService</code> লাগবে", Angular injector ঠিক করে দেয় কোন instance পাঠাবে — টেস্টে সহজেই একটা mock <code>UserService</code> injector-এ বসিয়ে দেওয়া যায়, আসল HTTP call ছাড়াই component টেস্ট করা যায় (Testing অধ্যায়ে বিস্তারিত)।</div>
+
+<h3>Hierarchical Injectors — কোথায় Provide করলে কী স্কোপ</h3>
+<table>
+<tr><th>Provide করার জায়গা</th><th>Instance স্কোপ</th></tr>
+<tr><td><code>providedIn: 'root'</code></td><td>পুরো অ্যাপে একটাই singleton instance</td></tr>
+<tr><td>Component-এর <code>providers: [...]</code> array</td><td>সেই component ও তার সব child-এর জন্য একটা নতুন, আলাদা instance</td></tr>
+<tr><td>Route-এর <code>providers</code></td><td>সেই route ও তার child route-গুলোর জন্য একটা নতুন instance</td></tr>
+</table>
+<pre><span class="c">// একটা component-level provider — প্রতিটা এই component-এর instance তার নিজস্ব CartService পায়</span>
+@Component({
+  standalone: true,
+  providers: [CartService],   <span class="c">// root-এ provide করা singleton override — এখানে নতুন instance</span>
+  ...
+})
+export class ProductPageComponent {}</pre>
+<div class="callout mistake"><span class="tag">Common mistake — Component-level Provider দিয়ে অনিচ্ছাকৃতভাবে State বিভক্ত করা</span>
+যদি একটা service <code>providedIn: 'root'</code> দিয়ে singleton হিসেবে চাওয়া হয় (যেমন একটা shopping cart যা পুরো অ্যাপে একই থাকা উচিত), কিন্তু কোনো component-এর <code>providers</code> array-তে সেই একই service আবার তালিকাভুক্ত করা হয়, তাহলে সেই component-এর জন্য একটা সম্পূর্ণ <b>নতুন, আলাদা</b> instance তৈরি হয়ে যায় — root-এর singleton থেকে বিচ্ছিন্ন। ফলাফল: cart-এ item যোগ করলেও অন্য component-এ সেই আপডেট দেখা যায় না, কারণ তারা আলাদা instance দেখছে।</div>
+</template>
+
+<template data-page="rxjs">
+<h2 class="title">৪. RxJS ও Observables — Angular-এর Reactive Core</h2>
+<p class="lead">RxJS Angular-এর সাথে গভীরভাবে জড়িত — <code>HttpClient</code>, Reactive Forms-এর <code>valueChanges</code>, Router-এর event — সবকিছুই Observable রিটার্ন করে। Signal আসার পরেও asynchronous event stream (একাধিক মান, সময়ের সাথে) সামলাতে RxJS-ই মূল টুল।</p>
+
+<h3>Observable বেসিক — Subscribe না করলে কিছুই ঘটে না</h3>
+<pre>import { HttpClient } from '@angular/common/http';
+
+@Component({ ... })
+export class UserListComponent {
+  private http = inject(HttpClient);
+  users$ = this.http.get&lt;User[]&gt;('/api/users');   <span class="c">// Observable&lt;User[]&gt; — এখনো কোনো HTTP call হয়নি</span>
+
+  ngOnInit() {
+    this.users$.subscribe(users =&gt; console.log(users));  <span class="c">// subscribe করার মুহূর্তেই আসল HTTP request পাঠানো হয়</span>
+  }
+}</pre>
+<div class="callout why"><span class="tag">Cold Observable — Lazy Execution</span>
+HttpClient-এর Observable "cold" — মানে <code>subscribe()</code> কল না করা পর্যন্ত কোনো actual network request পাঠানো হয় না। একই <code>users$</code>-এ দুইবার <code>subscribe()</code> কল করলে <b>দুইটা আলাদা</b> HTTP request পাঠানো হবে — এটা Promise-এর থেকে একটা গুরুত্বপূর্ণ পার্থক্য (Promise তৈরি হওয়ার সাথে সাথেই কাজ শুরু হয়ে যায়, subscribe/then নির্বিশেষে)।</div>
+
+<h3>async pipe — Template-এই Subscribe/Unsubscribe সামলানো</h3>
+<pre><span class="c">// Manual subscribe — cleanup নিজে লিখতে হয়</span>
+export class UserListComponent implements OnDestroy {
+  private sub!: Subscription;
+  users: User[] = [];
+  ngOnInit() { this.sub = this.userService.getUsers().subscribe(u =&gt; this.users = u); }
+  ngOnDestroy() { this.sub.unsubscribe(); }   <span class="c">// ভুলে গেলে memory leak</span>
+}
+
+<span class="c">// async pipe — Angular নিজেই subscribe/unsubscribe সামলায়</span>
+@Component({ template: `
+  &lt;ul&gt;
+    &lt;li *ngFor="let user of users$ | async"&gt;{{ user.name }}&lt;/li&gt;   <span class="c">&lt;!-- component destroy হলে async pipe নিজেই unsubscribe করে দেয় --&gt;</span>
+  &lt;/ul&gt;
+`})
+export class UserListComponent {
+  users$ = this.userService.getUsers();
+}</pre>
+<div class="callout mistake"><span class="tag">Common mistake — Manual Subscribe করে Unsubscribe ভুলে যাওয়া</span>
+প্রতিটা <code>.subscribe()</code> কল একটা resource ধরে রাখে — component destroy হয়ে গেলেও সেই subscription যদি সক্রিয় থাকে (unsubscribe না করা হয়), তাহলে সেই callback ভবিষ্যতেও চলতে থাকবে, একটা আর-না-থাকা component-এর reference ধরে রাখবে — এটাই ক্লাসিক memory leak। যেখানেই সম্ভব <code>async</code> pipe বা <code>takeUntilDestroyed()</code> operator ব্যবহার করাই নিরাপদ — ম্যানুয়াল <code>ngOnDestroy</code>-এ unsubscribe লেখা সহজেই ভুলে যাওয়া যায়।</div>
+
+<h3>takeUntilDestroyed() — Angular 16+ এর আধুনিক Cleanup</h3>
+<pre>import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+export class SearchComponent {
+  private destroyRef = inject(DestroyRef);
+  results = signal&lt;Product[]&gt;([]);
+
+  constructor(private http: HttpClient) {
+    this.searchTerm$.pipe(
+      debounceTime(300),                      <span class="c">// ৩০০ms টাইপ থামলে তবেই এগোবে</span>
+      distinctUntilChanged(),                 <span class="c">// একই term আবার আসলে ignore</span>
+      switchMap(term =&gt; this.http.get&lt;Product[]&gt;(`/api/search?q=${term}`)),  <span class="c">// আগের pending request বাতিল করে নতুনটা শুরু</span>
+      takeUntilDestroyed(this.destroyRef),    <span class="c">// component destroy হলে স্বয়ংক্রিয়ভাবে unsubscribe</span>
+    ).subscribe(products =&gt; this.results.set(products));
+  }
+}</pre>
+<div class="callout why"><span class="tag">switchMap কেন সার্চ বক্সে সবচেয়ে জনপ্রিয় operator</span>
+ব্যবহারকারী দ্রুত টাইপ করলে একাধিক search request পাঠানো হতে পারে — নেটওয়ার্কের কারণে সেগুলো যেকোনো ক্রমে ফিরে আসতে পারে, ফলে একটা পুরনো query-র ফলাফল নতুন query-র ফলাফলকে ওভাররাইট করে ফেলতে পারে (race condition)। <code>switchMap</code> প্রতিটা নতুন value আসার সাথে সাথে আগের ভেতরের Observable (pending HTTP request) <b>বাতিল করে দেয়</b> এবং নতুনটায় সুইচ করে — ফলে সবসময় শুধু সর্বশেষ query-র ফলাফলই দেখা যায়।</div>
+
+<h3>সাধারণ Operator-এর সংক্ষিপ্ত মানচিত্র</h3>
+<table>
+<tr><th>Operator</th><th>কাজ</th></tr>
+<tr><td><span class="kw">map</span></td><td>প্রতিটা emitted value রূপান্তর করা</td></tr>
+<tr><td><span class="kw">filter</span></td><td>শর্ত না মিললে value বাদ দেওয়া</td></tr>
+<tr><td><span class="kw">debounceTime(ms)</span></td><td>নির্দিষ্ট সময় কোনো নতুন value না এলে তবেই emit করা — টাইপিং থামার অপেক্ষা</td></tr>
+<tr><td><span class="kw">switchMap</span></td><td>নতুন value এলে আগের inner Observable বাতিল করে নতুনটায় সুইচ (সার্চ, ইত্যাদি)</td></tr>
+<tr><td><span class="kw">combineLatest</span></td><td>একাধিক Observable-এর সর্বশেষ value একসাথে মিলিয়ে একটা নতুন value তৈরি</td></tr>
+</table>
+</template>
+
+<template data-page="directives">
+<h2 class="title">৫. Directives, Pipes ও Control Flow</h2>
+<p class="lead">Directive দিয়ে DOM element-এর আচরণ/চেহারা প্রোগ্রাম্যাটিকভাবে বদলানো যায়, আর Pipe দিয়ে টেমপ্লেটেই ডেটা রূপান্তর করা যায়। Angular 17+ এসেছে সম্পূর্ণ নতুন, built-in <span class="kw">control flow syntax</span> (<code>@if</code>/<code>@for</code>/<code>@switch</code>), যা পুরনো <code>*ngIf</code>/<code>*ngFor</code>-কে প্রতিস্থাপন করছে।</p>
+
+<h3>নতুন Control Flow — @if, @for, @switch</h3>
+<pre><span class="c">&lt;!-- পুরনো ধরন — structural directive (*ngIf/*ngFor), NgModule import লাগত --&gt;</span>
+&lt;div *ngIf="user; else loading"&gt;{{ user.name }}&lt;/div&gt;
+&lt;ng-template #loading&gt;&lt;p&gt;Loading…&lt;/p&gt;&lt;/ng-template&gt;
+&lt;li *ngFor="let item of items; trackBy: trackById"&gt;{{ item.name }}&lt;/li&gt;
+
+<span class="c">&lt;!-- Angular 17+ — built-in syntax, কোনো import লাগে না, ভালো performance --&gt;</span>
+@if (user) {
+  &lt;div&gt;{{ user.name }}&lt;/div&gt;
+} @else {
+  &lt;p&gt;Loading…&lt;/p&gt;
+}
+
+@for (item of items; track item.id) {
+  &lt;li&gt;{{ item.name }}&lt;/li&gt;
+} @empty {
+  &lt;li&gt;কোনো আইটেম নেই&lt;/li&gt;
+}</pre>
+<div class="callout why"><span class="tag">নতুন Control Flow কেন দ্রুততর — Built-in বনাম Directive</span>
+পুরনো <code>*ngFor</code> একটা directive হিসেবে বাস্তবায়িত ছিল — Angular-কে directive resolve করতে হতো, আর <code>trackBy</code> ঐচ্ছিক হওয়ায় ভুলে বাদ পড়ে যেত প্রায়ই (নিচে)। নতুন <code>@for</code> সরাসরি Angular compiler-এর built-in অংশ, <code>track</code> expression <b>বাধ্যতামূলক</b> (compile error দেয় বাদ দিলে), আর runtime-এ pattern matching-ও দ্রুততর — Angular টিমের নিজস্ব benchmark-এ বড় list-এ লক্ষণীয় গতি বৃদ্ধি দেখানো হয়েছে।</div>
+
+<h3>trackBy / track — কেন এটা গুরুত্বপূর্ণ (React-এর key-এর সমতুল্য)</h3>
+<div class="callout mistake"><span class="tag">Common mistake — track বাদ দেওয়া বা track: $index ব্যবহার করা</span>
+<code>track</code> ছাড়া (বা ভুলভাবে index দিয়ে) list-এর প্রতিটা item-এর পরিচয় Angular বুঝতে পারে না — array পুনর্বিন্যস্ত হলে (sort/filter) Angular পুরনো সব DOM node ধ্বংস করে নতুন করে সব বানায়, প্রতিটা child component ধ্বংস-পুনর্নির্মাণ হয় (internal state হারিয়ে যায়) — ঠিক React-এ index-কে key হিসেবে ব্যবহারের একই সমস্যা। <code>track item.id</code> ব্যবহার করলে Angular বুঝে যায় কোন item কোনটার সাথে "একই", আর শুধু প্রকৃত পরিবর্তনটুকু DOM-এ প্রয়োগ করে।</div>
+
+<h3>Pipe — টেমপ্লেটেই ডেটা রূপান্তর</h3>
+<pre><span class="c">&lt;!-- Built-in pipe --&gt;</span>
+&lt;p&gt;{{ order.total | currency:'BDT' }}&lt;/p&gt;
+&lt;p&gt;{{ order.createdAt | date:'mediumDate' }}&lt;/p&gt;
+
+<span class="c">// Custom pipe — timeAgo.pipe.ts</span>
+@Pipe({ name: 'timeAgo', standalone: true, pure: true })   <span class="c">// pure: true (ডিফল্ট) — শুধু input বদলালেই আবার চলে</span>
+export class TimeAgoPipe implements PipeTransform {
+  transform(date: Date): string {
+    const diffMin = Math.floor((Date.now() - date.getTime()) / 60000);
+    return diffMin &lt; 1 ? 'এইমাত্র' : `${diffMin} মিনিট আগে`;
+  }
+}
+<span class="c">// ব্যবহার: {{ post.createdAt | timeAgo }}</span></pre>
+<div class="callout best"><span class="tag">Pure বনাম Impure Pipe — Performance-এর বিবেচনা</span>
+Pure pipe (ডিফল্ট) শুধু তখনই আবার চলে যখন তার <b>input reference</b> বদলায় — একটা array-তে item push করলে (reference একই থাকে) pure pipe আবার চলবে না। Impure pipe (<code>pure: false</code>) প্রতিটা change detection cycle-এ চলে, input বদলাক বা না বদলাক — এটা মারাত্মক পারফরম্যান্স সমস্যা তৈরি করতে পারে বড় list-এ, তাই impure pipe শুধু সত্যিকারের প্রয়োজনে (যেমন mutable array নিজে ফিল্টার করা, যেখানে reference বদলায় না) ব্যবহার করা উচিত, ডিফল্ট পছন্দ নয়।</div>
+
+<h3>Custom Attribute Directive — Element-এর আচরণ বাড়ানো</h3>
+<pre>@Directive({ selector: '[appHighlight]', standalone: true })
+export class HighlightDirective {
+  private el = inject(ElementRef);
+  @HostListener('mouseenter') onEnter() { this.el.nativeElement.style.background = 'yellow'; }
+  @HostListener('mouseleave') onLeave() { this.el.nativeElement.style.background = ''; }
+}
+<span class="c">&lt;!-- ব্যবহার: &lt;p appHighlight&gt;Hover me&lt;/p&gt; --&gt;</span></pre>
+</template>
+
+<template data-page="forms">
+<h2 class="title">৬. Forms — Template-driven ও Reactive</h2>
+<p class="lead">Angular-এ ফর্ম বানানোর দুইটা সম্পূর্ণ আলাদা দর্শন আছে — Template-driven (HTML-এ ঘোষণামূলক, ছোট ফর্মের জন্য সহজ) আর Reactive (TypeScript-এ প্রোগ্রাম্যাটিক, জটিল ফর্মে বেশি নিয়ন্ত্রণ)। Angular 14+ থেকে Reactive Forms strictly typed — এটা এই যুগের ডিফল্ট পছন্দ বড় ফর্মে।</p>
+
+<h3>Template-driven Forms — [(ngModel)]-ভিত্তিক</h3>
+<pre>@Component({ standalone: true, imports: [FormsModule], template: `
+  &lt;form #f="ngForm" (ngSubmit)="onSubmit(f.value)"&gt;
+    &lt;input name="email" [(ngModel)]="email" required email #emailField="ngModel" /&gt;
+    &lt;p *ngIf="emailField.invalid && emailField.touched"&gt;সঠিক ইমেইল দিন&lt;/p&gt;
+    &lt;button type="submit" [disabled]="f.invalid"&gt;Submit&lt;/button&gt;
+  &lt;/form&gt;
+`})
+export class SimpleFormComponent {
+  email = '';
+  onSubmit(value: any) { console.log(value); }
+}</pre>
+
+<h3>Reactive Forms — FormGroup, FormControl, Validators, Typed Forms</h3>
+<pre>import { FormBuilder, Validators } from '@angular/forms';
+
+@Component({ standalone: true, imports: [ReactiveFormsModule], template: `
+  &lt;form [formGroup]="signupForm" (ngSubmit)="onSubmit()"&gt;
+    &lt;input formControlName="email" /&gt;
+    @if (signupForm.controls.email.invalid && signupForm.controls.email.touched) {
+      &lt;p&gt;সঠিক ইমেইল দিন&lt;/p&gt;
+    }
+    &lt;input type="password" formControlName="password" /&gt;
+    &lt;button type="submit" [disabled]="signupForm.invalid"&gt;Sign up&lt;/button&gt;
+  &lt;/form&gt;
+`})
+export class SignupFormComponent {
+  private fb = inject(FormBuilder);
+
+  <span class="c">// nonNullable + Validators দিয়ে strictly-typed FormGroup — signupForm.value.email এখন string, string | null নয়</span>
+  signupForm = this.fb.nonNullable.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
+  });
+
+  onSubmit() {
+    if (this.signupForm.valid) {
+      console.log(this.signupForm.getRawValue());  <span class="c">// { email: string; password: string } — টাইপ-নিরাপদ</span>
+    }
+  }
+}</pre>
+<div class="callout why"><span class="tag">Typed Reactive Forms — কেন Angular 14+ এ এটা যুক্ত হলো</span>
+পুরনো Reactive Forms-এ <code>FormGroup</code>-এর <code>value</code> সবসময় <code>any</code> টাইপের ছিল — একটা field-এর নাম টাইপো করলেও TypeScript compiler কিছু ধরতে পারত না, রানটাইমে বাগ হিসেবে দেখা দিত। Angular 14+ থেকে <code>FormBuilder.group()</code> automatically সঠিক টাইপ infer করে — <code>signupForm.controls.email</code> ভুল বানান লিখলে compile-time এই error ধরা পড়ে, form আরও বড় হলে এই টাইপ-নিরাপত্তা রিফ্যাক্টরিং অনেক নিরাপদ করে তোলে।</div>
+
+<h3>Template-driven বনাম Reactive — কখন কোনটা</h3>
+<table>
+<tr><th></th><th>Template-driven</th><th>Reactive</th></tr>
+<tr><td>ফর্ম গঠন কোথায় সংজ্ঞায়িত</td><td>HTML টেমপ্লেটে (<code>ngModel</code>)</td><td>TypeScript-এ (<code>FormGroup</code>)</td></tr>
+<tr><td>Testability</td><td>কঠিন — টেমপ্লেট render করতে হয়</td><td>সহজ — কোনো DOM ছাড়াই form logic ইউনিট টেস্ট করা যায়</td></tr>
+<tr><td>জটিল/dynamic ফর্ম (ফিল্ড রানটাইমে যোগ/বাদ)</td><td>কষ্টকর</td><td>স্বাভাবিকভাবে সহজ (<code>FormArray</code>)</td></tr>
+<tr><td>উপযুক্ত ক্ষেত্র</td><td>খুব ছোট, সাধারণ ফর্ম (login, contact)</td><td>মাঝারি-বড়, জটিল validation logic-যুক্ত ফর্ম</td></tr>
+</table>
+</template>
+
+<template data-page="httpclient">
+<h2 class="title">৭. HttpClient ও Data Fetching</h2>
+<p class="lead">Angular-এর built-in <code>HttpClient</code> প্রতিটা request-কে একটা Observable হিসেবে রিটার্ন করে (আগের অধ্যায়ে আলোচিত RxJS-এর ভিত্তিতেই), আর <span class="kw">functional interceptor</span> (Angular 15+) দিয়ে প্রতিটা outgoing request/incoming response কেন্দ্রীয়ভাবে পরিবর্তন/পর্যবেক্ষণ করা যায়।</p>
+
+<h3>বেসিক GET/POST ও Error Handling</h3>
+<pre>@Injectable({ providedIn: 'root' })
+export class OrderService {
+  private http = inject(HttpClient);
+
+  getOrders() {
+    return this.http.get&lt;Order[]&gt;('/api/orders').pipe(
+      catchError((err: HttpErrorResponse) =&gt; {
+        console.error('Failed to load orders', err.status);
+        return of([]);   <span class="c">// একটা fallback empty array রিটার্ন — component-কে subscribe error handle করতে হয় না</span>
+      }),
+    );
+  }
+
+  createOrder(order: NewOrder) {
+    return this.http.post&lt;Order&gt;('/api/orders', order);
+  }
+}</pre>
+
+<h3>Functional Interceptor — কেন্দ্রীয়ভাবে Auth Token যোগ করা</h3>
+<pre><span class="c">// auth.interceptor.ts — Angular 15+ functional interceptor, class-এর দরকার নেই</span>
+export const authInterceptor: HttpInterceptorFn = (req, next) =&gt; {
+  const authService = inject(AuthService);
+  const token = authService.getToken();
+
+  if (!token) return next(req);
+
+  const cloned = req.clone({ headers: req.headers.set('Authorization', `Bearer ${token}`) });
+  return next(cloned);
+};
+
+<span class="c">// app.config.ts — বুটস্ট্র্যাপ-টাইমে রেজিস্টার</span>
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideHttpClient(withInterceptors([authInterceptor])),
+  ],
+};</pre>
+<div class="callout why"><span class="tag">Interceptor কেন — প্রতিটা Service-এ Token বসানো এড়ানো</span>
+Interceptor ছাড়া, প্রতিটা API-কল করা service-এ ম্যানুয়ালি <code>Authorization</code> header যোগ করতে হতো — নতুন কোনো service লিখলে এটা ভুলে যাওয়ার ঝুঁকি থাকত। Interceptor একটা একক, কেন্দ্রীয় জায়গায় বসে প্রতিটা <b>outgoing</b> HTTP request-এই স্বয়ংক্রিয়ভাবে প্রযোজ্য হয় — নতুন service লেখার সময় auth নিয়ে ভাবারই দরকার হয় না। Interceptor একইভাবে global error handling (যেমন ৪০১ পেলে logout করানো), loading spinner দেখানো, response caching-এর জন্যও ব্যবহৃত হয়।</div>
+
+<h3>httpResource() — Signal-ভিত্তিক Data Fetching (Angular 19+)</h3>
+<pre><span class="c">// নতুন experimental API — httpResource একটা signal রিটার্ন করে, RxJS subscribe ছাড়াই</span>
+export class UserProfileComponent {
+  userId = input.required&lt;number&gt;();
+  userResource = httpResource&lt;User&gt;(() =&gt; `/api/users/${this.userId()}`);
+  <span class="c">// টেমপ্লেটে: userResource.value(), userResource.isLoading(), userResource.error()</span>
+}</pre>
+<p>Angular ধীরে ধীরে data-fetching-কেও signal-ভিত্তিক করে তুলছে (এখনো developer preview), যা React Query-এর <code>useQuery</code>-এর দর্শনের সাথে মিল রাখে — <code>isLoading</code>/<code>error</code>/<code>value</code> সরাসরি signal হিসেবে পাওয়া যায়, ম্যানুয়াল subscribe/unsubscribe ছাড়াই।</p>
+</template>
+
+<template data-page="routing">
+<h2 class="title">৮. Angular Router</h2>
+<p class="lead">Angular Router built-in, এবং Angular 14+ থেকে standalone component-এর সাথে <code>provideRouter()</code> দিয়ে configure করা যায় — কোনো <code>RouterModule.forRoot()</code>-এর দরকার নেই।</p>
+
+<h3>Route Configuration ও Lazy Loading</h3>
+<pre><span class="c">// app.routes.ts</span>
+export const routes: Routes = [
+  { path: '', component: HomeComponent },
+  { path: 'products', component: ProductListComponent },
+  {
+    path: 'products/:id',
+    loadComponent: () =&gt; import('./product-detail.component').then(m =&gt; m.ProductDetailComponent),  <span class="c">// lazy — শুধু ভিজিট হলেই bundle লোড হয়</span>
+  },
+  {
+    path: 'admin',
+    loadChildren: () =&gt; import('./admin/admin.routes').then(m =&gt; m.ADMIN_ROUTES),   <span class="c">// পুরো feature area lazy load</span>
+    canActivate: [authGuard],
+  },
+  { path: '**', component: NotFoundComponent },
+];
+
+<span class="c">// app.config.ts</span>
+export const appConfig: ApplicationConfig = {
+  providers: [provideRouter(routes)],
+};</pre>
+
+<h3>ActivatedRoute ও Router — Param পড়া, Navigate করা</h3>
+<pre>@Component({ ... })
+export class ProductDetailComponent {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+
+  productId = toSignal(this.route.paramMap.pipe(map(p =&gt; p.get('id'))));  <span class="c">// Observable → Signal রূপান্তর</span>
+
+  deleteProduct() {
+    this.productService.delete(this.productId()!).subscribe(() =&gt; {
+      this.router.navigate(['/products']);   <span class="c">// প্রোগ্রাম্যাটিক নেভিগেশন</span>
+    });
+  }
+}</pre>
+
+<h3>Functional Guard — Route Protection</h3>
+<pre><span class="c">// auth.guard.ts — Angular 15+ functional guard, class-এর দরকার নেই</span>
+export const authGuard: CanActivateFn = (route, state) =&gt; {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.isLoggedIn()) return true;
+
+  return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });   <span class="c">// redirect</span>
+};</pre>
+<div class="callout why"><span class="tag">Functional Guard কেন Class-based Guard-কে প্রতিস্থাপন করছে</span>
+পুরনো ধরনে guard একটা <code>@Injectable</code> class ছিল যা <code>CanActivate</code> interface implement করত — একটা ছোট check-এর জন্যও পুরো class boilerplate লিখতে হতো। Functional guard শুধু একটা প্লেইন function, <code>inject()</code> দিয়ে dependency নেয় — Angular-এর বাকি অংশ (interceptor, resolver) যেভাবে functional API-এর দিকে এগোচ্ছে তার সাথেই সামঞ্জস্যপূর্ণ।</div>
+</template>
+
+<template data-page="statemgmt">
+<h2 class="title">৯. State Management — NgRx ও Signal Store</h2>
+<p class="lead">ছোট-মাঝারি অ্যাপে Angular-এর নিজস্ব Signal ও Service যথেষ্ট, কিন্তু বড়, জটিল অ্যাপে predictable, ট্রেসযোগ্য state দরকার হলে NgRx (Redux প্যাটার্নের Angular সংস্করণ) বা হালকা Signal-ভিত্তিক store বেছে নেওয়া যায়।</p>
+
+<h3>NgRx — Action, Reducer, Selector, Effect</h3>
+<pre><span class="c">// cart.actions.ts</span>
+export const addItem = createAction('[Cart] Add Item', props&lt;{ item: CartItem }&gt;());
+
+<span class="c">// cart.reducer.ts — pure function, আগের state + action থেকে নতুন state</span>
+export const cartReducer = createReducer(
+  initialState,
+  on(addItem, (state, { item }) =&gt; ({ ...state, items: [...state.items, item] })),
+);
+
+<span class="c">// cart.selectors.ts — derived state, memoized</span>
+export const selectCartTotal = createSelector(
+  selectCartItems,
+  (items) =&gt; items.reduce((sum, i) =&gt; sum + i.price, 0),
+);
+
+<span class="c">// component-এ ব্যবহার</span>
+export class CartComponent {
+  private store = inject(Store);
+  total$ = this.store.select(selectCartTotal);
+  addToCart(item: CartItem) { this.store.dispatch(addItem({ item })); }
+}</pre>
+<div class="callout why"><span class="tag">NgRx Effect — Side Effect-কে Reducer থেকে আলাদা রাখা</span>
+Reducer সবসময় pure function হতে হয় (কোনো HTTP call/side effect নয়) — কিন্তু "cart-এ item যোগ করলে server-এ সিঙ্ক করা" এর মতো side effect কোথাও তো লাগবে। NgRx <code>Effect</code> ঠিক এই কাজের জন্য — এটা একটা action শোনে (যেমন <code>addItem</code>), side effect চালায় (HTTP call), আর সফল/ব্যর্থ হলে আরেকটা action dispatch করে — reducer নিজে কখনো impure কাজ করে না।</div>
+
+<h3>Signal Store — হালকা, আধুনিক বিকল্প</h3>
+<pre><span class="c">// cart.store.ts — @ngrx/signals বা নিজস্ব service-ভিত্তিক signal store</span>
+@Injectable({ providedIn: 'root' })
+export class CartStore {
+  private itemsSignal = signal&lt;CartItem[]&gt;([]);
+  readonly items = this.itemsSignal.asReadonly();     <span class="c">// বাইরে থেকে শুধু পড়া যাবে, সরাসরি বদলানো যাবে না</span>
+  readonly total = computed(() =&gt; this.itemsSignal().reduce((s, i) =&gt; s + i.price, 0));
+
+  addItem(item: CartItem) {
+    this.itemsSignal.update(items =&gt; [...items, item]);
+  }
+}</pre>
+
+<h3>NgRx বনাম Signal Store বনাম প্লেইন Service — সিদ্ধান্ত মানদণ্ড</h3>
+<table>
+<tr><th>মানদণ্ড</th><th>প্লেইন Service + Signal</th><th>Signal Store (@ngrx/signals)</th><th>NgRx (Action/Reducer/Effect)</th></tr>
+<tr><td>Boilerplate</td><td>ন্যূনতম</td><td>কম</td><td>বেশি (কিন্তু কড়া কাঠামো)</td></tr>
+<tr><td>DevTools/Time-travel</td><td>নেই</td><td>আংশিক</td><td>পূর্ণ Redux DevTools support</td></tr>
+<tr><td>উপযুক্ত ক্ষেত্র</td><td>ছোট-মাঝারি অ্যাপ</td><td>মাঝারি অ্যাপ, signal-first পছন্দ</td><td>বড় টিম, জটিল async flow, কড়া convention দরকার</td></tr>
+</table>
+</template>
+
+<template data-page="changedetection">
+<h2 class="title">১০. Change Detection — Zone.js, OnPush, Zoneless</h2>
+<p class="lead">Angular কীভাবে জানে "কখন UI আপডেট করতে হবে" — এই প্রশ্নের উত্তরই change detection। এটা বছরের পর বছর ধরে বিবর্তিত হয়েছে: Zone.js-ভিত্তিক "সব চেক করো" থেকে শুরু করে আজকের Signal-ভিত্তিক "শুধু যা বদলেছে তা চেক করো" পর্যন্ত।</p>
+
+<h3>Zone.js — ঐতিহ্যগত পদ্ধতি (Monkey-Patching)</h3>
+<div class="callout behind"><span class="tag">Zone.js আসলে কী করে</span>
+Zone.js ব্রাউজারের asynchronous API (setTimeout, Promise, DOM event) monkey-patch করে — অর্থাৎ এসব function-কে নিজের ভার্সন দিয়ে বদলে দেয়, যাতে এগুলোর যেকোনোটা ঘটলে Angular জানতে পারে "কিছু একটা ঘটেছে হয়তো, পুরো component tree চেক করা দরকার"। এটাই ডিফল্ট Angular change detection-এর ভিত্তি — কোনো নির্দিষ্ট signal/observable ছাড়াই, "একটা button click হলো" শোনার সাথে সাথে পুরো tree top-to-bottom traverse করে দেখে কোথায় কী বদলেছে।</div>
+
+<h3>Default বনাম OnPush Change Detection Strategy</h3>
+<pre>@Component({
+  selector: 'app-product-row',
+  changeDetection: ChangeDetectionStrategy.OnPush,   <span class="c">// শুধু @Input reference বদলালে, event ঘটলে, বা async pipe emit করলে re-check</span>
+  template: `&lt;tr&gt;&lt;td&gt;{{ product.name }}&lt;/td&gt;&lt;/tr&gt;`,
+})
+export class ProductRowComponent {
+  @Input() product!: Product;
+}</pre>
+<table>
+<tr><th>Strategy</th><th>কখন Re-check হয়</th></tr>
+<tr><td><span class="kw">Default</span></td><td>যেকোনো async event-এর পরে — পুরো component tree, উপর থেকে নিচ পর্যন্ত</td></tr>
+<tr><td><span class="kw">OnPush</span></td><td>শুধু: (১) একটা <code>@Input</code>-এর reference বদলালে, (২) component-এর নিজের event handler ঘটলে, (৩) async pipe নতুন value emit করলে, বা (৪) manually <code>markForCheck()</code> কল করলে</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — OnPush + Mutation (Reference না বদলানো)</span>
+<pre><span class="c">// ❌ OnPush component-এ এই আপডেট UI-তে প্রতিফলিত হবে না</span>
+this.product.price = newPrice;   <span class="c">// একই object mutate করা হলো, reference একই থেকে গেল</span>
+
+<span class="c">// ✅ নতুন reference — OnPush component বুঝবে input বদলেছে</span>
+this.product = { ...this.product, price: newPrice };</pre>
+OnPush strategy <code>@Input</code>-এর <b>reference</b> তুলনা করে (<code>===</code>), কনটেন্ট নয় — ঠিক React-এর <code>React.memo</code>-এর মতোই। একটা object/array-কে সরাসরি mutate করলে (একটা property বদলানো, <code>.push()</code> করা) reference একই থাকে, তাই OnPush component ভাবে "কিছুই বদলায়নি", re-render হয় না। তাই OnPush ব্যবহার করলে সবসময় immutable update pattern (spread/স্প্রেড করে নতুন object বানানো) মেনে চলা বাধ্যতামূলক — এটাই Signal-ভিত্তিক স্টেটের সাথে স্বাভাবিকভাবেই মিলে যায়, কারণ <code>signal.update()</code>-ও একই প্যাটার্ন অনুসরণ করে।</div>
+
+<h3>Zoneless Angular (Angular 18+) — Zone.js সম্পূর্ণ বাদ দেওয়া</h3>
+<div class="callout why"><span class="tag">কেন Zoneless — Zone.js-এর লুকানো খরচ</span>
+Zone.js প্রতিটা asynchronous API monkey-patch করে বলেই এটা বাড়তি bundle size (প্রায় ১০-২০ KB) যোগ করে, আর "কিছু একটা ঘটেছে হয়তো" ভিত্তিতে পুরো tree চেক করা — বড় অ্যাপে এমনকি অপ্রাসঙ্গিক অংশও চেক হতে থাকে, performance-এ প্রভাব ফেলে। যেহেতু Signal-ভিত্তিক component ঠিক জানে কোন signal বদলালে কোন অংশ আপডেট দরকার, Angular এখন <code>provideZonelessChangeDetection()</code> দিয়ে Zone.js সম্পূর্ণ বাদ দেওয়ার বিকল্প দিচ্ছে — শুধু signal/manual trigger-ভিত্তিক, আরও নির্ভুল ও দ্রুত change detection।</div>
+</template>
+
+<template data-page="performance">
+<h2 class="title">১১. Performance Optimization</h2>
+<p class="lead">Angular-এর পারফরম্যান্স অপ্টিমাইজেশনের বেশিরভাগ কৌশলই আগের অধ্যায়গুলোর ধারণার প্রয়োগ — OnPush, track expression, lazy loading — এই অধ্যায়ে সেগুলোকেই একত্রে সংক্ষিপ্তভাবে দেখা যাক, সাথে নতুন <code>@defer</code> ব্লক।</p>
+
+<h3>@defer — Deferrable Views (Angular 17+)</h3>
+<pre>@defer (on viewport) {
+  &lt;heavy-analytics-widget /&gt;             <span class="c">&lt;!-- ব্যবহারকারী স্ক্রল করে দেখার আগে এই component-এর bundle-ই ডাউনলোড হয় না --&gt;</span>
+} @placeholder {
+  &lt;div class="skeleton"&gt;&lt;/div&gt;
+} @loading (minimum 200ms) {
+  &lt;spinner /&gt;
+} @error {
+  &lt;p&gt;লোড করা যায়নি&lt;/p&gt;
+}</pre>
+<div class="callout why"><span class="tag">@defer কেন — React-এর React.lazy + Suspense-এর Angular সমতুল্য</span>
+<code>@defer</code> ব্লক-এর ভেতরের component-এর JavaScript বান্ডেল আলাদা chunk হিসেবে থাকে, আর শর্ত (<code>on viewport</code>, <code>on interaction</code>, <code>on idle</code>, বা টাইমার) পূরণ না হওয়া পর্যন্ত সেটা ডাউনলোডই হয় না — initial bundle ছোট থাকে, প্রথম পেজ দ্রুত interactive হয়। এটা Angular compiler-এর built-in ফিচার, কোনো বাড়তি লাইব্রেরি ছাড়াই route-এর বাইরেও (একটা মডাল, একটা নিচের widget) code splitting করা যায়।</div>
+
+<h3>সংক্ষিপ্ত Optimization Checklist</h3>
+<table>
+<tr><th>কৌশল</th><th>প্রভাব</th></tr>
+<tr><td><code>ChangeDetectionStrategy.OnPush</code></td><td>অপ্রয়োজনীয় re-check এড়ানো (Change Detection অধ্যায়ে বিস্তারিত)</td></tr>
+<tr><td><code>@for ... track</code></td><td>List পুনর্বিন্যস্ত হলে অপ্রয়োজনীয় DOM ধ্বংস-পুনর্নির্মাণ এড়ানো</td></tr>
+<tr><td><code>loadComponent</code>/<code>loadChildren</code></td><td>Route-based code splitting — initial bundle ছোট রাখা</td></tr>
+<tr><td><code>@defer</code></td><td>Route-independent code splitting — viewport/interaction-ভিত্তিক lazy loading</td></tr>
+<tr><td>Pure pipe (impure এড়ানো)</td><td>প্রতিটা change detection cycle-এ অপ্রয়োজনীয় recomputation এড়ানো</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — Angular DevTools দিয়ে Profile করা</span>
+React-এর মতোই, অনুমান করে অপ্টিমাইজ করার বদলে Angular DevTools (Chrome extension)-এর Profiler ব্যবহার করে দেখা উচিত ঠিক কোন component বারবার change detection trigger করছে এবং কেন — তারপরই সেই নির্দিষ্ট জায়গায় OnPush/track/defer প্রয়োগ করা উচিত।</div>
+</template>
+
+<template data-page="testing">
+<h2 class="title">১২. Testing — TestBed, Jasmine</h2>
+<p class="lead">Angular CLI ডিফল্টভাবে Jasmine + Karma সেটআপ করে দেয় (আধুনিক প্রজেক্টে Jest-ও জনপ্রিয় বিকল্প)। মূল টুল <code>TestBed</code> — এটা একটা mini Angular module তৈরি করে, যেখানে dependency mock করে component টেস্ট করা যায়।</p>
+
+<h3>একটা Component টেস্ট করা — TestBed বেসিক</h3>
+<pre>describe('CounterComponent', () =&gt; {
+  let fixture: ComponentFixture&lt;CounterComponent&gt;;
+
+  beforeEach(async () =&gt; {
+    await TestBed.configureTestingModule({
+      imports: [CounterComponent],   <span class="c">// standalone component সরাসরি imports-এ</span>
+    }).compileComponents();
+    fixture = TestBed.createComponent(CounterComponent);
+  });
+
+  it('বাটনে ক্লিক করলে count বাড়া উচিত', () =&gt; {
+    fixture.detectChanges();          <span class="c">// প্রথম render trigger করা — automatic নয়</span>
+    const button = fixture.nativeElement.querySelector('button');
+    button.click();
+    fixture.detectChanges();          <span class="c">// state বদলের পর UI আপডেট করতে আবার trigger করা লাগে</span>
+
+    const text = fixture.nativeElement.querySelector('p').textContent;
+    expect(text).toContain('1');
+  });
+});</pre>
+<div class="callout why"><span class="tag">fixture.detectChanges() ম্যানুয়ালি কল করা লাগে কেন</span>
+Production-এ Zone.js/signal নিজে থেকেই change detection trigger করে, কিন্তু টেস্ট পরিবেশে এটা predictable রাখার জন্য ম্যানুয়াল — <code>detectChanges()</code> কল না করলে component render হবে না, state বদলালেও DOM আপডেট হবে না। এটা টেস্টকে deterministic রাখে: ঠিক কোন মুহূর্তে change detection চলল তা টেস্ট কোডেই স্পষ্ট।</div>
+
+<h3>DI Mock করে একটা Service নির্ভর Component টেস্ট করা</h3>
+<pre>describe('UserProfileComponent', () =&gt; {
+  it('userService থেকে পাওয়া নাম দেখানো উচিত', async () =&gt; {
+    const mockUserService = { getUser: () =&gt; of({ name: 'Alice' }) };   <span class="c">// আসল HTTP call ছাড়াই fake Observable</span>
+
+    await TestBed.configureTestingModule({
+      imports: [UserProfileComponent],
+      providers: [{ provide: UserService, useValue: mockUserService }],   <span class="c">// real service-এর জায়গায় mock বসানো</span>
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(UserProfileComponent);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Alice');
+  });
+});</pre>
+<div class="callout best"><span class="tag">Behavior-focused Testing — Angular Testing Library</span>
+React-এর মতোই, Angular-এও <code>@testing-library/angular</code> ব্যবহার করে "internal implementation নয়, ব্যবহারকারী যা দেখেন/করেন তাই টেস্ট করুন" এই দর্শন অনুসরণ করা যায় — <code>screen.getByRole('button', { name: /submit/i })</code>-এর মতো query দিয়ে, সরাসরি <code>fixture.nativeElement.querySelector</code>-এর CSS selector-নির্ভরতার বদলে। এতে টেস্ট রিফ্যাক্টর-প্রতিরোধী হয়।</div>
+</template>
+
+<template data-page="a11y">
+<h2 class="title">১৩. Accessibility ও Styling</h2>
+<p class="lead">Angular Material-এর ভিত্তি, Angular CDK (Component Dev Kit)-এর একটা সমর্পিত <code>a11y</code> মডিউল আছে যা focus management ও screen-reader announcement-এর মতো জটিল সমস্যা সমাধান করে দেয়।</p>
+
+<h3>Semantic HTML প্রথম, ARIA পরে — React-এর মতোই একই নীতি</h3>
+<pre><span class="c">// ❌ কাস্টম div দিয়ে বাটন বানানো — কিবোর্ড/screen-reader সাপোর্ট নেই</span>
+&lt;div (click)="submit()"&gt;Submit&lt;/div&gt;
+
+<span class="c">// ✅ সঠিক semantic element ব্যবহার — focus/keyboard activation বিনামূল্যে</span>
+&lt;button (click)="submit()"&gt;Submit&lt;/button&gt;</pre>
+
+<h3>Angular CDK a11y — FocusTrap ও LiveAnnouncer</h3>
+<pre>import { A11yModule } from '@angular/cdk/a11y';
+
+@Component({ standalone: true, imports: [A11yModule], template: `
+  &lt;div class="modal" cdkTrapFocus cdkTrapFocusAutoCapture&gt;   <span class="c">&lt;!-- modal-এর ভেতরেই Tab focus আটকে রাখে --&gt;</span>
+    &lt;h2&gt;Confirm Delete&lt;/h2&gt;
+    &lt;button (click)="confirm()"&gt;Yes&lt;/button&gt;
+    &lt;button (click)="cancel()"&gt;Cancel&lt;/button&gt;
+  &lt;/div&gt;
+`})
+export class ConfirmModalComponent {
+  private liveAnnouncer = inject(LiveAnnouncer);
+  confirm() {
+    this.liveAnnouncer.announce('Item deleted');   <span class="c">// screen reader-কে explicitly জানানো, ভিজুয়াল পরিবর্তন ছাড়াই</span>
+  }
+}</pre>
+<div class="callout why"><span class="tag">LiveAnnouncer কেন দরকার — Visual-only Feedback যথেষ্ট নয়</span>
+একটা item ডিলিট হলে UI-তে হয়তো শুধু সেই row টা অদৃশ্য হয়ে যায় — একজন sighted ব্যবহারকারী এটা দেখেই বুঝবেন, কিন্তু screen reader ব্যবহারকারী কোনো ঘোষণা না পেলে জানতেই পারবেন না কিছু ঘটেছে। <code>LiveAnnouncer</code> ARIA live region ব্যবহার করে স্ক্রিন রিডারকে স্পষ্টভাবে একটা বার্তা "বলে" — বিশুদ্ধ visual পরিবর্তনের বাইরেও non-visual ফিডব্যাক নিশ্চিত করে।</div>
+
+<h3>View Encapsulation — Component CSS Scoping</h3>
+<table>
+<tr><th>Mode</th><th>আচরণ</th></tr>
+<tr><td><span class="kw">Emulated</span> (ডিফল্ট)</td><td>Angular attribute-ভিত্তিক CSS scoping দিয়ে অনুকরণ করে — component-এর CSS বাইরে "leak" করে না</td></tr>
+<tr><td><span class="kw">None</span></td><td>Global CSS — কোনো scoping নেই, সাবধানে ব্যবহার করা উচিত</td></tr>
+<tr><td><span class="kw">ShadowDom</span></td><td>আসল browser-native Shadow DOM ব্যবহার করে সত্যিকারের style isolation</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — ::ng-deep-এর ওপর নির্ভর করা</span>
+<code>::ng-deep</code> child component-এর encapsulated style ভেদ করে স্টাইল প্রয়োগের একটা shortcut ছিল, কিন্তু এটা deprecated — এটা ব্যবহার করলে স্টাইল leak করে অনিচ্ছাকৃতভাবে অন্য component-কেও প্রভাবিত করতে পারে, আর ভবিষ্যতে ব্রাউজার/Angular ভার্সনে এটা সম্পূর্ণ সরিয়ে ফেলা হতে পারে। এর বদলে <code>:host</code>, CSS custom property (variable) দিয়ে parent-child styling API তৈরি করা, বা component input দিয়ে class/style pass করা নিরাপদ।</div>
+</template>
+
+<template data-page="production">
+<h2 class="title">১৪. Production Concerns</h2>
+<p class="lead">Angular CLI প্রোডাকশন বিল্ডে বেশ কিছু অপ্টিমাইজেশন স্বয়ংক্রিয়ভাবে করে দেয় (AOT compilation, tree-shaking, minification) — কিন্তু environment configuration, error monitoring, আর bundle budget নিজে থেকে বুঝে সেটআপ করতে হয়।</p>
+
+<h3>AOT বনাম JIT Compilation</h3>
+<table>
+<tr><th></th><th>JIT (Just-in-Time)</th><th>AOT (Ahead-of-Time)</th></tr>
+<tr><td>টেমপ্লেট কম্পাইল হয় কখন</td><td>ব্রাউজারে, রানটাইমে</td><td>বিল্ড-টাইমে, সার্ভারে</td></tr>
+<tr><td>Bundle-এ কম্পাইলার যায়?</td><td>হ্যাঁ — Angular compiler নিজেই bundle-এর অংশ</td><td>না — শুধু কম্পাইল হওয়া ফলাফল</td></tr>
+<tr><td>প্রোডাকশনে ব্যবহার</td><td>না (deprecated হয়ে গেছে বেশিরভাগ ক্ষেত্রে)</td><td>হ্যাঁ — Angular CLI-এর ডিফল্ট প্রোডাকশন বিল্ড</td></tr>
+</table>
+<div class="callout why"><span class="tag">AOT কেন প্রোডাকশনের ডিফল্ট — ছোট Bundle, দ্রুত প্রথম Render</span>
+JIT-এ পুরো Angular template compiler-টাই client bundle-এ পাঠাতে হয় (বেশ কয়েক KB), আর ব্রাউজারে প্রথমবার টেমপ্লেট কম্পাইল করতে সময় লাগে — ব্যবহারকারী সেই সময়টুকু অপেক্ষা করেন। AOT বিল্ড-টাইমেই টেমপ্লেটকে সরাসরি efficient JavaScript-এ কম্পাইল করে ফেলে — compiler bundle-এ থাকে না (ছোট bundle), আর ব্রাউজারে render হওয়ার আগে কোনো কম্পাইলেশন ধাপ নেই (দ্রুত প্রথম পেইন্ট)।</div>
+
+<h3>Environment Configuration ও Bundle Budget</h3>
+<pre><span class="c">// angular.json — প্রোডাকশন বিল্ডে file replacement + bundle size limit</span>
+"configurations": {
+  "production": {
+    "fileReplacements": [
+      { "replace": "src/environments/environment.ts", "with": "src/environments/environment.prod.ts" }
+    ],
+    "budgets": [
+      { "type": "initial", "maximumWarning": "500kb", "maximumError": "1mb" }   <span class="c">// এই সীমা ছাড়ালে বিল্ড fail/warn করবে</span>
+    ]
+  }
+}</pre>
+<div class="callout best"><span class="tag">Bundle Budget কেন সেট করা উচিত — Silent Bloat আটকানো</span>
+Budget ছাড়া, সময়ের সাথে নতুন dependency যোগ হতে হতে bundle ধীরে ধীরে বড় হতে থাকে, কেউ খেয়াল করে না — একদিন হঠাৎ দেখা যায় প্রাথমিক লোড সময় অনেক বেড়ে গেছে। <code>budgets</code>-এ একটা সীমা বেঁধে দিলে, কেউ একটা ভারী লাইব্রেরি যোগ করে সীমা ছাড়ালে বিল্ড নিজেই warning/error দেখায় — bundle size regression প্রোডাকশনে পৌঁছানোর আগেই ধরা পড়ে।</div>
+
+<h3>Global Error Handling</h3>
+<pre>@Injectable()
+export class GlobalErrorHandler implements ErrorHandler {
+  handleError(error: unknown) {
+    console.error('Unhandled error:', error);
+    <span class="c">// Sentry/monitoring service-এ পাঠানো এখানে</span>
+  }
+}
+
+<span class="c">// app.config.ts</span>
+export const appConfig: ApplicationConfig = {
+  providers: [{ provide: ErrorHandler, useClass: GlobalErrorHandler }],
+};</pre>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৫. Interview প্রশ্নোত্তর — কোড সহ</h2>
+<p class="lead">Angular ইন্টারভিউতে বারবার ঘুরেফিরে আসা প্রশ্ন — প্রতিটার সংক্ষিপ্ত কোড উদাহরণ + বাংলায় ব্যাখ্যা, basic থেকে advanced পর্যন্ত।</p>
+
+<h3>১) Standalone Component কী, আর এটা NgModule-এর কী সমস্যা সমাধান করে?</h3>
+<p><b>ব্যাখ্যা:</b> Standalone component নিজের dependency (component, directive, pipe) নিজের <code>imports</code> array-তে সরাসরি ঘোষণা করে — কোনো central <code>NgModule</code>-এর <code>declarations</code>/<code>exports</code> জালের দরকার নেই। এতে নতুন ডেভেলপারদের শেখার বাধা কমে, আর dependency graph component-লেভেলেই স্পষ্ট থাকে (Foundations অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>২) signal() আর Observable-এর মধ্যে মূল পার্থক্য কী?</h3>
+<pre>const count = signal(0);        <span class="c">// synchronous — count() কল করলেই এখনকার মান পাওয়া যায়</span>
+const count$ = new BehaviorSubject(0);  <span class="c">// stream — subscribe না করলে কিছু ঘটে না</span></pre>
+<p><b>ব্যাখ্যা:</b> Signal একটা synchronous, সবসময়-উপস্থিত মান — কোনো subscription ছাড়াই তাৎক্ষণিক পড়া যায়। Observable একটা lazy stream — subscribe করার আগে কিছুই ঘটে না, আর সময়ের সাথে একাধিক asynchronous মান emit করতে পারে। State-এর জন্য Signal, asynchronous event stream (HTTP, keyboard debounce)-এর জন্য Observable বেশি উপযুক্ত (Signals ও RxJS অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৩) @Injectable({ providedIn: 'root' }) আসলে কী করে?</h3>
+<p><b>ব্যাখ্যা:</b> এটা Angular-কে বলে দেয় এই service-টা root injector-এ singleton হিসেবে provide করা হবে — পুরো অ্যাপে একটাই instance থাকবে, আর কেউ প্রথমবার inject না করা পর্যন্ত এটা তৈরিই হবে না (tree-shakeable — কোথাও ব্যবহৃত না হলে bundle-এও যাবে না)। কোনো module-এর <code>providers</code> array-তে ম্যানুয়ালি যোগ করার দরকার নেই (Dependency Injection অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৪) async pipe ব্যবহারের সুবিধা কী?</h3>
+<pre>&lt;li *ngFor="let u of users$ | async"&gt;{{ u.name }}&lt;/li&gt;</pre>
+<p><b>ব্যাখ্যা:</b> <code>async</code> pipe component destroy হলে স্বয়ংক্রিয়ভাবে unsubscribe করে দেয় — ম্যানুয়াল <code>ngOnDestroy</code>-এ unsubscribe লেখা ভুলে যাওয়ার (memory leak-এর) ঝুঁকি সম্পূর্ণ এড়িয়ে যায়। এটা RxJS Observable-কে সরাসরি টেমপ্লেটে ব্যবহার করার সবচেয়ে নিরাপদ উপায় (RxJS অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৫) OnPush change detection strategy-তে কেন mutation কাজ করে না?</h3>
+<pre><span class="c">// ❌ কাজ করবে না — reference একই থাকল</span>
+this.user.name = 'নতুন নাম';
+<span class="c">// ✅ কাজ করবে — নতুন reference</span>
+this.user = { ...this.user, name: 'নতুন নাম' };</pre>
+<p><b>ব্যাখ্যা:</b> OnPush strategy <code>@Input</code>-এর reference তুলনা করে (<code>===</code>), কনটেন্ট ডিপ-কম্পেয়ার করে না। একটা object সরাসরি mutate করলে reference বদলায় না, তাই Angular বুঝতেই পারে না input বদলেছে — re-render হয় না। Immutable update pattern (spread) মেনে চলা তাই OnPress-এ বাধ্যতামূলক (Change Detection অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৬) trackBy/track কেন *ngFor/@for-এ ব্যবহার করা উচিত?</h3>
+<p><b>ব্যাখ্যা:</b> এটা ছাড়া Angular list-এর প্রতিটা item-এর "পরিচয়" বুঝতে পারে না — array পুনর্বিন্যস্ত হলে সব পুরনো DOM node ধ্বংস করে নতুন করে বানায়, প্রতিটা child component-এর internal state হারিয়ে যায়। <code>track item.id</code> দিলে Angular বুঝে যায় কোন item কোনটার সাথে "একই", শুধু প্রকৃত পরিবর্তনটুকু DOM-এ প্রয়োগ হয় — React-এ list-এ <code>key</code> prop-এর একদম সমতুল্য ধারণা (Directives অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৭) Component-level provider দিয়ে service provide করলে কী ঘটে?</h3>
+<pre>@Component({ providers: [CartService], ... })  <span class="c">// root singleton override — নতুন, আলাদা instance</span></pre>
+<p><b>ব্যাখ্যা:</b> সেই component (ও তার সব child)-এর জন্য একটা সম্পূর্ণ নতুন instance তৈরি হয়, root-এ provide করা singleton থেকে সম্পূর্ণ বিচ্ছিন্ন। একটা service সত্যিই singleton হিসেবে চাইলে, এটাকে ভুলবশত কোনো component-এর <code>providers</code>-এ আবার তালিকাভুক্ত না করা জরুরি (DI অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৮) switchMap সার্চ ফিচারে এত জনপ্রিয় কেন?</h3>
+<p><b>ব্যাখ্যা:</b> ব্যবহারকারী দ্রুত টাইপ করলে একাধিক request পাঠানো হতে পারে, যেগুলো যেকোনো ক্রমে ফিরে আসতে পারে — একটা পুরনো query-র ফলাফল দেরিতে এসে নতুন query-র ফলাফল ওভাররাইট করতে পারে (race condition)। <code>switchMap</code> নতুন value এলেই আগের pending inner Observable বাতিল করে দেয় — সবসময় শুধু সর্বশেষ query-র ফলাফলই থেকে যায় (RxJS অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৯) Reactive Forms বনাম Template-driven Forms — কখন কোনটা বেছে নেবেন?</h3>
+<p><b>ব্যাখ্যা:</b> ছোট, সাধারণ ফর্মে (login) Template-driven যথেষ্ট এবং কম কোড লাগে। মাঝারি-বড়, জটিল validation বা dynamic field (রানটাইমে ফিল্ড যোগ/বাদ) দরকার হলে Reactive Forms বেছে নেওয়া উচিত — কারণ এটা TypeScript-এ প্রোগ্রাম্যাটিকভাবে নিয়ন্ত্রিত, easily unit-testable, আর Angular 14+ থেকে strictly typed (Forms অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১০) Zoneless Angular আসলে কী সমস্যা সমাধান করে?</h3>
+<p><b>ব্যাখ্যা:</b> Zone.js প্রতিটা asynchronous API monkey-patch করে "কিছু একটা ঘটেছে হয়তো" ধরনের সিগন্যাল দেয়, এরপর Angular পুরো component tree চেক করে দেখে কোথায় বদলেছে — বড় অ্যাপে অপ্রয়োজনীয় চেকিং ও বাড়তি bundle size যোগ করে। Signal-ভিত্তিক component ঠিক জানে কোন signal বদলালে কোন অংশ আপডেট দরকার, তাই Zone.js সম্পূর্ণ বাদ দিয়ে (<code>provideZonelessChangeDetection()</code>) আরও নির্ভুল, দ্রুত change detection সম্ভব (Change Detection অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১১) একটা Custom Hook-এর মতো, একটা Custom Signal-ভিত্তিক Service লিখুন যা localStorage-এ সিঙ্ক থাকে</h3>
+<pre>@Injectable({ providedIn: 'root' })
+export class PersistedSignalService {
+  private themeSignal = signal&lt;string&gt;(localStorage.getItem('theme') ?? 'dark');
+  readonly theme = this.themeSignal.asReadonly();
+
+  constructor() {
+    effect(() =&gt; localStorage.setItem('theme', this.themeSignal()));   <span class="c">// theme বদলালেই স্বয়ংক্রিয়ভাবে localStorage-এ সংরক্ষণ</span>
+  }
+
+  setTheme(value: string) { this.themeSignal.set(value); }
+}</pre>
+<p><b>ব্যাখ্যা:</b> এই প্রশ্নে interviewer দেখতে চান — <code>effect()</code> কীভাবে signal dependency automatically track করে (কোনো dependency array ম্যানুয়াল লেখা লাগে না), <code>asReadonly()</code> দিয়ে encapsulation (বাইরে থেকে সরাসরি signal বদলানো আটকানো), আর <code>providedIn: 'root'</code> দিয়ে singleton service বানানোর প্যাটার্ন বোঝা গেছে কিনা।</p>
+
+<h3>১২) Angular-এ Memory Leak-এর সবচেয়ে সাধারণ কারণ কী, আর কীভাবে এড়ানো যায়?</h3>
+<p><b>ব্যাখ্যা:</b> সবচেয়ে সাধারণ কারণ — ম্যানুয়ালি <code>.subscribe()</code> কল করে কখনো <code>unsubscribe()</code> না করা, বিশেষ করে <code>ngOnDestroy</code>-তে ভুলে যাওয়া। সমাধান: যেখানে সম্ভব <code>async</code> pipe ব্যবহার করা (Angular নিজেই cleanup করে), অথবা <code>takeUntilDestroyed(this.destroyRef)</code> operator পাইপে যোগ করা — কোনোটাতেই ম্যানুয়াল <code>ngOnDestroy</code> বয়লারপ্লেট লাগে না (RxJS অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৩) AOT compilation প্রোডাকশনে কী সুবিধা দেয়?</h3>
+<p><b>ব্যাখ্যা:</b> AOT বিল্ড-টাইমেই টেমপ্লেটকে efficient JavaScript-এ কম্পাইল করে ফেলে — Angular-এর template compiler client bundle-এ যায় না (bundle ছোট), আর ব্রাউজারে render হওয়ার আগে কোনো রানটাইম কম্পাইলেশন ধাপ থাকে না (দ্রুত প্রথম পেইন্ট)। Angular CLI-এর প্রোডাকশন বিল্ডে এটাই ডিফল্ট (Production Concerns অধ্যায়ে বিস্তারিত)।</p>
+
+<div class="callout best"><span class="tag">Interview-এ সোনালি টিপ</span>
+<ul>
+<li>"UI আপডেট হচ্ছে না" জাতীয় প্রশ্ন এলেই → <b>OnPush + mutation বনাম immutable update (reference equality)</b> নিয়ে ভাবুন।</li>
+<li>"Memory leak" শুনলেই → <b>manual subscribe/unsubscribe বনাম async pipe/takeUntilDestroyed</b> মনে করুন।</li>
+<li>Signal নিয়ে যেকোনো প্রশ্নে "automatic dependency tracking" (dependency array ম্যানুয়াল লেখা লাগে না) উল্লেখ করুন — এটাই React hooks থেকে সবচেয়ে বড় পার্থক্য।</li>
+<li>"React-এ এটা কীভাবে করতেন" প্রশ্ন এলে সমতুল্যতা মনে রাখুন: Signal ≈ useState, computed ≈ useMemo, effect() ≈ useEffect, DI service ≈ Context/custom hook।</li>
+</ul>
+</div>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>
