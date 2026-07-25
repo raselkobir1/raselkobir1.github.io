@@ -121,6 +121,7 @@ const pages = [
   {id:"patterns",      icon:"🧩", title:"Component Design Patterns"},
   {id:"a11y",          icon:"♿", title:"Accessibility ও Styling"},
   {id:"production",    icon:"🚀", title:"Production Concerns"},
+  {id:"nextjsrelation",icon:"▲", title:"React ও Next.js-এর সম্পর্ক — Library বনাম Framework"},
   {id:"interview",     icon:"❓", title:"Interview প্রশ্নোত্তর — কোড সহ"},
 ];
 </script>
@@ -1044,8 +1045,78 @@ Sentry.init({ dsn: "https://...@sentry.io/...", environment: "production" });
 প্রোডাকশন JS bundle সাধারণত minified — একটা error stack trace তখন <code>a.js:1:24501</code>-এর মতো অর্থহীন দেখায়। Source map (minified কোডকে আসল কোডের সাথে ম্যাপ করা ফাইল) Sentry-এর মতো সার্ভিসে আপলোড করলে সেখানে readable stack trace দেখা যায় — কিন্তু সেই source map ফাইল কখনো public-এ (browser থেকে সরাসরি অ্যাক্সেসযোগ্য) serve করা উচিত না, কারণ এতে পুরো আসল, unminified সোর্স কোড ফাঁস হয়ে যায়।</div>
 </template>
 
+<template data-page="nextjsrelation">
+<h2 class="title">১৫. React ও Next.js-এর সম্পর্ক — Library বনাম Framework</h2>
+<p class="lead">"React আর Next.js কি একই জিনিস?" — এটা প্রায় প্রতিটা নতুন React শিক্ষার্থীর মনে আসা প্রথম প্রশ্নগুলোর একটা। সংক্ষিপ্ত উত্তর: <b>Next.js React-এর প্রতিস্থাপন নয়, React-এর ওপর বানানো একটা framework</b> — এই অধ্যায়ে এই সম্পর্কটা স্পষ্টভাবে ভেঙে দেখা যাক।</p>
+
+<h3>React কী, Next.js কী — একবাক্যে</h3>
+<table>
+<tr><th></th><th>React</th><th>Next.js</th></tr>
+<tr><td>এটা আসলে কী</td><td>একটা UI <b>লাইব্রেরি</b> — Meta ও ওপেন সোর্স কমিউনিটি রক্ষণাবেক্ষণ করে</td><td>একটা পূর্ণাঙ্গ <b>framework</b> — Vercel তৈরি ও রক্ষণাবেক্ষণ করে, ভেতরে React ব্যবহার করে</td></tr>
+<tr><td>দায়িত্ব</td><td>শুধু component তৈরি, state, আর state থেকে UI রেন্ডার করা</td><td>Routing, rendering strategy (SSR/SSG/ISR), bundling, API layer — অ্যাপ চালানোর বাকি সবকিছু</td></tr>
+<tr><td>একা যথেষ্ট?</td><td>না — production অ্যাপে routing/bundler/data-fetching-এর জন্য বাড়তি টুল লাগে</td><td>হ্যাঁ — একটা single dependency-তেই পুরো production setup পাওয়া যায়</td></tr>
+</table>
+<div class="callout why"><span class="tag">সবচেয়ে সহজ analogy — Engine বনাম গাড়ি</span>
+React হলো একটা <b>engine</b> — অত্যন্ত শক্তিশালী, কিন্তু একা একটা engine দিয়ে কেউ রাস্তায় চলতে পারে না। Next.js হলো সেই engine-এর ওপর বানানো একটা <b>পূর্ণাঙ্গ গাড়ি</b> — চ্যাসিস (routing), চাকা (bundling), ড্যাশবোর্ড (built-in optimization) সব একসাথে জোড়া লাগানো, যাতে ড্রাইভার (ডেভেলপার) শুধু গাড়ি চালানো নিয়ে ভাবতে পারেন, ইঞ্জিন-চ্যাসিস জোড়া লাগানোর জটিলতা নিয়ে নয়।</div>
+
+<h3>React একা কী দেয়, কী দেয় না</h3>
+<div class="grid2">
+  <div class="box"><b>React একা যা দেয়</b><br>JSX, component model, <code>useState</code>/<code>useEffect</code>-এর মতো hooks, আর virtual DOM reconciliation (Foundations অধ্যায়ে বিস্তারিত)। ব্যস, এটুকুই — <code>npx create-react-app</code>-এর মতো কোনো official production template এখন আর React টিম প্রস্তাব করে না (deprecated)।</div>
+  <div class="box"><b>React একা যা দেয় না</b><br>কোনো built-in routing (React Router আলাদা লাইব্রেরি লাগে — Routing অধ্যায়ে দেখুন), কোনো নির্দিষ্ট data-fetching convention, কোনো built-in bundler config (Vite/webpack নিজে বসাতে হয়), আর কোনো server-side rendering ক্ষমতা নেই — এসব সমাধান করতেই একটা framework দরকার হয়ে পড়ে।</div>
+</div>
+
+<h3>Next.js React-এর ওপর ঠিক কী কী যোগ করে</h3>
+<table>
+<tr><th>Next.js ফিচার</th><th>এটা যা সমাধান করে</th></tr>
+<tr><td><span class="kw">File-based Routing</span></td><td><code>app/products/[id]/page.tsx</code> — একটা ফাইল বানালেই route তৈরি; আলাদাভাবে React Router-এর মতো <code>&lt;Routes&gt;</code> কনফিগার করা লাগে না (Routing অধ্যায়ের সাথে তুলনা করুন)</td></tr>
+<tr><td><span class="kw">SSR / SSG / ISR</span></td><td>Server-এ HTML প্রি-রেন্ডার করা (SEO ও প্রথম-পেইন্ট গতির জন্য) — plain React (client-side rendering)-এ এটা নিজে থেকে বানাতে হতো একটা কাস্টম Node সার্ভার দিয়ে</td></tr>
+<tr><td><span class="kw">Server Components / App Router</span></td><td>React-এর নিজস্ব ফিচার (Server Components অধ্যায়ে বিস্তারিত), কিন্তু Next.js-ই প্রথম ও সবচেয়ে পরিণত framework যা এটা পূর্ণাঙ্গভাবে বাস্তবায়ন করেছে</td></tr>
+<tr><td><span class="kw">API Routes / Route Handlers</span></td><td>একই প্রজেক্টে backend endpoint লেখা — আলাদা Express/Node সার্ভার সেটআপ করার দরকার নেই</td></tr>
+<tr><td><span class="kw">Image/Font Optimization</span></td><td><code>&lt;Image&gt;</code> কম্পোনেন্ট স্বয়ংক্রিয়ভাবে resize/lazy-load/modern format (WebP) serve করে — plain React-এ ম্যানুয়ালি করতে হতো</td></tr>
+<tr><td><span class="kw">Zero-config Bundling</span></td><td>Webpack/Turbopack কনফিগারেশন আগে থেকেই optimized — নিজে থেকে <code>webpack.config.js</code> লেখা লাগে না</td></tr>
+</table>
+
+<h3>একই ছোট Page — Plain React (Vite) বনাম Next.js</h3>
+<pre><span class="c">// Plain React — Vite + React Router — routing নিজে ঘোষণা করতে হয় (Routing অধ্যায়ে বিস্তারিত)</span>
+const router = createBrowserRouter([
+  { path: "products/:id", element: &lt;ProductDetail /&gt; },
+]);
+function ProductDetail() {
+  const { id } = useParams();
+  const [product, setProduct] = useState(null);
+  useEffect(() =&gt; { fetchProduct(id).then(setProduct); }, [id]);   <span class="c">// ক্লায়েন্টেই fetch — SEO-এর জন্য আদর্শ নয়</span>
+  return product ? &lt;h2&gt;{product.name}&lt;/h2&gt; : &lt;p&gt;Loading…&lt;/p&gt;;
+}
+
+<span class="c">// Next.js App Router — ফাইলের অবস্থানই route, component ডিফল্টে Server Component</span>
+<span class="c">// app/products/[id]/page.tsx</span>
+async function ProductDetail({ params }) {
+  const product = await fetchProduct(params.id);   <span class="c">// সার্ভারেই fetch, HTML-এই readily রেন্ডার হয়ে ব্রাউজারে পৌঁছায়</span>
+  return &lt;h2&gt;{product.name}&lt;/h2&gt;;
+}</pre>
+<p>লক্ষ করুন — দুইটাতেই কম্পোনেন্ট, JSX, props সব <b>একই React ধারণা</b>। পার্থক্য শুধু routing কীভাবে ঘোষিত হচ্ছে, আর ডেটা কোথায় (client/server) fetch হচ্ছে — এই দুইটাই Next.js-এর framework-স্তরের সিদ্ধান্ত, React নিজের নয়।</p>
+
+<div class="callout mistake"><span class="tag">সাধারণ ভুল ধারণা — "Next.js শিখলে React শেখার দরকার নেই"</span>
+Next.js-এর প্রতিটা component আসলে একটা <b>React component</b> — একই JSX সিনট্যাক্স, একই <code>useState</code>/<code>useEffect</code> hooks (Client Component-এ), একই props/composition মডেল। Next.js React-কে প্রতিস্থাপন করে না, বরং React-এর ওপর একটা routing/rendering/bundling স্তর যোগ করে। যিনি React-এর মূল ধারণা (component, hooks, rendering) না বুঝেই সরাসরি Next.js শেখা শুরু করেন, তিনি প্রায়ই আটকে যান — কারণ Next.js-এর ডকুমেন্টেশন ধরেই নেয় পাঠক React জানেন।</div>
+
+<h3>কেন React টিম নিজেই এখন Framework ব্যবহারের পরামর্শ দেয়</h3>
+<div class="callout behind"><span class="tag">react.dev-এর অবস্থান বদলের পেছনের কারণ</span>
+কয়েক বছর আগে পর্যন্ত React-এর অফিসিয়াল ডকুমেন্টেশন নতুন প্রজেক্ট শুরুর জন্য <code>create-react-app</code> (CRA) সুপারিশ করত — যেটা শুধু client-side rendering-ভিত্তিক একটা খালি টেমপ্লেট দিত, routing/data-fetching/SSR নিজে জোড়া লাগাতে হতো। React টিম এখন আনুষ্ঠানিকভাবে CRA-কে deprecated ঘোষণা করে Next.js, React Router (Framework mode), বা Expo (native)-এর মতো framework দিয়ে শুরু করার পরামর্শ দেয় — কারণ production-grade routing, data-fetching, code-splitting, আর Server Components-এর মতো নতুন ফিচার সঠিকভাবে বাস্তবায়ন করা জটিল, আর framework-এর মেইনটেইনাররা সরাসরি React কোর টিমের সাথে সমন্বয় করে এসব ফিচার আগে থেকেই সঠিকভাবে integrate করে রাখেন — প্রতিটা ডেভেলপারকে নিজে থেকে এই তারের জাল বুনতে হয় না।</div>
+
+<h3>কখন Plain React যথেষ্ট, কখন Next.js দরকার</h3>
+<table>
+<tr><th>পরিস্থিতি</th><th>উপযুক্ত পছন্দ</th></tr>
+<tr><td>Login-এর পেছনে থাকা internal dashboard/admin panel — SEO দরকার নেই</td><td>Plain React (Vite) + React Router যথেষ্ট, বাড়তি framework overhead দরকার নেই</td></tr>
+<tr><td>একটা বড় অ্যাপের ভেতরে embed হওয়া ছোট widget</td><td>Plain React — নিজস্ব routing/SSR-ই দরকার নেই</td></tr>
+<tr><td>Public-facing marketing site, blog, e-commerce — SEO ও দ্রুত first paint জরুরি</td><td>Next.js (বা Remix/Astro-এর মতো অন্য framework) — SSR/SSG ছাড়া search engine ও ধীর নেটওয়ার্কে ভুক্তভোগী ব্যবহারকারীরা কষ্ট পাবেন</td></tr>
+<tr><td>নতুন, বড় production অ্যাপ শুরু করা (সাধারণ ক্ষেত্র)</td><td>react.dev-এর বর্তমান সুপারিশ অনুযায়ী framework দিয়েই শুরু করা — routing/data-fetching বারবার নতুন করে না বানিয়ে</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — Next.js একমাত্র বিকল্প নয়</span>
+Next.js সবচেয়ে জনপ্রিয় হলেও, React-এর ওপর বানানো একমাত্র framework নয় — Remix/React Router (Framework mode), Astro (content-heavy সাইটে), Gatsby (স্ট্যাটিক সাইটে) একই দর্শনের ভিন্ন বাস্তবায়ন। Vercel Next.js মেইনটেইন করে, কিন্তু React নিজে Meta ও ওপেন সোর্স কমিউনিটি মেইনটেইন করে — দুইটা আলাদা প্রজেক্ট, আলাদা রিলিজ সাইকেল, শুধু একটা অন্যটার ওপর নির্ভরশীল।</div>
+</template>
+
 <template data-page="interview">
-<h2 class="title">১৫. Interview প্রশ্নোত্তর — কোড সহ</h2>
+<h2 class="title">১৬. Interview প্রশ্নোত্তর — কোড সহ</h2>
 <p class="lead">React ইন্টারভিউতে বারবার ঘুরেফিরে আসা প্রশ্ন — প্রতিটার সংক্ষিপ্ত কোড উদাহরণ + বাংলায় ব্যাখ্যা, basic থেকে advanced পর্যন্ত।</p>
 
 <h3>১) Virtual DOM কী, আর এটা কেন দরকার?</h3>
