@@ -1,0 +1,1162 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Spoken English for Software Engineers — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#34d399; --accent2:#6ee7b7;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --blue:#4aa3ff;
+    --code-bg:#0b0f14; --kw:#34d399;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(52,211,153,.22),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#04221a}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--blue)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--blue)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#6ee7b7}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🗣️ Spoken English for Engineers</h1>
+      <p>Beginner → Advanced • বাংলায়</p>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",              icon:"🗣️", title:"Foundation — কেন Spoken English জরুরি"},
+  {id:"phonetics-vowels",        icon:"🔤", title:"Phonetics ১ — Vowel Sound ও IPA"},
+  {id:"phonetics-consonants",    icon:"👄", title:"Phonetics ২ — Consonant ও কমন ভুল"},
+  {id:"stress",                  icon:"🎵", title:"Word Stress ও Syllable"},
+  {id:"intonation",              icon:"📈", title:"Sentence Stress, Rhythm ও Intonation"},
+  {id:"grammar-basics",          icon:"📘", title:"Basic Grammar ১ — Sentence Structure ও Tense"},
+  {id:"grammar-more",            icon:"📗", title:"Basic Grammar ২ — Article, Preposition, Modal"},
+  {id:"grammar-dev",             icon:"🧮", title:"Developer Grammar — Conditional, Passive, Reported Speech"},
+  {id:"standup",                 icon:"🧑‍💻", title:"Standup, Meeting ও Clarifying Question"},
+  {id:"tech-talk",               icon:"🗨️", title:"Bug, Architecture ও Code Review কথায় বলা"},
+  {id:"writing",                 icon:"✍️", title:"Written English — Slack, Commit, PR, Docs"},
+  {id:"interview",               icon:"🎤", title:"Interview English — STAR Method"},
+  {id:"advanced",                icon:"🚀", title:"Presentation, Client Communication ও Remote Team"},
+  {id:"practice",                icon:"📆", title:"Listening, Accent ও ৯০-দিনের Practice Plan"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Foundation — কেন Spoken English জরুরি একজন Software Engineer-এর জন্য</h2>
+<p class="lead">অনেক বাংলাদেশি ইঞ্জিনিয়ার দুর্দান্ত কোড লেখেন, complex সিস্টেম ডিজাইন করেন, প্রোডাকশন ইনসিডেন্ট সমাধান করেন — কিন্তু একটা standup meeting-এ নিজের কাজ ব্যাখ্যা করতে গিয়ে জমে যান, কিংবা client call-এ প্রশ্ন শুনে মাথায় উত্তর থাকা সত্ত্বেও ইংরেজিতে বলতে গিয়ে আটকে যান। এই কোর্সের পুরো উদ্দেশ্য একটাই — টেকনিক্যাল দক্ষতা যা ইতিমধ্যে আছে, সেটাকে স্পষ্ট, আত্মবিশ্বাসী spoken ও written English দিয়ে সঠিকভাবে প্রকাশ করতে শেখানো।</p>
+
+<h3>আসল সমস্যা — টেকনিক্যাল স্কিলই যথেষ্ট নয়</h3>
+<p>ক্যারিয়ারে একটা পর্যায় পর্যন্ত কোডিং স্কিল একাই আপনাকে এগিয়ে নেয় — কিন্তু senior role, remote/international job, বা client-facing দায়িত্বে যাওয়ার সাথে সাথে <span class="kw">communication</span> একটা আলাদা, সমান গুরুত্বপূর্ণ স্কিল হয়ে দাঁড়ায়। একজন ইঞ্জিনিয়ার যিনি নিজের সমাধান স্পষ্টভাবে ব্যাখ্যা করতে পারেন না, তিনি প্রায়ই promotion-এ পিছিয়ে পড়েন, interview-এ বাদ পড়েন, অথবা client-এর কাছে "কম নির্ভরযোগ্য" মনে হন — যদিও টেকনিক্যাল কাজ পুরোপুরি ঠিক ছিল। এটা শুধু "ভালো ইংরেজি বলা"-র প্রশ্ন নয়; এটা সরাসরি ক্যারিয়ার-গ্রোথ, বেতন-বৃদ্ধি, এবং remote job পাওয়ার সুযোগের সাথে যুক্ত।</p>
+<div class="callout why"><span class="tag">কেন এই সমস্যাটা প্রায়ই অদৃশ্য থাকে</span>নিজের টিমের ভেতরে বাংলায় বা ভাঙা ইংরেজিতে কাজ চালানো সহজ, তাই সমস্যাটা দৃশ্যমান হয় না — যতক্ষণ না একটা international standup, একটা onsite client call, বা একটা remote job interview এসে পড়ে। তখন বোঝা যায় যে ভাষার barrier আসলে টেকনিক্যাল সীমাবদ্ধতা নয়, বরং practice-এর অভাব — এবং practice দিয়েই এটা সমাধানযোগ্য।</div>
+
+<h3>একজন ইঞ্জিনিয়ারের দিনভর ইংরেজি কোথায় কোথায় লাগে</h3>
+<p>ইংরেজি শুধু "interview-এর জন্য" শেখার বিষয় নয় — একজন working software engineer-এর প্রতিদিনের কাজে এটা বারবার দরকার হয়, স্পোকেন এবং written দুইভাবেই।</p>
+<pre><span class="c"># একজন ইঞ্জিনিয়ারের সাপ্তাহিক জীবনে ইংরেজির ব্যবহার</span>
+Daily standup                → what I did / doing / blockers বলা
+Sprint planning ও retro       → estimation, opinion, feedback দেওয়া
+Code review comments          → written — সংক্ষিপ্ত কিন্তু স্পষ্টভাবে issue বোঝানো
+PR description                → written — কেন change করা হলো তার প্রেক্ষাপট
+Slack / email                 → distributed teammate-দের সাথে async communication
+Client demo / status call     → progress, risk, timeline ব্যাখ্যা করা
+Technical interview            → problem বলা, approach ব্যাখ্যা করা, প্রশ্ন করা
+Behavioral interview           → local ও international remote job উভয়ের জন্য
+Conference talk / tech blog    → জ্ঞান শেয়ার করা, personal brand তৈরি
+Open-source contribution       → issue/PR-এ ইংরেজিতে আলোচনা, maintainer-এর সাথে
+Salary / offer negotiation     → নিজের value স্পষ্টভাবে যুক্তি দিয়ে উপস্থাপন করা</pre>
+<p>লক্ষ্য করুন — এই তালিকার প্রায় অর্ধেক <span class="kw">spoken</span> (standup, call, interview, negotiation), আর বাকি অর্ধেক <span class="kw">written</span> (code review, PR, email, blog)। দুটোই আলাদা স্কিল, দুটোরই আলাদা priority — এবং এই কোর্স দুটোই কভার করবে।</p>
+
+<h3>Spoken fluency মানে perfect grammar নয় — একটা গুরুত্বপূর্ণ reframe</h3>
+<p>অনেকে "spoken English ভালো করা" মানে ধরে নেন perfect grammar, বড় বড় শব্দ, বা নিখুঁত উচ্চারণ। বাস্তবে standup বা client call-এর মতো real-time কথোপকথনে সবচেয়ে গুরুত্বপূর্ণ জিনিস হলো <span class="kw">clarity</span> এবং <span class="kw">confidence</span> — শ্রোতা যেন প্রথমবারেই বুঝে ফেলেন আপনি কী বলছেন, আর আপনি যেন থেমে না গিয়ে চালিয়ে যেতে পারেন। অন্যদিকে, একটা PR description, একটা technical doc, বা একটা client email লেখার সময় আপনার হাতে সময় থাকে — সেখানে grammar, শব্দচয়ন, এবং গঠন ঠিক করার সুযোগ ও প্রয়োজন দুটোই বেশি।</p>
+<div class="grid2">
+  <div class="box"><b>Speaking situations (standup, call, interview)</b><br>Real-time, থামার সুযোগ কম। Priority: বোঝা যাওয়া (clarity), না থেমে বলে যাওয়া (fluency), আত্মবিশ্বাসী শোনানো। ছোট ভুল grammar গ্রহণযোগ্য, যদি অর্থ স্পষ্ট থাকে।</div>
+  <div class="box"><b>Writing situations (PR, doc, email)</b><br>সময় নিয়ে লেখা, edit করার সুযোগ। Priority: সঠিক grammar, precise শব্দচয়ন, গঠনগত স্পষ্টতা। এখানে ভুল বেশি চোখে পড়ে ও বেশিদিন থেকে যায়, তাই সতর্কতা জরুরি।</div>
+</div>
+<div class="callout why"><span class="tag">কেন এই কোর্স speaking-এ grammar-এর চেয়ে clarity/confidence-কে আগে রাখে</span>একটা standup-এ যদি আপনি "Yesterday I am fixing the bug" বলেন ভুল tense দিয়ে, কিন্তু স্পষ্টভাবে, দ্বিধাহীনভাবে বলেন — টিম বুঝে যাবে এবং কাজ এগোবে। কিন্তু যদি সঠিক tense-এর কথা ভাবতে গিয়ে ৫ সেকেন্ড থেমে যান, বা একদম চুপ করে থাকেন — সেটাই প্রকৃত সমস্যা তৈরি করে, কারণ টিম ভাববে আপনি নিশ্চিত না বা কাজ এগোয়নি। তাই speaking অংশে আগে fluency ও confidence তৈরি করা হবে, grammar আসবে সমান্তরালে — কিন্তু writing অংশে grammar-কে প্রথম priority দেওয়া হবে, কারণ লেখার ভুল স্থায়ীভাবে থেকে যায় এবং professionally বেশি চোখে পড়ে।</div>
+
+<h3>এই কোর্সের রোডম্যাপ — ১৪টা অধ্যায়, চারটা পর্ব</h3>
+<p>পুরো কোর্সটা চারটা পর্বে সাজানো, প্রতিটা পর্ব আগেরটার উপর ভিত্তি করে তৈরি — ভিত্তি (উচ্চারণ) ছাড়া গ্রামার শেখা, আর গ্রামার ছাড়া কথোপকথন প্র্যাকটিস করা কার্যকর হয় না।</p>
+<table>
+<tr><th>পর্ব</th><th>অধ্যায়</th><th>লক্ষ্য</th></tr>
+<tr><td><span class="kw">Part 1 — Phonetics</span></td><td>২–৫</td><td>মৌলিক ইংরেজি ধ্বনি, স্ট্রেস ও ইন্টোনেশন সঠিকভাবে উচ্চারণ করা — যাতে পরবর্তী প্রতিটা বাক্য বুঝতে-পারার-মতো (intelligible) হয়</td></tr>
+<tr><td><span class="kw">Part 2 — Grammar Foundation</span></td><td>৬–৮</td><td>স্পোকেন কথোপকথনে সবচেয়ে বেশি প্রয়োজনীয় tense, sentence structure ও connector শক্তভাবে আয়ত্ত করা</td></tr>
+<tr><td><span class="kw">Part 3 — Everyday & Technical Communication</span></td><td>৯–১১</td><td>standup, code review, PR, email, client call-এর বাস্তব ভাষা ও ফরম্যাট প্র্যাকটিস করা</td></tr>
+<tr><td><span class="kw">Part 4 — Advanced</span></td><td>১২–১৪</td><td>interview, presentation/conference talk, এবং দীর্ঘমেয়াদী স্বাধীন practice plan তৈরি করা</td></tr>
+</table>
+
+<h3>এই কোর্স দিনে দিনে কীভাবে ব্যবহার করবেন</h3>
+<p>প্রতিদিন শুধু পড়ে গেলে fluency তৈরি হয় না — শোনা (listening), বলা (speaking), এবং লেখা (writing), তিনটাই মিশিয়ে প্র্যাকটিস করতে হবে। প্রতিটা অধ্যায়ের উদাহরণ বাক্য জোরে উচ্চারণ করুন, নিজের কণ্ঠ রেকর্ড করে শুনুন, এবং সম্ভব হলে একটা real standup বা mock interview-এ প্রয়োগ করুন। Phonetics অধ্যায়গুলো (২–৫) দেখে অনেকের মনে হতে পারে "এটা তো basic, আমি জানি" — কিন্তু এখানেই সবচেয়ে বড় ভুল হয়। মৌলিক ধ্বনি ভুল উচ্চারণ করলে পরে যত জটিল বাক্যই বলুন না কেন, শ্রোতার কাছে অস্পষ্ট থেকে যাবে, এবং সেটা আপনার credibility-কেও প্রভাবিত করে।</p>
+<div class="callout mistake"><span class="tag">Common mistake — "আগে perfect grammar শিখি, তারপর কথা বলব"</span>এটা সবচেয়ে ক্ষতিকর একটা ধারণা। বাস্তবে "perfect" গ্রামার শেখার লক্ষ্যে অনেক ইঞ্জিনিয়ার বছরের পর বছর চুপ করে থাকেন, standup-এ শুধু "yes/no" বলেন, বা meeting-এ মতামত দেওয়া এড়িয়ে যান — এই নীরবতাই আসলে speaking skill-কে আরও দুর্বল করে দেয়, কারণ speaking অন্য যেকোনো স্কিলের মতোই শুধু practice দিয়ে উন্নত হয়, perfect হওয়ার অপেক্ষা করে নয়। ভুল করে বলাটাই শেখার প্রক্রিয়ার অংশ।</div>
+<div class="callout best"><span class="tag">Best practice — প্রতিদিনের ছোট, নিয়মিত অভ্যাস</span>প্রতিদিন কমপক্ষে ১৫–২০ মিনিট বরাদ্দ করুন — ৫ মিনিট শোনা (কোনো টেক টক বা podcast), ৫ মিনিট জোরে বলে প্র্যাকটিস করা (এই কোর্সের example dialogue), আর ৫–১০ মিনিট ছোট কিছু লেখা (একটা PR description, একটা Slack message draft করে দেখা)। সপ্তাহে একবার নিজের real standup-এর জন্য আগে থেকে ২-৩ বাক্য মনে মনে ছক করে রাখুন — এতে আসল meeting-এ জড়তা কমবে। ধারাবাহিকতা (consistency) একটানা অনেক সময় দেওয়ার চেয়ে বেশি কার্যকর।</div>
+</template>
+
+<template data-page="phonetics-vowels">
+<h2 class="title">২. Phonetics ১ — English-এর Vowel Sound ও IPA পরিচিতি</h2>
+<p class="lead">সঠিক গ্রামার আর বড় vocabulary জানলেই যথেষ্ট নয় — উচ্চারণ ভুল হলে কল বা ইন্টারভিউতে অন্য পাশের মানুষ ভুল শব্দ শুনবে। এই chapter-এ আমরা শিখব IPA (International Phonetic Alphabet) কী, English vowel sound গুলো কেমন, এবং কেন Bangla speaker-রা নির্দিষ্ট কিছু sound গুলিয়ে ফেলেন।</p>
+
+<h3>IPA কী, আর কেন এটা একজন Software Engineer-এর দরকার</h3>
+<p><span class="kw">IPA</span> (International Phonetic Alphabet) হলো একটা universal symbol system, যেখানে প্রতিটা sound-এর জন্য একটা নির্দিষ্ট symbol আছে — spelling যাই হোক না কেন, উচ্চারণ একরকম। ইংরেজি spelling আর pronunciation-এর মধ্যে সরাসরি সম্পর্ক নেই (যেমন <code>put</code> আর <code>but</code> দেখতে প্রায় একরকম, কিন্তু vowel sound সম্পূর্ণ আলাদা), তাই IPA জানলে dictionary-তে দেওয়া pronunciation guide পড়তে পারবেন এবং নিজে থেকে ভুল ধারণা সংশোধন করতে পারবেন।</p>
+<p>দৈনন্দিন standup, code review, বা client call-এ আপনি হয়তো গ্রামার ঠিকই বলছেন, কিন্তু একটা vowel sound ভুল হলে পুরো শব্দটাই অন্য অর্থ দাঁড়িয়ে যেতে পারে — যেমন <code>sheep</code> বলতে গিয়ে <code>ship</code> বলে ফেলা। Bangla-তে vowel-এর সংখ্যা কম এবং length-based পার্থক্য (short vs long) তেমন গুরুত্বপূর্ণ নয়, কিন্তু English-এ এই পার্থক্যটাই অর্থ বদলে দেয়। এই mismatch-এর কারণেই systematic ভুল হয় — শুধু individual mistake না, প্যাটার্ন হিসেবে repeat হয়।</p>
+
+<div class="callout why"><span class="tag">কেন vowel precision এত জরুরি</span>Bangla-তে দুইটা শব্দ আলাদা করতে সাধারণত consonant বা পুরো syllable বদলাতে হয়। কিন্তু English অনেক ক্ষেত্রে শুধু vowel-এর length বা quality দিয়ে অর্থ আলাদা করে — <code>bit</code> vs <code>beat</code>, <code>full</code> vs <code>fool</code>। তাই একজন non-native speaker-এর জন্য vowel sound নির্ভুল করা, consonant-এর চেয়েও বেশি গুরুত্বপূর্ণ হয়ে দাঁড়ায়, কারণ শ্রোতা প্রথমে vowel দিয়েই শব্দ চিনে।</p>
+</div>
+
+<h3>Monophthong Vowels — একক Vowel Sound</h3>
+<p>Monophthong মানে একটামাত্র pure vowel sound, শুরু থেকে শেষ পর্যন্ত quality বদলায় না। নিচের table-এ ১১টা গুরুত্বপূর্ণ English monophthong দেওয়া হলো।</p>
+<table>
+<tr><th>IPA</th><th>Example Word</th><th>Bangla Approximation</th></tr>
+<tr><td><code>/iː/</code></td><td>sheep</td><td>লম্বা "ঈ" — ঠোঁট টানটান, জিভ সামনে-উপরে</td></tr>
+<tr><td><code>/ɪ/</code></td><td>ship</td><td>ছোট, শিথিল "ই" — বাংলা "ই"-এর চেয়ে হালকা</td></tr>
+<tr><td><code>/e/</code></td><td>bed</td><td>বাংলা "এ"-এর কাছাকাছি, কিছুটা খোলা</td></tr>
+<tr><td><code>/æ/</code></td><td>cat</td><td>"অ্যা" — মুখ চ্যাপ্টা করে খুলে বলা, বাংলায় নেই ঠিক এই sound</td></tr>
+<tr><td><code>/ʌ/</code></td><td>cup</td><td>ছোট "আ" — মুখের মাঝামাঝি, বাংলা "আ" থেকে সংক্ষিপ্ত</td></tr>
+<tr><td><code>/ɑː/</code></td><td>car</td><td>লম্বা, খোলা "আ" — মুখ বেশি খুলে পেছন থেকে</td></tr>
+<tr><td><code>/ɒ/</code></td><td>hot</td><td>ছোট, গোলাকার "অ" (মূলত British English-এ)</td></tr>
+<tr><td><code>/ɔː/</code></td><td>call</td><td>লম্বা, গোলাকার "অ" — ঠোঁট গোল করে</td></tr>
+<tr><td><code>/ʊ/</code></td><td>book</td><td>ছোট, শিথিল "উ"</td></tr>
+<tr><td><code>/uː/</code></td><td>food</td><td>লম্বা, টানটান "উ" — ঠোঁট গোল করে সামনে বাড়িয়ে</td></tr>
+<tr><td><code>/ə/</code></td><td>about, banana</td><td><span class="kw">Schwa</span> — একদম নিরপেক্ষ, দুর্বল "আ/অ" — মুখ শিথিল, প্রায় effortless</td></tr>
+</table>
+<p><span class="kw">Schwa</span> <code>/ə/</code> হলো English-এর সবচেয়ে বেশি ব্যবহৃত vowel sound — unstressed syllable-এ প্রায় সবসময় এটাই আসে। যেমন <code>about</code> শব্দে প্রথম syllable "a" পুরোপুরি "আ" না বলে schwa হয়ে যায়: <code>/əˈbaʊt/</code>। Bangla speaker-রা প্রায়ই এই schwa কে উপেক্ষা করে প্রতিটা syllable পূর্ণভাবে উচ্চারণ করেন, যার ফলে speech শোনায় textbook-reading-এর মতো, unnatural।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — Schwa উপেক্ষা করা</span>Bangla-medium শিক্ষার্থীরা প্রায়ই প্রতিটা syllable-কে সমান গুরুত্ব দিয়ে পূর্ণ vowel হিসেবে উচ্চারণ করেন — যেমন <code>computer</code>-কে "কম-পিউ-টার" বলার মতো প্রতিটা অংশ স্পষ্ট করে বলা, অথচ native speaker বলে <code>/kəmˈpjuːtər/</code> — প্রথম আর শেষ syllable schwa হয়ে হালকা হয়ে যায়। এই "সব syllable সমান জোরে" style-টাই speech-কে robotic এবং unnatural শোনায়।</p>
+</div>
+
+<h3>Diphthongs — দুই Vowel Sound-এর মিশ্রণ</h3>
+<p><span class="kw">Diphthong</span> হলো এমন vowel sound যেখানে একটা sound থেকে আরেকটাতে glide করে যাওয়া হয় — শুরুর sound আর শেষের sound আলাদা, কিন্তু একই syllable-এ মিশে একটা সুষম glide তৈরি করে।</p>
+<table>
+<tr><th>IPA</th><th>Example Word</th><th>ছোট বর্ণনা</th></tr>
+<tr><td><code>/eɪ/</code></td><td>day</td><td>"এ" থেকে "ই"-এর দিকে glide</td></tr>
+<tr><td><code>/aɪ/</code></td><td>my</td><td>"আ" থেকে "ই"-এর দিকে glide</td></tr>
+<tr><td><code>/ɔɪ/</code></td><td>boy</td><td>"অ" থেকে "ই"-এর দিকে glide</td></tr>
+<tr><td><code>/aʊ/</code></td><td>now</td><td>"আ" থেকে "উ"-এর দিকে glide</td></tr>
+<tr><td><code>/əʊ/</code> বা <code>/oʊ/</code></td><td>go</td><td>schwa/"ও" থেকে "উ"-এর দিকে glide (British/American ভেদে ভিন্ন)</td></tr>
+<tr><td><code>/ɪə/</code></td><td>near</td><td>"ই" থেকে schwa-এর দিকে glide</td></tr>
+<tr><td><code>/eə/</code></td><td>hair</td><td>"এ" থেকে schwa-এর দিকে glide</td></tr>
+<tr><td><code>/ʊə/</code></td><td>sure</td><td>"উ" থেকে schwa-এর দিকে glide</td></tr>
+</table>
+<p>লক্ষ্য করুন, শেষের তিনটা diphthong (<code>/ɪə/</code>, <code>/eə/</code>, <code>/ʊə/</code>) সাধারণত British English-এর r-less accent-এ শোনা যায়; American English-এ এগুলো প্রায়ই একটা r-colored vowel-এ পরিণত হয়। কোন accent target করছেন সেটা মাথায় রেখে practice করুন, তবে দুটোই বোঝার জন্য পড়া দরকার।</p>
+
+<h3>Bangla Speaker-দের Common Vowel Confusion</h3>
+<p>Bangla-এর vowel inventory-তে English-এর মতো এতগুলো short-long pair নেই, তাই আমরা প্রায়ই দুইটা আলাদা English vowel-কে একই sound হিসেবে শুনি এবং উচ্চারণ করি। নিচের table-এ কিছু সাধারণ confusion pair দেওয়া হলো।</p>
+<table>
+<tr><th>Word Pair</th><th>IPA পার্থক্য</th><th>যে ভুলটা হয়</th></tr>
+<tr><td><code>ship</code> / <code>sheep</code></td><td><code>/ɪ/</code> vs <code>/iː/</code></td><td>দুটোই "শিপ"-এর মতো বলা হয়, length/quality-এর পার্থক্য হারিয়ে যায়</td></tr>
+<tr><td><code>full</code> / <code>fool</code></td><td><code>/ʊ/</code> vs <code>/uː/</code></td><td>দুটোই "ফুল"-এর মতো, short vs long উ আলাদা করা হয় না</td></tr>
+<tr><td><code>cat</code> / <code>cut</code></td><td><code>/æ/</code> vs <code>/ʌ/</code></td><td>দুটোই "ক্যাট/কাট"-এর কাছাকাছি একরকম "আ" দিয়ে বলা হয়</td></tr>
+<tr><td><code>bit</code> / <code>beat</code></td><td><code>/ɪ/</code> vs <code>/iː/</code></td><td>দুটোই "বিট", vowel length উপেক্ষিত হয়</td></tr>
+<tr><td><code>pull</code> / <code>pool</code></td><td><code>/ʊ/</code> vs <code>/uː/</code></td><td>দুটোই "পুল", short-long পার্থক্য নেই</td></tr>
+<tr><td><code>hat</code> / <code>hut</code></td><td><code>/æ/</code> vs <code>/ʌ/</code></td><td>দুটোই "হ্যাট/হাট"-এর মতো একই vowel দিয়ে বলা হয়</td></tr>
+</table>
+<p>এই confusion-এর মূল কারণ হলো — Bangla-তে vowel length (short vs long) meaning বদলায় না, কিন্তু English-এ বদলায়। ফলে আমাদের কান দুইটা আলাদা English vowel-কে "একই" ধরে নেয়, এবং মুখও সেই অনুযায়ী একরকম sound produce করে। এটা fix করার একমাত্র উপায় হলো conscious অনুশীলন — কান আর মুখ দুটোকেই নতুন distinction শেখানো।</p>
+
+<h3>Minimal Pairs দিয়ে Practice করার Technique</h3>
+<p><span class="kw">Minimal pair</span> হলো এমন দুটো শব্দ, যাদের মধ্যে মাত্র একটা sound-এর পার্থক্য থাকে (যেমন <code>ship</code>/<code>sheep</code>)। এই টেকনিক ব্যবহার করে কান এবং মুখ দুটোকেই train করা যায়:</p>
+<p>প্রথমে একজোড়া minimal pair বেছে নিন, তারপর দুটো শব্দ পরপর জোরে জোরে বলুন, নিজের কণ্ঠস্বর রেকর্ড করুন, এবং শুনে যাচাই করুন — দুইটা শব্দ কি সত্যিই আলাদা শোনাচ্ছে? প্রতিদিন ৫-১০ মিনিট এই অনুশীলন করলে ধীরে ধীরে কান sensitive হয়ে ওঠে এবং মুখও automatically সঠিক position-এ যেতে শেখে।</p>
+<pre><span class="c"># আজ থেকেই চেষ্টা করুন — জোরে বলুন প্রতিটা pair</span>
+seat  /siːt/    —  sit   /sɪt/
+pool  /puːl/    —  pull  /pʊl/
+bad   /bæd/     —  bud   /bʌd/
+cot   /kɒt/     —  caught /kɔːt/
+Luke  /luːk/    —  look  /lʊk/</pre>
+
+<div class="callout best"><span class="tag">Best practice — Record ও Compare</span>নিজের মোবাইলে minimal pair গুলো রেকর্ড করুন, তারপর YouTube বা dictionary app (Cambridge, Oxford) থেকে একই শব্দের native pronunciation শুনুন এবং পাশাপাশি compare করুন। শুধু শোনা যথেষ্ট না — নিজের উচ্চারণ আর native উচ্চারণের মধ্যে পার্থক্য কানে ধরতে পারাটাই আসল দক্ষতা। সপ্তাহে ২-৩ বার এই exercise করলে এক-দুই মাসের মধ্যেই পার্থক্য বোঝা শুরু হয়।</p>
+</div>
+
+<div class="grid2">
+<div class="box"><b>Short vowel মনে রাখার Tip</b><br>Short vowel (<code>/ɪ/</code>, <code>/ʊ/</code>, <code>/ʌ/</code>, <code>/e/</code>, <code>/æ/</code>, <code>/ɒ/</code>) উচ্চারণে মুখের muscle relax রাখুন, sound-টা দ্রুত শেষ করুন — টেনে বলবেন না।</div>
+<div class="box"><b>Long vowel মনে রাখার Tip</b><br>Long vowel (<code>/iː/</code>, <code>/uː/</code>, <code>/ɑː/</code>, <code>/ɔː/</code>) উচ্চারণে sound-টা সামান্য টেনে বলুন, যেন শ্রোতা length-টা স্পষ্ট শুনতে পায়।</div>
+</div>
+</template>
+
+<template data-page="phonetics-consonants">
+<h2 class="title">৩. Phonetics ২ — Consonant Sound ও বাংলাভাষীদের কমন ভুল</h2>
+<p class="lead">গত chapter-এ আমরা vowel sound নিয়ে কথা বলেছি। এই chapter-এ আমরা দেখব consonant sound গুলো — বিশেষ করে যেগুলো বাংলা ভাষায় নেই বা আলাদাভাবে উচ্চারিত হয়, আর যেগুলোর কারণে standup meeting-এ বা client call-এ শ্রোতার কাছে অর্থ পাল্টে যেতে পারে। লক্ষ্য accent পাল্টানো নয় — লক্ষ্য হলো unambiguous (দ্ব্যর্থহীন) ভাবে কথা বলা।</p>
+
+<h3>Consonant sound-এর সংক্ষিপ্ত গঠন</h3>
+<p>English-এর consonant sound গুলো কীভাবে তৈরি হয় তা বুঝলে ভুল ধরা সহজ হয়। মোটামুটি পাঁচটা ভাগে ভাগ করা যায়।</p>
+<table>
+<tr><th>ধরন</th><th>কীভাবে তৈরি হয়</th><th>উদাহরণ</th></tr>
+<tr><td><span class="kw">Stop / Plosive</span></td><td>বাতাস সম্পূর্ণ আটকে হঠাৎ ছেড়ে দেওয়া হয়</td><td>/p/, /b/, /t/, /d/, /k/, /g/</td></tr>
+<tr><td><span class="kw">Fricative</span></td><td>বাতাস সরু ফাঁক দিয়ে ঘষে বের হয়, ঘর্ষণ শোনা যায়</td><td>/f/, /v/, /θ/, /ð/, /s/, /z/</td></tr>
+<tr><td><span class="kw">Affricate</span></td><td>Stop দিয়ে শুরু, Fricative দিয়ে শেষ</td><td>/tʃ/ (church), /dʒ/ (judge)</td></tr>
+<tr><td><span class="kw">Nasal</span></td><td>বাতাস নাক দিয়ে বের হয়</td><td>/m/, /n/, /ŋ/</td></tr>
+<tr><td><span class="kw">Approximant</span></td><td>জিভ কাছাকাছি আসে কিন্তু স্পর্শ করে না</td><td>/r/, /l/, /w/, /j/</td></tr>
+</table>
+<p>বাংলাভাষীদের জন্য মূল সমস্যা তৈরি হয় <span class="kw">Fricative</span> আর <span class="kw">Approximant</span> গোষ্ঠীতে — কারণ বাংলায় এই sound গুলোর সরাসরি প্রতিরূপ নেই। নিচে সবচেয়ে গুরুত্বপূর্ণ চারটা কেস বিস্তারিত দেখা যাক।</p>
+
+<h3>TH sound — /θ/ ও /ð/</h3>
+<p>English-এ দুই ধরনের TH আছে: <span class="kw">voiceless /θ/</span> (think, three, throw — vocal cord কাঁপে না) আর <span class="kw">voiced /ð/</span> (this, that, these — vocal cord কাঁপে)। বাংলায় এই sound-এর কোনো সমতুল্য অক্ষর নেই, তাই আমরা স্বভাবতই কাছাকাছি sound দিয়ে replace করি — /t/, /d/ অথবা /s/, /z/ দিয়ে। ফলে "think" হয়ে যায় "tink", "this" হয়ে যায় "dis"।</p>
+<p>সঠিক উচ্চারণের জন্য জিভের ডগা উপরের দাঁতের একদম কিনারায় (দাঁত আর ঠোঁটের মাঝে) হালকা করে ছুঁইয়ে বাতাস বের করতে হয় — দাঁতের পেছনে জিভ ঠেকানো (যেমন /t/, /d/-এ হয়) নয়।</p>
+<table>
+<tr><th>শব্দ</th><th>সঠিক sound</th><th>ভুল উচ্চারণ</th><th>টিপ</th></tr>
+<tr><td><code>threading</code></td><td>/θ/ voiceless</td><td>"treading"</td><td>জিভের ডগা দাঁতের কিনারায়, শুধু বাতাস বের করুন — vocal cord কাঁপবে না</td></tr>
+<tr><td><code>throughput</code></td><td>/θ/ voiceless</td><td>"trupoot"</td><td>শুরুতে TH আটকে না গিয়ে বাতাস ছাড়ুন, তারপর "roo"</td></tr>
+<tr><td><code>authentication</code></td><td>মাঝে /θ/</td><td>"aw-ten-tication"</td><td>মাঝের th-কে t দিয়ে replace করবেন না, জিভ দাঁতে ছোঁয়ান</td></tr>
+<tr><td><code>these / those</code></td><td>/ð/ voiced</td><td>"dese / doze"</td><td>একই জিভের অবস্থান, কিন্তু vocal cord কাঁপাতে হবে</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — দৈনিক ৫ মিনিটের drill</span>প্রতিদিন আয়নার সামনে দাঁড়িয়ে জিভ দেখে এই তিনটা sound নিয়ে অনুশীলন করুন: (১) TH — "think, three, throughput" দশবার আস্তে; (২) V — "very, version, verify" বনাম "berry, bershion, berify" শুনে পার্থক্য বোঝা; (৩) R — "server, error, retry" ধীরে বলা, জিভ কার্ল করে পেছনে টানা। প্রতিটার জন্য মাত্র দেড়-দুই মিনিট, কিন্তু নিয়মিত করলে এক মাসেই মুখের পেশি অভ্যস্ত হয়ে যায়।</div>
+
+<h3>V বনাম W বনাম B — বিভ্রান্তি</h3>
+<p>বাংলা ভাষায় /v/ sound নেই — আমরা "ভ" বা "ব" দিয়ে কাজ চালাই, ফলে <span class="kw">/v/</span> আর <span class="kw">/b/</span> প্রায়ই মিলেমিশে যায়। আবার /v/ আর /w/-ও গুলিয়ে ফেলা হয়, কারণ দুটোই ঠোঁটের কাছাকাছি সম্পর্কিত মনে হয়। কিন্তু তিনটা সম্পূর্ণ আলাদা: /b/-এ ঠোঁট সম্পূর্ণ বন্ধ হয়ে হঠাৎ খোলে, /v/-এ উপরের দাঁত নিচের ঠোঁটে হালকা ছোঁয় আর বাতাস ঘষে বের হয়, আর /w/-এ দুই ঠোঁট গোল করে ভেতরের দিকে টেনে "উ"-এর মতো sound তৈরি হয়।</p>
+<table>
+<tr><th>শব্দ জোড়া</th><th>পার্থক্য</th><th>tech প্রসঙ্গ</th></tr>
+<tr><td><code>very</code> / <code>berry</code></td><td>/v/ দাঁত-ঠোঁট ঘর্ষণ, /b/ ঠোঁট বন্ধ-খোলা</td><td>"That's very slow" যেন "berry slow" না শোনায়</td></tr>
+<tr><td><code>version</code> / বাংলা ঘরানার "bershion"</td><td>একই ভুল প্যাটার্ন</td><td>API version, software version</td></tr>
+<tr><td><code>verify</code> / <code>berify</code></td><td>প্রথম sound-এ পার্থক্য</td><td>"verify the token" — code review-এ common শব্দ</td></tr>
+<tr><td><code>van</code> / <code>ban</code></td><td>Minimal pair, অর্থই পাল্টে যায়</td><td>VPN বলার সময় সতর্ক থাকুন</td></tr>
+<tr><td><code>wet</code> / <code>vet</code></td><td>/w/ ঠোঁট গোল, /v/ দাঁত-ঠোঁট</td><td>"we would" বনাম "variable" শুরুর sound</td></tr>
+</table>
+
+<h3>R sound — retroflex approximant</h3>
+<p>বাংলার "র" জিভ দিয়ে তালুতে হালকা টোকা দিয়ে (tap) বা মাঝে মাঝে গড়িয়ে (roll) উচ্চারিত হয়। English /r/ সম্পূর্ণ ভিন্ন — এটা একটা <span class="kw">approximant</span>, জিভ কোথাও ছোঁয় না, বরং জিভের ডগা সামান্য পেছনে কার্ল (curl) করে মুখের ছাদের কাছাকাছি নিয়ে আসতে হয়। তাই "very", "server", "retry" বলার সময় জিভ যেন কোথাও টোকা না দেয়, বরং একটানে গড়িয়ে যায়।</p>
+<p>আরেকটা গুরুত্বপূর্ণ পার্থক্য হলো <span class="kw">rhotic</span> বনাম <span class="kw">non-rhotic</span> accent। American English-এ vowel-এর পরেও /r/ উচ্চারিত হয় — যেমন "car", "server", "error"। British English-এ vowel-এর পরের /r/ প্রায়ই drop হয়ে যায় (car → "cah")। দুটোই সঠিক, কিন্তু একটা ঠিক করে সেটাতেই স্থির থাকা ভালো — মাঝপথে দুটো mix করলে শোনার সময় অসংগতি লাগে।</p>
+
+<h3>শেষের consonant cluster ও dropped ending</h3>
+<p>বাংলা শব্দে সাধারণত এত জটিল consonant cluster শব্দের শেষে থাকে না, তাই ইংরেজি বলার সময় আমরা অজান্তেই শেষের sound গুলো ছেঁটে ফেলি। "asked" /ɑːskt/-এর /s/, /k/, /t/ তিনটাই উচ্চারণ না করলে সেটা শোনায় "ask" বা এমনকি "as"-এর মতো। এটা শুধু accent-এর ব্যাপার না — এখানে <span class="kw">grammar</span>-ই পাল্টে যায়, কারণ past tense-এর -ed ending drop হলে শ্রোতা বুঝতে পারে না আপনি past বলছেন না present।</p>
+<table>
+<tr><th>শব্দ</th><th>পুরো cluster</th><th>drop করলে যা শোনায়</th></tr>
+<tr><td><code>asked</code></td><td>/ɑːskt/</td><td>"ask" (present-এর মতো)</td></tr>
+<tr><td><code>deployed</code></td><td>/dɪˈplɔɪd/</td><td>"deploy" (tense হারিয়ে যায়)</td></tr>
+<tr><td><code>tested</code></td><td>/ˈtɛstɪd/</td><td>"test"</td></tr>
+<tr><td><code>scripts</code></td><td>/skrɪpts/</td><td>"script" (singular-এর মতো শোনায়)</td></tr>
+<tr><td><code>months</code></td><td>/mʌnθs/</td><td>"month"</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — -ed ending drop করে ফেলা</span>"I tested it yesterday" বলার সময় শেষের /-ɪd/ sound না দিলে এটা শোনায় "I test it yesterday" — অর্থাৎ শ্রোতা ভাবতে পারে আপনি present tense-এ কথা বলছেন, বা রুটিন কাজের কথা বলছেন, যেখানে আপনি আসলে গতকালের একটা নির্দিষ্ট কাজের কথা বলছিলেন। Standup meeting-এ এই ধরনের ভুল team-কে confuse করে দিতে পারে — কে কী করেছে, কে কী করছে তার timeline গুলিয়ে যায়।</div>
+
+<h3>Silent letter — tech vocabulary-তে যা প্রায়ই ভুল হয়</h3>
+<p>English spelling-এর কিছু অক্ষর উচ্চারণই হয় না, কিন্তু বাংলাভাষীরা spelling দেখে সেগুলো উচ্চারণ করার চেষ্টা করেন। এই ছোট list মনে রাখলে বেশ কিছু সাধারণ ভুল এড়ানো যায়।</p>
+<table>
+<tr><th>শব্দ</th><th>silent অক্ষর</th><th>সঠিক উচ্চারণ</th></tr>
+<tr><td><code>debt</code></td><td>silent <code>b</code></td><td>/dɛt/ — "det" (technical debt বলার সময়)</td></tr>
+<tr><td><code>sign</code></td><td>silent <code>g</code></td><td>/saɪn/ — "sain"</td></tr>
+<tr><td><code>design</code></td><td>silent <code>g</code></td><td>/dɪˈzaɪn/ — "di-zain"</td></tr>
+<tr><td><code>Wednesday</code></td><td>silent <code>d</code></td><td>/ˈwɛnzdeɪ/ — "wenz-day"</td></tr>
+<tr><td><code>receipt</code></td><td>silent <code>p</code></td><td>/rɪˈsiːt/ — "ri-seet"</td></tr>
+</table>
+<div class="callout why"><span class="tag">Accent-free নয়, unambiguous — এটাই আসল লক্ষ্য</span>Consonant precision নিয়ে এত বিস্তারিত আলোচনার কারণ হলো — একজন non-native speaker কখনোই সম্পূর্ণ "native accent" পাবেন না, আর সেটার দরকারও নেই। কিন্তু TH, V, R, বা -ed ending-এর মতো sound ভুল হলে অনেক সময় শব্দের অর্থই পাল্টে যায় (ban vs van, ask vs asked)। তাই লক্ষ্য হওয়া উচিত consonant গুলো এমনভাবে উচ্চারণ করা যাতে শ্রোতা বিভ্রান্ত না হন — accent থাকতেই পারে, কিন্তু meaning যেন সবসময় স্পষ্ট থাকে।</div>
+</template>
+
+<template data-page="stress">
+<h2 class="title">৪. Word Stress ও Syllable — Technical শব্দের সঠিক উচ্চারণ</h2>
+<p class="lead">বাংলায় আমরা প্রায় প্রতিটা syllable-এ সমান জোর দিয়ে কথা বলি — এটাকে বলে syllable-timed rhythm। কিন্তু English একটা <span class="kw">stress-timed language</span> — একটা শব্দে একটা নির্দিষ্ট syllable-এ জোর (stress) পড়ে, বাকিগুলো তুলনামূলক দ্রুত ও হালকাভাবে উচ্চারিত হয়। এই chapter-এ আমরা শিখব কেন stress এত গুরুত্বপূর্ণ, কিছু সাধারণ নিয়ম, আর সবচেয়ে বেশি ব্যবহৃত technical শব্দগুলোর সঠিক stress pattern।</p>
+
+<h3>Word Stress আসলে কী, এবং এটা কেন গুরুত্বপূর্ণ</h3>
+<p>প্রতিটা multi-syllable ইংরেজি শব্দে একটা syllable অন্যগুলোর চেয়ে জোরে, লম্বা সময় ধরে, এবং একটু উঁচু pitch-এ উচ্চারিত হয় — একে বলে <span class="kw">primary stress</span>। যেমন <code>de-VE-lo-per</code> শব্দে "VE" অংশটা বাকি তিনটার চেয়ে স্পষ্টভাবে জোরালো। বাংলায় আমরা "ডেভেলপার" বললে প্রতিটা অংশ প্রায় সমান জোরে বলি, তাই এই stress pattern স্বাভাবিকভাবে আসে না — এটা আলাদাভাবে শিখে practice করতে হয়।</p>
+<div class="callout why"><span class="tag">Stress কেন vowel-এর চেয়েও বেশি জরুরি</span>একজন native বা fluent English speaker শব্দ চেনার সময় মূলত <span class="kw">stress pattern</span>-এর উপর নির্ভর করে, প্রতিটা vowel-এর নিখুঁত উচ্চারণের উপর নয়। তাই vowel সামান্য ভুল হলেও শ্রোতা প্রসঙ্গ থেকে বুঝে নিতে পারে, কিন্তু stress ভুল জায়গায় পড়লে মস্তিষ্ক শব্দটাকেই ভিন্ন একটা শব্দ হিসেবে process করার চেষ্টা করে — ফলে সঠিক উচ্চারণ সত্ত্বেও শব্দটা বোধগম্য থাকে না।</div>
+
+<h3>সাধারণ নিয়ম — Noun বনাম Verb Stress</h3>
+<p>ইংরেজিতে অনেক দুই-syllable শব্দ noun হিসেবে ব্যবহার হলে প্রথম syllable-এ এবং verb হিসেবে ব্যবহার হলে দ্বিতীয় syllable-এ stress নেয়। এটা কোনো strict নিয়ম নয়, কিন্তু খুব common একটা pattern — বিশেষ করে record, produce, project, permit, contract-এর মতো শব্দে দেখা যায়।</p>
+<table><tr><th>শব্দ</th><th>Noun (প্রথম syllable stress)</th><th>Verb (দ্বিতীয় syllable stress)</th></tr>
+<tr><td>record</td><td><b>RE</b>-cord</td><td>re-<b>CORD</b></td></tr>
+<tr><td>produce</td><td><b>PRO</b>-duce</td><td>pro-<b>DUCE</b></td></tr>
+<tr><td>project</td><td><b>PRO</b>-ject</td><td>pro-<b>JECT</b></td></tr>
+<tr><td>permit</td><td><b>PER</b>-mit</td><td>per-<b>MIT</b></td></tr>
+<tr><td>contract</td><td><b>CON</b>-tract</td><td>con-<b>TRACT</b></td></tr>
+</table>
+<p>Standup meeting-এ "we need to <b>proJECT</b> the timeline" বলার সময় ভুলে "PROject" (noun-এর stress) বলে ফেললে অর্থ ঠিকই থাকে, কিন্তু rhythm native কানে খানিকটা অস্বাভাবিক শোনায়।</p>
+
+<h3>Technical শব্দের Stress — Reference Table</h3>
+<p>নিচের শব্দগুলো প্রতিটা software engineer-এর daily vocabulary-তে থাকে। stressed syllable বোল্ড ও CAPS করে দেখানো হলো — জোরে জোরে পড়ে practice করুন।</p>
+<table><tr><th>শব্দ</th><th>Syllable ভাঙা</th><th>Stress</th></tr>
+<tr><td>algorithm</td><td>al-go-rithm</td><td><b>AL</b>-go-rithm</td></tr>
+<tr><td>database</td><td>da-ta-base</td><td><b>DA</b>-ta-base</td></tr>
+<tr><td>repository</td><td>re-po-si-to-ry</td><td>re-<b>PO</b>-si-to-ry</td></tr>
+<tr><td>architecture</td><td>ar-chi-tec-ture</td><td><b>AR</b>-chi-tec-ture</td></tr>
+<tr><td>developer</td><td>de-ve-lo-per</td><td>de-<b>VE</b>-lo-per</td></tr>
+<tr><td>engineer</td><td>en-gi-neer</td><td>en-gi-<b>NEER</b></td></tr>
+<tr><td>deployment</td><td>de-ploy-ment</td><td>de-<b>PLOY</b>-ment</td></tr>
+<tr><td>container</td><td>con-tai-ner</td><td>con-<b>TAI</b>-ner</td></tr>
+<tr><td>Kubernetes</td><td>ku-ber-ne-tes</td><td>ku-ber-<b>NE</b>-tes</td></tr>
+<tr><td>authentication</td><td>au-then-ti-ca-tion</td><td>au-then-ti-<b>CA</b>-tion</td></tr>
+<tr><td>authorization</td><td>au-tho-ri-za-tion</td><td>au-tho-ri-<b>ZA</b>-tion</td></tr>
+<tr><td>migration</td><td>mi-gra-tion</td><td>mi-<b>GRA</b>-tion</td></tr>
+<tr><td>framework</td><td>frame-work</td><td><b>FRAME</b>-work</td></tr>
+<tr><td>dependency</td><td>de-pen-den-cy</td><td>de-<b>PEN</b>-den-cy</td></tr>
+<tr><td>asynchronous</td><td>a-syn-chro-nous</td><td>a-<b>SYN</b>-chro-nous</td></tr>
+<tr><td>parameter</td><td>pa-ram-e-ter</td><td>pa-<b>RAM</b>-e-ter</td></tr>
+<tr><td>variable</td><td>va-ri-a-ble</td><td><b>VA</b>-ri-a-ble</td></tr>
+<tr><td>function</td><td>func-tion</td><td><b>FUNC</b>-tion</td></tr>
+<tr><td>interface</td><td>in-ter-face</td><td><b>IN</b>-ter-face</td></tr>
+<tr><td>environment</td><td>en-vi-ron-ment</td><td>en-<b>VI</b>-ron-ment</td></tr>
+<tr><td>infrastructure</td><td>in-fra-struc-ture</td><td><b>IN</b>-fra-struc-ture</td></tr>
+<tr><td>documentation</td><td>doc-u-men-ta-tion</td><td>doc-u-men-<b>TA</b>-tion</td></tr>
+</table>
+
+<h3>Common Mistake — Last-Syllable বা Equal Stress-এর প্রবণতা</h3>
+<p>বাংলাভাষী speaker-দের মধ্যে দুইটা সাধারণ ভুল দেখা যায়: (১) শেষ syllable-এ জোর দেওয়া, কারণ বাংলা শব্দের rhythm-এ শেষের দিকে একটা natural emphasis থাকে, আর (২) প্রতিটা syllable-এ সমান জোর দেওয়া, যেটা বাংলা উচ্চারণের অভ্যাস থেকে আসে।</p>
+<pre><span class="c"># ভুল বনাম সঠিক stress</span>
+Wrong: da-ta-<b>BASE</b>       Right: <b>DA</b>-ta-base
+Wrong: de-ve-lo-<b>PER</b>     Right: de-<b>VE</b>-lo-per
+Wrong: al-go-<b>RITHM</b>      Right: <b>AL</b>-go-rithm</pre>
+<div class="callout mistake"><span class="tag">Common mistake — Interview-এ জোর ভুল জায়গায় পড়া</span>একটা interview-তে একজন candidate সুন্দরভাবে system design-এর উত্তর দিচ্ছিলেন, কিন্তু বারবার "da-ta-BASE" বলছিলেন। Interviewer সঠিক শব্দ শুনতে পাচ্ছিলেন না বলে দুইবার "sorry, what did you say?" জিজ্ঞেস করেন — যা উত্তরের flow ভেঙে দেয় এবং candidate-এর confidence-এ প্রভাব ফেলে, যদিও technical content পুরোপুরি সঠিক ছিল।</div>
+
+<h3>নিজে কীভাবে Stress যাচাই করবেন</h3>
+<p>প্রতিটা নতুন technical শব্দ শেখার সময় শুধু বানান নয়, উচ্চারণও check করার অভ্যাস করুন। Dictionary app (যেমন Google-এ শব্দের পাশে speaker icon, বা Cambridge/Merriam-Webster dictionary) খুলে audio শুনুন — সেখানে stress mark (') সহ IPA transcription দেখা যায়। শোনার পর ৩-৪ বার জোরে repeat করুন, নিজের কণ্ঠে record করে শুনুন এবং মূলের সাথে মিলিয়ে দেখুন। গুরুত্বপূর্ণ কথোপকথনের আগে কাগজে শব্দটার stressed অংশ বোল্ড বা underline করে রাখুন — এটা মুখস্থ practice-কে সহজ করে দেয়।</p>
+<div class="callout best"><span class="tag">Best practice — আগে থেকে stress mark করে practice করা</span>কোনো গুরুত্বপূর্ণ call বা interview-এর আগে যে ৫-১০টা technical শব্দ ব্যবহার করবেন বলে মনে হচ্ছে (যেমন আপনার project-এর architecture বা tech stack-এর নাম) সেগুলো লিখে ফেলুন, প্রতিটার stressed syllable বোল্ড করে চিহ্নিত করুন, এবং জোরে জোরে কয়েকবার বাক্যে ব্যবহার করে practice করুন। এই ৫ মিনিটের প্রস্তুতি অনেক সময় পুরো conversation-এর smoothness বাড়িয়ে দেয়।</div>
+
+<div class="grid2"><div class="box"><b>মনে রাখুন</b><br>English stress-timed, বাংলা syllable-timed — তাই stress আলাদাভাবে শিখতে হয়, automatically আসে না।</div><div class="box"><b>Practice টিপ</b><br>নতুন শব্দ শেখার সময় বানানের পাশাপাশি সবসময় pronunciation audio শুনে stress নোট করুন।</div></div>
+</template>
+
+<template data-page="intonation">
+<h2 class="title">৫. Sentence Stress, Rhythm ও Intonation</h2>
+<p class="lead">শব্দ সঠিক আর গ্রামার নিখুঁত হলেও যদি বলার সুর (tone) আর ছন্দ (rhythm) ঠিক না থাকে, তাহলে standup-এ বা interview-তে আপনাকে অস্পষ্ট, অনিশ্চিত বা বিরক্ত মনে হতে পারে। এই chapter-এ আমরা দেখব ইংরেজি বলার সময় কোন শব্দে জোর পড়ে, শব্দগুলো কীভাবে একসাথে মিশে যায়, আর প্রশ্ন-উত্তর-list বলার সময় সুর কোন দিকে ওঠে-নামে — যাতে আপনার কথা শুনতে <span class="kw">confident</span> আর natural লাগে।</p>
+
+<h3>Content words vs Function words — কোন শব্দে জোর পড়ে</h3>
+<p>বাংলায় আমরা মোটামুটি প্রতিটা শব্দকে সমান গুরুত্ব দিয়ে উচ্চারণ করি। কিন্তু ইংরেজি একটা <span class="kw">stress-timed</span> ভাষা — মানে বাক্যের মধ্যে শুধু কিছু নির্দিষ্ট শব্দে জোর (stress) পড়ে, বাকিগুলো দ্রুত আর হালকাভাবে উচ্চারিত হয়। যেসব শব্দ অর্থ বহন করে — noun, main verb, adjective, adverb — সেগুলোকে বলে <span class="kw">content words</span>, আর এগুলোতেই জোর পড়ে। আর articles (a, the), prepositions (to, in, on), auxiliary verbs (is, was, have), pronoun (it, he, they) — এগুলো হলো <span class="kw">function words</span>, এগুলো গ্রামার ঠিক রাখে কিন্তু নিজে থেকে বাড়তি অর্থ যোগ করে না, তাই এগুলো de-stress করে দ্রুত বলা হয়।</p>
+<pre><span class="c"># কোন শব্দে stress পড়ছে দেখুন (CAPS = stressed)</span>
+I de-PLOYED the SER-vice to pro-DUC-tion YES-ter-day.</pre>
+<p>লক্ষ করুন — <code>I</code>, <code>the</code>, <code>to</code> এই function words প্রায় অস্পষ্টভাবে দ্রুত চলে যায়, কিন্তু <code>DEPLOYED</code>, <code>SERVICE</code>, <code>PRODUCTION</code>, <code>YESTERDAY</code> — এই content words-এ স্পষ্ট জোর পড়ে। এই জোর-অজোরের প্যাটার্নই ইংরেজির স্বাভাবিক rhythm তৈরি করে। এই rhythm অভ্যাস না করলে বাক্য শুনতে "রোবটিক" বা "শব্দ-বাই-শব্দ" মনে হয়।</p>
+
+<h3>Connected Speech ও Linking — শব্দগুলো কীভাবে মিশে যায়</h3>
+<p>স্বাভাবিক গতিতে কথা বললে ইংরেজিতে শব্দগুলো আলাদা আলাদা করে উচ্চারিত হয় না, বরং একটার শেষ আরেকটার শুরুর সাথে মিশে যায় — একে বলে <span class="kw">linking</span>। যখন একটা শব্দ consonant দিয়ে শেষ হয় আর পরের শব্দ vowel দিয়ে শুরু হয়, তখন সেগুলো একসাথে জোড়া লেগে যায়।</p>
+<pre><span class="c"># linking-এর উদাহরণ</span>
+"Check it in"  →  শোনায় "che-KI-tin"
+"Turn it off"  →  শোনায় "TUR-ni-TOFF"
+"Log in"       →  শোনায় "LO-gin"</pre>
+<p>এর পাশাপাশি কথ্য ইংরেজিতে কিছু <span class="kw">contraction</span> খুব সাধারণ, বিশেষ করে developer-দের আড্ডা বা standup-এ: <code>gonna</code> (going to), <code>wanna</code> (want to), <code>gotta</code> (got to), <code>I'd've</code> (I would have)। যেমন — "I'm gonna push this fix today" বা "We gotta fix that bug before release।"</p>
+<div class="callout mistake"><span class="tag">লিখিত ইংরেজিতে ব্যবহার করবেন না</span>এই contraction গুলো শুধু <b>কথ্য</b> ভাষার জন্য — casual standup বা আড্ডায় স্বাভাবিক। কিন্তু PR description, technical document, বা client email-এ "gonna", "wanna" লেখা অপেশাদার (unprofessional) মনে হবে। লিখিত ইংরেজির formality নিয়ে বিস্তারিত থাকবে পরের একটা chapter-এ।</div>
+
+<h3>Intonation Patterns — কথার সুর কোন দিকে যায়</h3>
+<p>ইংরেজিতে বাক্যের শেষে সুর ওঠে না নামে, সেটার উপর নির্ভর করে বাক্যের অর্থ আর উদ্দেশ্য বদলে যায়। তিনটা প্রধান প্যাটার্ন মনে রাখুন — statement আর wh-question-এ সুর <span class="kw">নামে</span> (falling ↘), yes/no question-এ সুর <span class="kw">ওঠে</span> (rising ↗), আর list বা option বলার সময় প্রতিটা item-এ ওঠে, শেষ item-এ নামে।</p>
+<pre><span class="c"># falling — statement ও wh-question</span>
+I deployed the service. ↘
+What did you deploy? ↘
+
+<span class="c"># rising — yes/no question</span>
+Did the tests pass? ↗
+Is the pipeline green? ↗
+
+<span class="c"># rising-falling — list/options</span>
+We can use Redis↗, Postgres↗, or Kafka↘.</pre>
+<table>
+<tr><th>বাক্যের ধরন</th><th>Intonation</th><th>উদাহরণ</th></tr>
+<tr><td>Statement</td><td>Falling ↘</td><td>The build failed. ↘</td></tr>
+<tr><td>Wh-question (what/why/how)</td><td>Falling ↘</td><td>Why did the build fail? ↘</td></tr>
+<tr><td>Yes/No question</td><td>Rising ↗</td><td>Did you fix the bug? ↗</td></tr>
+<tr><td>List / options</td><td>Rising↗ … Falling↘ (শেষে)</td><td>Staging↗, QA↗, or Production↘?</td></tr>
+</table>
+
+<h3>Flat বা Monotone বলা কেন সমস্যা</h3>
+<p>অনেকেই স্কুলে ইংরেজি শিখেছেন শব্দ-বাই-শব্দ পড়ে, তাই বলার সময়ও প্রতিটা শব্দ সমান জোর দিয়ে, সমান pitch-এ, flat ভাবে বলে ফেলেন। টেকনিক্যালি বাক্যের গ্রামার আর content সঠিক হলেও এই <span class="kw">monotone delivery</span> শুনতে অনিশ্চিত, বিরক্তিকর বা অস্পষ্ট শোনায় — শ্রোতা বুঝতে পারেন না কোনটা গুরুত্বপূর্ণ তথ্য, কোনটা না।</p>
+<div class="callout why"><span class="tag">Tone আসলে perception বদলে দেয়</span>Standup বা interview-তে আপনার কথার content ঠিক থাকলেও, monotone আর flat delivery শুনলে শ্রোতা (বিশেষ করে native speaker manager বা client) ধরে নেন আপনি ব্যাপারটা নিয়ে নিশ্চিত না, অথবা গুরুত্ব দিচ্ছেন না। অর্থাৎ সঠিক stress আর intonation শুধু অর্থ স্পষ্ট করে না — এটা আপনাকে কতটা confident ও competent মনে হচ্ছে, সেটাও নির্ধারণ করে।</div>
+<div class="callout mistake"><span class="tag">Common mistake — শব্দ-বাই-শব্দ পড়া</span>স্কুলে শেখানো পদ্ধতিতে অনেকে ইংরেজি বাক্য এমনভাবে পড়েন যেন প্রতিটা শব্দ আলাদা একটা ইউনিট — "I. Deployed. The. Service." এভাবে থেমে থেমে, সমান জোর দিয়ে। স্বাভাবিক ইংরেজিতে বরং শব্দগুলো <span class="kw">stress group</span>-এ একসাথে চলে, যেমন "I deployed" একসাথে একটা প্রবাহে বলা হয়, মাঝে থেমে থেমে না। প্রতিটা শব্দ আলাদা করে জোর দিয়ে বলাটাই flat, রোবটিক শোনানোর মূল কারণ।</div>
+
+<h3>Practice Exercise — একটা standup update মার্কআপ করে অনুশীলন</h3>
+<p>নিচের বাস্তব standup update sentence-টা নিন, তারপর stress (CAPS) আর intonation (↘ ↗) মার্ক করে জোরে জোরে কয়েকবার পড়ুন।</p>
+<pre><span class="c"># Step 1 — সাধারণ বাক্য</span>
+Yesterday I fixed the login bug and pushed the changes. Today I'm gonna review Rasel's PR.
+
+<span class="c"># Step 2 — stress ও intonation মার্ক করা</span>
+YES-ter-day I FIXED the LO-gin BUG and PUSHED the CHANG-es. ↘
+to-DAY I'm gonna re-VIEW Ra-SEL's P-R. ↘</pre>
+<p>এবার এটা অন্তত পাঁচবার জোরে পড়ুন — প্রতিবার শুধু CAPS করা শব্দগুলোতে জোর দিন, বাকি শব্দগুলো দ্রুত আর হালকাভাবে বলুন, আর বাক্যের শেষে সুর নামিয়ে আনুন। তারপর নিজের কণ্ঠ রেকর্ড করে শুনুন — flat লাগছে, নাকি স্বাভাবিক ছন্দে বাক্যটা প্রবাহিত হচ্ছে?</p>
+<div class="callout best"><span class="tag">Best practice — নিজের কণ্ঠ রেকর্ড করে তুলনা করুন</span>নিজের standup update ফোনে রেকর্ড করুন, তারপর একই ধরনের content-এর একটা native speaker recording (যেমন YouTube-এ কোনো engineering standup বা tech talk clip) খুঁজে বের করে পাশাপাশি শুনুন। তুলনা করার সময় শুধু "শব্দ ঠিক আছে কিনা" দেখবেন না — <b>rhythm আর stress pattern মিলছে কিনা</b> সেটাতেই মনোযোগ দিন। শব্দ ভুল হলেও rhythm ঠিক থাকলে শুনতে অনেক বেশি natural আর confident লাগে।</div>
+
+<div class="grid2"><div class="box"><b>মনে রাখুন</b><br>Content words (noun, verb, adjective, adverb)-এ জোর পড়ে; function words (article, preposition, pronoun, auxiliary) দ্রুত ও হালকা।</div><div class="box"><b>মনে রাখুন</b><br>Statement ও wh-question ↘, yes/no question ↗, list-এর প্রতিটা item ↗ আর শেষটায় ↘।</div></div>
+</template>
+
+<template data-page="grammar-basics">
+<h2 class="title">৬. Basic Grammar ১ — Sentence Structure ও Tense</h2>
+<p class="lead">Grammar-এর ভুল বেশিরভাগ সময় "rule না জানার" সমস্যা না — এটা মূলত <span class="kw">sentence-building habit</span>-এর সমস্যা। বাংলা আর ইংরেজি sentence বানানোর পদ্ধতি একদম উল্টো, তাই মাথায় বাংলায় ভাবা sentence সরাসরি ইংরেজিতে বসিয়ে দিলে সেটা awkward শোনায়। এই chapter-এ আমরা সেই মূল কারণটা ধরব, আর present-past-future tense-এর ব্যবহারিক পার্থক্যগুলো দেখব যা standup, code review আর client call-এ প্রতিদিন লাগে।</p>
+
+<h3>মূল সমস্যা — SOV বনাম SVO</h3>
+<p>বাংলা একটা <span class="kw">SOV</span> ভাষা — মানে sentence-এর গঠন হয় Subject-Object-Verb, আর verb সবসময় শেষে আসে। ইংরেজি হলো <span class="kw">SVO</span> ভাষা — Subject-Verb-Object, verb মাঝখানে বসে। যেমন বাংলায় আমরা বলি "আমি সার্ভিসটা deploy করলাম" — এখানে verb ("করলাম") সবার শেষে। কিন্তু ইংরেজিতে হবে "I deployed the service" — verb ("deployed") দ্বিতীয় position-এ, শেষে না।</p>
+<p>স্বতঃস্ফূর্তভাবে (spontaneously) কথা বলার সময় মস্তিষ্ক আগে বাংলা order-এ sentence build করে, তারপর সেটাকে শব্দে শব্দে ইংরেজিতে translate করার চেষ্টা করে — আর ঠিক এখানেই সমস্যা তৈরি হয়। কারণ verb শেষে রাখার অভ্যাস থেকে বেরিয়ে আসা কঠিন, ফলে sentence অসম্পূর্ণ থেকে যায়, বা word-order উল্টে যায়, বা মাঝপথে থেমে গিয়ে reconstruct করতে হয়।</p>
+<table><tr><th>বাংলা-order-এ ভুল (word-by-word translate)</th><th>সঠিক English SVO</th></tr>
+<tr><td>"I the PR review will do" (আমি PR-টা review করব)</td><td>"I will review the PR."</td></tr>
+<tr><td>"He the bug already fixed" (সে বাগটা already fix করেছে)</td><td>"He has already fixed the bug."</td></tr>
+<tr><td>"We tomorrow the release will do" (আমরা কাল release করব)</td><td>"We will do the release tomorrow."</td></tr>
+</table>
+<div class="callout why"><span class="tag">এটাই root cause</span>অনেক সময় আমরা মনে করি নিজেদের "tense ভুল" বা "grammar দুর্বল" — কিন্তু আসল সমস্যাটা হলো sentence-এর কাঠামো বাংলা অভ্যাস থেকে তৈরি হয়। Verb কোথায় বসবে সেটা ঠিক না করে যদি tense rule মুখস্থ করা হয়, তাহলেও কথা বলার সময় sentence ভেঙে যাবে। তাই প্রথম কাজ হলো subject-verb-object এই order-টা reflex-এ পরিণত করা — তারপর tense তার ওপর বসানো সহজ হয়ে যায়।</div>
+
+<h3>Parts of Speech — দ্রুত রেফারেন্স</h3>
+<p>Sentence বানানোর আগে এই building block গুলো চেনা দরকার। প্রতিটার সাথে একটা dev-relevant উদাহরণ দেওয়া হলো।</p>
+<table><tr><th>Part of speech</th><th>কাজ</th><th>উদাহরণ শব্দ</th></tr>
+<tr><td><span class="kw">Noun</span></td><td>ব্যক্তি/বস্তু/ধারণার নাম</td><td><code>server</code>, <code>database</code></td></tr>
+<tr><td><span class="kw">Verb</span></td><td>কাজ বা অবস্থা বোঝায়</td><td><code>deploy</code>, <code>refactor</code></td></tr>
+<tr><td><span class="kw">Adjective</span></td><td>noun-কে বর্ণনা করে</td><td><code>slow</code> (query), <code>critical</code> (bug)</td></tr>
+<tr><td><span class="kw">Adverb</span></td><td>verb/adjective-কে modify করে</td><td><code>quickly</code>, <code>frequently</code></td></tr>
+<tr><td><span class="kw">Preposition</span></td><td>relationship দেখায় (স্থান/সময়)</td><td><code>in</code> production, <code>before</code> merging</td></tr>
+<tr><td><span class="kw">Conjunction</span></td><td>দুইটা অংশ জোড়া দেয়</td><td><code>because</code>, <code>although</code></td></tr>
+</table>
+
+<h3>Present Tense — তিনটা রূপ, তিনটা ভিন্ন অর্থ</h3>
+<p>বাংলায় আমরা সাধারণত সব present-কে এক রকম বলি — "আমি কাজ করছি" বলতে গিয়ে habit, এখনকার কাজ, আর সদ্য-শেষ-হওয়া কাজ সবকিছুই "করছি/করি" দিয়ে চালিয়ে দিই। ইংরেজিতে কিন্তু এই তিনটার জন্য আলাদা tense আছে, আর অর্থও আলাদা — এই পার্থক্য না বুঝলে শ্রোতা বুঝতেই পারবে না আপনি কী বলতে চাইছেন।</p>
+<table><tr><th>Tense</th><th>কখন ব্যবহার হয়</th><th>উদাহরণ</th></tr>
+<tr><td><span class="kw">Present Simple</span></td><td>habit, routine, স্থায়ী সত্য</td><td>"I deploy the service every Friday."</td></tr>
+<tr><td><span class="kw">Present Continuous</span></td><td>এখনই ঘটছে</td><td>"I am debugging a memory leak right now."</td></tr>
+<tr><td><span class="kw">Present Perfect</span></td><td>past action, যার প্রভাব এখনো আছে</td><td>"I have already reviewed your PR."</td></tr>
+</table>
+<p>লক্ষ্য করুন — "I deploy the service every Friday" মানে এটা প্রতি শুক্রবার নিয়মিত করি (habit)। কিন্তু "I am deploying the service" মানে এই মুহূর্তে সেটা চলছে। আর "I have deployed the service" মানে deploy করা শেষ হয়ে গেছে এবং এখন সেটার result বা status relevant — যেমন "I have deployed the service, so you can test it now।" এই তৃতীয়টা বাংলা speaker-দের কাছে সবচেয়ে বেশি গুলিয়ে যায়, কারণ বাংলায় এর জন্য আলাদা কোনো ব্যাকরণিক রূপ নেই।</p>
+
+<h3>Past ও Future Tense — dev standup-এর বাস্তব উদাহরণ</h3>
+<p>Standup আর status update-এ past আর future tense সবচেয়ে বেশি লাগে — কালকে কী করেছেন, আজ কী করছেন/করবেন সেটা বলার জন্য। নিচের টেবিলে চারটা গুরুত্বপূর্ণ রূপ দেওয়া হলো।</p>
+<table><tr><th>Tense</th><th>কখন ব্যবহার হয়</th><th>উদাহরণ</th></tr>
+<tr><td><span class="kw">Past Simple</span></td><td>past-এ শেষ হওয়া একটা কাজ</td><td>"I fixed the bug yesterday."</td></tr>
+<tr><td><span class="kw">Past Continuous</span></td><td>past-এর একটা মুহূর্তে চলছিল</td><td>"I was debugging when the call started."</td></tr>
+<tr><td><span class="kw">Past Perfect</span></td><td>আরেকটা past event-এর আগে ঘটেছিল</td><td>"I had already deployed before the client called."</td></tr>
+<tr><td><span class="kw">Future — will</span></td><td>তাৎক্ষণিক decision / prediction</td><td>"I will merge this after tests pass."</td></tr>
+<tr><td><span class="kw">Future — going to</span></td><td>আগে থেকে planned intention</td><td>"I am going to refactor this next sprint."</td></tr>
+</table>
+<p><code>will</code> সাধারণত তখন ব্যবহার হয় যখন decision-টা কথা বলার মুহূর্তেই নেওয়া হচ্ছে, বা কোনো প্রতিশ্রুতি/prediction — যেমন "Tests pass করলে আমি এটা merge করে দেব।" আর <code>going to</code> ব্যবহার হয় যখন plan আগে থেকেই ঠিক করা আছে — যেমন "পরের sprint-এ আমরা এটা refactor করার plan করেছি।" এই পার্থক্যটা client call-এ commitment বোঝাতে গুরুত্বপূর্ণ — "I will fix it" শুনতে instant commitment মনে হয়, কিন্তু "I am going to fix it in the next release" শুনতে already-planned মনে হয়।</p>
+<pre><span class="c"># Standup update — past, present, future একসাথে</span>
+Yesterday, I fixed the login bug.
+Right now, I am writing unit tests for it.
+I will deploy it once the review is approved.
+</pre>
+
+<h3>সবচেয়ে সাধারণ ভুল — Auxiliary Verb (be/have/do) বাদ দেওয়া</h3>
+<p>বাংলায় "আমি কাজ করছি" বলতে আলাদা কোনো helping word লাগে না — verb-এর form নিজেই সেটা বহন করে। কিন্তু ইংরেজিতে continuous, perfect, বা negative sentence বানাতে <span class="kw">auxiliary verb</span> (am/is/are, have/has, do/does) অবশ্যই লাগে। বাংলা speaker-রা প্রায়ই এই auxiliary বাদ দিয়ে ফেলেন, কারণ বাংলায় এর কোনো সমতুল্য শব্দ নেই।</p>
+<table><tr><th>ভুল</th><th>সঠিক</th></tr>
+<tr><td>"I working on it."</td><td>"I am working on it."</td></tr>
+<tr><td>"I not sure."</td><td>"I am not sure." / "I'm not sure."</td></tr>
+<tr><td>"He finished the task."(ঠিক আছে, কিন্তু continuous বোঝাতে গেলে)</td><td>"He is finishing the task." (এখনো চলছে বোঝাতে)</td></tr>
+<tr><td>"She not agree with this approach."</td><td>"She doesn't agree with this approach."</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — auxiliary verb বাদ দেওয়া</span>"I working on it" বা "I not sure" এই ধরনের sentence বাংলা structure-এর সরাসরি প্রভাব — বাংলায় verb-ই যথেষ্ট, কিন্তু ইংরেজিতে <code>be</code>, <code>have</code>, <code>do</code> ছাড়া sentence অসম্পূর্ণ থেকে যায় এবং শুনতে ভাঙা ইংরেজি মনে হয়। প্রতিটা continuous ("-ing") sentence-এর আগে am/is/are বসছে কিনা, আর প্রতিটা negative sentence-এ do/does/am/is/are + not আছে কিনা — এই দুইটা check habit করে নিন।</div>
+
+<h3>অভ্যাস তৈরির উপায়</h3>
+<p>শুধু rule পড়ে এই অভ্যাস বদলানো যায় না — এর জন্য মুখে বলে practice করতে হবে, কারণ সমস্যাটা knowledge-এর না, habit-এর।</p>
+<div class="callout best"><span class="tag">Best practice — জোরে বলে practice করুন</span>প্রতিদিন meeting-এ যাওয়ার আগে নিজের কাজ নিয়ে ৩-৪টা simple SVO sentence জোরে বলে practice করুন — "I fixed the bug", "I am reviewing the PR", "I will deploy tomorrow।" এতে মস্তিষ্ক সরাসরি ইংরেজি order-এ sentence build করার অভ্যাস পায়, বাংলা order থেকে translate করার দরকার পড়ে না। শুরুতে ধীরে বললেও সমস্যা নেই — লক্ষ্য হলো subject-verb-object এই ক্রমটাকে reflex বানানো, যাতে আসল meeting-এ চিন্তা না করেই সঠিক order-এ কথা বেরিয়ে আসে।</div>
+</template>
+
+<template data-page="grammar-more">
+<h2 class="title">৭. Basic Grammar ২ — Article, Preposition ও Modal Verb</h2>
+<p class="lead">এই অধ্যায়ে আমরা এমন তিনটা জিনিস নিয়ে কথা বলব যেগুলো বাংলা ভাষায় সরাসরি নেই — article (a/an/the), preposition-এর নির্দিষ্ট ব্যবহার, আর modal verb-এর মাধ্যমে politeness প্রকাশ। এই তিনটাই ছোট ছোট শব্দ, কিন্তু এগুলো ঠিকমতো ব্যবহার না করলে আপনার English শোনায় ভাঙা ভাঙা, আর code review-এর মতো লিখিত জায়গায় ভুল modal ব্যবহার করলে আপনার কথা অনিচ্ছাকৃতভাবে রূঢ় শোনাতে পারে।</p>
+
+<h3>Article — a/an/the: বাংলায় যার কোনো সমতুল্য নেই</h3>
+<p>বাংলা ভাষায় article বলে কিছু নেই। আমরা বলি "আমি bug ঠিক করেছি" — এখানে "একটা bug" নাকি "সেই নির্দিষ্ট bug" তা প্রসঙ্গ থেকে বোঝা যায়, আলাদা শব্দ লাগে না। কিন্তু English-এ এই পার্থক্যটা <span class="kw">article</span> দিয়ে বাধ্যতামূলকভাবে বলে দিতে হয়। এই কারণেই বাংলাভাষী ইঞ্জিনিয়াররা প্রায়ই বলেন "I fixed bug" — যেটা native speaker-এর কানে সাথে সাথে অস্বাভাবিক লাগে, কারণ ওদের ব্রেইন "a bug" বা "the bug" প্রত্যাশা করে।</p>
+<p>সহজ নিয়ম মনে রাখুন — <span class="kw">a/an</span> ব্যবহার হয় যখন প্রথমবার কোনো একটা countable জিনিসের কথা বলা হয় (যেটা শ্রোতা এখনো জানে না কোনটা)। <span class="kw">the</span> ব্যবহার হয় যখন জিনিসটা নির্দিষ্ট, আগে থেকে আলোচিত, অথবা একমাত্র (unique)। আর uncountable concept, general idea, বা বেশিরভাগ proper noun (ভাষা, টুল, ফ্রেমওয়ার্কের নাম)-এর আগে কোনো article লাগে না।</p>
+<table>
+<tr><th>Phrase</th><th>ব্যাখ্যা</th></tr>
+<tr><td>"I need <b>a</b> database for this service."</td><td>প্রথমবার উল্লেখ — যেকোনো একটা database, নির্দিষ্ট না</td></tr>
+<tr><td>"<b>The</b> database is down again."</td><td>নির্দিষ্ট — যে database নিয়ে আগে কথা হয়েছে</td></tr>
+<tr><td>"<b>The</b> API returned a 500 error."</td><td>নির্দিষ্ট, দুজনেই জানে কোন API</td></tr>
+<tr><td>"We need <b>an</b> algorithm to sort this."</td><td>প্রথমবার, vowel sound তাই "an"</td></tr>
+<tr><td>"<b>Kubernetes</b> is popular for orchestration." (no article)</td><td>টেকনোলজির নাম, general concept — article নেই</td></tr>
+<tr><td>"<b>The</b> Kubernetes cluster is down."</td><td>নির্দিষ্ট instance — এখন article লাগবে</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — article একেবারে বাদ দেওয়া</span>অনেকে সবসময় বলেন "bug", "server", "test" — কখনো "a bug", কখনো "the bug" বলেন না। এটা বোঝা যায়, কিন্তু শুনতে খুবই non-native লাগে, এবং কখনো কখনো সত্যিকারের ambiguity তৈরি করে — শ্রোতা বুঝতে পারে না আপনি একটা নির্দিষ্ট bug-এর কথা বলছেন, নাকি সাধারণভাবে bug সম্পর্কে বলছেন।</div>
+
+<h3>Common tech preposition phrase — এগুলো ফিক্সড, মুখস্থ করে ফেলুন</h3>
+<p>ইংরেজিতে অনেক শব্দের সাথে একটা নির্দিষ্ট preposition আটকে থাকে — এগুলো যুক্তি দিয়ে বোঝা যায় না, শুধু মুখস্থ করে নিতে হয়। ইঞ্জিনিয়ারিং কথাবার্তায় এই phrase-গুলো প্রতিদিন ব্যবহার হয়।</p>
+<table>
+<tr><th>Phrase</th><th>Example</th></tr>
+<tr><td><span class="kw">depends on</span></td><td>"The deployment time depends on the image size."</td></tr>
+<tr><td><span class="kw">based on</span></td><td>"We chose this design based on last sprint's feedback."</td></tr>
+<tr><td><span class="kw">responsible for</span></td><td>"I'm responsible for the payment service."</td></tr>
+<tr><td><span class="kw">related to</span></td><td>"This bug is related to the caching layer."</td></tr>
+<tr><td><span class="kw">compatible with</span></td><td>"This library isn't compatible with Node 18."</td></tr>
+<tr><td><span class="kw">consistent with</span></td><td>"Let's keep the naming consistent with the rest of the codebase."</td></tr>
+<tr><td><span class="kw">different from</span></td><td>"Staging behaves different from production."</td></tr>
+<tr><td><span class="kw">similar to</span></td><td>"This error is similar to the one we saw last week."</td></tr>
+<tr><td><span class="kw">in charge of</span></td><td>"Who's in charge of the release pipeline this week?"</td></tr>
+</table>
+
+<h3>Preposition of time ও place — in/on/at</h3>
+<p>Time এবং place-এর জন্য <code>in</code>, <code>on</code>, <code>at</code> — এই তিনটা preposition গুলিয়ে ফেলা খুবই সাধারণ একটা ভুল। মোটামুটি নিয়ম হলো — বড় সময়/জায়গার জন্য <code>in</code>, মাঝারি নির্দিষ্ট দিনের জন্য <code>on</code>, আর একদম নির্দিষ্ট পয়েন্টের জন্য <code>at</code>।</p>
+<table>
+<tr><th>Time</th><th>Place</th></tr>
+<tr><td><code>in</code> 2024, <code>in</code> July, <code>in</code> the morning</td><td><code>in</code> the office, <code>in</code> the codebase</td></tr>
+<tr><td><code>on</code> Monday, <code>on</code> the deadline day</td><td><code>on</code> the server, <code>on</code> the branch, <code>on</code> the call</td></tr>
+<tr><td><code>at</code> 3pm, <code>at</code> noon, <code>at</code> the moment</td><td><code>at</code> the meeting, <code>at</code> the office desk</td></tr>
+</table>
+
+<h3>Modal verb — politeness-এর level ঠিক করে</h3>
+<p><span class="kw">Modal verb</span> (can, could, should, must, would, might) দিয়ে আমরা একই কথা বিভিন্ন মাত্রার directness বা politeness দিয়ে বলতে পারি। বাংলায় আমরা tone, honorific ("আপনি"/"তুমি"), বাক্যের গঠন দিয়ে ভদ্রতা বোঝাই — English-এ অনেকটা কাজটা modal verb করে। ভুল modal বেছে নিলে আপনার বলা কথা শ্রোতার কাছে অনেক বেশি harsh বা অনেক বেশি weak শোনাতে পারে, আপনি হয়তো তা বোঝাতেই চাননি।</p>
+<table>
+<tr><th>Modal phrase</th><th>Intent / Politeness level</th></tr>
+<tr><td>"You <b>must</b> fix this before merging."</td><td>Strong obligation — জোরালো, কখনো কখনো harsh শোনায়</td></tr>
+<tr><td>"You <b>should</b> consider refactoring this."</td><td>Suggestion — পরামর্শ, চাপিয়ে দেওয়া না</td></tr>
+<tr><td>"<b>Could</b> you please rebase this branch?"</td><td>Polite request — ভদ্র অনুরোধ</td></tr>
+<tr><td>"This <b>might</b> cause a race condition."</td><td>Cautious possibility — নিশ্চিত না, সতর্ক করা</td></tr>
+<tr><td>"<b>Would</b> you mind adding a test for this?"</td><td>Very polite request — সবচেয়ে soft অনুরোধ</td></tr>
+</table>
+
+<h3>Code review comment-এ modal-এর গুরুত্ব</h3>
+<p>Code review একটা লিখিত মাধ্যম, এখানে গলার স্বর (tone of voice), মুখভঙ্গি, বা হাসি দিয়ে কথা নরম করার সুযোগ নেই। তাই আপনি যদি "must" ব্যবহার করেন যেখানে আসলে "could" বা "should" বোঝাতে চেয়েছিলেন, সেটা লেখায় ঠিক ততটাই কড়া শোনাবে যতটা লেখা আছে — কোনো নরম tone সেটা ঠিক করে দেবে না। বিশেষ করে ভিন্ন সংস্কৃতির টিমমেট বা senior-এর সাথে কাজ করার সময় এই পার্থক্যটা সম্পর্ক এবং professional impression-এ সরাসরি প্রভাব ফেলে।</p>
+<div class="callout why"><span class="tag">লিখিত মাধ্যমে politeness gradient কেন বেশি জরুরি</span>মুখোমুখি কথায় hesitation, smile, বা soft tone দিয়ে একটা কড়া কথাও নরম করে দেওয়া যায়। কিন্তু লেখায় সেই সুযোগ নেই — শব্দই একমাত্র সংকেত। তাই code review comment-এ শব্দ choice (বিশেষত modal verb)-ই পুরো সামাজিক সংকেতের ভার বহন করে। একই ভুলের কথা "must" দিয়ে লিখলে command শোনায়, "could" দিয়ে লিখলে collaboration শোনায়।</div>
+<div class="callout best"><span class="tag">Best practice — Code review-এর politeness ladder</span>Direct সমালোচনা নরম করতে "must"/"have to"-এর বদলে ধাপে ধাপে softer modal ব্যবহার করুন। যেমন — সবচেয়ে জরুরি ও non-negotiable বিষয়ের জন্য "This needs to change because..." (কারণ সহ ব্যাখ্যা করলে "must"-ও কম harsh লাগে), মাঝারি গুরুত্বের সাজেশনের জন্য "You should..." বা "I'd suggest...", আর optional idea বা সন্দেহের জন্য "Could we...", "What if we...", "This might benefit from...". একটা সহজ অভ্যাস — প্রতিটা review comment লেখার পর একবার নিজেকে জিজ্ঞেস করুন, "এটা কি command শোনাচ্ছে নাকি suggestion?"</div>
+
+<h3>অনুশীলনের জন্য কিছু বাক্য</h3>
+<pre><span class="c"># Article ঠিক রেখে বলার অনুশীলন</span>
+I found a bug in the payment module.
+The bug happens only on the staging server.
+Docker makes deployment easier. (no article — general concept)
+The Docker container keeps restarting. (specific — article লাগবে)
+
+<span class="c"># Code review-এ politeness ladder ব্যবহার</span>
+This needs to change — it will break in production.
+You should add error handling here.
+Could we extract this into a separate function?
+This might cause a memory leak under load.
+Would you mind renaming this variable for clarity?</pre>
+</template>
+
+<template data-page="grammar-dev">
+<h2 class="title">৮. Developer Grammar — Conditional, Passive Voice ও Reported Speech</h2>
+<p class="lead">এই চ্যাপ্টারে যে তিনটা গ্রামার টপিক নিয়ে কথা বলব — Conditional, Passive Voice, আর Reported Speech — এগুলো আসলে সফটওয়্যার ইঞ্জিনিয়ারদের জন্য সবচেয়ে "স্বাভাবিক" গ্রামার। কারণ আপনি প্রতিদিন কোডে <code>if/else</code>, ফাংশন কল আর কারো বলা বাগ রিপোর্ট নিয়ে কাজ করেন — এই তিনটাই আসলে সেই একই লজিকের ইংরেজি ভার্সন।</p>
+
+<h3>Conditionals — আপনার if/else লজিক, শুধু ইংরেজিতে</h3>
+<p>ইংরেজিতে চারটা মূল <span class="kw">conditional</span> টাইপ আছে, আর মজার ব্যাপার হলো — প্রতিটার পেছনে একটা করে চেনা প্রোগ্রামিং প্যাটার্ন আছে।</p>
+<table>
+<tr><th>টাইপ</th><th>স্ট্রাকচার</th><th>ব্যবহার</th><th>ডেভ উদাহরণ</th></tr>
+<tr><td><span class="kw">Zero conditional</span></td><td>If + present, present</td><td>সবসময় সত্য / fact / fixed logic</td><td>If the cache misses, the system queries the database.</td></tr>
+<tr><td><span class="kw">First conditional</span></td><td>If + present, will + verb</td><td>বাস্তব সম্ভাবনা, ভবিষ্যতে ঘটতে পারে</td><td>If tests fail, the pipeline will stop.</td></tr>
+<tr><td><span class="kw">Second conditional</span></td><td>If + past, would + verb</td><td>কাল্পনিক / অসম্ভাব্য পরিস্থিতি</td><td>If we rewrote this in Rust, it would be faster.</td></tr>
+<tr><td><span class="kw">Third conditional</span></td><td>If + past perfect, would have + verb</td><td>অতীতের অনুমান / আফসোস (postmortem)</td><td>If we had used a queue, we would not have lost those events.</td></tr>
+</table>
+<p>লক্ষ্য করুন — <code>zero</code> হলো এমন লজিক যা <code>if (cacheMiss) return db.query()</code>-এর মতো সবসময় সত্য। <code>first</code> হলো এমন শর্ত যা আসলেই ঘটতে পারে — প্রায় <code>if (testsFail) pipeline.stop()</code>। <code>second</code> আর <code>third</code> হলো এমন branch যেটা আসলে কখনো এক্সিকিউট হয়নি বা হবে না — একটা "what-if" সিমুলেশন।</p>
+
+<div class="callout why"><span class="tag">Conditional আপনার জন্য নতুন কিছু না</span>আপনি ইতিমধ্যে প্রতিদিন <code>if/else</code>, <code>switch-case</code>, guard clause লিখে অভ্যস্ত। ইংরেজি conditional শেখা মানে নতুন একটা লজিক শেখা না — শুধু সেই একই লজিক্যাল স্ট্রাকচারকে ইংরেজি tense-এ ম্যাপ করা। বেশিরভাগ ইংরেজি শিক্ষার্থীর জন্য conditional কঠিন লাগে কারণ তারা এটাকে বিমূর্ত গ্রামার রুল হিসেবে মুখস্থ করে। আপনার সেই সমস্যা নেই — আপনি already condition-based thinking-এ expert। শুধু "if X then Y" এর ইংরেজি tense mapping-টা মনে রাখলেই হয়ে যায়।</div>
+
+<h3>Passive Voice — টেকনিক্যাল লেখায় কখন এবং কেন</h3>
+<p><span class="kw">Passive voice</span> টেকনিক্যাল ডকুমেন্টেশন, API doc, রিসার্চ পেপার আর incident report-এ প্রচুর ব্যবহার হয় — কারণ এখানে "কে করেছে" তার চেয়ে "কী হয়েছে" বেশি গুরুত্বপূর্ণ।</p>
+<table>
+<tr><th>Active</th><th>Passive</th></tr>
+<tr><td>The middleware processes the request.</td><td>The request is processed by the middleware.</td></tr>
+<tr><td>The team migrated the data last night.</td><td>The data was migrated last night.</td></tr>
+<tr><td>The logger logs errors automatically.</td><td>Errors are logged automatically.</td></tr>
+<tr><td>Someone deprecated this endpoint in v2.</td><td>This endpoint was deprecated in v2.</td></tr>
+</table>
+<p>Passive ব্যবহার করুন যখন <b>সিস্টেমের আচরণ</b> বর্ণনা করছেন এবং "কে করেছে" সেটা irrelevant বা obvious — যেমন ডকুমেন্টেশন, README, architecture doc। কিন্তু day-to-day কমিউনিকেশনে — standup, code review কমেন্ট, স্ল্যাক মেসেজ — active voice বেশি direct, স্পষ্ট, আর কথোপকথনের মতো শোনায়।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — Standup-এ passive voice-এর ওভারইউজ</span>অনেকে standup-এ বলেন "The bug was fixed" — কিন্তু এতে বোঝা যায় না কে ফিক্স করেছে, এটা কি already merged হয়েছে, নাকি কেউ অন্য কেউ করেছে। Team visibility-র জন্য এটা ক্ষতিকর, কারণ টিম জানতে চায় কে কী কাজ করেছে। সবসময় বলুন "I fixed the bug" বা "I merged the fix" — নিজের কাজের ownership স্পষ্ট করে বলাটাই ভালো communication।</div>
+
+<div class="callout best"><span class="tag">Best practice — Doc-এ passive, স্পিচে active</span>টেকনিক্যাল ডকুমেন্টেশন লেখার সময় সিস্টেম behavior বর্ণনা করতে passive voice ব্যবহার করুন — এটা objective এবং professional শোনায় ("Requests are validated before processing")। কিন্তু মুখে যখন নিজের progress রিপোর্ট করছেন, active voice-এ থাকুন — "I validated the requests", "I deployed the fix" — এতে স্পষ্টতা আর accountability দুটোই বজায় থাকে।</p></div>
+
+<h3>Reported Speech — কারো বলা কথা টিমকে জানানো</h3>
+<p><span class="kw">Reported speech</span> শেখা জরুরি কারণ প্রতিদিন আপনাকে ক্লায়েন্ট, QA, বা PM-এর বলা কথা টিমের কাছে relay করতে হয় — সরাসরি quote না করে। মূল নিয়ম হলো: tense এক ধাপ পেছনে চলে যায় — <code>doesn't</code> → <code>didn't</code>, <code>will</code> → <code>would</code>, <code>can</code> → <code>could</code>, <code>is</code> → <code>was</code>।</p>
+<table>
+<tr><th>Direct speech</th><th>Reported speech</th></tr>
+<tr><td>Client: "The button doesn't work."</td><td>She said the button didn't work.</td></tr>
+<tr><td>QA: "The app crashes on login."</td><td>QA said the app crashed on login.</td></tr>
+<tr><td>PM: "We will release this on Friday."</td><td>The PM said they would release it on Friday.</td></tr>
+<tr><td>Tester: "I can reproduce the bug."</td><td>The tester said she could reproduce the bug.</td></tr>
+</table>
+
+<h3>মিনি ডায়ালগ — সব একসাথে</h3>
+<p>নিচের ছোট ডায়ালগে reported speech, first conditional, আর third conditional — তিনটাই একসাথে ব্যবহার করা হয়েছে, ঠিক যেভাবে বাস্তব standup-এ কথা বলা হয়।</p>
+<pre><span class="c"># Relaying a QA bug report + fix + prevention</span>
+Rafi: QA said the login button crashed on mobile Safari.
+Rafi: If we deploy the fix today, the crash will go away.
+Rafi: If we had added mobile Safari to our test matrix earlier,
+      we would not have missed this bug.</pre>
+<p>প্রথম লাইনে reported speech ("QA said... crashed") দিয়ে বাগ রিপোর্ট রিলে করা হয়েছে। দ্বিতীয় লাইনে first conditional দিয়ে বাস্তব fix-এর ফলাফল বলা হয়েছে। তৃতীয় লাইনে third conditional দিয়ে postmortem-স্টাইলে বলা হয়েছে কী করলে এই বাগটা এড়ানো যেত। এই তিনটা প্যাটার্ন একসাথে ব্যবহার করতে পারলে আপনি যেকোনো bug-discussion বা incident review-তে flawlessly ইংরেজিতে কথা বলতে পারবেন।</p>
+</template>
+
+<template data-page="standup">
+<h2 class="title">৯. Everyday Developer English — Standup, Meeting ও Clarifying Question</h2>
+<p class="lead">একজন সফটওয়্যার ইঞ্জিনিয়ারের দৈনন্দিন কাজের বেশিরভাগ ইংরেজি আসলে খুব ছোট ছোট ফরম্যাটেড কথোপকথনে ঘটে — daily standup-এ তিনটা লাইন বলা, sprint planning-এ একটা মতামত দেওয়া, কারো কথা না বুঝে সেটা জিজ্ঞেস করা, অথবা মিটিং শেষে action item গুলো এক লাইনে গুছিয়ে বলা। এই অধ্যায়ে আমরা সেই খুব practical, প্রতিদিন কাজে লাগবে এমন phrase গুলো শিখব — grammar নয়, বরং কাজ চালানোর জন্য দরকারি স্ক্রিপ্ট।</p>
+
+<h3>১. Daily Standup — Yesterday / Today / Blockers টেমপ্লেট</h3>
+<p>প্রতিটা standup আসলে একটা <span class="kw">fixed template</span> অনুসরণ করে: গতকাল কী করেছ, আজ কী করবে, আর কোথাও আটকে আছ কিনা। এই তিনটা প্রশ্নের উত্তর যদি আগে থেকে গুছিয়ে রাখা যায়, standup বলাটা অনেক সহজ হয়ে যায়। নিচে একটা বাস্তব উদাহরণ দেখো — একজন ইঞ্জিনিয়ার একটা payment retry bug নিয়ে কাজ করছে।</p>
+<pre><span class="c"># Sample standup update — realistic script</span>
+Yesterday, I finished the API integration for the payment retry logic
+and pushed the PR for review.
+Today, I'm going to address the review comments from Tanvir
+and start writing unit tests for the retry queue.
+I'm a bit blocked on the staging environment — it's been down since
+last night, so I can't test the retry flow end-to-end yet.
+I've already pinged the DevOps channel about it.
+As a next step, once staging is back up, I'll finish testing
+and hopefully merge this by tomorrow.</pre>
+<div class="callout best"><span class="tag">Best practice — standup-এর আগেই প্রস্তুতি নাও</span>মিটিং শুরুর ঠিক আগে মাথায় মাথায় সাজানোর চেষ্টা কোরো না। প্রথম কয়েক মাস, standup শুরুর ১-২ মিনিট আগে খাতায় বা নোটসে সত্যিই লিখে ফেলো — Yesterday, Today, Blockers মিলিয়ে মাত্র ২-৩টা বাক্য। এটা লিখে লিখে অভ্যাস করলে কয়েক সপ্তাহ পরে এই কাঠামোটা মাথায় automatic হয়ে যাবে, আর তখন লেখার দরকারই পড়বে না।</div>
+
+<h3>২. মতামত দেওয়ার Phrase Bank — Sprint Planning ও Retro-তে</h3>
+<p>Sprint planning বা retro-তে নিজের মতামত পরিষ্কারভাবে কিন্তু ভদ্রভাবে উপস্থাপন করার জন্য কিছু নির্দিষ্ট phrase বারবার ব্যবহার হয়। এগুলো মুখস্থ রাখলে মিটিং-এ চুপ করে বসে থাকতে হবে না।</p>
+<table><tr><th>Phrase</th><th>কখন ব্যবহার করবে</th></tr>
+<tr><td><code>I think we should...</code></td><td>সরাসরি একটা প্রস্তাব দেওয়ার সময়</td></tr>
+<tr><td><code>In my opinion, ...</code></td><td>নিজের মত হিসেবে স্পষ্ট করে বলার সময়, যাতে বোঝা যায় এটা fact নয় opinion</td></tr>
+<tr><td><code>One option would be to...</code></td><td>একাধিক সমাধানের একটা হিসেবে নরমভাবে উপস্থাপন করতে</td></tr>
+<tr><td><code>What if we tried...?</code></td><td>নতুন আইডিয়া প্রস্তাব করতে, কিছুটা ব্রেইনস্টর্মিং ভঙ্গিতে</td></tr>
+<tr><td><code>From my experience, ...</code></td><td>আগের প্রজেক্ট বা অভিজ্ঞতা থেকে যুক্তি দিতে</td></tr>
+<tr><td><code>I'd suggest we prioritize X over Y because...</code></td><td>Sprint planning-এ priority নিয়ে মতামত দিতে</td></tr>
+</table>
+
+<h3>৩. ভদ্রভাবে একমত/দ্বিমত পোষণ করা</h3>
+<p>Meeting-এ কারো মতের সাথে একমত বা দ্বিমত পোষণ করার একটা ভদ্র ভাষা আছে, যেটা না জানলে কথাগুলো রূঢ় শোনাতে পারে।</p>
+<table><tr><th>উদ্দেশ্য</th><th>Phrase</th></tr>
+<tr><td>একমত হওয়া</td><td><code>That makes sense.</code> / <code>I agree, and also...</code> / <code>Exactly, that's what I was thinking too.</code></td></tr>
+<tr><td>ভদ্রভাবে দ্বিমত</td><td><code>I see your point, but I'm a bit concerned about...</code></td></tr>
+<tr><td>ভদ্রভাবে দ্বিমত</td><td><code>Have you considered...?</code></td></tr>
+<tr><td>ভদ্রভাবে দ্বিমত</td><td><code>I'm not fully convinced, could we discuss this a bit more?</code></td></tr>
+<tr><td>আংশিক একমত, আংশিক দ্বিমত</td><td><code>That's a fair point, but on the other hand...</code></td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — সরাসরি "No, that's wrong" বলা</span>টেকনিক্যালি ঠিক হলেও মিটিং-এ সরাসরি <code>"No, that's wrong"</code> বলাটা বেশিরভাগ international বা western workplace culture-এ রূঢ় শোনায়, যদিও তোমার point valid। একই কথা <code>"I see your point, but I'm a bit concerned about the edge case where..."</code> দিয়ে বললে result একই থাকে — তোমার আপত্তিটা পৌঁছায় — কিন্তু কারো সাথে confrontation তৈরি হয় না।</div>
+
+<h3>৪. পরিষ্কার না হলে জিজ্ঞেস করা — Clarifying Question</h3>
+<p>অনেক ইঞ্জিনিয়ার দ্বিধার কারণে না বুঝেও জিজ্ঞেস করে না, ভাবে "সবাই হয়তো জানে, আমি জিজ্ঞেস করলে বোকা মনে হব।" আসলে ঠিক উল্টোটা — জিজ্ঞেস না করে ভুল ধরে নিয়ে এগিয়ে যাওয়াটাই বেশি ক্ষতিকর।</p>
+<pre><span class="c"># Clarifying question phrase bank</span>
+Sorry, could you repeat that?
+Just to confirm, you mean we should deploy this on Friday, not Monday?
+When you say "the API is deprecated," do you mean it's already removed,
+or just marked for removal in a future version?
+Could you clarify what you mean by "high priority" here?
+Sorry, I missed that last part — could you say it again?
+So if I understood correctly, the plan is to roll back first
+and then investigate — is that right?</pre>
+<div class="callout mistake"><span class="tag">Common mistake — না বুঝেও চুপ করে থাকা</span>মিটিং-এ কিছু পরিষ্কার না হলে "বোকা মনে হবে" ভেবে চুপ করে থাকা ছোট একটা সমস্যা মনে হলেও এটা দীর্ঘমেয়াদে অনেক বেশি ক্ষতিকর। কারণ পরে দেখা যায় ভুল বোঝাবুঝির কারণে পুরো ফিচার ভুলভাবে বানিয়ে ফেলা হয়েছে, যেটা ঠিক করতে দিন-রাতের পরিশ্রম আর অনেক embarrassment দুটোই লাগে। একবার clarifying question জিজ্ঞেস করার সাহসিকতা সবসময়ই পরে ভুল কাজ শুধরানোর চেয়ে সস্তা।</div>
+
+<h3>৫. মাঝে কথা বলা ও মিটিং শেষে Summarize করা</h3>
+<p>কারো কথার মাঝে ভদ্রভাবে ঢুকে কিছু বলতে হলে, বা মিটিং শেষে সবার আলোচনা এক জায়গায় গুছিয়ে বলতে হলে এই phrase গুলো কাজে লাগে।</p>
+<table><tr><th>উদ্দেশ্য</th><th>Phrase</th></tr>
+<tr><td>ভদ্রভাবে মাঝে কথা বলা</td><td><code>Sorry to jump in, but...</code> / <code>Can I add something here?</code> / <code>Sorry, quick question before we move on...</code></td></tr>
+<tr><td>মিটিং শেষে সারমর্ম</td><td><code>Just to summarize what we've discussed...</code></td></tr>
+<tr><td>Action item স্পষ্ট করা</td><td><code>So the action items are: I'll do X, Tanvir will do Y, and we'll check back on Thursday.</code></td></tr>
+<tr><td>নিশ্চিত হওয়া</td><td><code>Does that sound right to everyone?</code> / <code>Are we all aligned on this?</code></td></tr>
+</table>
+<div class="callout why"><span class="tag">চুপ থাকা vs ভদ্রভাবে দ্বিমত পোষণ করা</span>বেশিরভাগ modern engineering culture-এ ভদ্রভাবে প্রশ্ন তোলা বা দ্বিমত পোষণ করাকে নেতিবাচকভাবে দেখা হয় না, বরং এটাকে engagement আর ownership-এর লক্ষণ হিসেবে দেখা হয়। উল্টো দিকে, মিটিং-এ পুরোপুরি চুপ থাকা বা সবকিছুতে হ্যাঁ বলে যাওয়াকে অনেক সময় "সে বুঝতে পারছে না" বা "সে আসলে engaged না" হিসেবে ধরে নেওয়া হয়। তাই প্রশ্ন তোলা বা মৃদু আপত্তি জানানো ভদ্রতার লঙ্ঘন নয়, বরং একজন সক্রিয় টিম মেম্বার হওয়ার লক্ষণ।</div>
+
+<h3>৬. Mini Sprint Planning Dialogue</h3>
+<p>নিচের সংক্ষিপ্ত কথোপকথনে দুইজন ইঞ্জিনিয়ার — একজন opinion দিচ্ছে, একজন clarifying question জিজ্ঞেস করছে, ভদ্রভাবে দ্বিমত জানাচ্ছে, আর শেষে summarize করছে।</p>
+<pre><span class="c"># Mini sprint planning dialogue</span>
+Rasel: I think we should pick up the notification service refactor
+       this sprint, before we add any new features on top of it.
+
+Tanvir: Just to confirm, you mean refactoring the whole service,
+        or just the retry logic inside it?
+
+Rasel: Just the retry logic for now — the rest can wait.
+
+Tanvir: Okay, that makes sense. I'm a bit concerned about the timeline
+        though — we already have the checkout bug fix in this sprint.
+        Have you considered splitting the refactor into two smaller tasks?
+
+Rasel: That's a fair point. Let's split it, and I'll take the smaller
+        piece so we don't overload the sprint.
+
+Tanvir: Sounds good. So, just to summarize — we're doing the checkout
+        fix, plus a smaller retry-logic refactor split into two tasks.
+        I'll create the tickets today.</pre>
+<div class="grid2"><div class="box"><b>মনে রাখার মূল কথা</b><br>Standup, meeting আর clarifying question — এই তিনটা জায়গায় একই কয়েকটা phrase বারবার ঘুরেফিরে আসে। এগুলো মুখস্থ করে ফেললে দৈনন্দিন কাজের ৮০% ইংরেজি কথোপকথন সহজ হয়ে যায়।</div><div class="box"><b>অনুশীলন</b><br>আজকের standup-এর জন্য উপরের টেমপ্লেট ব্যবহার করে ৩টা বাক্য লিখে ফেলো, আর পরের মিটিং-এ অন্তত একটা clarifying question জিজ্ঞেস করার চেষ্টা করো — even if it feels uncomfortable at first।</div></div>
+</template>
+
+<template data-page="tech-talk">
+<h2 class="title">১০. Technical Communication — Bug রিপোর্ট, Architecture ও Code Review কথায় বলা</h2>
+<p class="lead">Senior ইঞ্জিনিয়ার আর জুনিয়ার ইঞ্জিনিয়ারের মধ্যে পার্থক্য শুধু কোড লেখায় না — <b>জটিল টেকনিক্যাল তথ্য কতটা পরিষ্কারভাবে অন্যকে বোঝাতে পারেন</b> তাতেও। একটা bug ঠিকভাবে বর্ণনা করতে না পারলে debugging-এ দ্বিগুণ সময় লাগে, একটা architecture ভুলভাবে ব্যাখ্যা করলে নতুন টিমমেট ভুল ধারণা নিয়ে কোড লেখা শুরু করে, আর একটা code review comment ভুল টোনে লিখলে সম্পর্ক নষ্ট হয়। এই chapter-এ আমরা তিনটা সবচেয়ে ঘন ঘন ঘটা technical conversation-এর জন্য reusable ভাষার কাঠামো শিখব।</p>
+
+<h3>একটা Bug স্পষ্টভাবে মুখে বর্ণনা করা</h3>
+<p>একটা bug রিপোর্ট করার সবচেয়ে নির্ভরযোগ্য কাঠামো চারটা অংশে ভাগ করা যায়: <span class="kw">Expected behavior</span> (কী হওয়ার কথা ছিল) → <span class="kw">Actual behavior</span> (আসলে কী হচ্ছে) → <span class="kw">Steps to reproduce</span> (কীভাবে আবার ঘটানো যায়) → <span class="kw">Environment/context</span> (কোথায়, কখন, কী পরিস্থিতিতে ঘটে)। এই একই ক্রম প্রতিবার ব্যবহার করলে শ্রোতা — তা টিমমেট হোক বা QA — সহজেই আপনাকে ফলো করতে পারে, এমনকি meeting তাড়াহুড়ায় থাকলেও।</p>
+<table>
+<tr><th>অংশ</th><th>ব্যবহারযোগ্য phrase</th></tr>
+<tr><td>Expected behavior</td><td>"I expected X to happen when the user clicks submit."<br>"The intended behavior is that the order gets confirmed immediately."</td></tr>
+<tr><td>Actual behavior</td><td>"But instead, the page just freezes."<br>"Instead, it silently fails and nothing gets saved."</td></tr>
+<tr><td>Steps to reproduce</td><td>"It happens when you submit the form twice in a row."<br>"It's reproducible if you log in with an expired token."<br>"Here are the exact steps to reproduce it."</td></tr>
+<tr><td>Environment/context</td><td>"It's reproducible on staging, but not on my local machine."<br>"It only happens in production, not locally."<br>"This only shows up under heavy load, around 500 concurrent users."</td></tr>
+</table>
+<pre><span class="c"># একটা সম্পূর্ণ spoken bug description — উদাহরণ</span>
+"So, I expected the payment confirmation email to go out
+right after checkout. But instead, the email never arrives —
+the order still gets created, it's just the email that's
+missing. It's reproducible every time you checkout with a
+saved card, not a new one. And it only happens in production;
+locally, with the same saved-card flow, the email goes out
+fine. So my guess is it's something environment-specific,
+maybe an SMTP config difference."
+</pre>
+<div class="callout best"><span class="tag">Best practice — সবসময় একই কাঠামো ব্যবহার করুন</span>প্রতিবার bug বর্ণনা করার সময় expected → actual → repro → context এই একই ক্রম বজায় রাখুন। এটা মুখস্থ script মনে হলেও আসলে এটাই সবচেয়ে কার্যকর — শ্রোতা জানে পরের বাক্যে কী আসবে, তাই তথ্য মিস করার সম্ভাবনা কমে, আর আপনি চাপের মধ্যেও কিছু বাদ দেন না।</div>
+
+<h3>System Architecture মুখে বর্ণনা করা</h3>
+<p>একজন নতুন টিমমেট বা junior-কে একটা diagram বা flow মুখে বুঝিয়ে দেওয়ার সময় সবসময় <span class="kw">entry point</span> থেকে শুরু করুন এবং request-এর গতিপথ অনুসরণ করুন — এলোমেলোভাবে মাঝখান থেকে শুরু করলে শ্রোতা হারিয়ে যায়। প্রতিটা component-এর জন্য এক বাক্যে তার দায়িত্ব বলুন, তারপর পরের component-এ যান।</p>
+<pre><span class="c"># architecture narration-এর জন্য phrase bank</span>
+"Let's start from the entry point — the client sends a request here."
+"This service is responsible for validating the user's session."
+"The request flows from the API gateway to the auth service, then to the database."
+"From there, it gets forwarded to..."
+"The reason we split it this way is to isolate the payment logic."
+"At a high level, there are three layers here."
+"Everything eventually comes back through this same path."
+</pre>
+<p>নিচের উদাহরণে একটা সাধারণ তিন-স্তরের (client → API → database) architecture এভাবে বর্ণনা করা যায়।</p>
+<pre><span class="c"># mini-narration উদাহরণ — client → API → database</span>
+"Let's start from the entry point. The client — that's our
+web or mobile app — sends a request to the API layer over
+HTTPS. This API layer is responsible for authentication,
+validation, and business logic. The request flows from the
+API into the database, which just stores and retrieves the
+raw data — it has no business logic of its own. The reason
+we keep the database this thin is so we can swap or scale it
+independently. Everything eventually comes back through the
+same API layer to the client."
+</pre>
+<div class="callout why"><span class="tag">এন্ট্রি পয়েন্ট থেকে শুরু করাই কেন কার্যকর</span>মানুষের মস্তিষ্ক একটা গল্পের মতো ক্রমিক ভাষ্য সহজে অনুসরণ করে — request কোথা থেকে ঢোকে সেখান থেকে শুরু করলে শ্রোতা একটা mental map তৈরি করতে পারে, প্রতিটা component সেই মানচিত্রে একটা নির্দিষ্ট জায়গায় বসে। মাঝখান থেকে শুরু করলে শ্রোতাকে একইসাথে "এর আগে কী হয়েছিল" আর "এর পরে কী হবে" — দুটোই অনুমান করতে হয়, যা cognitive load বাড়ায়।</div>
+
+<h3>Code Review-এর ভাষা — লেখা ও মুখে বলা</h3>
+<p>Code review comment-এর টোন প্রায়ই তার বিষয়বস্তুর চেয়ে বেশি গুরুত্বপূর্ণ। একই সমালোচনা দুইভাবে বলা যায় — একটা সম্পর্ক নষ্ট করে, অন্যটা করে না। নিচের phrase bank চারটা category-তে ভাগ করা।</p>
+<table>
+<tr><th>Category</th><th>ব্যবহারযোগ্য phrase</th></tr>
+<tr><td>নরমভাবে পরিবর্তনের প্রস্তাব</td><td>"Have you considered using a map here instead of nested loops?"<br>"What if we extracted this into a separate function?"<br>"Small nit: maybe rename this variable for clarity."</td></tr>
+<tr><td>Blocking বনাম minor চিহ্নিত করা</td><td>"blocking: this will throw a null reference in production."<br>"nit: extra blank line here."<br>"non-blocking suggestion: consider adding a test for the edge case."</td></tr>
+<tr><td>ভালো কাজের প্রশংসা</td><td>"Nice catch here — I would've missed that edge case."<br>"This is a clean approach, much simpler than what I had in mind."<br>"Great job handling the error cases here."</td></tr>
+<tr><td>সিদ্ধান্তের কারণ জিজ্ঞাসা</td><td>"What was the reasoning behind choosing this library?"<br>"Can you help me understand why we're not caching this response?"<br>"Is there a specific constraint that led to this design?"</td></tr>
+</table>
+<div class="callout why"><span class="tag">nit: / blocking: কনভেনশন কেন দরকার</span>এই লেবেলিং কনভেনশন থাকার কারণ হলো — author-কে সাথে সাথে বলে দেওয়া যায় কোন comment merge-এর আগে অবশ্যই ঠিক করতে হবে (blocking), আর কোনটা optional, চাইলে পরে ঠিক করা যায় (nit, non-blocking suggestion)। এটা ছাড়া author প্রতিটা comment-কে সমান গুরুত্বপূর্ণ ভেবে সবকিছু নিয়ে আলোচনা শুরু করে, যা review-কে দীর্ঘ back-and-forth-এ পরিণত করে। লেবেল স্পষ্ট থাকলে author এক নজরে triage করতে পারে।</div>
+<div class="callout mistake"><span class="tag">Common mistake — কারণ না জেনেই সিদ্ধান্তকে ভুল ধরে নেওয়া</span>একটা design decision দেখে সরাসরি বলে দেওয়া "This is wrong" বা "why did you do it this way, it doesn't make sense" — প্রায়ই ভুল হয়, কারণ সেই decision-এর পেছনে হয়তো এমন একটা constraint ছিল যা আপনি জানতেন না (legacy system, performance requirement, client-এর বিশেষ শর্ত)। আগে "What was the reasoning behind this?" জিজ্ঞাসা করুন — যদি সত্যিই ভুল হয়, তখনও সেটা বলার সুযোগ থাকবে, কিন্তু আপনি author-কে defensive না করেই আলোচনা শুরু করতে পারবেন।</div>
+
+<h3>Sample Dialogue — টিমমেটকে কলে Bug বোঝানো</h3>
+<pre><span class="c"># Call — Rafi bug-টা Sara-কে ব্যাখ্যা করছে</span>
+Rafi:  Hey, do you have a minute? I found something weird
+       with the checkout flow.
+Sara:  Sure, go ahead.
+Rafi:  So, I expected the discount code to apply before the
+       final total is shown. But instead, it applies after
+       the confirmation page loads, so the customer sees the
+       wrong price for a second.
+Sara:  Okay, when does that happen exactly?
+Rafi:  It's reproducible whenever you apply a code and then
+       immediately click checkout — you don't even need to
+       wait. It only happens in production, though; on my
+       local build I can't reproduce it at all.
+Sara:  Interesting. Any idea why local is different?
+Rafi:  Not yet — my guess is a caching layer that only exists
+       in the production environment. I haven't confirmed it.
+Sara:  Got it, that's a good starting point. Can you open a
+       ticket with these exact steps?
+Rafi:  Yeah, doing that now.
+</pre>
+
+<h3>Cross-cultural নোট — সরাসরি বলা সবসময় ভালো নয়</h3>
+<p>বাংলা থেকে সরাসরি অনুবাদ করা ইংরেজি প্রায়ই অতিরিক্ত blunt শোনায় — যেমন "This is wrong," "You did this incorrectly," "Why did you write it like this?" এই বাক্যগুলো টেকনিক্যালি সঠিক হতে পারে, কিন্তু অনেক আন্তর্জাতিক বা পশ্চিমা সহকর্মীর কাছে এগুলো অপ্রয়োজনীয়ভাবে কঠোর মনে হয় — যেন ব্যক্তিগতভাবে দোষারোপ করা হচ্ছে। একই সংশোধন নরম ভাষায় বললেও সমান কার্যকর হয়, বরং সম্পর্ক অক্ষত থাকে।</p>
+<div class="grid2">
+<div class="box"><b>Blunt (এড়িয়ে চলুন)</b><br>"This is wrong."<br>"You did this incorrectly."<br>"This code is bad."</div>
+<div class="box"><b>Softened (একই অর্থ, ভালো টোন)</b><br>"I think there might be an issue here."<br>"This doesn't seem to handle the edge case — can we revisit it?"<br>"This could be simplified a bit."</div>
+</div>
+<div class="callout behind"><span class="tag">টোন বদলালে বার্তা দুর্বল হয় না</span>"I think there might be an issue" বলার মানে এই না যে আপনি অনিশ্চিত — এটা শুধু বার্তাটাকে এমনভাবে সাজানো যাতে অন্যপক্ষ আক্রমণাত্মক না ভেবে সহযোগিতামূলক মনে করে। টেকনিক্যাল সঠিকতা এখানে এতটুকুও কমে না; শুধু delivery বদলায়, আর সেটাই দীর্ঘমেয়াদে টিমের মধ্যে বিশ্বাস ধরে রাখে।</div>
+</template>
+
+<template data-page="writing">
+<h2 class="title">১১. Written English — Slack/Email, Commit Message ও Documentation</h2>
+<p class="lead">কথা বলার ইংরেজিতে <span class="kw">clarity over perfection</span> — এটাই ছিল এই কোর্সের শুরুর নীতি। কিন্তু লেখা ইংরেজিতে (Slack message, email, commit message, PR description, documentation) নিয়ম কিছুটা বদলে যায়। লেখাটা থেকে যায় — সহকর্মী পরে পড়বে, ছয় মাস পর আপনি নিজেই পড়বেন, এমনকি ভবিষ্যতের কোনো নতুন টিম মেম্বার পড়বে। তাই লেখায় দুটো জিনিস বেশি গুরুত্বপূর্ণ হয়ে ওঠে — <b>সংক্ষিপ্ততা</b> (কারণ পাঠক আপনার সাথে সরাসরি কথা বলতে পারছে না) আর <b>সঠিকতা</b> (কারণ ভুল লেখা বহুদিন থেকে যায়, ভুল উচ্চারণ মুহূর্তেই মিলিয়ে যায়)।</p>
+
+<h3>Slack/Email — Tone ও Structure: আগে সিদ্ধান্ত, পরে প্রসঙ্গ</h3>
+<p>বাংলায় লেখার একটা স্বাভাবিক অভ্যাস হলো প্রেক্ষাপট দিয়ে শুরু করে ধীরে ধীরে মূল কথায় পৌঁছানো — কিন্তু ইংরেজি প্রফেশনাল লেখায় এটা উল্টো। প্রথম বাক্যেই থাকা উচিত <span class="kw">ask বা conclusion</span> — আপনি কী চান, বা সিদ্ধান্ত কী — তারপর প্রয়োজনীয় প্রসঙ্গ। ব্যস্ত সহকর্মী প্রথম লাইন পড়েই বুঝবে এই মেসেজ তার জন্য জরুরি কিনা, উত্তর দিতে কী লাগবে।</p>
+<div class="callout best"><span class="tag">BLUF — Bottom Line Up Front</span>যেকোনো Slack message বা email লেখার আগে নিজেকে জিজ্ঞেস করুন: "আমি যদি শুধু প্রথম বাক্যটা পড়ি, তাহলে কি বুঝতে পারব কী চাওয়া হচ্ছে?" যদি না হয়, বাক্যটা পুনর্বিন্যাস করুন। প্রথম বাক্যে conclusion/ask, তারপর supporting detail — এই একটা অভ্যাসই লেখার effectiveness সবচেয়ে বেশি বাড়ায়।</div>
+<table>
+<tr><th>প্রসঙ্গ-প্রথম (রম্বলিং)</th><th>সিদ্ধান্ত-প্রথম (BLUF)</th></tr>
+<tr><td>"Hi team, so yesterday I was working on the payment module and I noticed the retry logic was calling the API three times, and while debugging I found that the timeout config was set too low, and after checking with the QA team it seems like this has been happening since last sprint, so I think we should probably look into increasing the timeout value at some point."</td><td>"Can we bump the payment API timeout from 2s to 5s? Retries are firing too early — QA confirmed it's been happening since last sprint. (Details below if useful.)"</td></tr>
+<tr><td>"Regarding the meeting we had last week about the dashboard, I've been thinking about it and there are a few things that came to mind that might be worth discussing, one of which is related to the loading state..."</td><td>"Blocked on the dashboard: the loading state spec is missing. Can you confirm by EOD whether we show a spinner or skeleton screen?"</td></tr>
+</table>
+<div class="callout why"><span class="tag">Async/remote টিমে এটা আরও বেশি জরুরি কেন</span>একই অফিসে বসা সহকর্মীকে অস্পষ্ট মেসেজ পাঠালে সে ঘুরে এসে "মানে কী বলতে চাইছ?" জিজ্ঞেস করতে পারে — কথোপকথন দ্রুত ঠিক হয়ে যায়। কিন্তু distributed/remote টিমে reader হয়তো ৬-১২ ঘণ্টা সময়-পার্থক্যে থাকে — একটা অস্পষ্ট প্রশ্নের উত্তর পেতে পুরো একটা কর্মদিবস নষ্ট হতে পারে। তাই প্রথম মেসেজটাই এমনভাবে লেখা দরকার যাতে reader কোনো back-and-forth ছাড়াই কাজ করতে পারে — সব প্রয়োজনীয় তথ্য (কী দরকার, কখন, কেন) একসাথে থাকা চাই।</div>
+
+<h3>Commit Message — Imperative Mood: "এই commit যা করবে তা লিখুন"</h3>
+<p>Git commit message লেখার সবচেয়ে সাধারণ নিয়ম হলো <span class="kw">imperative mood</span> ব্যবহার করা — যেন একটা নির্দেশ দিচ্ছেন। "Fix null pointer exception" ঠিক, কিন্তু "Fixed null pointer exception" বা "Fixes null pointer exception" প্রথাগতভাবে ভুল ধরা হয়। কারণ বোঝার সহজ উপায় হলো একটা বাক্য সম্পূর্ণ করা মনে করে দেখা — <b>"If applied, this commit will ___"</b>। এই ফাঁকা জায়গায় commit message বসিয়ে দেখুন: "If applied, this commit will fix null pointer exception" — বাক্যটা ব্যাকরণগতভাবে ঠিক বসে। কিন্তু "will fixed" বা "will fixes" বসালে তা ভাঙা বাক্য হয়ে যায়।</p>
+<table>
+<tr><th>ভুল (past/present tense)</th><th>সঠিক (imperative)</th></tr>
+<tr><td>Fixed the login bug</td><td>Fix the login bug</td></tr>
+<tr><td>Adds retry logic to payment service</td><td>Add retry logic to payment service</td></tr>
+<tr><td>Updated README with setup instructions</td><td>Update README with setup instructions</td></tr>
+<tr><td>Removing unused imports</td><td>Remove unused imports</td></tr>
+</table>
+<p>এই কনভেনশন শুধু ব্যাকরণের খেলা না — এটা Git-এর নিজস্ব আচরণের সাথেও সামঞ্জস্যপূর্ণ। `git merge` বা `git revert` নিজে থেকেই imperative mood-এ commit message তৈরি করে ("Merge branch 'feature-x'"), তাই টিমের সব commit একই স্বরে থাকলে history পড়তে সহজ ও ধারাবাহিক হয়। Git workflow-এর বাকি কনভেনশন (branch naming, PR title, conventional commits যেমন `feat:`/`fix:`/`chore:`) — এই একই imperative-mood নীতির উপর দাঁড়িয়ে।</p>
+<div class="callout mistake"><span class="tag">Common mistake — tense-এ অসংগতি</span>একই PR-এর ভেতরে কিছু commit "Fix ...", কিছু "Fixed ...", কিছু "Fixes ..." — এই অসংগতি ছোট মনে হলেও history স্ক্যান করা কঠিন করে তোলে। এর চেয়েও বড় সমস্যা হলো commit message-এ শুধু "fix bug" বা "update code" লিখে ফেলা — কোন bug, কেন, কীভাবে fix হলো তার কোনো ইঙ্গিত না থাকা। ছয় মাস পর `git blame` করে যখন কেউ (হয়তো আপনি নিজেই) এই commit-এ পৌঁছাবে, "fix bug" কোনো context দেয় না — সময় নষ্ট হয় পুরোনো PR/issue খুঁজে বের করতে।</div>
+
+<h3>PR (Pull Request) Description — What, Why, How</h3>
+<p>ভালো PR description একটা নির্দিষ্ট কাঠামো অনুসরণ করে: <span class="kw">what</span> (ঠিক কী পরিবর্তন হয়েছে), <span class="kw">why</span> (এই পরিবর্তনের পেছনের সমস্যা বা motivation কী), <span class="kw">how to test</span> (reviewer কীভাবে নিশ্চিত হবে এটা কাজ করছে), আর <span class="kw">risks/tradeoffs</span> (কোনো side-effect বা সীমাবদ্ধতা থাকলে)। এই চার অংশ থাকলে reviewer দ্রুত এবং সঠিকভাবে review করতে পারে — আর ভবিষ্যতে কেউ এই PR-এ ফিরে এলে পুরো প্রেক্ষাপট পায়।</p>
+<pre><span class="c"># PR: Add rate limiting to /api/orders endpoint</span>
+
+## What
+Adds a token-bucket rate limiter (10 requests/second per API key)
+to the POST /api/orders endpoint using the existing Redis instance.
+
+## Why
+Last week a misbehaving client script sent ~500 req/s to this
+endpoint and caused a brief DB connection pool exhaustion (see
+incident #2026-07-18). This endpoint had no protection against
+that kind of burst traffic.
+
+## How to test
+1. Run `docker-compose up redis`
+2. Hit POST /api/orders 15 times in one second with the same
+   API key — requests 11-15 should return 429 Too Many Requests
+3. Wait 1 second, confirm requests succeed again
+4. Unit tests added in `test_rate_limiter.py` cover the bucket
+   refill logic
+
+## Risks / tradeoffs
+- Rate limit is per API key, not per IP, so a shared key across
+  multiple clients will hit the limit faster than expected.
+- Limit is currently hardcoded (10 req/s); follow-up ticket
+  JIRA-4521 will move this to a config value.</pre>
+<p>লক্ষ্য করুন — শিরোনামটাও imperative mood-এ ("Add rate limiting"), commit message-এর নিয়মের সাথে সামঞ্জস্যপূর্ণ। প্রতিটা section ছোট, scannable — reviewer উপর থেকে নিচে পড়ে দ্রুত পুরো ছবিটা পায়, লম্বা প্যারাগ্রাফে হারিয়ে যেতে হয় না।</p>
+
+<h3>Documentation লেখার নিয়ম — Active Voice, Present Tense, কম শব্দ</h3>
+<p>Documentation লেখার সময় সবচেয়ে সাধারণ ভুল হলো অতিরিক্ত ভদ্র বা জটিল বাক্য গঠন — passive voice, future tense, বা অপ্রয়োজনীয় hedge words ("might", "could potentially")। ভালো documentation লেখে <span class="kw">active voice</span> ও <span class="kw">present tense</span>-এ, কারণ ফাংশন/সিস্টেম যা করে তা একটা স্থায়ী সত্য — future tense ব্যবহার করলে মনে হয় যেন এটা এখনো ঘটেনি। আর পাঠক ধরে নিন আপনার চেয়ে কম context আছে — তাই স্পষ্ট, ছোট বাক্য, কোনো অপ্রয়োজনীয় শব্দ ছাড়া।</p>
+<table>
+<tr><th>জড়ানো/অস্পষ্ট</th><th>স্পষ্ট/সংক্ষিপ্ত</th></tr>
+<tr><td>"This function will typically return a value that represents the user's session token, assuming the login was successful."</td><td>"The function returns the session token if login succeeds."</td></tr>
+<tr><td>"It should be noted that the configuration file needs to be modified by the user in order for the changes to take effect."</td><td>"Edit the config file to apply changes."</td></tr>
+<tr><td>"In the event that an error is encountered, the system will attempt to retry the operation a total of three times before failing."</td><td>"On error, the system retries up to three times, then fails."</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — পাঠকের জ্ঞান আপনার চেয়ে কম ধরে নিন</span>Documentation লেখার সময় সবসময় ধরে নিন পাঠক আপনার মতো এই কোডবেস/সিস্টেম জানে না। যা আপনার কাছে "obvious" মনে হয়, তা লিখে দিন — একটা প্রিরিকুইজিট, একটা example, একটা edge case। ছোট বাক্য, active voice, present tense — এই তিনটা মিলে documentation দ্রুত পড়া ও দ্রুত বোঝা যায়।</div>
+
+<h3>সারসংক্ষেপ — Speaking বনাম Writing</h3>
+<p>এই কোর্সের প্রথম অধ্যায়ে বলা হয়েছিল, কথা বলার সময় <span class="kw">clarity over perfection</span> — গ্রামারের ছোটখাটো ভুল, contraction, এমনকি কিছুটা এলোমেলো বাক্যও গ্রহণযোগ্য, কারণ কথোপকথন তাৎক্ষণিক এবং সংশোধনযোগ্য। কিন্তু লেখায় নিয়ম পাল্টায় — বিশেষ করে ক্লায়েন্ট-facing document, commit message, বা PR description-এ, যা দীর্ঘদিন টিকে থাকে এবং বহু মানুষ পড়ে।</p>
+<table>
+<tr><th>দিক</th><th>Speaking (Chapter ১ দ্রষ্টব্য)</th><th>Writing</th></tr>
+<tr><td>Contractions</td><td>"I'm", "don't", "can't" — স্বাভাবিক ও প্রত্যাশিত</td><td>ক্লায়েন্ট-facing formal doc-এ এড়ানো ভালো ("I am", "do not")</td></tr>
+<tr><td>ব্যাকরণ</td><td>ছোটখাটো ভুল গ্রহণযোগ্য, message বোঝাই আসল</td><td>Tense/agreement ভুল বহুদিন টিকে থাকে — সঠিকতা গুরুত্বপূর্ণ</td></tr>
+<tr><td>Tone</td><td>তাৎক্ষণিক সংশোধনযোগ্য, প্রশ্ন করা যায়</td><td>স্থায়ী রেকর্ড — একবার merge/send হলে ফিরে সংশোধন কঠিন</td></tr>
+<tr><td>মূলনীতি</td><td>Clarity over perfection</td><td>Precision over speed</td></tr>
+</table>
+<p>দুটোই একই লক্ষ্যে কাজ করে — যোগাযোগ যেন কার্যকর হয়। শুধু মাধ্যম ভেদে ঝুঁকির মাত্রা আলাদা: কথায় ভুল হলে মুহূর্তেই ঠিক করা যায়, লেখায় ভুল থেকে যায় — commit history-তে, PR-এ, বা production documentation-এ, যেখানে ভবিষ্যতের কেউ (আপনি নিজেও) সেটার উপর নির্ভর করবে।</p>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১২. Interview English — Technical ও Behavioral (STAR Method)</h2>
+<p class="lead">ইন্টারভিউ মানে শুধু আপনার technical জ্ঞান যাচাই না — আপনি কীভাবে চিন্তা করেন, কীভাবে communicate করেন, আর কীভাবে একটা গল্পকে গুছিয়ে বলেন সেটাও দেখা হয়। এই chapter-এ আমরা দেখব একটা modern tech interview-এর structure কেমন হয়, behavioral প্রশ্নের জন্য <span class="kw">STAR method</span> কীভাবে ব্যবহার করবেন, আর live coding round-এ চুপ না থেকে জোরে চিন্তা করার (thinking out loud) কৌশল।</p>
+
+<h3>১. একটি Modern Interview-এর ধাপ</h3>
+<p>বেশিরভাগ software engineering interview মোটামুটি একই কাঠামো অনুসরণ করে — শুধু কোম্পানিভেদে সময় আর emphasis আলাদা হয়। প্রতিটা ধাপে কী expect করা হয় সেটা আগে থেকে জানা থাকলে nervousness অনেক কমে যায়।</p>
+<table>
+<tr><th>ধাপ</th><th>সময়কাল</th><th>যা প্রত্যাশিত</th></tr>
+<tr><td><span class="kw">Intro / Small talk</span></td><td>৩-৫ মিনিট</td><td>Rapport তৈরি — নিজের সম্পর্কে সংক্ষিপ্ত, স্বাভাবিক পরিচয়; over-rehearsed শোনালে খারাপ লাগে।</td></tr>
+<tr><td><span class="kw">Technical Q&A / Live coding</span></td><td>৩০-৪৫ মিনিট</td><td>Problem-solving process দেখানো, clarifying questions করা, code লেখার সময় চিন্তা প্রকাশ করা।</td></tr>
+<tr><td><span class="kw">Behavioral questions</span></td><td>১৫-২৫ মিনিট</td><td>নির্দিষ্ট, বাস্তব উদাহরণ — STAR structure মেনে সংক্ষিপ্ত ও organized উত্তর।</td></tr>
+<tr><td><span class="kw">Closing Q&A</span></td><td>৫-১০ মিনিট</td><td>প্রার্থী নিজে থেকে thoughtful প্রশ্ন করে — team, culture, growth সম্পর্কে আগ্রহ দেখানো।</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন structure জানা জরুরি</span>প্রতিটা ধাপের উদ্দেশ্য আলাদা। Intro-তে personality দেখা হয়, technical round-এ process, behavioral round-এ judgment আর self-awareness, আর closing round-এ আপনার genuine আগ্রহ। কোন ধাপে কী দেখা হচ্ছে বুঝলে আপনি সেই অনুযায়ী energy আর preparation ঠিক জায়গায় দিতে পারবেন।</div>
+
+<h3>২. STAR Method — Situation, Task, Action, Result</h3>
+<p>Behavioral প্রশ্নের ("Tell me about a time when...") উত্তর দেওয়ার সবচেয়ে কার্যকর কাঠামো হলো <span class="kw">STAR</span>। এটা আপনার গল্পকে এলোমেলো না রেখে একটা logical flow দেয়, যাতে interviewer সহজে বুঝতে পারে আপনি সমস্যাটা আসলেই সমাধান করেছিলেন কিনা।</p>
+<table>
+<tr><th>অংশ</th><th>মানে</th><th>কতটুকু সময়</th></tr>
+<tr><td><span class="kw">Situation</span></td><td>প্রেক্ষাপট — কোথায়, কখন, কী প্রজেক্ট</td><td>~১৫%</td></tr>
+<tr><td><span class="kw">Task</span></td><td>আপনার দায়িত্ব বা লক্ষ্য কী ছিল</td><td>~১৫%</td></tr>
+<tr><td><span class="kw">Action</span></td><td>আপনি নির্দিষ্টভাবে কী করেছেন</td><td>~৫০%</td></tr>
+<tr><td><span class="kw">Result</span></td><td>ফলাফল, শেখা, measurable impact</td><td>~২০%</td></tr>
+</table>
+<p>নিচে "Tell me about a time you fixed a difficult bug" প্রশ্নের একটা সম্পূর্ণ worked answer দেখুন — S/T/A/R অংশ label করা:</p>
+<pre><span class="c"># Question: Tell me about a time you fixed a difficult bug.</span>
+
+<span class="c">[S] Situation</span>
+"In my previous role, our payment service started throwing intermittent
+timeout errors in production — roughly once every few hundred requests,
+with no clear pattern. It was affecting about 2% of checkout attempts."
+
+<span class="c">[T] Task</span>
+"As the on-call engineer that week, I was responsible for finding the
+root cause before it escalated further, since the error rate was
+slowly climbing."
+
+<span class="c">[A] Action</span>
+"I started by reproducing the issue locally, but it wouldn't trigger.
+So I added structured logging around the database connection pool and
+the external payment gateway calls. After reviewing a few hours of logs,
+I noticed the timeouts always happened when connection pool usage spiked
+above 90%. I checked our pool configuration and found the max size was
+set far too low for our current traffic. I also discovered a connection
+leak in one code path where a transaction wasn't being closed on error.
+I fixed the leak, increased the pool size with load-test-backed numbers,
+and added an alert for pool saturation so we'd catch it earlier next time."
+
+<span class="c">[R] Result</span>
+"The timeout errors dropped to zero within a day of deploying the fix,
+and the new alert has since caught two similar issues before they
+affected customers. I also wrote a short postmortem so the team could
+recognize the same pattern faster in the future."
+</pre>
+<div class="callout mistake"><span class="tag">Common mistake — গল্প ঘুরিয়ে বলা</span>অনেকে STAR structure না মেনে গল্পটা চক্রাকারে বলতে থাকেন — আগে result বলে ফেলেন, তারপর situation-এ ফিরে যান, আবার মাঝপথে detail যোগ করেন। এতে interviewer বুঝতেই পারেন না আপনি আসলে সমস্যাটা সমাধান করেছিলেন কিনা, কারণ উত্তরের কোনো clear শুরু-মাঝ-শেষ থাকে না। উত্তর দেওয়ার আগে মনে মনে চার শব্দ বলুন: Situation, Task, Action, Result — এই ক্রমেই বলুন।</div>
+
+<h3>৩. Live Coding-এ Thinking Out Loud</h3>
+<p>Live technical interview-এ সবচেয়ে বড় ভুল হলো চুপচাপ বসে সমাধান খোঁজা। Interviewer আপনার মাথার ভেতরটা দেখতে পান না — আপনি জোরে চিন্তা না করলে তার কাছে মনে হবে আপনি আটকে গেছেন, যদিও আসলে আপনি সঠিক পথেই এগোচ্ছেন। নিচের phrase bank ব্যবহার করে practice করুন।</p>
+<pre><span class="c"># Clarifying before starting</span>
+"Can I clarify the constraints first — how large can the input be?"
+"Just to confirm, are there duplicates in the array?"
+"Should I optimize for time or space here?"
+
+<span class="c"># Thinking through the approach</span>
+"Let me think about the edge cases here — empty input, single element..."
+"One approach would be a nested loop, but that might be O(n²).
+ Let me think if there's something better."
+"I'll start with a brute-force approach, then optimize once it's correct."
+"This reminds me of a two-pointer pattern — let me try that."
+
+<span class="c">// While coding</span>
+"I'm going to name this variable 'seen' to track visited nodes."
+"Let me trace through this with a small example to check my logic."
+"Actually, wait — this breaks if the array is empty, let me handle that."
+
+<span class="c"># Wrapping up</span>
+"So the time complexity here is O(n) and space is O(n) for the hash map."
+"Is there a specific case you'd like me to test this against?"
+</pre>
+<div class="callout why"><span class="tag">কেন silence খারাপ, imperfect চিন্তাও ভালো</span>ইন্টারভিউয়াররা প্রায়ই perfect answer-এর চেয়ে বেশি গুরুত্ব দেন আপনার <span class="kw">problem-solving process</span>-কে। আপনি যদি ভুল পথেও যান কিন্তু জোরে বলতে বলতে যান — "এই approach-টা কাজ করবে না কারণ...", তাহলে interviewer বুঝতে পারেন আপনি কীভাবে চিন্তা করেন, নিজের ভুল ধরতে পারেন কিনা, আর feedback নিয়ে adjust করতে পারেন কিনা। চুপ থেকে হঠাৎ সঠিক উত্তর দিলে interviewer-এর মূল্যায়নের জন্য কিছুই থাকে না — সেটা এমনকি সন্দেহও তৈরি করতে পারে যে আপনি মুখস্থ উত্তর দিচ্ছেন।</div>
+
+<h3>৪. প্রস্তুত থাকা দরকার — সাধারণ Behavioral প্রশ্ন</h3>
+<p>নিচের প্রশ্নগুলো প্রায় প্রতিটা interview-তে কোনো না কোনো রূপে আসে। প্রতিটার জন্য আগে থেকে একটা STAR গল্প ভেবে রাখুন।</p>
+<table>
+<tr><th>প্রশ্ন</th><th>কিসের উপর focus করবেন</th></tr>
+<tr><td>Tell me about a challenging bug you fixed.</td><td>Debugging process, systematic approach, root cause</td></tr>
+<tr><td>Tell me about a time you disagreed with a teammate.</td><td>Respectful communication, listening, কীভাবে resolution-এ পৌঁছালেন</td></tr>
+<tr><td>Tell me about a time you missed a deadline.</td><td>Accountability, কী শিখলেন, পরে কী পরিবর্তন করলেন</td></tr>
+<tr><td>Tell me about a time you learned something new quickly.</td><td>Learning approach, resourcefulness, applying it fast</td></tr>
+<tr><td>Tell me about a mistake you made.</td><td>Honesty, ownership, blame না দিয়ে solution-এ focus</td></tr>
+<tr><td>Tell me about a time you had to convince others of your idea.</td><td>Data দিয়ে persuasion, patience, compromise</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — আগে থেকে গল্প তৈরি রাখুন</span>Interview room-এ বসে গল্প মনে করার চেষ্টা করলে answer এলোমেলো হয়ে যায়। আগে থেকে ৫-৬টা STAR গল্প ভেবে লিখে রাখুন যেগুলো conflict, failure, leadership, আর learning — এই মূল themeগুলো cover করে। একটা ভালো গল্প সামান্য পরিবর্তন করে একাধিক প্রশ্নের উত্তরে ব্যবহার করা যায়, তাই শূন্য থেকে কখনো শুরু করতে হবে না।</div>
+
+<h3>৫. Interview ভালোভাবে শেষ করা</h3>
+<p>Closing round-এ শুধু "No, I don't have any questions" বলে দিলে সুযোগ নষ্ট হয়। Thoughtful প্রশ্ন করলে বোঝা যায় আপনি সত্যিই ভূমিকাটা নিয়ে ভেবেছেন, এবং এটা আপনাকেও যাচাই করতে সাহায্য করে যে জায়গাটা আপনার জন্য উপযুক্ত কিনা।</p>
+<div class="grid2">
+<div class="box"><b>Team ও কাজের ধরন নিয়ে</b><br>"What does a typical sprint look like for this team?"<br>"How do you approach code reviews here?"</div>
+<div class="box"><b>On-call ও Codebase নিয়ে</b><br>"What's the on-call rotation like, and how is it compensated?"<br>"How would you describe the current state of the codebase — legacy or actively refactored?"</div>
+<div class="box"><b>Growth নিয়ে</b><br>"What does career growth look like for someone in this role over the next year or two?"<br>"How does the team decide what to invest in — tech debt vs. new features?"</div>
+<div class="box"><b>শেষ করার ভাষা</b><br>"Thank you for your time — I really enjoyed this conversation and I'm excited about the possibility of joining the team."</div>
+</div>
+<div class="callout behind"><span class="tag">ছোট্ট একটা tip</span>শেষে জিজ্ঞেস করুন, "Is there anything about my background that makes you hesitant about moving forward?" — এটা সাহসী শোনালেও, এটা আপনাকে সরাসরি concern address করার এবং শেষ মুহূর্তে নিজের পক্ষে বলার সুযোগ দেয়।</div>
+</template>
+
+<template data-page="advanced">
+<h2 class="title">১৩. Advanced — Presentation, Client Communication ও Remote Team</h2>
+<p class="lead">এই chapter-এ আমরা তিনটা advanced দক্ষতা নিয়ে কাজ করব — একটা tech talk বা demo গুছিয়ে উপস্থাপন করা, ক্লায়েন্ট বা PM-এর সাথে বাস্তবসম্মত ও পেশাদার যোগাযোগ (দরকার হলে বিনয়ের সাথে "না" বলাও), আর remote/async টিমে কাজ করার সময় সাংস্কৃতিক পার্থক্য ও সময়-অঞ্চলের ফারাক সামলানো। এই তিনটাই সেই জায়গা যেখানে টেকনিক্যাল জ্ঞান যথেষ্ট নয় — যোগাযোগের সূক্ষ্মতাই পার্থক্য গড়ে দেয়।</p>
+
+<h3>একটা Tech Talk / Demo গুছিয়ে উপস্থাপন করা</h3>
+<p>একটা ভালো presentation-এর গঠন প্রায় সবসময় একই প্যাটার্ন মেনে চলে — <span class="kw">Hook</span> (কেন শ্রোতা এটা শুনবে) → <span class="kw">Problem</span> (কী সমস্যা ছিল) → <span class="kw">Solution</span> (কীভাবে সমাধান করা হলো) → <span class="kw">Live demo</span> (দেখিয়ে দেওয়া) → <span class="kw">Recap/Q&A</span> (সংক্ষিপ্ত করে শেষ করা, প্রশ্ন নেওয়া)। এই কাঠামো মনে রাখলে নার্ভাস অবস্থাতেও কথা হারিয়ে ফেলার সম্ভাবনা কমে যায়, কারণ পরের বাক্যটা কী হবে তা আগে থেকেই জানা থাকে।</p>
+<pre><span class="c"># Hook — শুরুতে আগ্রহ তৈরি করা</span>
+Today I want to show you how we cut our deployment time in half.
+Has your team ever struggled with flaky tests slowing down releases?
+By the end of this talk, you'll be able to set this up yourselves.
+
+<span class="c"># Problem — প্রেক্ষাপট বোঝানো</span>
+The issue we kept running into was...
+Every week, this was costing us roughly...
+
+<span class="c"># Transition — এক অংশ থেকে আরেক অংশে যাওয়া</span>
+Let's take a look at how this works in practice.
+So, with that context, here's what we built.
+Now let me switch over and show you the actual demo.
+
+<span class="c"># Closing — সংক্ষিপ্ত করে শেষ করা</span>
+To summarize, we covered three things today...
+The main takeaway here is...
+I'll pause here — happy to take any questions.</pre>
+<div class="callout best"><span class="tag">Best practice — demo চলাকালীন "narrate" করা</span>
+Live demo-র সময় চুপচাপ ক্লিক করে যাওয়া বড় ভুল — শ্রোতা তখন বুঝতে পারে না আপনি কী দেখাচ্ছেন বা কেন। প্রতিটা পদক্ষেপ ছোট বাক্যে বলে যান — "So now I'm clicking deploy, and you'll notice this pipeline kicks off automatically" — এতে presentation একটা conversation-এর মতো লাগে, রোবোটিক স্ক্রিপ্ট পড়ার মতো নয়।</div>
+
+<h3>Client-facing Communication — বাস্তবসম্মত ও পেশাদার Status Update</h3>
+<p>ক্লায়েন্ট বা প্রোডাক্ট ম্যানেজারের সাথে যোগাযোগে সবচেয়ে গুরুত্বপূর্ণ জিনিস হলো <span class="kw">expectation management</span> — যা সত্যি তাই বলা, কিন্তু পেশাদার ও গঠনমূলক ভঙ্গিতে। একটা ভালো status update সবসময় তিনটা জিনিস স্পষ্ট করে: বর্তমান অবস্থা কী, কোনো ঝুঁকি বা বাধা আছে কি না, আর সামনের পদক্ষেপ কী।</p>
+<pre><span class="c"># স্বাভাবিক অগ্রগতি জানানো</span>
+We're on track to deliver by Friday.
+We're about 80% done — the remaining work is mostly testing.
+
+<span class="c"># সমস্যা হলে সততার সাথে জানানো</span>
+We've run into an unexpected issue with the payment integration,
+and here's our plan to resolve it.
+This is taking longer than expected because of X — here's the revised timeline.</pre>
+
+<h3>বিনয়ের সাথে "না" বলা বা Push Back করা</h3>
+<p>অনেকেই মনে করেন ক্লায়েন্টকে "না" বলা মানে অপেশাদার আচরণ। বাস্তবে উল্টোটা সত্যি — একজন senior engineer-এর কাজই হলো বাস্তবসম্মত সীমা বুঝিয়ে বলা, শুধু সব কিছুতে রাজি হয়ে যাওয়া নয়। চাপের মুখে অনুমান করে একটা তারিখ বলে দেওয়ার বদলে, যাচাই করে ফিরে আসার কথা বলাটাই বেশি পেশাদার।</p>
+<pre><span class="c"># বিনয়ের সাথে সীমা বোঝানো</span>
+That's technically possible, but it would require...
+I'd recommend we prioritize X first because...
+Let me get back to you with a more accurate estimate
+after checking with the team.
+That timeline is tight — to hit it, we'd need to cut scope on Y.</pre>
+<div class="callout mistake"><span class="tag">Common mistake — অস্বস্তি এড়াতে অবাস্তব timeline-এ রাজি হয়ে যাওয়া</span>
+"না" বলার অস্বস্তি এড়াতে অনেকেই ক্লায়েন্টের দেওয়া অবাস্তব deadline-এ চুপচাপ রাজি হয়ে যান, ভেবে নেন "পরে ম্যানেজ করে নেব"। এর ফলাফল প্রায় সবসময় খারাপ হয় — deadline মিস হয়, আর তখন ব্যাখ্যা দেওয়া আরও কঠিন হয়ে পড়ে, কারণ শুরুতেই সমস্যা নিয়ে কথা বলা হয়নি। এর বদলে শুরুতেই scope বা timeline নিয়ে স্পষ্ট যুক্তি দিয়ে re-negotiate করাটাই বেশি বিশ্বাসযোগ্যতা তৈরি করে — একটা early, honest "this needs more time, here's why" একটা late "we missed the deadline" এর চেয়ে অনেক ভালো।</div>
+
+<h3>Cross-cultural যোগাযোগ — Directness-এর পার্থক্য</h3>
+<p>Remote global টিমে কাজ করলে একটা জিনিস দ্রুত টের পাওয়া যায় — সরাসরি কথা বলার (<span class="kw">directness</span>) মাত্রা সংস্কৃতিভেদে অনেক আলাদা। US, UK বা Northern European অনেক workplace culture-এ স্পষ্ট, সরাসরি দ্বিমত পোষণ করা বা সরাসরি "no" বলাটা স্বাভাবিক ও প্রত্যাশিত। বাংলাদেশের অনেক কর্মক্ষেত্রের norm-এ সম্পর্কের সৌহার্দ্য বজায় রাখতে indirectness ও hedging (যেমন "maybe", "we'll try") বেশি ব্যবহৃত হয় — এটা অভদ্রতা নয়, বরং ভদ্রতার একটা ভিন্ন প্রকাশ।</p>
+<div class="callout why"><span class="tag">কেন এই পার্থক্য শুধু অস্বস্তি নয়, বাস্তব ভুল বোঝাবুঝি তৈরি করে</span>
+এই mismatch শুধু "একটু বিদঘুটে লাগা" পর্যায়ে থামে না — এটা real professional মিসকমিউনিকেশন তৈরি করে। একজন বাংলাদেশি ইঞ্জিনিয়ার যখন ভদ্রতা বজায় রাখতে বলেন "maybe, we'll try" — তার মনে এটা একটা নরম, অনিশ্চিত উত্তর। কিন্তু একজন পশ্চিমা সহকর্মী এটাকে প্রায়ই একটা আসল commitment হিসেবে ধরে নেন, এবং সেই অনুযায়ী পরিকল্পনা করেন — ফলে পরে deadline মিস হলে সেটা "মিথ্যা প্রতিশ্রুতি" হিসেবে দেখা হয়, যদিও উদ্দেশ্য ছিল উল্টো। একইভাবে, একজন পশ্চিমা সহকর্মীর সরাসরি feedback ("this approach is wrong, we need to redo it") বাংলাদেশি ইঞ্জিনিয়ারের কাছে প্রয়োজনের চেয়ে বেশি কঠোর বা ব্যক্তিগত আক্রমণ মনে হতে পারে, যদিও সেটা শুধু কাজ নিয়ে সরাসরি মতামত ছিল। দুই পক্ষই নিজের সংস্কৃতির লেন্স দিয়ে অন্যকে বিচার করলে ভুল বোঝাবুঝি বাড়তেই থাকে।</div>
+<div class="grid2">
+  <div class="box"><b>Typical Bangla-influenced style</b><br>সম্পর্কের সৌহার্দ্য রক্ষা করাটা অগ্রাধিকার — সরাসরি "no" এড়িয়ে "we'll try", "maybe", "let me see" ব্যবহার করা হয়; দ্বিমত প্রায়ই পরোক্ষভাবে, প্রশ্নের আকারে প্রকাশ পায়।</div>
+  <div class="box"><b>Typical Western workplace style</b><br>স্পষ্টতা ও efficiency-কে অগ্রাধিকার দেওয়া হয় — সরাসরি "no, I disagree" বলা স্বাভাবিক ও পেশাদার বলে ধরা হয়; হেজিং কমিটমেন্ট হিসেবে পড়া হতে পারে।</div>
+</div>
+<p>এই পার্থক্য বোঝার অর্থ এই নয় যে নিজের সংস্কৃতি বদলে ফেলতে হবে — বরং যখন সরাসরি অডিয়েন্স পশ্চিমা, তখন সচেতনভাবে একটু বেশি স্পষ্ট ভাষা বেছে নেওয়া ("I'm not confident this will work" এর বদলে "maybe" না বলা), আর অন্যের সরাসরি feedback-কে ব্যক্তিগত আক্রমণ না ভেবে শুধু কাজ নিয়ে মতামত হিসেবে নেওয়া।</p>
+
+<h3>Async/Remote Team Etiquette — সময়-অঞ্চলের ব্যবধান সামলানো</h3>
+<p>যখন টিমমেট আট-দশ ঘণ্টা সময়-ব্যবধানে থাকেন, তখন real-time আলোচনা প্রায়ই সম্ভব হয় না — তাই লেখা যোগাযোগকেই "self-contained" করে তুলতে হয় (আগের writing chapter-এর সাথে সরাসরি সম্পর্কিত), যাতে অন্য পক্ষকে প্রশ্ন করার জন্য অপেক্ষা করতে না হয়।</p>
+<table>
+<tr><th>নীতি</th><th>কেন গুরুত্বপূর্ণ</th></tr>
+<tr><td><span class="kw">Self-contained messages</span></td><td>প্রয়োজনীয় সব প্রেক্ষাপট, লিংক ও context একই মেসেজে দেওয়া, যাতে "১২ ঘণ্টা অপেক্ষা করে একটা ক্লারিফাইং প্রশ্নের উত্তর" নিতে না হয়</td></tr>
+<tr><td><span class="kw">Explicit urgency</span></td><td>"this is urgent, need a response by EOD your time" স্পষ্ট করে বলা — শেয়ার্ড context ধরে নেওয়া যাবে না, কারণ অন্য টাইমজোনের কলিগ আপনার deadline-এর চাপ টের পান না</td></tr>
+<tr><td><span class="kw">Over-communicate status</span></td><td>চুপ থাকার চেয়ে বেশি জানানো ভালো — নীরবতা async টিমে সহজেই "কাজ আটকে আছে" বলে ভুল বোঝা যায়</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — নীরবতার চেয়ে বেশি জানানো ভালো</span>
+Remote ও async টিমে সবচেয়ে বড় anxiety-র উৎস হলো নীরবতা — একজন টাইমজোন-দূরের ম্যানেজার যখন দুই দিন কোনো আপডেট পান না, তখন তার মাথায় সবচেয়ে খারাপ সম্ভাবনাই আসে। এর সমাধান জটিল কিছু নয় — একটা ছোট দৈনিক বা সপ্তাহে দুইবার লিখিত status update ("Done: X. In progress: Y. Blocked on: Z, need input from...") পাঠানো, এমনকি খুব বেশি নতুন কিছু না থাকলেও। এই ছোট অভ্যাসটাই দূরত্বের কারণে তৈরি হওয়া সন্দেহ ও ভুল বোঝাবুঝি অনেকটা কমিয়ে দেয়।</div>
+
+<h3>Reference — Diplomatic Pushback Phrase Bank</h3>
+<table>
+<tr><th>পরিস্থিতি</th><th>বলার ভাষা</th></tr>
+<tr><td>Client অবাস্তব ফিচার চাইছে অল্প সময়ে</td><td>"That's technically possible, but it would require cutting X from this sprint."</td></tr>
+<tr><td>একাধিক কাজ একসাথে করতে বলা হচ্ছে</td><td>"I'd recommend we prioritize X first because it directly affects the launch date."</td></tr>
+<tr><td>মিটিং-এ চাপ দিয়ে তাৎক্ষণিক estimate চাওয়া হচ্ছে</td><td>"Let me get back to you with a more accurate estimate after checking with the team."</td></tr>
+<tr><td>Deadline টিমের সক্ষমতার তুলনায় খুব কম</td><td>"To hit that date, we'd need to reduce scope — can we align on what's must-have vs. nice-to-have?"</td></tr>
+<tr><td>একটা অনুরোধ সরাসরি প্রত্যাখ্যান করা দরকার</td><td>"I don't think that's the right approach here — can I suggest an alternative?"</td></tr>
+</table>
+</template>
+
+<template data-page="practice">
+<h2 class="title">১৪. Listening, Accent ও ৯০-দিনের Practice Plan</h2>
+<p class="lead">এটা এই কোর্সের শেষ অধ্যায় — কিন্তু ইংরেজি বলার অনুশীলনের শেষ নয়। আগের ১৩টা অধ্যায়ে আমরা phonetics, grammar pattern, standup/code-review/interview-এর ভাষা শিখেছি; এই অধ্যায়ে সেগুলোকে একটা <span class="kw">শোনা (listening)</span>-ভিত্তিক অনুশীলন-পদ্ধতির মধ্যে বসানো হবে, আর পুরো কোর্সটাকে একটা বাস্তবসম্মত ৯০-দিনের রুটিনে রূপান্তর করা হবে — যাতে শেখাটা বইয়ের জ্ঞান হয়ে না থেকে মুখের অভ্যাসে পরিণত হয়।</p>
+
+<h3>Shadowing — উচ্চারণ ও ছন্দ শেখার সবচেয়ে কার্যকর কৌশল</h3>
+<p>বেশিরভাগ মানুষ ইংরেজি অনুশীলন করে টেক্সট জোরে জোরে পড়ে (reading aloud)। এটা খারাপ না, কিন্তু এতে একটা বড় সমস্যা আছে — টেক্সট পড়ার সময় আপনি নিজের গতিতে, নিজের ছন্দে পড়েন, বাস্তব native speaker-এর rhythm/stress/intonation কপি করার কোনো চাপ থাকে না। <span class="kw">Shadowing</span> এই সমস্যাটা সরাসরি সমাধান করে। ধাপগুলো এরকম:</p>
+<pre><span class="c"># Shadowing protocol — প্রতিদিন ১০-১৫ মিনিট</span>
+১. ছোট একটা natural English clip বেছে নিন (৩০-৬০ সেকেন্ড) — tech talk, podcast segment, বা explanation video
+২. একবার পুরোটা শুনুন, কোনো নোট না নিয়ে — শুধু বুঝুন কী বলা হচ্ছে
+৩. Clip-টা pause করুন এক-দুই বাক্য পরপর, এবং ঠিক যা শুনলেন তাই বলার চেষ্টা করুন —
+   word-for-word না, বরং একই stress আর intonation কপি করে
+৪. এখন longer clip নিন (১-২ মিনিট) এবং audio-র সাথে সাথে, একই সময়ে (simultaneously) বলার চেষ্টা করুন —
+   এটাই আসল "shadowing" — আপনি speaker-এর ছায়ার মতো তার পিছনে পিছনে বলছেন
+৫. একই clip দিয়ে ৩-৪ বার পুনরাবৃত্তি করুন যতক্ষণ না rhythm-টা স্বাভাবিক লাগে</pre>
+<div class="callout why"><span class="tag">কেন Shadowing শুধু পড়ার চেয়ে অনেক বেশি কার্যকর</span>শুধু টেক্সট পড়লে আপনি নিজের সময়ে, নিজের গতিতে কথা বলেন — real-time timing-এর কোনো চাপ নেই, তাই brain-টা কখনো শেখে না যে কোন শব্দের পরে কতটা বিরতি লাগে, কোথায় গলার স্বর ওঠে, কোন শব্দটা দ্রুত গিলে ফেলতে হয়। Shadowing-এ আপনাকে audio-র সাথে সাথে বলতে হয় বলে brain বাধ্য হয় real speaker-এর actual timing, pause, আর pitch pattern কপি করতে — এটা ঠিক সেই rhythm/intonation skill তৈরি করে যা ধীরে ধীরে পড়া বা নীরবে পড়া কখনো তৈরি করতে পারে না।</div>
+
+<h3>কী শুনবেন — Practice-এর জন্য উপযুক্ত Input বেছে নেওয়া</h3>
+<p>Listening practice-এর জন্য কনটেন্ট বেছে নেওয়ার সবচেয়ে গুরুত্বপূর্ণ নিয়ম হলো — <b>এমন বিষয় বেছে নিন যা আপনি টেকনিক্যালি ইতিমধ্যে বোঝেন</b>। যদি একই সাথে নতুন concept আর নতুন ভাষা দুটোই শিখতে হয়, তাহলে মস্তিষ্কের পুরো effort concept বোঝাতেই খরচ হয়ে যায়, ভাষার জন্য কিছু বাকি থাকে না। তাই নিচের ধরনের input বেছে নিন যেগুলোর বিষয়বস্তু আপনার পরিচিত:</p>
+<pre><span class="c"># Input categories — বিষয় পরিচিত রেখে ভাষায় ফোকাস দিন</span>
+- Tech conference talk বা product demo video — যে টপিকে আপনি কাজ করেন (React, Kubernetes, System Design ইত্যাদি)
+- Software engineering podcast — engineering culture, architecture decision, career আলোচনা
+- নিজের লেখা বা পড়া engineering blog post — জোরে জোরে পড়ুন, নিজের কণ্ঠে
+- সহকর্মীর সাথে ইংরেজিতে pair programming বা mock interview session
+- প্রতিদিনের কাজ নিয়ে ছোট একটা English journal — আজ কী করলেন, কী ব্লকার পেলেন, দুই-তিন বাক্যে</pre>
+<p>লক্ষ্য করুন — এই তালিকার প্রতিটা item-ই এমন কিছু নিয়ে যা আপনি ইতিমধ্যে জানেন। Familiar টপিক শোনা বা পড়া মানে নতুন vocabulary বা sentence pattern-এর দিকে পুরো মনোযোগ দেওয়া যায়, কারণ "এর মানে কী" প্রশ্নটা concept নিয়ে না, শুধু ভাষা নিয়ে।</p>
+
+<h3>Accent — লক্ষ্যটা আসলে কী, আর কী না</h3>
+<p>এই পুরো কোর্সে phonetics, stress, rhythm নিয়ে অনেক কথা হয়েছে — কিন্তু এর লক্ষ্য কখনোই "American accent" বা "British accent" অর্জন করা ছিল না। লক্ষ্য হলো <span class="kw">intelligibility</span> — স্পষ্টভাবে বোঝা যাওয়া। বাংলাদেশি উচ্চারণে কথা বলা, কিন্তু সঠিক word stress, স্বাভাবিক sentence rhythm, আর স্পষ্ট consonant sound (আগের অধ্যায়গুলোতে যা কভার হয়েছে) দিয়ে বলা — এটা সম্পূর্ণ পেশাদার এবং স্বাভাবিক। আজকের গ্লোবাল remote team-এ বেশিরভাগ ইংরেজি কথোপকথনই আসলে দুই non-native speaker-এর মধ্যে হয় — একজন Bangladeshi engineer একজন German বা Vietnamese engineer-এর সাথে কথা বলছেন, এখানে "native-like" শোনানো কারো লক্ষ্য না, বরং স্পষ্ট, বোঝার মতো করে বলাই যথেষ্ট এবং কাম্য।</p>
+<div class="callout mistake"><span class="tag">Common mistake — "neutral" বা American/British accent-কে লক্ষ্য বানানো</span>নিজের বাংলা accent মুছে ফেলে "নিরপেক্ষ" বা American/British-এর মতো শোনানোর চেষ্টা একটা ভুল লক্ষ্য — এতে বিশাল সময় ও effort খরচ হয়, ফলাফল প্রায়ই উল্টো হয়: কথা বলা আরও কঠিন, আরও artificial, আরও কম স্বতঃস্ফূর্ত শোনায়, কারণ আপনি নিজের স্বাভাবিক voice-এর বদলে একটা নকল voice বজায় রাখার চেষ্টা করছেন। সময় ও effort clarity-তে খরচ করুন — word stress ঠিক জায়গায় বসানো, consonant গিলে না ফেলা, sentence rhythm স্বাভাবিক রাখা — accent-এর "রঙ" (color) নিজের মতোই থাকুক।</div>
+
+<h3>৯০-দিনের Practice Plan — পুরো কোর্সকে একটা রুটিনে রূপান্তর</h3>
+<p>নিচের প্ল্যানটা এই কোর্সের অধ্যায়গুলোকেই চারটা phase-এ ভাগ করে, যাতে প্রতিদিন কী নিয়ে অনুশীলন করবেন তা স্পষ্ট থাকে।</p>
+<table>
+<tr><th>সময়কাল</th><th>মূল ফোকাস (কোর্স অধ্যায়)</th><th>দৈনিক অনুশীলন</th></tr>
+<tr><td><span class="kw">সপ্তাহ ১-২</span></td><td>Phonetics fundamentals — vowel/consonant sound, word stress</td><td>Minimal-pair drill (ship/sheep ধরনের) + ১০ মিনিট shadowing ছোট clip দিয়ে</td></tr>
+<tr><td><span class="kw">সপ্তাহ ৩-৬</span></td><td>Grammar ও Vocabulary — tense, conditional, modal verb pattern</td><td>প্রতিদিন এই pattern ব্যবহার করে ৫-১০টা sentence বানানো + নিজের tech-word stress list তৈরি ও আপডেট করা</td></tr>
+<tr><td><span class="kw">সপ্তাহ ৭-১০</span></td><td>Speaking practice — standup, code review, লেখা যোগাযোগ</td><td>প্রতিদিন জোরে জোরে mock standup দেওয়া, real PR-এ code-review phrase bank প্রয়োগ, real Slack/email/PR draft লেখা</td></tr>
+<tr><td><span class="kw">সপ্তাহ ১১-১৩</span></td><td>Interview ও Presentation প্রস্তুতি</td><td>STAR story প্রস্তুত করা, সপ্তাহে ১টা mock technical interview (মোট ২-৩টা), নিজের একটা project নিয়ে ছোট tech-talk explanation অনুশীলন</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — ৯০ দিন পরেও টিকিয়ে রাখার মতো ন্যূনতম অভ্যাস</span>৯০ দিন শেষ হওয়ার পর বড় পরিকল্পনা না রেখে একটা ছোট, টেকসই দৈনিক অভ্যাস বজায় রাখুন — প্রতিদিন মাত্র ১০ মিনিট shadowing, আর দিনে অন্তত একবার বাস্তব কোনো meeting-এ ইংরেজিতে কথা বলার সচেতন চেষ্টা। মাসে একবার তিন ঘণ্টার "study session" করার চেয়ে প্রতিদিনের এই ছোট, নিয়মিত অভ্যাস অনেক বেশি ফল দেয় — কারণ ভাষা শেখা compound হয়, ধারাবাহিকতা (consistency) মাঝে মাঝের তীব্রতার (intensity) চেয়ে বেশি গুরুত্বপূর্ণ।</div>
+
+<h3>কোর্সের সারাংশ — Perfection নয়, Clarity ও Confidence</h3>
+<p>প্রথম অধ্যায়ে আমরা একটা reframe দিয়ে শুরু করেছিলাম — ইংরেজি বলার লক্ষ্য "perfect, accent-less, native-like" হওয়া নয়, বরং স্পষ্ট, আত্মবিশ্বাসী যোগাযোগ করা, যাতে standup-এ আপনার আপডেট বোঝা যায়, code review-এ আপনার feedback স্পষ্ট থাকে, ইন্টারভিউতে আপনার technical depth ভাষার বাধায় হারিয়ে না যায়। ১৪টা অধ্যায় জুড়ে phonetics থেকে grammar pattern, standup থেকে interview prep পর্যন্ত যা কিছু কভার হয়েছে — সবকিছুর মূল লক্ষ্য একটাই ছিল।</p>
+<div class="grid2"><div class="box"><b>যা লক্ষ্য নয়</b><br>Native-এর মতো শোনানো, একটাও ভুল না করা, আমেরিকান/ব্রিটিশ accent অর্জন করা</div><div class="box"><b>যা আসল লক্ষ্য</b><br>স্পষ্টভাবে বোঝানো, আত্মবিশ্বাসের সাথে কথা বলা, প্রতিদিনের ছোট অনুশীলন ধারাবাহিকভাবে চালিয়ে যাওয়া</div></div>
+<p>এই কোর্স শেষ হলো, কিন্তু অনুশীলন শেষ হয় না — আজ থেকেই ৯০-দিনের প্ল্যানের প্রথম দিন শুরু করুন, আর মনে রাখুন: প্রতিদিনের ছোট চেষ্টাই দীর্ঘমেয়াদে সবচেয়ে বড় পার্থক্য তৈরি করে।</p>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>
