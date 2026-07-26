@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Networking Mastery — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#22d3ee; --accent2:#67e8f9;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --blue:#4aa3ff;
+    --code-bg:#0b0f14; --kw:#22d3ee;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(34,211,238,.22),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#04222f}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--blue)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--blue)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#67e8f9}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🌐 Networking Mastery</h1>
+      <p>Beginner → Advanced • বাংলায়</p>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",   icon:"🌐", title:"Foundation — OSI ও TCP/IP Model"},
+  {id:"datalink",     icon:"🔌", title:"Physical ও Data Link Layer — Ethernet, Switching, VLAN"},
+  {id:"addressing",   icon:"🔢", title:"IP Addressing ও Subnetting — IPv4/IPv6"},
+  {id:"arpdhcp",      icon:"🧭", title:"ARP, DHCP ও ICMP"},
+  {id:"routing",      icon:"🛤️", title:"Routing — Static, Dynamic ও BGP"},
+  {id:"transport",    icon:"🚦", title:"Transport Layer — TCP বনাম UDP"},
+  {id:"dns",          icon:"📖", title:"DNS — Domain Name System"},
+  {id:"http",         icon:"🕸️", title:"HTTP/HTTPS ও Web Protocols"},
+  {id:"tls",          icon:"🔒", title:"TLS/SSL, PKI ও Encryption"},
+  {id:"natfirewall",  icon:"🧱", title:"NAT ও Firewalls"},
+  {id:"vpn",          icon:"🛡️", title:"VPN ও Tunneling"},
+  {id:"wireless",     icon:"📶", title:"Wireless Networking ও Wi-Fi Security"},
+  {id:"cloudnet",     icon:"☁️", title:"Load Balancing ও Cloud Networking"},
+  {id:"security",     icon:"🚨", title:"Network Security, Attacks ও Monitoring Tools"},
+  {id:"troubleshoot", icon:"🩺", title:"Troubleshooting ও Performance/QoS"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Foundation — OSI ও TCP/IP Model</h2>
+<p class="lead">নেটওয়ার্কিং মানে দুটো বা তার বেশি ডিভাইসের মধ্যে ডেটা আদান-প্রদান করার নিয়মকানুন — কিন্তু "cable থেকে browser পর্যন্ত" পুরো পথটা এত জটিল যে একে একক কোনো প্রোটোকল হিসেবে ডিজাইন করা অসম্ভব। তাই পুরো সমস্যাটাকে স্তরে (layer) ভাগ করা হয়েছে — প্রতিটা স্তর একটা নির্দিষ্ট দায়িত্ব পালন করে, আর নিচের স্তর কীভাবে কাজ করছে তা না জেনেই ওপরের স্তর কাজ করতে পারে।</p>
+
+<h3>কেন Layered Model — Encapsulation ধারণা</h3>
+<p>যখন আপনি একটা ব্রাউজারে URL লেখেন, সেই request প্রতিটা স্তর পার হওয়ার সময় আগের স্তরের ডেটাকে নিজের একটা <span class="kw">header</span>-এ মুড়ে দেয় (wrap) — একে বলে <span class="kw">encapsulation</span>। গন্তব্যে পৌঁছে বিপরীত ক্রমে প্রতিটা header খুলে (de-encapsulation) আসল ডেটা বের করা হয়।</p>
+<div class="diagram"><pre>
+Application  ──▶  HTTP request (data)
+Transport    ──▶  [TCP header | data]                       ("segment")
+Network      ──▶  [IP header | TCP header | data]            ("packet")
+Data Link    ──▶  [Ethernet header | IP header | TCP | data]  ("frame")
+Physical     ──▶  ০১০১১০০০...  (আসল বৈদ্যুতিক/আলোক সংকেত — "bits")
+</pre></div>
+<div class="callout why"><span class="tag">Encapsulation কেন গুরুত্বপূর্ণ — Layer independence</span>
+প্রতিটা স্তর শুধু তার ঠিক ওপরে ও নিচের স্তরের সাথে একটা সংজ্ঞায়িত ইন্টারফেসে কথা বলে — এর ভেতরের বাস্তবায়ন সম্পূর্ণ স্বাধীন। ঠিক এই কারণেই একই Ethernet cable-এর ওপর দিয়ে IPv4 বা IPv6 দুটোই চলতে পারে, বা একই TCP connection-এর ওপর HTTP/1.1 বা HTTP/2 দুটোই বসতে পারে — নিচের স্তর বদলালে ওপরের স্তরকে কিছুই জানতে হয় না, আর এটাই এই পুরো কোর্সের প্রতিটা অধ্যায় আলাদাভাবে পড়া সম্ভব করে তোলে।</div>
+
+<h3>OSI 7-Layer Model — সম্পূর্ণ রেফারেন্স</h3>
+<table>
+<tr><th>স্তর</th><th>নাম</th><th>কাজ</th><th>উদাহরণ</th></tr>
+<tr><td>৭</td><td><span class="kw">Application</span></td><td>ব্যবহারকারীর সরাসরি ব্যবহৃত প্রোটোকল</td><td>HTTP, DNS, SMTP (৮ ও ৭ নম্বর অধ্যায়ে বিস্তারিত)</td></tr>
+<tr><td>৬</td><td>Presentation</td><td>ডেটা ফরম্যাট, এনক্রিপশন, কম্প্রেশন</td><td>TLS encoding, JSON/XML serialization</td></tr>
+<tr><td>৫</td><td>Session</td><td>সংযোগ স্থাপন, বজায় রাখা, বন্ধ করা</td><td>API session, RPC session</td></tr>
+<tr><td>৪</td><td><span class="kw">Transport</span></td><td>end-to-end ডেটা ডেলিভারি, reliability</td><td>TCP, UDP (৬ নম্বর অধ্যায়ে বিস্তারিত)</td></tr>
+<tr><td>৩</td><td><span class="kw">Network</span></td><td>লজিক্যাল অ্যাড্রেসিং, রাউটিং</td><td>IP, ICMP, routers (৩ ও ৫ নম্বর অধ্যায়ে বিস্তারিত)</td></tr>
+<tr><td>২</td><td><span class="kw">Data Link</span></td><td>একই নেটওয়ার্কে ফ্রেম ডেলিভারি, MAC অ্যাড্রেসিং</td><td>Ethernet, switches, VLAN (২ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>১</td><td>Physical</td><td>আসল বিট পাঠানো — voltage, light, radio wave</td><td>Cable, fiber, Wi-Fi radio</td></tr>
+</table>
+
+<h3>TCP/IP 4-Layer Model — বাস্তবে যা প্রয়োগ হয়</h3>
+<p>বাস্তব ইন্টারনেট OSI-এর ৭ স্তর হুবহু অনুসরণ করে না — এটা তৈরি হয়েছে সরলতর <span class="kw">TCP/IP model</span>-এর ওপর, যেখানে OSI-এর ওপরের তিন স্তর (Application/Presentation/Session) একটাই "Application" স্তরে মিশে যায়।</p>
+<div class="grid2">
+  <div class="box"><b>OSI (৭ স্তর)</b><br>শেখার ও আলোচনার জন্য আদর্শ vocabulary — নেটওয়ার্ক সমস্যা নিয়ে কথা বলার সময় "layer 2 ইস্যু" বা "layer 7 firewall" বলাটা এখান থেকেই আসে।</div>
+  <div class="box"><b>TCP/IP (৪ স্তর)</b><br>বাস্তবে যা implement হয় — Application, Transport, Internet, Network Access। এই কোর্সের প্রতিটা প্রোটোকল আসলে এই মডেলের কোনো না কোনো স্তরের বাস্তবায়ন।</div>
+</div>
+<div class="callout behind"><span class="tag">কেন এখনো OSI পড়ানো হয়, যদি কেউ সেটা হুবহু implement না করে</span>
+OSI মডেল একটা শিক্ষামূলক ফ্রেমওয়ার্ক — এটা কোনো প্রোটোকলের নাম নয়, বরং একটা সার্বজনীন ভাষা যা দিয়ে যেকোনো নেটওয়ার্ক সমস্যাকে নির্দিষ্ট একটা স্তরে চিহ্নিত করা যায়। একজন ইঞ্জিনিয়ার যখন বলেন "এটা layer 3 সমস্যা", তখন সবাই বুঝে যান সমস্যাটা routing/IP addressing-এ, cable বা application কোডে নয় — এই নির্ভুল communication-ই OSI-এর আসল মূল্য, বাস্তব প্যাকেটে কোনো "OSI header" থাকে না।</div>
+
+<h3>Network Topology — ডিভাইসগুলো কীভাবে সংযুক্ত</h3>
+<table>
+<tr><th>Topology</th><th>গঠন</th><th>সুবিধা/অসুবিধা</th></tr>
+<tr><td>Bus</td><td>একটাই কেন্দ্রীয় cable-এ সব ডিভাইস</td><td>সস্তা, কিন্তু cable কাটলে পুরো নেটওয়ার্ক ডাউন</td></tr>
+<tr><td>Star</td><td>একটা কেন্দ্রীয় switch/hub-এর সাথে প্রতিটা ডিভাইস আলাদাভাবে যুক্ত</td><td>একটা লিংক নষ্ট হলে শুধু সেই ডিভাইস প্রভাবিত হয় — আজকের বেশিরভাগ LAN-এর ভিত্তি</td></tr>
+<tr><td>Mesh</td><td>প্রতিটা ডিভাইস একাধিক (বা সবার সাথে) সরাসরি সংযুক্ত</td><td>উচ্চ redundancy, ব্যয়বহুল — ISP backbone/data center fabric-এ ব্যবহৃত</td></tr>
+<tr><td>Hybrid</td><td>একাধিক টপোলজির মিশ্রণ</td><td>বাস্তব enterprise/ISP নেটওয়ার্কের সাধারণ চিত্র</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common misconception — "ইন্টারনেট" একটা একক নেটওয়ার্ক</span>
+ইন্টারনেট আসলে হাজার হাজার স্বাধীনভাবে পরিচালিত নেটওয়ার্কের (Autonomous System) একটা mesh — কোনো একক প্রতিষ্ঠান পুরোটা মালিকানাধীন বা নিয়ন্ত্রণ করে না। এই আলাদা নেটওয়ার্কগুলো একে অপরের সাথে কীভাবে রাউট শেয়ার করে তা ৫ নম্বর অধ্যায়ে BGP আলোচনায় স্পষ্ট হবে — বাকি এই কোর্সের প্রতিটা প্রোটোকল ধরেই নেয় যে এই আন্তঃসংযুক্ত কাঠামোর ওপর দিয়েই ডেটা ভ্রমণ করবে।</div>
+</template>
+
+<template data-page="datalink">
+<h2 class="title">২. Physical ও Data Link Layer — Ethernet, Switching, VLAN</h2>
+<p class="lead">Layer 1 আসল বিট পাঠায় (কেবল/রেডিও দিয়ে), আর Layer 2 সেই বিটগুলোকে অর্থবহ <span class="kw">frame</span>-এ সংগঠিত করে একই লোকাল নেটওয়ার্কের মধ্যে সঠিক ডিভাইসে পৌঁছে দেয় — এই দুই স্তর না বুঝলে IP addressing বা routing কেন দরকার তাও বোঝা যায় না।</p>
+
+<h3>MAC Address — প্রতিটা নেটওয়ার্ক ইন্টারফেসের স্থায়ী পরিচয়</h3>
+<p>প্রতিটা নেটওয়ার্ক ইন্টারফেস কার্ডের (NIC) একটা ৪৮-বিট <span class="kw">MAC address</span> থাকে (যেমন <code>3C:5A:B4:1F:9E:02</code>), যা প্রস্তুতকারক কারখানায় বেক করে দেয় — প্রথম ৩ বাইট (OUI) প্রস্তুতকারককে চিহ্নিত করে, বাকিটা ইউনিক সিরিয়াল। IP address বদলাতে পারে (নেটওয়ার্ক বদলালে), কিন্তু MAC address সাধারণত হার্ডওয়্যারের সাথে স্থায়ীভাবে যুক্ত থাকে।</p>
+
+<h3>Hub বনাম Switch — Layer 2-এর আসল বিপ্লব</h3>
+<div class="diagram"><pre>
+Hub    :  A পাঠালে ──▶  B, C, D সবাই পায় (broadcast) — একই সময়ে দুইজন পাঠালে collision
+Switch :  A পাঠালে ──▶  শুধু B পায় (MAC address table দেখে) — বাকিরা প্রভাবিত হয় না
+</pre></div>
+<p>একটা switch প্রতিটা পোর্টে আসা frame-এর <span class="kw">source MAC</span> শিখে একটা <span class="kw">CAM/MAC address table</span>-এ জমা রাখে (পোর্ট নম্বর ↔ MAC ম্যাপিং), তারপর destination MAC দেখে সরাসরি সঠিক পোর্টেই frame পাঠায়। destination MAC টেবিলে না থাকলে (unknown unicast) সাময়িকভাবে সব পোর্টে flood করে, উত্তর এলে টেবিল আপডেট হয়ে যায়।</p>
+<div class="callout why"><span class="tag">Collision Domain বনাম Broadcast Domain</span>
+প্রতিটা switch পোর্ট নিজের একটা আলাদা <span class="kw">collision domain</span> (দুইটা ডিভাইস একসাথে পাঠালে সংঘর্ষ হতে পারে এমন এলাকা) — তাই আধুনিক switched নেটওয়ার্কে collision কার্যত অস্তিত্বহীন। কিন্তু broadcast frame (destination <code>FF:FF:FF:FF:FF:FF</code>) সব পোর্টেই যায় — পুরো switch (বা VLAN)-টাই একটা একক <span class="kw">broadcast domain</span>। একটা নেটওয়ার্কে ডিভাইস যত বাড়ে, broadcast traffic-ও তত বাড়ে — এটাই VLAN দিয়ে ভাগ করার মূল কারণ।</div>
+
+<h3>VLAN — একটা Physical নেটওয়ার্ককে একাধিক Logical নেটওয়ার্কে ভাগ করা</h3>
+<p>একটা <span class="kw">VLAN (Virtual LAN)</span> একই physical switch-কে একাধিক আলাদা broadcast domain-এ ভাগ করে — যেমন HR, Engineering, আর Guest Wi-Fi আলাদা VLAN-এ থাকলে একই switch-এ থেকেও তারা একে অপরের broadcast traffic দেখে না, আর VLAN-এর মধ্যে যোগাযোগের জন্য একটা router/Layer-3 switch দরকার হয় (routing অধ্যায়ে বিস্তারিত)।</p>
+<table>
+<tr><th>ধারণা</th><th>ব্যাখ্যা</th></tr>
+<tr><td><span class="kw">Access port</span></td><td>একটা VLAN-এর সাথে যুক্ত — সাধারণত end-device (PC, printer) এখানে সংযুক্ত হয়</td></tr>
+<tr><td><span class="kw">Trunk port</span></td><td>একাধিক VLAN-এর ট্রাফিক একটাই লিংকে বহন করে — switch-থেকে-switch সংযোগে ব্যবহৃত</td></tr>
+<tr><td><span class="kw">802.1Q tag</span></td><td>trunk-এ প্রতিটা frame-এ একটা ৪-বাইট VLAN ID ট্যাগ যোগ হয়, যাতে গ্রহণকারী switch বুঝতে পারে কোন VLAN-এর ফ্রেম</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — নিরাপত্তা ও performance দুটোর জন্যই VLAN segmentation</span>
+VLAN শুধু broadcast traffic কমায় না — নিরাপত্তার দিক থেকেও গুরুত্বপূর্ণ। Guest Wi-Fi ও ইন্টারনাল সার্ভার একই VLAN-এ থাকলে একটা compromised guest ডিভাইস সরাসরি ইন্টারনাল সার্ভার scan করতে পারে (Layer 2-তে কোনো firewall বাধা দেয় না)। আলাদা VLAN-এ রেখে, VLAN-এর মধ্যে ট্রাফিক একটা router/firewall দিয়ে পার করানো হলে (inter-VLAN routing) সেখানে ACL/firewall rule বসিয়ে নিয়ন্ত্রণ করা যায় — এটাই ১০ নম্বর অধ্যায়ে আলোচিত network segmentation-এর ভিত্তি।</div>
+<div class="callout mistake"><span class="tag">Common mistake — MAC address আর IP address গুলিয়ে ফেলা</span>
+MAC address Layer 2-এর (একই লোকাল নেটওয়ার্কে ফ্রেম ডেলিভারির জন্য), আর IP address Layer 3-এর (ভিন্ন নেটওয়ার্কের মধ্যে রাউটিংয়ের জন্য) — একটা প্যাকেট ইন্টারনেট পাড়ি দেওয়ার সময় প্রতিটা hop-এ তার MAC address বদলায় (পরবর্তী router/switch-এর MAC বসে), কিন্তু IP address (সাধারণত) অপরিবর্তিত থাকে পুরো যাত্রা জুড়ে। এই দুটো ঠিক কীভাবে সংযুক্ত হয় তা পরের অধ্যায়ে ARP আলোচনায় স্পষ্ট হবে।</div>
+</template>
+
+<template data-page="addressing">
+<h2 class="title">৩. IP Addressing ও Subnetting — IPv4/IPv6</h2>
+<p class="lead">IP address হলো Layer 3-এর লজিক্যাল ঠিকানা, যা দিয়ে ভিন্ন ভিন্ন নেটওয়ার্কে থাকা ডিভাইস একে অপরকে খুঁজে পায় — MAC address স্থায়ী হলেও IP address নির্ভর করে ডিভাইসটা কোন নেটওয়ার্কে যুক্ত তার ওপর, ঠিক যেমন একটা বাড়ির নম্বর তার এলাকার ওপর নির্ভর করে।</p>
+
+<h3>IPv4 গঠন — ৩২-বিট, চারটা Octet</h3>
+<p>একটা IPv4 address ৩২ বিট, সাধারণত ৪টা <span class="kw">octet</span> (৮-বিট গ্রুপ) দশমিকে লেখা হয় — যেমন <code>192.168.1.10</code>। প্রতিটা octet-এর মান ০-২৫৫।</p>
+
+<h3>CIDR ও Subnet Mask — নেটওয়ার্ক ও হোস্ট অংশ আলাদা করা</h3>
+<p>একটা IP address-এর কোন অংশ <span class="kw">network</span> (কোন নেটওয়ার্ক) আর কোন অংশ <span class="kw">host</span> (সেই নেটওয়ার্কের কোন ডিভাইস) তা নির্ধারণ করে <span class="kw">subnet mask</span>/<span class="kw">CIDR prefix</span>। <code>192.168.1.10/24</code>-এ <code>/24</code> মানে প্রথম ২৪ বিট নেটওয়ার্ক অংশ, বাকি ৮ বিট হোস্ট অংশ।</p>
+<div class="diagram"><pre>
+IP Address    : 192.168.1.10   = 11000000.10101000.00000001.00001010
+Subnet Mask   : 255.255.255.0  = 11111111.11111111.11111111.00000000   (/24)
+                                  └────── network ──────┘└─ host ─┘
+Network ID    : 192.168.1.0     (host অংশ সব ০)
+Broadcast IP  : 192.168.1.255   (host অংশ সব ১)
+ব্যবহারযোগ্য   : 192.168.1.1 – 192.168.1.254   (২৫৪টা হোস্ট)
+</pre></div>
+<table>
+<tr><th>CIDR</th><th>Subnet Mask</th><th>মোট Address</th><th>ব্যবহারযোগ্য Host</th></tr>
+<tr><td>/24</td><td>255.255.255.0</td><td>256</td><td>254</td></tr>
+<tr><td>/25</td><td>255.255.255.128</td><td>128</td><td>126</td></tr>
+<tr><td>/26</td><td>255.255.255.192</td><td>64</td><td>62</td></tr>
+<tr><td>/27</td><td>255.255.255.224</td><td>32</td><td>30</td></tr>
+<tr><td>/30</td><td>255.255.255.252</td><td>4</td><td>2 (point-to-point লিংকে ব্যবহৃত)</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — Network ও Broadcast address ভুলে যাওয়া</span>
+প্রতিটা subnet-এর প্রথম address (host অংশ সব ০) <span class="kw">network address</span> আর শেষ address (host অংশ সব ১) <span class="kw">broadcast address</span> হিসেবে সংরক্ষিত — এই দুটো কোনো ডিভাইসকে দেওয়া যায় না। তাই একটা /24 (২৫৬টা মোট address)-এ আসলে ব্যবহারযোগ্য host সংখ্যা ২৫৪, ২৫৬ নয় — সাবনেটিং হিসাব করার সময় এই "মাইনাস ২" সবচেয়ে সাধারণ ভুল।</div>
+
+<h3>একটা /24 কে ছোট Subnet-এ ভাগ করা — বাস্তব উদাহরণ</h3>
+<p>ধরা যাক <code>192.168.1.0/24</code>-কে ৪টা সমান অংশে (প্রতিটাতে ৬২টা ব্যবহারযোগ্য host) ভাগ করতে হবে — প্রতিটা অংশের জন্য ২ বিট host থেকে ধার নিয়ে /26 বানানো হয়:</p>
+<table>
+<tr><th>Subnet</th><th>Network Address</th><th>ব্যবহারযোগ্য Range</th><th>Broadcast</th></tr>
+<tr><td>Subnet ১</td><td>192.168.1.0/26</td><td>.1 – .62</td><td>192.168.1.63</td></tr>
+<tr><td>Subnet ২</td><td>192.168.1.64/26</td><td>.65 – .126</td><td>192.168.1.127</td></tr>
+<tr><td>Subnet ৩</td><td>192.168.1.128/26</td><td>.129 – .190</td><td>192.168.1.191</td></tr>
+<tr><td>Subnet ৪</td><td>192.168.1.192/26</td><td>.193 – .254</td><td>192.168.1.255</td></tr>
+</table>
+
+<h3>Private বনাম Public IP — RFC 1918</h3>
+<table>
+<tr><th>Range</th><th>ব্যবহার</th></tr>
+<tr><td>10.0.0.0/8</td><td>বড় প্রতিষ্ঠান/cloud VPC-তে ব্যাপকভাবে ব্যবহৃত</td></tr>
+<tr><td>172.16.0.0/12</td><td>মাঝারি আকারের প্রাইভেট নেটওয়ার্ক</td></tr>
+<tr><td>192.168.0.0/16</td><td>হোম/অফিস রাউটারের ডিফল্ট রেঞ্জ</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন Private IP দরকার — IPv4 ঠিকানার সীমাবদ্ধতা</span>
+IPv4-এ মোট প্রায় ৪.৩ বিলিয়ন address সম্ভব — বিশ্বের সব ডিভাইসকে একটা করে পাবলিক address দেওয়ার জন্য যথেষ্ট নয়। সমাধান হলো প্রতিটা বাড়ি/অফিস ভেতরে private range ব্যবহার করে (একই <code>192.168.1.5</code> লক্ষ লক্ষ বাড়িতে পুনর্ব্যবহৃত হতে পারে, কারণ এগুলো ইন্টারনেটে রাউট হয় না), আর বাইরের দুনিয়ার সাথে যোগাযোগের জন্য একটামাত্র পাবলিক IP ব্যবহার করে NAT দিয়ে (১০ নম্বর অধ্যায়ে বিস্তারিত)। এটাই IPv4 ঠিকানা সংকট সাময়িকভাবে সমাধানের মূল কৌশল।</div>
+
+<h3>IPv6 — দীর্ঘমেয়াদি সমাধান</h3>
+<p>IPv6 ১২৮-বিট address ব্যবহার করে (৩৪০ ট্রিলিয়ন ট্রিলিয়ন ট্রিলিয়ন address) — NAT-এর দরকার ছাড়াই প্রতিটা ডিভাইসের নিজস্ব গ্লোবাল ইউনিক পাবলিক address থাকতে পারে। লেখা হয় ৮টা গ্রুপে hexadecimal-এ, যেমন <code>2001:0db8:0000:0000:0000:ff00:0042:8329</code>, যা সংক্ষেপে লেখা যায় <code>2001:db8::ff00:42:8329</code> (পরপর শূন্যের গ্রুপ <code>::</code> দিয়ে একবারই বদলানো যায়)।</p>
+<div class="grid2">
+  <div class="box"><b>Unicast</b><br>একটামাত্র নির্দিষ্ট ইন্টারফেসের ঠিকানা — IPv4-এর মতোই সাধারণ point-to-point communication।</div>
+  <div class="box"><b>Multicast / Anycast</b><br>Multicast একদল ইন্টারফেসে একসাথে পাঠায় (IPv4-এও আছে); Anycast একই address একাধিক জায়গায় assign থাকে, নিকটতমটা উত্তর দেয় — DNS root server ও CDN-এ ব্যাপকভাবে ব্যবহৃত (৭ ও ১৩ নম্বর অধ্যায়ে প্রাসঙ্গিক)।</div>
+</div>
+</template>
+
+<template data-page="arpdhcp">
+<h2 class="title">৪. ARP, DHCP ও ICMP</h2>
+<p class="lead">IP address আর MAC address আলাদা স্তরের হলেও, প্রতিটা প্যাকেট পাঠানোর আগে এই দুটোকে সংযুক্ত করতে হয়, প্রতিটা ডিভাইসকে একটা IP address পেতে হয়, আর নেটওয়ার্ক নিজে সুস্থ আছে কিনা তা যাচাই করতে হয় — এই তিনটা "helper protocol" এসব ফাঁকা জায়গা পূরণ করে।</p>
+
+<h3>ARP — Address Resolution Protocol</h3>
+<p>একই লোকাল নেটওয়ার্কে একটা প্যাকেট পাঠাতে হলে destination-এর MAC address লাগবে — কিন্তু আপনি জানেন শুধু তার IP address। <span class="kw">ARP</span> এই ফাঁক পূরণ করে।</p>
+<div class="diagram"><pre>
+Host A (192.168.1.10) ──▶ broadcast: "192.168.1.20-এর MAC address কার?"  (ARP Request)
+Host B (192.168.1.20) ──▶ unicast:   "192.168.1.20 = AA:BB:CC:DD:EE:FF"   (ARP Reply)
+Host A নিজের ARP cache-এ এই ম্যাপিং সংরক্ষণ করে — পরের বার আর জিজ্ঞেস করার দরকার নেই
+</pre></div>
+<div class="callout mistake"><span class="tag">নিরাপত্তা ঝুঁকি — ARP Spoofing/Poisoning</span>
+ARP-এ কোনো authentication নেই — যে কেউ জাল ARP Reply পাঠিয়ে বলতে পারে "gateway-এর IP আসলে আমার MAC address"। এতে ভিকটিমের সব ট্রাফিক আক্রমণকারীর মেশিন দিয়ে চলে যায় (Man-in-the-Middle) — এটাই ১৪ নম্বর অধ্যায়ে আলোচিত সবচেয়ে সাধারণ লোকাল-নেটওয়ার্ক আক্রমণগুলোর একটা। ডিফেন্স হিসেবে dynamic ARP inspection বা স্ট্যাটিক ARP entry ব্যবহার করা হয় sensitive নেটওয়ার্কে।</div>
+
+<h3>DHCP — Dynamic Host Configuration Protocol</h3>
+<p>প্রতিটা ডিভাইসকে হাতে IP address সেট করা অব্যবহারিক — <span class="kw">DHCP</span> স্বয়ংক্রিয়ভাবে IP address, subnet mask, default gateway, ও DNS server বরাদ্দ করে, একটা চার-ধাপের প্রক্রিয়ায় যাকে সংক্ষেপে <span class="kw">DORA</span> বলা হয়।</p>
+<div class="diagram"><pre>
+Client  ──▶ DHCP Discover  (broadcast: "কোনো DHCP server আছে?")
+Server  ──▶ DHCP Offer     ("আমি এই IP address অফার করছি")
+Client  ──▶ DHCP Request   ("ঠিক আছে, এই IP-টাই নিতে চাই")
+Server  ──▶ DHCP Ack       ("নিশ্চিত — এই IP এখন তোমার, এই lease সময়ের জন্য")
+</pre></div>
+<div class="callout why"><span class="tag">Lease Time — কেন IP address চিরস্থায়ী নয়</span>
+DHCP প্রতিটা IP address একটা নির্দিষ্ট সময়ের জন্য ধার দেয় (<span class="kw">lease</span>), স্থায়ীভাবে নয় — lease-এর অর্ধেক সময় পার হলে ক্লায়েন্ট নীরবে renew করার চেষ্টা করে। এটা গুরুত্বপূর্ণ কারণ নেটওয়ার্ক থেকে বিচ্ছিন্ন হয়ে যাওয়া ডিভাইস (ল্যাপটপ অফিস থেকে চলে গেলে) তার IP address চিরদিনের জন্য আটকে রাখে না — একটা সীমিত IP pool বহু ডিভাইসের মধ্যে পুনর্ব্যবহৃত হতে পারে, ঠিক যেমন একটা হোটেল রুম চেক-আউটের পর নতুন অতিথির জন্য খালি হয়ে যায়।</div>
+
+<h3>ICMP — নেটওয়ার্কের স্বাস্থ্য পরীক্ষা</h3>
+<p><span class="kw">ICMP</span> কোনো ব্যবহারকারী ডেটা বহন করে না — এটা নেটওয়ার্ক ডায়াগনস্টিক ও এরর মেসেজের জন্য, <code>ping</code> ও <code>traceroute</code>-এর ভিত্তি।</p>
+<table>
+<tr><th>ICMP Type</th><th>ব্যবহার</th></tr>
+<tr><td>Echo Request/Reply</td><td><code>ping</code> — ডিভাইস পৌঁছানো যাচ্ছে কিনা ও round-trip time যাচাই</td></tr>
+<tr><td>Time Exceeded</td><td><code>traceroute</code>-এর ভিত্তি — TTL শূন্য হয়ে গেলে router এই মেসেজ পাঠায়</td></tr>
+<tr><td>Destination Unreachable</td><td>host/network/port-এ পৌঁছানো যায়নি এমন জানান দেয়</td></tr>
+</table>
+<div class="callout behind"><span class="tag">Traceroute আসলে কীভাবে কাজ করে — TTL ব্যবহারের কৌশল</span>
+প্রতিটা IP প্যাকেটে একটা <span class="kw">TTL (Time To Live)</span> ফিল্ড থাকে, প্রতি hop-এ router সেটা ১ কমায় — শূন্যে পৌঁছালে প্যাকেট ফেলে দিয়ে একটা ICMP "Time Exceeded" ফেরত পাঠায়। <code>traceroute</code> ইচ্ছাকৃতভাবে TTL=1 দিয়ে একটা প্যাকেট পাঠায় (প্রথম router-ই ফেলে দেয় ও উত্তর দেয়), তারপর TTL=2, ৩... এভাবে বাড়িয়ে প্রতিটা hop-এর router-কে একে একে "প্রকাশ" করায় — পুরো পথের প্রতিটা router সনাক্ত করার এটাই কৌশল, কোনো magic ঠিকানা-তালিকা নয়।</div>
+</template>
+
+<template data-page="routing">
+<h2 class="title">৫. Routing — Static, Dynamic ও BGP</h2>
+<p class="lead">দুটো ডিভাইস একই নেটওয়ার্কে থাকলে switch-ই যথেষ্ট (২ নম্বর অধ্যায়)। কিন্তু ভিন্ন নেটওয়ার্কে থাকলে — যেমন আপনার বাসার নেটওয়ার্ক থেকে একটা দূরের সার্ভারে — একাধিক <span class="kw">router</span>-এর মধ্য দিয়ে প্যাকেট পাঠাতে হয়, আর প্রতিটা router-কে জানতে হয় পরের ধাপে কোথায় পাঠাতে হবে।</p>
+
+<h3>Routing Table — প্রতিটা Router-এর সিদ্ধান্ত নেওয়ার ভিত্তি</h3>
+<table>
+<tr><th>Field</th><th>মানে</th></tr>
+<tr><td><span class="kw">Destination network</span></td><td>কোন নেটওয়ার্ক/subnet-এর জন্য এই entry প্রযোজ্য</td></tr>
+<tr><td><span class="kw">Next hop</span></td><td>সেই নেটওয়ার্কে পৌঁছানোর জন্য পরের directly-connected router-এর IP</td></tr>
+<tr><td><span class="kw">Interface</span></td><td>কোন লোকাল পোর্ট দিয়ে পাঠাতে হবে</td></tr>
+<tr><td><span class="kw">Metric</span></td><td>এই পথের "খরচ" — একাধিক পথ থাকলে সবচেয়ে কম metric-এর পথ বাছাই হয়</td></tr>
+</table>
+<div class="callout behind"><span class="tag">Longest Prefix Match — একাধিক entry মিললে কোনটা জেতে</span>
+একটা destination IP একসাথে <code>0.0.0.0/0</code> (default route) আর <code>192.168.1.0/24</code> দুটো entry-র সাথেই মিলতে পারে। Router সবসময় সবচেয়ে <span class="kw">specific</span> (দীর্ঘতম prefix/subnet mask) entry বেছে নেয় — এই নীতিকেই <span class="kw">longest prefix match</span> বলে। এই কারণেই একটা নির্দিষ্ট subnet-এর জন্য একটা কাস্টম রুট থাকলে সেটা সবসময় generic default route-এর ওপর অগ্রাধিকার পায়, যতই সেই default route "সবকিছুই কভার করুক না কেন"।</div>
+
+<h3>Static বনাম Dynamic Routing</h3>
+<table>
+<tr><th></th><th>Static Routing</th><th>Dynamic Routing</th></tr>
+<tr><td>সেটআপ</td><td>ইঞ্জিনিয়ার হাতে প্রতিটা রুট লেখেন</td><td>রাউটার নিজেরাই একে অপরের সাথে তথ্য বিনিময় করে রুট শেখে</td></tr>
+<tr><td>স্কেল</td><td>ছোট, স্থির নেটওয়ার্কে উপযুক্ত</td><td>বড়, পরিবর্তনশীল নেটওয়ার্কে অপরিহার্য</td></tr>
+<tr><td>Link ডাউন হলে</td><td>ম্যানুয়াল আপডেট দরকার</td><td>স্বয়ংক্রিয়ভাবে বিকল্প পথ খুঁজে নেয়</td></tr>
+</table>
+
+<h3>Distance Vector বনাম Link-State — দুই ধরনের Dynamic Protocol</h3>
+<table>
+<tr><th>Protocol</th><th>ধরন</th><th>কীভাবে কাজ করে</th></tr>
+<tr><td><span class="kw">RIP</span></td><td>Distance Vector</td><td>প্রতিবেশীর কাছ থেকে "কতদূরে" (hop count) শোনে, নিজের টেবিল আপডেট করে সেই তথ্য আবার প্রতিবেশীদের জানায় — সরল কিন্তু বড় নেটওয়ার্কে ধীর ও সীমিত (max ১৫ hop)</td></tr>
+<tr><td><span class="kw">OSPF</span></td><td>Link-State</td><td>প্রতিটা router পুরো নেটওয়ার্কের টপোলজির একটা মানচিত্র তৈরি করে (সব link ও তাদের cost জেনে), তারপর নিজে shortest-path হিসাব করে — দ্রুত converge করে, বড় enterprise নেটওয়ার্কে ব্যবহৃত</td></tr>
+</table>
+
+<h3>BGP — ইন্টারনেটের মেরুদণ্ড</h3>
+<p>RIP/OSPF একটা প্রতিষ্ঠানের নিজের নেটওয়ার্কের (একটা <span class="kw">Autonomous System</span>/AS) ভেতরে ব্যবহৃত হয়। কিন্তু ভিন্ন ভিন্ন প্রতিষ্ঠান/ISP (ভিন্ন AS) একে অপরের সাথে কীভাবে রুট শেয়ার করে? সেটাই <span class="kw">BGP (Border Gateway Protocol)</span>-এর কাজ — ইন্টারনেট মূলত হাজার হাজার AS-এর মধ্যে BGP দিয়ে বিনিময় করা routing তথ্যের ওপর দাঁড়িয়ে।</p>
+<div class="callout why"><span class="tag">কেন BGP পারফরম্যান্সের বদলে Policy-চালিত</span>
+RIP/OSPF সবচেয়ে দ্রুত/কম-cost পথ খোঁজে। BGP ভিন্ন — এটা ব্যবসায়িক চুক্তি (peering agreement) মেনে চলে, "সবচেয়ে দ্রুত পথ" নয়। দুটো ISP-এর মধ্যে কে কার ট্রাফিক বহন করবে তা প্রযুক্তির চেয়ে বেশি ব্যবসায়িক সিদ্ধান্ত — এই কারণেই মাঝেমধ্যে একটা BGP misconfiguration (ভুল রুট ঘোষণা) সারা বিশ্বে বড় বড় ওয়েবসাইট কয়েক ঘণ্টার জন্য অপ্রাপ্য করে দিতে পারে।</div>
+<div class="callout mistake"><span class="tag">Routing Loop এড়ানো — কেন প্রতিটা প্রোটোকলের নিজস্ব রক্ষাকবচ আছে</span>
+Distance vector প্রোটোকলে (যেমন RIP) যদি সাবধানতা না নেওয়া হয়, দুই router একে অপরকে ভুলভাবে "আমার হয়ে ওই নেটওয়ার্কে যাও" বলে চক্রাকারে প্যাকেট ঘুরাতে পারে — একে <span class="kw">routing loop</span> বলে। <span class="kw">split horizon</span> (যে ইন্টারফেস থেকে একটা রুট শেখা হয়েছে, সেই একই ইন্টারফেস দিয়ে তা আবার ফেরত না পাঠানো) এই সমস্যার সবচেয়ে সাধারণ প্রতিকার — TTL (আগের অধ্যায়ে আলোচিত)-ও একটা শেষ safety-net হিসেবে কাজ করে, প্যাকেট চিরকাল না ঘুরে একসময় বাতিল হয়ে যায়।</div>
+</template>
+
+<template data-page="transport">
+<h2 class="title">৬. Transport Layer — TCP বনাম UDP</h2>
+<p class="lead">Network layer (IP) শুধু "কোন হোস্ট পর্যন্ত" পৌঁছে দেয় — কিন্তু একটা সার্ভারে একসাথে অনেক অ্যাপ্লিকেশন চলে (ওয়েব সার্ভার, SSH, ডেটাবেস)। Transport layer এই ফাইনাল ডেলিভারি ঠিক করে, কোন প্রক্রিয়ার কাছে ডেটা যাবে — আর সেই সাথে ঠিক করে ডেটা কতটা নির্ভরযোগ্যভাবে পৌঁছাবে।</p>
+
+<h3>Port Number — একটা IP-এর মধ্যেও নির্দিষ্ট Application চেনা</h3>
+<p>একটা <span class="kw">socket</span> = IP address + port নম্বর-এর সমন্বয়। port নম্বর ০-৬৫৫৩৫-এর মধ্যে, তিন ভাগে বিভক্ত: well-known (০-১০২৩, যেমন HTTP ৮০, HTTPS ৪৪৩, SSH ২২, DNS ৫৩), registered (১০২৪-৪৯১৫১), আর dynamic/ephemeral (৪৯১৫২-৬৫৫৩৫, ক্লায়েন্ট সাইডে সাময়িকভাবে ব্যবহৃত)।</p>
+
+<h3>TCP — নির্ভরযোগ্য, সংযোগ-ভিত্তিক যোগাযোগ</h3>
+<p>TCP ডেটা পাঠানোর আগে একটা সংযোগ স্থাপন করে — বিখ্যাত <span class="kw">three-way handshake</span>।</p>
+<div class="diagram"><pre>
+Client  ──▶  SYN                     "সংযোগ শুরু করতে চাই, আমার sequence number = x"
+Server  ──▶  SYN-ACK                 "ঠিক আছে, আমারটাও গ্রহণ করো (ACK x+1), আমারটা = y"
+Client  ──▶  ACK                     "নিশ্চিত (ACK y+1)"  ── এখন সংযোগ established
+</pre></div>
+<p>সংযোগ শেষ হয় চার-ধাপে (FIN/ACK উভয় দিক থেকে), যাতে দুই পক্ষই নিশ্চিত হয় সব ডেটা পৌঁছেছে।</p>
+<table>
+<tr><th>TCP-এর নির্ভরযোগ্যতা কৌশল</th><th>কাজ</th></tr>
+<tr><td><span class="kw">Sequence number</span></td><td>প্রতিটা বাইটের একটা ক্রম নম্বর — প্যাকেট এলোমেলো ক্রমে পৌঁছালেও সঠিক ক্রমে সাজানো যায়</td></tr>
+<tr><td><span class="kw">ACK</span></td><td>প্রাপক নিশ্চিত করে কতদূর পর্যন্ত পেয়েছে — না পেলে প্রেরক পুনরায় পাঠায় (retransmission)</td></tr>
+<tr><td><span class="kw">Flow control</span></td><td>receiver window বলে দেয় প্রাপক এখনই কতটুকু নিতে প্রস্তুত — প্রেরককে অতিরিক্ত পাঠানো থেকে আটকায়</td></tr>
+<tr><td><span class="kw">Congestion control</span></td><td>নেটওয়ার্ক নিজেই ভিড়ে আছে কিনা বুঝে ধীরে ধীরে গতি বাড়ানো (slow start) — packet loss দেখলে গতি কমানো</td></tr>
+</table>
+<div class="callout why"><span class="tag">Congestion Control কেন দরকার — ১৯৮৬-এর Congestion Collapse</span>
+আশির দশকে ইন্টারনেট প্রায় সম্পূর্ণ অচল হয়ে গিয়েছিল, কারণ অনেক TCP সংযোগ একসাথে যত পারে তত ডেটা পাঠাতে থাকলে নেটওয়ার্কের ভেতরের router queue উপচে পড়ে, প্যাকেট হারিয়ে যায়, আর হারানো প্যাকেট আবার পাঠানোর ফলে আরও বেশি ভিড় তৈরি হয় — একটা দুষ্টচক্র। TCP-এর <span class="kw">congestion control</span> (slow start, congestion avoidance) এই সমস্যার সমাধান হিসেবে যুক্ত হয়, যেখানে প্রতিটা সংযোগ সতর্কভাবে নিজের গতি বাড়ায় ও packet loss দেখলেই দ্রুত কমিয়ে দেয় — এটাই আজকের ইন্টারনেট স্থিতিশীল রাখার মূল কারিগরি ভিত্তিগুলোর একটা।</div>
+
+<h3>UDP — দ্রুত, সরল, No-Guarantee</h3>
+<p>UDP-তে কোনো handshake নেই, কোনো ACK নেই, কোনো ক্রম নিশ্চিত করার প্রক্রিয়া নেই — শুধু ডেটা পাঠিয়ে দেওয়া। এই সরলতাই এর শক্তি: কম ওভারহেড, কম latency।</p>
+<table>
+<tr><th></th><th>TCP</th><th>UDP</th></tr>
+<tr><td>সংযোগ</td><td>Connection-oriented (handshake লাগে)</td><td>Connectionless</td></tr>
+<tr><td>নির্ভরযোগ্যতা</td><td>নিশ্চিত ডেলিভারি, ক্রম বজায়</td><td>কোনো গ্যারান্টি নেই — প্যাকেট হারাতে/এলোমেলো হতে পারে</td></tr>
+<tr><td>গতি/Overhead</td><td>তুলনামূলক ধীর, বেশি header</td><td>দ্রুত, ছোট header</td></tr>
+<tr><td>ব্যবহার</td><td>HTTP, ফাইল ট্রান্সফার, ডেটাবেস</td><td>DNS, video streaming, gaming, VoIP</td></tr>
+</table>
+<div class="callout best"><span class="tag">কেন Real-time অ্যাপ্লিকেশন ইচ্ছাকৃতভাবে Unreliable UDP বাছে</span>
+একটা ভিডিও কলে যদি একটা ফ্রেমের একটা প্যাকেট হারিয়ে যায়, সেটা আবার পাঠিয়ে "ঠিক করার" চেষ্টা করাটাই আসলে ক্ষতিকর — ততক্ষণে কথোপকথন এগিয়ে গেছে, দেরিতে আসা পুরনো ফ্রেম কোনো কাজে আসে না। তাই VoIP/video streaming/gaming ইচ্ছাকৃতভাবে UDP ব্যবহার করে — একটা প্যাকেট হারালে সেটা উপেক্ষা করে পরের ফ্রেমেই এগিয়ে যাওয়া, retransmission-এর জন্য অপেক্ষা করে পুরো অভিজ্ঞতা থমকে দেওয়ার চেয়ে ভালো। এটাই ৮ নম্বর অধ্যায়ে HTTP/3 কেন UDP-ভিত্তিক QUIC ব্যবহার করে তার একটা ভিত্তি।</div>
+</template>
+
+<template data-page="dns">
+<h2 class="title">৭. DNS — Domain Name System</h2>
+<p class="lead">কম্পিউটার শুধু IP address বোঝে, কিন্তু মানুষ মনে রাখে <code>example.com</code>-এর মতো নাম। <span class="kw">DNS</span> এই দুইয়ের মধ্যে অনুবাদক — ইন্টারনেটের সবচেয়ে গুরুত্বপূর্ণ, প্রায় অদৃশ্য অবকাঠামোগুলোর একটা।</p>
+
+<h3>DNS Hierarchy — কোনো একক সার্ভার সব জানে না</h3>
+<div class="diagram"><pre>
+                     "." (Root — ১৩টা root server ক্লাস্টার)
+                      │
+        ┌─────────────┼─────────────┐
+       .com          .org           .net       (TLD — Top Level Domain)
+        │
+    example.com                                  (Authoritative name server)
+        │
+   www.example.com, mail.example.com             (নির্দিষ্ট রেকর্ড)
+</pre></div>
+<p>প্রতিটা স্তর শুধু পরের স্তরের ঠিকানা জানে, পুরো ইন্টারনেটের রেকর্ড নয় — root server জানে <code>.com</code> TLD সার্ভার কোথায়, <code>.com</code> TLD সার্ভার জানে <code>example.com</code>-এর authoritative সার্ভার কোথায়, ইত্যাদি।</p>
+
+<h3>Resolution প্রক্রিয়া — একটা Query-এর ভ্রমণ</h3>
+<div class="diagram"><pre>
+Browser ──▶ Recursive Resolver (সাধারণত ISP/Google 8.8.8.8): "www.example.com-এর IP কী?"
+Resolver ──▶ Root Server:        "www.example.com?"  ──▶  "জানি না, কিন্তু .com TLD সার্ভার এখানে"
+Resolver ──▶ .com TLD Server:    "www.example.com?"  ──▶  "example.com-এর authoritative সার্ভার এখানে"
+Resolver ──▶ Authoritative Server: "www.example.com?" ──▶ "IP = 93.184.216.34"
+Resolver ──▶ Browser:             "93.184.216.34"  (ও নিজের cache-এ TTL অনুযায়ী সংরক্ষণ)
+</pre></div>
+
+<h3>DNS Record Type — সবচেয়ে সাধারণগুলো</h3>
+<table>
+<tr><th>Record</th><th>কাজ</th></tr>
+<tr><td><span class="kw">A</span></td><td>Domain → IPv4 address</td></tr>
+<tr><td><span class="kw">AAAA</span></td><td>Domain → IPv6 address</td></tr>
+<tr><td><span class="kw">CNAME</span></td><td>একটা domain-কে আরেকটা domain-এর alias করা (যেমন <code>www</code> → <code>example.com</code>)</td></tr>
+<tr><td><span class="kw">MX</span></td><td>এই domain-এর ইমেইল কোন সার্ভার হ্যান্ডেল করবে</td></tr>
+<tr><td><span class="kw">TXT</span></td><td>মুক্ত টেক্সট — domain ownership verification, SPF/DKIM ইমেইল যাচাই-এ ব্যবহৃত</td></tr>
+<tr><td><span class="kw">NS</span></td><td>এই domain-এর authoritative name server কোনটা</td></tr>
+</table>
+
+<h3>Caching ও TTL — গতি ও লোড কমানোর কৌশল</h3>
+<p>প্রতিটা DNS response-এ একটা <span class="kw">TTL (Time To Live, সেকেন্ডে)</span> থাকে, যা বলে দেয় resolver কতক্ষণ এই উত্তর cache-এ রাখতে পারে — পরবর্তী query-তে root/TLD/authoritative সার্ভার পর্যন্ত না গিয়ে সরাসরি cache থেকে উত্তর দেওয়া যায়। বেশিরভাগ query-ই আসলে recursive resolver-এর cache থেকেই সরাসরি উত্তর পায়, উপরের পুরো hierarchy পার হতে হয় খুব কম ক্ষেত্রেই।</p>
+<div class="callout mistake"><span class="tag">Common misconception — DNS পরিবর্তন সাথে সাথে সবার কাছে দেখা যায়</span>
+একটা DNS record বদলালে (যেমন সার্ভার migrate করার সময়), পুরো ইন্টারনেট জুড়ে সাথে সাথে সেই পরিবর্তন দেখা যায় না — যেসব resolver পুরনো মানটা cache-এ রেখেছে, তাদের TTL শেষ না হওয়া পর্যন্ত পুরনো IP-ই ফেরত দিতে থাকবে। এই কারণেই migration-এর আগেভাগে (কয়েক ঘণ্টা/দিন আগে) TTL কমিয়ে রাখা হয় — যাতে আসল পরিবর্তনের সময় cache দ্রুত expire হয়ে নতুন মান ছড়িয়ে পড়ে, একে বলে "DNS propagation" পরিকল্পনা।</div>
+<div class="callout why"><span class="tag">DNS কেন প্রধানত UDP ব্যবহার করে</span>
+বেশিরভাগ DNS query ছোট (একটা প্যাকেটেই ধরে) — তাই handshake-এর ওভারহেড ছাড়াই দ্রুত UDP ব্যবহার করা হয় (পোর্ট ৫৩)। তবে response বড় হলে (যেমন DNSSEC signature বা অনেক রেকর্ড), UDP-এর ৫১২-বাইট সীমা পার হলে DNS স্বয়ংক্রিয়ভাবে TCP-তে fallback করে — এটা এমন একটা প্রোটোকলের ভালো উদাহরণ যা পরিস্থিতি অনুযায়ী দুটো transport-ই ব্যবহার করে।</div>
+</template>
+
+<template data-page="http">
+<h2 class="title">৮. HTTP/HTTPS ও Web Protocols</h2>
+<p class="lead">TCP নিশ্চিত করে বাইটগুলো নির্ভরযোগ্যভাবে পৌঁছাবে (৬ নম্বর অধ্যায়)। কিন্তু সেই বাইটের ভেতরে "একটা পেজ চাই" বা "এই ফর্ম সাবমিট করছি" — এই অর্থ বহন করে <span class="kw">HTTP</span>, যা আধুনিক ওয়েবের ভিত্তি প্রোটোকল।</p>
+
+<h3>Request/Response — HTTP-এর মৌলিক গঠন</h3>
+<pre><span class="c">GET /users/42 HTTP/1.1</span>
+Host: api.example.com
+Accept: application/json
+Authorization: Bearer eyJhbGciOi...
+
+<span class="c">HTTP/1.1 200 OK</span>
+Content-Type: application/json
+Content-Length: 128
+
+{"id": 42, "name": "Rasel"}</pre>
+
+<h3>HTTP Method ও Status Code</h3>
+<table>
+<tr><th>Method</th><th>উদ্দেশ্য</th><th>Idempotent?</th></tr>
+<tr><td><span class="kw">GET</span></td><td>রিসোর্স আনা</td><td>হ্যাঁ</td></tr>
+<tr><td><span class="kw">POST</span></td><td>নতুন রিসোর্স তৈরি/non-idempotent অ্যাকশন</td><td>না</td></tr>
+<tr><td><span class="kw">PUT</span></td><td>পুরো রিসোর্স প্রতিস্থাপন</td><td>হ্যাঁ</td></tr>
+<tr><td><span class="kw">DELETE</span></td><td>রিসোর্স মুছে ফেলা</td><td>হ্যাঁ</td></tr>
+</table>
+<table>
+<tr><th>Status Code Range</th><th>মানে</th></tr>
+<tr><td>2xx</td><td>সফল (200 OK, 201 Created, 204 No Content)</td></tr>
+<tr><td>3xx</td><td>Redirect (301 Permanent, 302 Temporary)</td></tr>
+<tr><td>4xx</td><td>ক্লায়েন্টের ভুল (400 Bad Request, 401 Unauthorized, 404 Not Found)</td></tr>
+<tr><td>5xx</td><td>সার্ভারের ভুল (500 Internal Error, 503 Service Unavailable)</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — Idempotency ভুল বোঝা</span>
+Idempotent মানে "একবার চালান বা দশবার চালান, ফলাফল একই" — এটা "কোনো পরিবর্তন করে না" এমনটা বোঝায় না। <code>DELETE /users/42</code> idempotent, কারণ দ্বিতীয়বার চালালেও চূড়ান্ত অবস্থা একই (ইউজার মুছে গেছে) — যদিও প্রথমবার একটা রেকর্ড মুছে ফেলে, দ্বিতীয়বার হয়তো 404 দেয়। এই ধারণা network retry logic ডিজাইনে গুরুত্বপূর্ণ — একটা idempotent request নিরাপদে retry করা যায় (packet loss/timeout হলে), কিন্তু non-idempotent POST নির্বিচারে retry করলে duplicate অর্ডার তৈরি হতে পারে।</div>
+
+<h3>Stateless প্রোটোকল ও Cookie/Session</h3>
+<p>HTTP নিজে <span class="kw">stateless</span> — প্রতিটা request স্বাধীন, সার্ভার আগের request মনে রাখে না। ব্যবহারকারীর "লগইন অবস্থা" ধরে রাখতে <span class="kw">cookie</span> ব্যবহার হয় — সার্ভার একটা <code>Set-Cookie</code> header পাঠায়, ব্রাউজার পরের প্রতিটা request-এ সেই cookie ফেরত পাঠায়, যা দিয়ে সার্ভার ইউজারকে চেনে (session)।</p>
+
+<h3>HTTP/1.1 → HTTP/2 → HTTP/3 — একই প্রোটোকলের বিবর্তন</h3>
+<table>
+<tr><th>ভার্সন</th><th>মূল পরিবর্তন</th><th>সমস্যা যা সমাধান করে</th></tr>
+<tr><td>HTTP/1.1</td><td>একটা TCP সংযোগে একটার পর একটা request (বা সীমিত parallel connection)</td><td>—</td></tr>
+<tr><td><span class="kw">HTTP/2</span></td><td>একটা TCP সংযোগে একাধিক request/response একসাথে multiplex</td><td>প্রতিটা resource-এর জন্য আলাদা TCP connection খোলার ওভারহেড দূর করে</td></tr>
+<tr><td><span class="kw">HTTP/3</span></td><td>TCP-এর বদলে UDP-ভিত্তিক <span class="kw">QUIC</span> ব্যবহার</td><td>HTTP/2-এও একটা প্যাকেট হারালে TCP-এর কারণে সব stream থমকে যেত (head-of-line blocking) — QUIC-এ একটা stream-এর packet loss অন্য stream-কে প্রভাবিত করে না</td></tr>
+</table>
+<div class="callout why"><span class="tag">HTTPS কেন — Plain HTTP-এর ঝুঁকি</span>
+Plain HTTP-তে পুরো request/response (পাসওয়ার্ড, session cookie সহ) নেটওয়ার্কের মধ্যবর্তী যেকোনো পয়েন্টে (public Wi-Fi, ISP) পড়া বা পরিবর্তন করা সম্ভব। <span class="kw">HTTPS</span> মানে HTTP-কে TLS-এর ওপর চালানো (৯ নম্বর অধ্যায়ে বিস্তারিত) — একই HTTP semantics, কিন্তু পুরো ট্রান্সপোর্ট এনক্রিপ্ট করা, তাই মধ্যবর্তী কেউ ডেটা পড়তে বা বদলাতে পারে না।</div>
+</template>
+
+<template data-page="tls">
+<h2 class="title">৯. TLS/SSL, PKI ও Encryption</h2>
+<p class="lead">HTTP নিজে সাদা কাগজে লেখা পোস্টকার্ডের মতো — পথের যে কেউ পড়তে পারে। <span class="kw">TLS (Transport Layer Security)</span> সেই কার্ডকে একটা তালাবদ্ধ খামে ভরে দেয়, শুধু প্রাপক যার চাবি জানে সেই খুলতে পারে।</p>
+
+<h3>Symmetric বনাম Asymmetric Encryption</h3>
+<table>
+<tr><th></th><th>Symmetric</th><th>Asymmetric</th></tr>
+<tr><td>Key</td><td>একটাই key — encrypt/decrypt দুটোতেই ব্যবহৃত</td><td>Key pair — public key দিয়ে encrypt, শুধু private key দিয়ে decrypt</td></tr>
+<tr><td>গতি</td><td>দ্রুত, বড় ডেটার জন্য উপযুক্ত</td><td>ধীর, গণনা-নিবিড়</td></tr>
+<tr><td>সমস্যা</td><td>key কীভাবে নিরাপদে বিনিময় করবেন যদি চ্যানেলটাই অনিরাপদ?</td><td>গতি কম হওয়ায় বড় ডেটার জন্য অব্যবহারিক</td></tr>
+</table>
+<div class="callout why"><span class="tag">TLS-এর সমাধান — দুটোরই সমন্বয় (Hybrid Encryption)</span>
+TLS প্রথমে asymmetric encryption ব্যবহার করে একটা সাময়িক symmetric key নিরাপদে বিনিময় করে (যেখানে গতি বড় বিষয় নয়, শুধু একবারই হয়), তারপর বাকি পুরো সংযোগের প্রকৃত ডেটা সেই symmetric key দিয়ে এনক্রিপ্ট করে (যেখানে গতি জরুরি)। এভাবে asymmetric-এর "নিরাপদ key বিনিময়" সুবিধা আর symmetric-এর "দ্রুত bulk এনক্রিপশন" সুবিধা — দুটোই একসাথে পাওয়া যায়।</div>
+
+<h3>TLS Handshake — সংক্ষিপ্ত প্রবাহ (TLS 1.3)</h3>
+<div class="diagram"><pre>
+Client ──▶ ClientHello         "আমি এই cipher suite-গুলো সাপোর্ট করি"
+Server ──▶ ServerHello + Certificate + key share   "এইটা বাছলাম, এই আমার সার্টিফিকেট"
+Client    (সার্টিফিকেট যাচাই করে, symmetric key বের করে)
+Client ──▶ Finished             ── এখন উভয় দিকে এনক্রিপ্টেড ডেটা চলাচল শুরু
+</pre></div>
+
+<h3>Certificate ও PKI — কীভাবে বিশ্বাস প্রতিষ্ঠিত হয়</h3>
+<p>একটা <span class="kw">certificate</span> একটা public key-কে একটা domain-এর সাথে যুক্ত করে ঘোষণা করে "এই public key আসলেই example.com-এর" — কিন্তু সেই ঘোষণা কেন বিশ্বাসযোগ্য? কারণ এটা একটা বিশ্বস্ত <span class="kw">Certificate Authority (CA)</span> দিয়ে স্বাক্ষরিত, আর ব্রাউজার/OS-এ আগে থেকেই কিছু root CA-এর public key বেক করা থাকে।</p>
+<div class="diagram"><pre>
+Root CA (ব্রাউজারে আগে থেকেই বিশ্বস্ত হিসেবে সংরক্ষিত)
+   │  স্বাক্ষর করে
+Intermediate CA
+   │  স্বাক্ষর করে
+example.com-এর Certificate      ── এই "chain of trust" ধরে ব্রাউজার যাচাই করে
+</pre></div>
+<div class="callout mistake"><span class="tag">Common mistake — Production-এ Self-Signed Certificate</span>
+একটা self-signed certificate কোনো বিশ্বস্ত CA দিয়ে স্বাক্ষরিত না হওয়ায় ব্রাউজার সেটাকে বিশ্বাস করে না, ইউজারকে একটা ভয়ংকর সতর্কবার্তা দেখায় — যা ব্যবহারকারীদের সেই সতর্কবার্তা এড়িয়ে যেতে অভ্যস্ত করে তোলে, এবং সত্যিকারের আক্রমণের সময়ও তারা সতর্কবার্তা উপেক্ষা করতে পারে। Development/internal testing-এ self-signed গ্রহণযোগ্য, কিন্তু production-এ সবসময় Let's Encrypt-এর মতো বিশ্বস্ত CA থেকে ফ্রি বা পেইড সার্টিফিকেট ব্যবহার করা উচিত।</div>
+
+<h3>mTLS — দুই দিকেই পরিচয় যাচাই</h3>
+<p>সাধারণ TLS-এ শুধু সার্ভার তার certificate দেখায় (ক্লায়েন্ট সার্ভারকে চেনে, উল্টোটা নয়)। <span class="kw">mTLS (mutual TLS)</span>-এ ক্লায়েন্টও নিজের certificate দেখায় — সার্ভার ও ক্লায়েন্ট উভয়েই একে অপরকে cryptographically যাচাই করে। Microservice-to-microservice communication-এ (যেখানে কোনো ইউজার পাসওয়ার্ড টাইপ করছে না) এটা service identity যাচাইয়ের প্রধান উপায়।</p>
+</template>
+
+<template data-page="natfirewall">
+<h2 class="title">১০. NAT ও Firewalls</h2>
+<p class="lead">একটা বাসা/অফিসের সব ডিভাইস প্রাইভেট IP ব্যবহার করে (৩ নম্বর অধ্যায়), যা ইন্টারনেটে রাউট হয় না — <span class="kw">NAT</span> তাদের একটা পাবলিক IP-এর পেছনে লুকিয়ে বাইরের দুনিয়ার সাথে যোগাযোগ সম্ভব করে, আর <span class="kw">firewall</span> ঠিক করে কোন ট্রাফিক ঢুকতে/বেরোতে পারবে।</p>
+
+<h3>NAT — কীভাবে একাধিক ডিভাইস একটা Public IP শেয়ার করে</h3>
+<div class="diagram"><pre>
+ভেতরে (Private):  192.168.1.10:54123  ──┐
+                                          ├──▶  NAT Router (Public IP: 203.0.113.5)
+ভেতরে (Private):  192.168.1.11:54871  ──┘        │
+                                                   ▼
+                                    বাইরে দেখা যায়: 203.0.113.5:61001, 203.0.113.5:61002
+</pre></div>
+<table>
+<tr><th>ধরন</th><th>ব্যাখ্যা</th></tr>
+<tr><td><span class="kw">Static NAT</span></td><td>একটা প্রাইভেট IP সবসময় একটা নির্দিষ্ট পাবলিক IP-তে ম্যাপ হয় — এক-এক সম্পর্ক</td></tr>
+<tr><td><span class="kw">Dynamic NAT</span></td><td>একটা pool থেকে যেকোনো উপলব্ধ পাবলিক IP বরাদ্দ হয়</td></tr>
+<tr><td><span class="kw">PAT/NAPT (সবচেয়ে সাধারণ)</span></td><td>একটামাত্র পাবলিক IP, কিন্তু প্রতিটা সংযোগ আলাদা port নম্বরে ম্যাপ হয় — ঘরে/অফিসে ব্যবহৃত সাধারণ রাউটারের ডিফল্ট পদ্ধতি</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — NAT-কে নিরাপত্তা বৈশিষ্ট্য মনে করা</span>
+NAT আসলে ডিজাইন হয়েছিল IPv4 address সংকট সমাধানের জন্য, নিরাপত্তার জন্য নয় — এটা যে বাইরে থেকে সরাসরি ভেতরের প্রাইভেট IP-তে connection শুরু করা যায় না, সেটা একটা <b>পার্শ্ব-প্রতিক্রিয়া</b> (আক্রমণকারী জানেই না ভেতরে কোন IP আছে), প্রকৃত সুরক্ষা নয়। প্রকৃত অ্যাক্সেস নিয়ন্ত্রণের দায়িত্ব <span class="kw">firewall</span>-এর — NAT থাকলেই "নিরাপদ" ধরে নেওয়া একটা সাধারণ ভুল ধারণা।</div>
+
+<h3>Firewall — কোন ট্রাফিক অনুমোদিত তা নিয়ন্ত্রণ</h3>
+<table>
+<tr><th>ধরন</th><th>কীভাবে সিদ্ধান্ত নেয়</th></tr>
+<tr><td><span class="kw">Packet Filtering</span></td><td>প্রতিটা প্যাকেট আলাদাভাবে দেখে (source/dest IP, port) — কোনো "সংযোগ" মনে রাখে না, দ্রুত কিন্তু সরল</td></tr>
+<tr><td><span class="kw">Stateful Inspection</span></td><td>পুরো সংযোগের অবস্থা মনে রাখে — যেমন একটা outbound request-এর জবাবে আসা inbound ট্রাফিক স্বয়ংক্রিয়ভাবে অনুমোদিত হয়, আলাদা rule ছাড়াই</td></tr>
+<tr><td><span class="kw">Application Layer/Proxy</span></td><td>Layer 7 পর্যন্ত পরীক্ষা করে — যেমন শুধু "port 443 খোলা" না দেখে, ভেতরের HTTP request-এর content/URL-ও যাচাই করে</td></tr>
+<tr><td><span class="kw">NGFW (Next-Gen Firewall)</span></td><td>উপরের সবকিছুর সাথে intrusion detection, application awareness, ইউজার-ভিত্তিক নীতি একত্রে</td></tr>
+</table>
+
+<h3>ACL — Access Control List-এর একটা বাস্তব উদাহরণ</h3>
+<pre><span class="c"># সরলীকৃত ACL — শুধু HTTP/HTTPS ঢুকতে দেবে, বাকি সব inbound বাতিল</span>
+permit tcp any any eq 443     <span class="c"># HTTPS — সব উৎস থেকে অনুমোদিত</span>
+permit tcp any any eq 80      <span class="c"># HTTP</span>
+deny   ip any any             <span class="c"># বাকি সব inbound ট্রাফিক বাতিল (implicit deny-এর ভালো অভ্যাস)</span></pre>
+<div class="callout best"><span class="tag">Best practice — Default Deny নীতি</span>
+একটা সুরক্ষিত firewall কনফিগারেশন সবসময় শুরু হয় "সব কিছু বাতিল, শুধু যা স্পষ্টভাবে অনুমোদিত তা-ই চলবে" — এই নীতিতে। এর উল্টোটা ("সব অনুমোদিত, শুধু যা জানা খারাপ তা বাতিল") একটা ক্রমাগত হেরে যাওয়া লড়াই, কারণ নতুন আক্রমণ পদ্ধতি প্রতিনিয়ত তৈরি হয় আর প্রতিটাকে আলাদা করে ব্লক করতে হবে। Default deny + explicit allow rule — এটাই ১৪ নম্বর অধ্যায়ে আলোচিত zero-trust দর্শনের ভিত্তি নীতিগুলোর একটা।</div>
+</template>
+
+<template data-page="vpn">
+<h2 class="title">১১. VPN ও Tunneling</h2>
+<p class="lead">দুটো অফিস আলাদা শহরে, বা একজন রিমোট কর্মী বাসা থেকে কোম্পানির ইন্টারনাল নেটওয়ার্কে যুক্ত হতে চান — সরাসরি প্রাইভেট cable বসানো অবাস্তব। <span class="kw">VPN</span> পাবলিক ইন্টারনেটের ওপর দিয়েই একটা এনক্রিপ্টেড, লজিক্যালি প্রাইভেট "টানেল" তৈরি করে।</p>
+
+<h3>Site-to-Site বনাম Remote Access VPN</h3>
+<table>
+<tr><th>ধরন</th><th>ব্যবহার</th></tr>
+<tr><td><span class="kw">Site-to-Site</span></td><td>দুটো অফিস নেটওয়ার্ককে (প্রতিটার নিজস্ব রাউটার/gateway আছে) স্থায়ীভাবে সংযুক্ত করে — উভয় পাশের সব ডিভাইস একে অপরকে দেখতে পারে, যেন একটাই নেটওয়ার্ক</td></tr>
+<tr><td><span class="kw">Remote Access</span></td><td>একজন ব্যক্তির ডিভাইস (ল্যাপটপ) থেকে সরাসরি কোম্পানির নেটওয়ার্কে ক্লায়েন্ট সফটওয়্যার দিয়ে সংযোগ — রিমোট কর্মীদের জন্য সাধারণ</td></tr>
+</table>
+
+<h3>IPSec — Enterprise VPN-এর ঐতিহ্যবাহী ভিত্তি</h3>
+<table>
+<tr><th>উপাদান</th><th>কাজ</th></tr>
+<tr><td><span class="kw">AH (Authentication Header)</span></td><td>প্যাকেট কেউ পরিবর্তন করেনি তা নিশ্চিত করে (integrity), কিন্তু এনক্রিপ্ট করে না</td></tr>
+<tr><td><span class="kw">ESP (Encapsulating Security Payload)</span></td><td>প্যাকেটের ভেতরের ডেটা এনক্রিপ্ট করে (confidentiality) — বাস্তবে সবচেয়ে বেশি ব্যবহৃত</td></tr>
+<tr><td><span class="kw">Tunnel Mode</span></td><td>পুরো আসল IP প্যাকেট (header সহ) এনক্রিপ্ট করে একটা নতুন IP header-এ মোড়ানো হয় — site-to-site VPN-এ ব্যবহৃত</td></tr>
+<tr><td><span class="kw">Transport Mode</span></td><td>শুধু payload এনক্রিপ্ট হয়, মূল IP header অক্ষত থাকে — একই নেটওয়ার্কের দুই হোস্টের মধ্যে সরাসরি সুরক্ষায় ব্যবহৃত</td></tr>
+</table>
+
+<h3>আধুনিক বিকল্প — WireGuard</h3>
+<div class="callout best"><span class="tag">WireGuard কেন IPSec-এর তুলনায় জনপ্রিয় হচ্ছে</span>
+IPSec-এর কনফিগারেশন জটিল — বহু cipher suite অপশন, negotiation-এর অনেক ধাপ, বাগ-প্রবণ implementation ইতিহাস। <span class="kw">WireGuard</span> ইচ্ছাকৃতভাবে ন্যূনতম কোডবেসে (কয়েক হাজার লাইন, IPSec-এর তুলনায় ১০ ভাগেরও কম) ডিজাইন করা, একটামাত্র আধুনিক cipher suite ব্যবহার করে (কোনো negotiation-এর ঝামেলা নেই) — ফলে কনফিগার করা সহজ, security audit করা সহজ, আর পারফরম্যান্সও সাধারণত ভালো। Linux kernel-এ সরাসরি অন্তর্ভুক্ত হওয়ার পর থেকে এটা দ্রুত নতুন VPN স্থাপনার ডিফল্ট পছন্দ হয়ে উঠছে।</div>
+
+<h3>SSH Tunneling — হালকা, Ad-Hoc সমাধান</h3>
+<p>পুরো VPN সেটআপ ছাড়াই, একটামাত্র SSH সংযোগ দিয়ে port forwarding করে একটা দ্রুত এনক্রিপ্টেড টানেল বানানো যায় — যেমন একটা রিমোট সার্ভারের ৫৪৩২ পোর্টে থাকা ডেটাবেসে লোকাল মেশিন থেকে নিরাপদে সংযোগ দেওয়া:</p>
+<pre><span class="c"># লোকাল পোর্ট 5433 থেকে remote সার্ভারের মাধ্যমে সেই সার্ভারের লোকাল 5432-এ টানেল</span>
+ssh -L 5433:localhost:5432 user@remote-server.example.com</pre>
+</template>
+
+<template data-page="wireless">
+<h2 class="title">১২. Wireless Networking ও Wi-Fi Security</h2>
+<p class="lead">Wired নেটওয়ার্কে physical access ছাড়া কেউ ট্রাফিক শুনতে পারে না, কিন্তু Wi-Fi রেডিও তরঙ্গ দেয়াল ভেদ করে ছড়িয়ে যায় — যে কেউ রেঞ্জের মধ্যে থাকলে সেই সংকেত ধরতে পারে, তাই wireless-এ encryption/authentication বিশেষভাবে গুরুত্বপূর্ণ।</p>
+
+<h3>802.11 স্ট্যান্ডার্ড — Wi-Fi-এর প্রজন্মগুলো</h3>
+<table>
+<tr><th>Standard</th><th>মার্কেটিং নাম</th><th>ব্যান্ড</th><th>সর্বোচ্চ গতি (তাত্ত্বিক)</th></tr>
+<tr><td>802.11n</td><td>Wi-Fi 4</td><td>2.4/5 GHz</td><td>~600 Mbps</td></tr>
+<tr><td>802.11ac</td><td>Wi-Fi 5</td><td>5 GHz</td><td>~3.5 Gbps</td></tr>
+<tr><td>802.11ax</td><td>Wi-Fi 6/6E</td><td>2.4/5/6 GHz</td><td>~9.6 Gbps, বহু-ডিভাইস দক্ষতা উন্নত</td></tr>
+</table>
+<div class="grid2">
+  <div class="box"><b>2.4 GHz ব্যান্ড</b><br>দীর্ঘ রেঞ্জ, দেয়াল ভেদ করে ভালো, কিন্তু চ্যানেল কম ও বেশি ডিভাইসে (Bluetooth, microwave) ভিড়/interference বেশি।</div>
+  <div class="box"><b>5 GHz ব্যান্ড</b><br>বেশি গতি, কম interference, কিন্তু রেঞ্জ কম ও দেয়াল ভেদ করার ক্ষমতা কম — কাছাকাছি high-throughput ব্যবহারে ভালো।</div>
+</div>
+
+<h3>Wi-Fi Security-এর বিবর্তন</h3>
+<table>
+<tr><th>প্রোটোকল</th><th>অবস্থা</th><th>দুর্বলতা</th></tr>
+<tr><td>WEP</td><td>সম্পূর্ণ পরিত্যক্ত</td><td>এনক্রিপশন কয়েক মিনিটেই ভাঙা যায় — কখনো ব্যবহার করা উচিত নয়</td></tr>
+<tr><td>WPA</td><td>পরিত্যক্ত</td><td>WEP-এর জরুরি প্যাচ হিসেবে এসেছিল, নিজেও দুর্বল</td></tr>
+<tr><td><span class="kw">WPA2</span></td><td>এখনো ব্যাপক ব্যবহৃত</td><td>4-way handshake-এ KRACK-এর মতো দুর্বলতা পাওয়া গেছে</td></tr>
+<tr><td><span class="kw">WPA3</span></td><td>বর্তমান মান</td><td>SAE (Simultaneous Authentication of Equals) handshake ব্যবহার করে — অফলাইন dictionary attack অনেক বেশি কঠিন করে তোলে</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — পুরনো ডিভাইস সাপোর্টের জন্য WEP/WPA সক্রিয় রাখা</span>
+অনেক রাউটার backward compatibility-এর জন্য WEP বা mixed WPA/WPA2 মোড অপশন রাখে — কিন্তু একটা রাউটারে WEP সক্রিয় থাকলে, WPA3 ডিভাইসও একই নেটওয়ার্কে থাকলেও পুরো নেটওয়ার্কের নিরাপত্তা তার দুর্বলতম লিংকের সমান হয়ে যায়। WEP সমর্থনকারী ডিভাইস এত পুরনো যে সেগুলো প্রতিস্থাপন করাই আজকাল যুক্তিসঙ্গত, নেটওয়ার্কের নিরাপত্তা কমানো নয়।</div>
+<div class="callout why"><span class="tag">WPA3-এর SAE কীভাবে WPA2-এর দুর্বলতা সমাধান করে</span>
+WPA2-এর 4-way handshake একটা আক্রমণকারীকে হ্যান্ডশেক ক্যাপচার করে অফলাইনে বিভিন্ন পাসওয়ার্ড অনুমান করে (dictionary/brute-force attack) মিলিয়ে দেখার সুযোগ দেয় — নেটওয়ার্কের সাথে সরাসরি interact না করেই। WPA3-এর SAE handshake ডিজাইন করা হয়েছে এমনভাবে যাতে প্রতিটা অনুমান নেটওয়ার্কের সাথে সরাসরি একটা লাইভ interaction দাবি করে — ফলে অফলাইন brute-force কার্যত অসম্ভব হয়ে যায়, প্রতিটা ভুল অনুমানই নেটওয়ার্ক টের পায়।</div>
+</template>
+
+<template data-page="cloudnet">
+<h2 class="title">১৩. Load Balancing ও Cloud Networking</h2>
+<p class="lead">একটামাত্র সার্ভার দিয়ে লক্ষ লক্ষ ব্যবহারকারী সামলানো সম্ভব না — আধুনিক অ্যাপ্লিকেশন একাধিক সার্ভারে ট্রাফিক ছড়িয়ে দেয়, আর cloud provider-এ পুরো নেটওয়ার্ক টপোলজি নিজেই কনফিগারযোগ্য কোড হয়ে যায়।</p>
+
+<h3>Load Balancer — L4 বনাম L7</h3>
+<table>
+<tr><th></th><th>Layer 4 (Transport)</th><th>Layer 7 (Application)</th></tr>
+<tr><td>সিদ্ধান্ত নেয় কীসের ভিত্তিতে</td><td>শুধু IP/port দেখে</td><td>HTTP header, URL path, cookie দেখে</td></tr>
+<tr><td>উদাহরণ রাউটিং</td><td>যেকোনো ট্রাফিক round-robin ভাগ করা</td><td><code>/api/*</code> এক সার্ভার গ্রুপে, <code>/static/*</code> আরেকটায়</td></tr>
+<tr><td>গতি</td><td>দ্রুততর, কম overhead</td><td>ধীরতর কিন্তু বেশি smart routing সম্ভব</td></tr>
+</table>
+
+<h3>Load Balancing Algorithm</h3>
+<table>
+<tr><th>অ্যালগরিদম</th><th>কীভাবে বাছাই করে</th></tr>
+<tr><td><span class="kw">Round Robin</span></td><td>ক্রমান্বয়ে একটার পর একটা সার্ভারে পাঠানো</td></tr>
+<tr><td><span class="kw">Least Connections</span></td><td>যে সার্ভারে এখন সবচেয়ে কম active connection আছে সেখানে পাঠানো</td></tr>
+<tr><td><span class="kw">IP Hash</span></td><td>client IP-এর হ্যাশ অনুযায়ী — একই ক্লায়েন্ট সবসময় একই সার্ভারে যায় (session affinity)</td></tr>
+</table>
+
+<h3>VPC — Cloud-এ আপনার নিজস্ব Private নেটওয়ার্ক</h3>
+<p>একটা <span class="kw">VPC (Virtual Private Cloud)</span> cloud provider-এর ভেতরে আপনার নিজস্ব বিচ্ছিন্ন নেটওয়ার্ক — এখানেই এই কোর্সের subnet/routing ধারণাগুলো কোড আকারে (IaC) প্রয়োগ হয়।</p>
+<div class="grid2">
+  <div class="box"><b>Public Subnet</b><br>একটা internet gateway-র সাথে সরাসরি রুট আছে — লোড ব্যালান্সার/bastion host সাধারণত এখানে বসে।</div>
+  <div class="box"><b>Private Subnet</b><br>সরাসরি ইন্টারনেট থেকে পৌঁছানো যায় না — ডেটাবেস/ইন্টারনাল সার্ভিস এখানে, বাইরে যাওয়ার জন্য (আপডেট ডাউনলোড) একটা NAT gateway ব্যবহার করে।</div>
+</div>
+<div class="callout why"><span class="tag">কেন Database সবসময় Private Subnet-এ রাখা হয়</span>
+একটা ডেটাবেসের সরাসরি ইন্টারনেট থেকে পৌঁছানোর কোনো বৈধ কারণ নেই — শুধু application সার্ভারেরই তার সাথে কথা বলার দরকার। Private subnet-এ রেখে (কোনো পাবলিক IP-ই নেই) আক্রমণের পৃষ্ঠক্ষেত্র (attack surface) সম্পূর্ণ দূর করা যায় — এমনকি একটা misconfigured security group rule-ও তখন ইন্টারনেট থেকে সরাসরি এক্সপোজ হয়ে যায় না, কারণ route table-এই কোনো পথ নেই। এটাই ১০ নম্বর অধ্যায়ের network segmentation নীতির cloud-native রূপ।</div>
+
+<h3>Security Group বনাম NACL</h3>
+<table>
+<tr><th></th><th>Security Group</th><th>Network ACL</th></tr>
+<tr><td>প্রয়োগ হয় কোথায়</td><td>প্রতিটা instance/resource-এর স্তরে</td><td>পুরো subnet-এর স্তরে</td></tr>
+<tr><td>State</td><td>Stateful — outbound অনুমতি দিলে ফিরতি ট্রাফিক স্বয়ংক্রিয় অনুমোদিত</td><td>Stateless — inbound/outbound দুটোই আলাদাভাবে rule লিখতে হয়</td></tr>
+<tr><td>Rule</td><td>শুধু allow rule</td><td>allow ও explicit deny দুটোই</td></tr>
+</table>
+
+<h3>CDN — কন্টেন্ট ব্যবহারকারীর কাছাকাছি নিয়ে আসা</h3>
+<p>একটা <span class="kw">CDN (Content Delivery Network)</span> স্ট্যাটিক কন্টেন্ট (ছবি, video, JS/CSS) বিশ্বজুড়ে ছড়িয়ে থাকা <span class="kw">edge server</span>-এ cache করে রাখে — ব্যবহারকারীর অনুরোধ মূল সার্ভার পর্যন্ত না গিয়ে ভৌগোলিকভাবে নিকটতম edge থেকেই উত্তর পায়, প্রায়ই <span class="kw">anycast</span> (৩ নম্বর অধ্যায়ে আলোচিত) ব্যবহার করে সবচেয়ে কাছের edge-এ রাউট করা হয় — latency কমে, মূল সার্ভারের ওপর লোডও কমে।</p>
+</template>
+
+<template data-page="security">
+<h2 class="title">১৪. Network Security, Attacks ও Monitoring Tools</h2>
+<p class="lead">এই কোর্সের প্রতিটা অধ্যায়ে ছড়িয়ে থাকা নিরাপত্তা-বিষয়ক টুকরোগুলো (ARP spoofing, NAT ভুল ধারণা, TLS, firewall) এখানে একত্র করে একটা সামগ্রিক দৃষ্টিভঙ্গি তৈরি করা হলো — সাধারণ আক্রমণ, প্রতিরক্ষা কৌশল, ও দৈনন্দিন ডায়াগনস্টিক টুল।</p>
+
+<h3>সাধারণ আক্রমণ — কোন Layer-এ ঘটে</h3>
+<table>
+<tr><th>আক্রমণ</th><th>Layer</th><th>সংক্ষেপে</th></tr>
+<tr><td>ARP Spoofing</td><td>Data Link (২)</td><td>জাল ARP reply দিয়ে ট্রাফিক নিজের দিকে ঘুরিয়ে নেওয়া (৪ নম্বর অধ্যায়ে বিস্তারিত)</td></tr>
+<tr><td>IP Spoofing</td><td>Network (৩)</td><td>প্যাকেটের source IP জাল করে অন্য কারো পরিচয়ে পাঠানো</td></tr>
+<tr><td>DNS Spoofing/Cache Poisoning</td><td>Application (৭)</td><td>জাল DNS response দিয়ে ইউজারকে ভুয়া সার্ভারে পাঠানো</td></tr>
+<tr><td><span class="kw">Man-in-the-Middle (MITM)</span></td><td>যেকোনো স্তর</td><td>দুই পক্ষের মধ্যে অদৃশ্যভাবে বসে ট্রাফিক পড়া/পরিবর্তন করা — TLS-এর মূল প্রতিরক্ষা লক্ষ্য এটাই</td></tr>
+<tr><td><span class="kw">DDoS (Distributed Denial of Service)</span></td><td>বিভিন্ন স্তর</td><td>হাজার হাজার উৎস থেকে একসাথে অতিরিক্ত ট্রাফিক পাঠিয়ে সার্ভিস অচল করে দেওয়া</td></tr>
+<tr><td>Port Scanning</td><td>Transport (৪)</td><td>কোন পোর্ট খোলা তা যাচাই করে দুর্বলতা খোঁজার পুনরুদ্ধার (reconnaissance) ধাপ</td></tr>
+</table>
+
+<h3>Defense-in-Depth ও Zero Trust</h3>
+<div class="callout behind"><span class="tag">Perimeter Security (Castle-and-Moat) থেকে Zero Trust-এ স্থানান্তর</span>
+ঐতিহ্যগত মডেলে ধরে নেওয়া হতো "ভেতরের নেটওয়ার্ক বিশ্বস্ত, বাইরেরটা নয়" — একবার firewall-এর ভেতরে ঢুকতে পারলে প্রায় সবকিছুতেই অ্যাক্সেস পাওয়া যেত। কিন্তু একবার কোনো আক্রমণকারী (phishing বা compromised device দিয়ে) ভেতরে ঢুকে পড়লে, পুরো ভেতরের নেটওয়ার্ক অরক্ষিত হয়ে যেত। <span class="kw">Zero Trust</span> দর্শন ধরে নেয় নেটওয়ার্কের অবস্থান (ভেতরে/বাইরে) কোনো বিশ্বাসের ভিত্তি নয় — প্রতিটা request-কে, তার উৎস যেখান থেকেই আসুক, আলাদাভাবে যাচাই করতে হয় (mTLS, strong authentication) — এটাই VLAN segmentation (২), private subnet (১৩), আর mTLS (৯)-এর মতো এই কোর্সের একাধিক প্র্যাকটিসের একত্রিত দর্শন।</div>
+
+<h3>Diagnostic Tools — প্রতিদিনের কাজে যা লাগে</h3>
+<table>
+<tr><th>টুল</th><th>কাজ</th></tr>
+<tr><td><code>ping</code></td><td>হোস্ট পৌঁছানো যাচ্ছে কিনা ও latency যাচাই (ICMP, ৪ নম্বর অধ্যায়)</td></tr>
+<tr><td><code>traceroute</code>/<code>tracert</code></td><td>গন্তব্য পর্যন্ত প্রতিটা router hop দেখানো</td></tr>
+<tr><td><code>nslookup</code>/<code>dig</code></td><td>DNS resolution পরীক্ষা — কোন record ফেরত আসছে তা সরাসরি দেখা</td></tr>
+<tr><td><code>netstat</code>/<code>ss</code></td><td>লোকাল মেশিনের কোন পোর্ট শুনছে, কোন সংযোগ সক্রিয় তা দেখা</td></tr>
+<tr><td><code>tcpdump</code>/<span class="kw">Wireshark</span></td><td>রিয়েল-টাইমে packet capture ও বিস্তারিত বিশ্লেষণ — প্রতিটা header ভেঙে দেখা যায়</td></tr>
+<tr><td><span class="kw">nmap</span></td><td>একটা হোস্টে কোন পোর্ট খোলা/বন্ধ তা স্ক্যান করা — pentest ও নিজের ইনফ্রাস্ট্রাকচার audit দুটোতেই ব্যবহৃত</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — নিজের ইনফ্রাস্ট্রাকচারে নিজেই nmap চালানো</span>
+আক্রমণকারীর ঠিক যে টুল ব্যবহার করে reconnaissance করে (যেমন nmap দিয়ে port scan), সেই একই টুল নিজের ইনফ্রাস্ট্রাকচারে নিয়মিত চালিয়ে দেখা উচিত — "যা আমার মনে হচ্ছে বন্ধ" তা আসলেই বন্ধ কিনা যাচাই করতে। একটা অনিচ্ছাকৃতভাবে খোলা পোর্ট (যেমন একটা ডেটাবেস যেটা ভুলবশত পাবলিকলি এক্সপোজড) নিজে খুঁজে বের করা, আক্রমণকারী খুঁজে বের করার চেয়ে অনেক ভালো — এটাই authorized security testing/audit-এর মূল যুক্তি।</div>
+</template>
+
+<template data-page="troubleshoot">
+<h2 class="title">১৫. Troubleshooting ও Performance/QoS</h2>
+<p class="lead">এই কোর্সের প্রতিটা স্তর এখন পরিচিত — শেষ অধ্যায়ে দেখা যাক কীভাবে এই পুরো স্তুপ (stack) ব্যবহার করে একটা বাস্তব নেটওয়ার্ক সমস্যা পদ্ধতিগতভাবে ডায়াগনোজ করা হয়, আর কীভাবে সীমিত ব্যান্ডউইথ বিভিন্ন অ্যাপ্লিকেশনের মধ্যে বুদ্ধিমানের মতো ভাগ করা যায়।</p>
+
+<h3>Layer-by-Layer Troubleshooting Approach</h3>
+<table>
+<tr><th>Layer</th><th>প্রশ্ন</th><th>টুল</th></tr>
+<tr><td>Physical/Data Link</td><td>Cable/Wi-Fi সংযুক্ত? Link light জ্বলছে?</td><td>Physical inspection, <code>ip link</code></td></tr>
+<tr><td>Network</td><td>IP address ঠিক আছে? Gateway পৌঁছানো যাচ্ছে?</td><td><code>ping</code>, <code>ip addr</code></td></tr>
+<tr><td>Transport</td><td>সঠিক পোর্ট খোলা/শুনছে?</td><td><code>netstat</code>/<code>ss</code>, <code>nmap</code></td></tr>
+<tr><td>Application</td><td>DNS ঠিক resolve হচ্ছে? সার্ভিস সঠিক response দিচ্ছে?</td><td><code>dig</code>, <code>curl</code>, browser dev tools</td></tr>
+</table>
+<div class="callout why"><span class="tag">Bottom-Up বনাম Top-Down Troubleshooting</span>
+<span class="kw">Bottom-up</span> Physical layer থেকে শুরু করে ধাপে ধাপে ওপরে ওঠে — নতুন/অপরিচিত ইনফ্রাস্ট্রাকচারে কার্যকর, কারণ কোনো অনুমান করা হয় না। <span class="kw">Top-down</span> Application থেকে শুরু করে ("ওয়েবসাইট লোড হচ্ছে না") নিচে নামে — পরিচিত সিস্টেমে দ্রুততর, কারণ সাধারণ কারণ (যেমন DNS) আগে যাচাই হয়। দুটোরই মিশ্রণ — যেমন প্রথমে <code>ping</code> (নেটওয়ার্ক লেয়ার ভালো আছে কিনা) দিয়ে physical/network বাতিল করা, তারপর application-এ ফোকাস করা — বাস্তবে সবচেয়ে বেশি ব্যবহৃত।</div>
+
+<h3>Bandwidth, Latency, Jitter, Packet Loss — চারটা আলাদা মেট্রিক</h3>
+<table>
+<tr><th>মেট্রিক</th><th>মানে</th><th>কোন অ্যাপ্লিকেশনে সবচেয়ে বেশি গুরুত্বপূর্ণ</th></tr>
+<tr><td><span class="kw">Bandwidth</span></td><td>প্রতি সেকেন্ডে সর্বোচ্চ কত ডেটা পাঠানো সম্ভব</td><td>ফাইল ডাউনলোড, streaming quality</td></tr>
+<tr><td><span class="kw">Latency</span></td><td>একটা প্যাকেট গন্তব্যে পৌঁছাতে কত সময় লাগে (one-way বা round-trip)</td><td>Gaming, video call, API response time</td></tr>
+<tr><td><span class="kw">Jitter</span></td><td>latency-এর তারতম্য — প্যাকেট মাঝেমধ্যে দ্রুত, মাঝেমধ্যে ধীরে আসা</td><td>VoIP/video call — উচ্চ jitter শব্দ/ভিডিও ভেঙে ভেঙে আসার কারণ</td></tr>
+<tr><td><span class="kw">Packet Loss</span></td><td>পাঠানো প্যাকেটের কত শতাংশ কখনো পৌঁছায়ই না</td><td>যেকোনো real-time অ্যাপ্লিকেশনে সরাসরি অভিজ্ঞতা খারাপ করে</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common misconception — বেশি Bandwidth মানেই কম Latency</span>
+একটা ৫০০ Mbps সংযোগ একটা ১০০ Mbps সংযোগের চেয়ে বেশি ডেটা <b>একসাথে</b> পাঠাতে পারে, কিন্তু একটা একক প্যাকেট গন্তব্যে পৌঁছাতে কত সময় নেয় (latency) তা মূলত দূরত্ব ও route-এর hop সংখ্যার ওপর নির্ভর করে (আলোর গতির সীমাবদ্ধতা-সহ) — bandwidth বাড়ালে latency কমে না। এই কারণেই একটা দ্রুতগতির সংযোগেও একটা geographically দূরের সার্ভারে (যেমন অন্য মহাদেশে) high-latency অভিজ্ঞতা হতে পারে — CDN (১৩ নম্বর অধ্যায়ে আলোচিত) এই সমস্যারই সমাধান, bandwidth বাড়িয়ে নয়, দূরত্ব কমিয়ে।</div>
+
+<h3>QoS — সীমিত ব্যান্ডউইথের বুদ্ধিদীপ্ত বণ্টন</h3>
+<p><span class="kw">QoS (Quality of Service)</span> সব ট্রাফিককে সমান গুরুত্ব না দিয়ে, গুরুত্বপূর্ণ/সময়-সংবেদনশীল ট্রাফিককে (যেমন VoIP) অগ্রাধিকার দেয় — একটা প্যাকেটের <span class="kw">DSCP</span> ফিল্ডে "priority" ট্যাগ করে router/switch-কে সেই অনুযায়ী queue-তে সাজানোর নির্দেশ দেওয়া হয়।</p>
+<div class="callout best"><span class="tag">বাস্তব উদাহরণ — অফিস নেটওয়ার্কে VoIP-কে অগ্রাধিকার</span>
+একটা অফিসে যদি কেউ একসাথে বড় ফাইল ডাউনলোড করে আর একটা ভিডিও কলে থাকে, bandwidth ভাগাভাগির কারণে কল ভেঙে ভেঙে যেতে পারে। QoS নীতি দিয়ে VoIP/video ট্রাফিককে উচ্চ অগ্রাধিকার দিলে, ফাইল ডাউনলোড সাময়িকভাবে ধীর হবে কিন্তু কল স্পষ্ট থাকবে — এটাই দেখায় নেটওয়ার্কিং শুধু "প্যাকেট পাঠানো" নয়, সীমিত রিসোর্স বুদ্ধিমত্তার সাথে বণ্টন করার প্রকৌশলও।</div>
+
+<h3>সবকিছু একসাথে — এই কোর্সের সম্পূর্ণ চিত্র</h3>
+<p>একটা ব্রাউজারে URL টাইপ করার পর — DNS domain-কে IP-তে অনুবাদ করে (৭) → ARP সেই IP-র MAC ঠিকানা বের করে (৪) → routing টেবিল অনুযায়ী একের পর এক router পার হয়ে প্যাকেট গন্তব্যে পৌঁছায় (৫) → TCP handshake সংযোগ প্রতিষ্ঠা করে, TLS সেটা এনক্রিপ্ট করে (৬, ৯) → HTTP request/response আসল ডেটা বহন করে (৮) → পথের মধ্যে NAT/firewall/load balancer প্রতিটা যথাযথ ভূমিকা পালন করে (১০, ১৩) — আর পুরো সময় জুড়ে নিরাপত্তা ও monitoring সক্রিয় থাকে (১৪)। এটাই আধুনিক নেটওয়ার্কিং-এর সম্পূর্ণ ছবি — Layer 1-এর একটা বৈদ্যুতিক সংকেত থেকে শুরু করে Layer 7-এর একটা ওয়েব পেজ পর্যন্ত, প্রতিটা স্তর একে অপরের ওপর নির্ভর করে একটা সুসংগঠিত সিস্টেম তৈরি করে।</p>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>
