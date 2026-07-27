@@ -187,6 +187,11 @@ Switch :  A পাঠালে ──▶  শুধু B পায় (MAC addre
 <div class="callout why"><span class="tag">Collision Domain বনাম Broadcast Domain</span>
 প্রতিটা switch পোর্ট নিজের একটা আলাদা <span class="kw">collision domain</span> (দুইটা ডিভাইস একসাথে পাঠালে সংঘর্ষ হতে পারে এমন এলাকা) — তাই আধুনিক switched নেটওয়ার্কে collision কার্যত অস্তিত্বহীন। কিন্তু broadcast frame (destination <code>FF:FF:FF:FF:FF:FF</code>) সব পোর্টেই যায় — পুরো switch (বা VLAN)-টাই একটা একক <span class="kw">broadcast domain</span>। একটা নেটওয়ার্কে ডিভাইস যত বাড়ে, broadcast traffic-ও তত বাড়ে — এটাই VLAN দিয়ে ভাগ করার মূল কারণ।</div>
 
+<h3>Redundant Link ও STP — Loop প্রতিরোধ</h3>
+<p>নির্ভরযোগ্যতার জন্য দুইটা switch-কে প্রায়ই একাধিক (redundant) লিংক দিয়ে সংযুক্ত করা হয় — একটা লিংক নষ্ট হলে অন্যটা যেন কাজ চালিয়ে যায়। কিন্তু Layer 2-তে IP-এর মতো কোনো TTL নেই, তাই একটা broadcast frame এই redundant লুপে ঢুকলে অনন্তকাল ধরে সার্কুলেট করতে থাকে — প্রতিটা switch সেটা কপি করে সব পোর্টে আবার পাঠায়, যা কয়েক সেকেন্ডেই পুরো নেটওয়ার্ককে অকেজো করে দিতে পারে (<span class="kw">broadcast storm</span>)।</p>
+<div class="callout behind"><span class="tag">STP (Spanning Tree Protocol) কীভাবে Loop ঠেকায়</span>
+STP সব switch মিলে একটা "root bridge" নির্বাচন করে, তারপর root পর্যন্ত পৌঁছানোর সবচেয়ে ভালো পথটুকু <span class="kw">forwarding</span> অবস্থায় রাখে আর বাকি redundant পোর্টগুলোকে <span class="kw">blocking</span> অবস্থায় রাখে (ফিজিক্যালি সংযুক্ত থাকলেও ডেটা ফরওয়ার্ড করে না) — ফলে সক্রিয় টপোলজিতে কোনো লুপই থাকে না। কোনো active লিংক ব্যর্থ হলে STP পুনরায় হিসাব করে আগে blocked থাকা একটা পোর্টকে forwarding-এ পাঠায় — redundancy বজায় থাকে কিন্তু loop হয় না। আধুনিক নেটওয়ার্কে দ্রুত converge করা <span class="kw">RSTP (Rapid STP)</span> সাধারণত ব্যবহৃত হয় — মূল STP-এর কনভার্জেন্স ৩০-৫০ সেকেন্ড লাগতে পারে, যেখানে RSTP লাগে মাত্র কয়েক সেকেন্ড।</div>
+
 <h3>VLAN — একটা Physical নেটওয়ার্ককে একাধিক Logical নেটওয়ার্কে ভাগ করা</h3>
 <p>একটা <span class="kw">VLAN (Virtual LAN)</span> একই physical switch-কে একাধিক আলাদা broadcast domain-এ ভাগ করে — যেমন HR, Engineering, আর Guest Wi-Fi আলাদা VLAN-এ থাকলে একই switch-এ থেকেও তারা একে অপরের broadcast traffic দেখে না, আর VLAN-এর মধ্যে যোগাযোগের জন্য একটা router/Layer-3 switch দরকার হয় (routing অধ্যায়ে বিস্তারিত)।</p>
 <table>
@@ -323,6 +328,9 @@ DHCP প্রতিটা IP address একটা নির্দিষ্ট �
 <tr><td><span class="kw">RIP</span></td><td>Distance Vector</td><td>প্রতিবেশীর কাছ থেকে "কতদূরে" (hop count) শোনে, নিজের টেবিল আপডেট করে সেই তথ্য আবার প্রতিবেশীদের জানায় — সরল কিন্তু বড় নেটওয়ার্কে ধীর ও সীমিত (max ১৫ hop)</td></tr>
 <tr><td><span class="kw">OSPF</span></td><td>Link-State</td><td>প্রতিটা router পুরো নেটওয়ার্কের টপোলজির একটা মানচিত্র তৈরি করে (সব link ও তাদের cost জেনে), তারপর নিজে shortest-path হিসাব করে — দ্রুত converge করে, বড় enterprise নেটওয়ার্কে ব্যবহৃত</td></tr>
 </table>
+
+<div class="callout behind"><span class="tag">Administrative Distance — একাধিক Protocol একই Destination-এর জন্য দ্বিমত হলে</span>
+একই router-এ কখনো কখনো static route, RIP, আর OSPF — একই destination network-এর জন্য ভিন্ন ভিন্ন path শিখে ফেলতে পারে। কোনটা routing table-এ জায়গা পাবে তা ঠিক করে <span class="kw">Administrative Distance (AD)</span> — উৎসের বিশ্বাসযোগ্যতার একটা র‍্যাঙ্কিং, কম মান মানে বেশি বিশ্বস্ত: directly connected (0), static route (1), OSPF (110), RIP (120)। এখানে AD-ই প্রথমে সিদ্ধান্ত নেয় কোন উৎসের রুট গ্রহণযোগ্য — <code>metric</code> শুধু তখনই তুলনা করা হয় যখন একই protocol/উৎস থেকে একাধিক path পাওয়া যায়।</div>
 
 <h3>BGP — ইন্টারনেটের মেরুদণ্ড</h3>
 <p>RIP/OSPF একটা প্রতিষ্ঠানের নিজের নেটওয়ার্কের (একটা <span class="kw">Autonomous System</span>/AS) ভেতরে ব্যবহৃত হয়। কিন্তু ভিন্ন ভিন্ন প্রতিষ্ঠান/ISP (ভিন্ন AS) একে অপরের সাথে কীভাবে রুট শেয়ার করে? সেটাই <span class="kw">BGP (Border Gateway Protocol)</span>-এর কাজ — ইন্টারনেট মূলত হাজার হাজার AS-এর মধ্যে BGP দিয়ে বিনিময় করা routing তথ্যের ওপর দাঁড়িয়ে।</p>
@@ -543,6 +551,13 @@ deny   ip any any             <span class="c"># বাকি সব inbound ট�
 <template data-page="vpn">
 <h2 class="title">১১. VPN ও Tunneling</h2>
 <p class="lead">দুটো অফিস আলাদা শহরে, বা একজন রিমোট কর্মী বাসা থেকে কোম্পানির ইন্টারনাল নেটওয়ার্কে যুক্ত হতে চান — সরাসরি প্রাইভেট cable বসানো অবাস্তব। <span class="kw">VPN</span> পাবলিক ইন্টারনেটের ওপর দিয়েই একটা এনক্রিপ্টেড, লজিক্যালি প্রাইভেট "টানেল" তৈরি করে।</p>
+<div class="diagram"><pre>
+আসল প্যাকেট         : [ IP Header │ TCP │ Data ]                           ← আপনার আসল ট্রাফিক
+VPN Tunnel-এ ঢোকার পর : [ New (Public) IP Header │ Encrypted( IP │ TCP │ Data ) ]
+                          └─ শুধু এই বাইরের IP Header ইন্টারনেটে raw দেখা যায়,
+                             ভেতরের আসল IP/port/data পুরোটাই এনক্রিপ্টেড থাকে
+</pre></div>
+<p>এটাই "tunnel"-এর প্রকৃত অর্থ — আসল প্যাকেটকে (header সহ) এনক্রিপ্ট করে একটা নতুন IP header দিয়ে মুড়ে দেওয়া, যাতে পথের মধ্যবর্তী কোনো router শুধু বাইরের ঠিকানাটাই দেখতে পায়, ভেতরের আসল ট্রাফিক নয়।</p>
 
 <h3>Site-to-Site বনাম Remote Access VPN</h3>
 <table>
@@ -550,6 +565,8 @@ deny   ip any any             <span class="c"># বাকি সব inbound ট�
 <tr><td><span class="kw">Site-to-Site</span></td><td>দুটো অফিস নেটওয়ার্ককে (প্রতিটার নিজস্ব রাউটার/gateway আছে) স্থায়ীভাবে সংযুক্ত করে — উভয় পাশের সব ডিভাইস একে অপরকে দেখতে পারে, যেন একটাই নেটওয়ার্ক</td></tr>
 <tr><td><span class="kw">Remote Access</span></td><td>একজন ব্যক্তির ডিভাইস (ল্যাপটপ) থেকে সরাসরি কোম্পানির নেটওয়ার্কে ক্লায়েন্ট সফটওয়্যার দিয়ে সংযোগ — রিমোট কর্মীদের জন্য সাধারণ</td></tr>
 </table>
+<div class="callout why"><span class="tag">Split Tunnel বনাম Full Tunnel — সব ট্রাফিক VPN দিয়ে যাবে কিনা</span>
+<span class="kw">Full tunnel</span>-এ ক্লায়েন্টের সব ইন্টারনেট ট্রাফিক (এমনকি সাধারণ ওয়েব ব্রাউজিং) VPN দিয়ে কোম্পানির নেটওয়ার্কে গিয়ে তারপর বাইরে বের হয় — নিরাপত্তা ও monitoring-এর জন্য ভালো (সব ট্রাফিক কোম্পানির firewall/inspection পার হয়), কিন্তু কোম্পানির bandwidth বেশি খরচ হয় ও latency বাড়ে। <span class="kw">Split tunnel</span>-এ শুধু কোম্পানির ইন্টারনাল রিসোর্সের ট্রাফিক VPN দিয়ে যায়, বাকি সাধারণ ব্রাউজিং সরাসরি লোকাল ইন্টারনেট দিয়ে বের হয় — দ্রুততর ও কম খরচ, কিন্তু নিরাপত্তা নিয়ন্ত্রণ কম, কারণ সেই বাকি ট্রাফিক কোম্পানির firewall/monitoring এড়িয়ে সরাসরি ইন্টারনেটে চলে যায়।</div>
 
 <h3>IPSec — Enterprise VPN-এর ঐতিহ্যবাহী ভিত্তি</h3>
 <table>
@@ -573,6 +590,16 @@ ssh -L 5433:localhost:5432 user@remote-server.example.com</pre>
 <template data-page="wireless">
 <h2 class="title">১২. Wireless Networking ও Wi-Fi Security</h2>
 <p class="lead">Wired নেটওয়ার্কে physical access ছাড়া কেউ ট্রাফিক শুনতে পারে না, কিন্তু Wi-Fi রেডিও তরঙ্গ দেয়াল ভেদ করে ছড়িয়ে যায় — যে কেউ রেঞ্জের মধ্যে থাকলে সেই সংকেত ধরতে পারে, তাই wireless-এ encryption/authentication বিশেষভাবে গুরুত্বপূর্ণ।</p>
+
+<h3>SSID ও Association — একটা ডিভাইস কীভাবে Wi-Fi নেটওয়ার্কে যুক্ত হয়</h3>
+<p>প্রতিটা Wi-Fi নেটওয়ার্কের একটা <span class="kw">SSID (Service Set Identifier)</span> থাকে — নেটওয়ার্কের নাম, যা Access Point (AP) নিয়মিত <span class="kw">beacon frame</span> সম্প্রচার করে ঘোষণা করে (তাই ডিভাইস স্ক্যান করলেই আশেপাশের নেটওয়ার্কের তালিকা দেখতে পায়)। একটা ডিভাইস সংযুক্ত হওয়ার আগে তিনটা ধাপ পার হয়:</p>
+<div class="diagram"><pre>
+Scanning       ── আশেপাশের AP-গুলোর beacon frame শোনা (কোন SSID, কোন চ্যানেলে)
+Authentication ── AP-কে নিজের পরিচয়/পাসওয়ার্ড প্রমাণ করা (WPA2/WPA3 handshake)
+Association    ── AP আনুষ্ঠানিকভাবে ডিভাইসকে গ্রহণ করে — এরপর DHCP দিয়ে IP address (৪ নম্বর অধ্যায়)
+</pre></div>
+<div class="callout mistake"><span class="tag">Common misconception — SSID লুকালেই নেটওয়ার্ক নিরাপদ</span>
+"Hide SSID" অপশন শুধু beacon frame-এ নাম প্রচার বন্ধ করে — কিন্তু association-এর সময় ডিভাইস ও AP-এর মধ্যে SSID তখনও প্লেইনটেক্সটে চালাচালি হয়, তাই যেকোনো packet-sniffing টুল দিয়ে সহজেই আসল নাম বের করা যায়। এটা প্রকৃত নিরাপত্তা নয় (security through obscurity) — প্রকৃত সুরক্ষা আসে WPA3-এর মতো শক্তিশালী এনক্রিপশন/অথেন্টিকেশন থেকে, নাম লুকানো থেকে নয়।</div>
 
 <h3>802.11 স্ট্যান্ডার্ড — Wi-Fi-এর প্রজন্মগুলো</h3>
 <table>
