@@ -83,6 +83,17 @@
   .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
   hr{border:none; border-top:1px solid var(--border); margin:28px 0}
   .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  .search-wrap{padding:0 10px 14px}
+  .search-box{
+    width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    border-radius:9px; padding:9px 12px; font-size:13.5px; font-family:inherit;
+    outline:none; transition:border-color .15s;
+  }
+  .search-box:focus{border-color:var(--accent)}
+  .search-box::placeholder{color:var(--muted)}
+  .search-meta{font-size:11.5px; color:var(--muted); padding:6px 2px 0; min-height:14px}
+  .navbtn.hide{display:none}
+  mark.hl{background:#fde047; color:#1a1a1a; padding:0 1px; border-radius:3px}
   ::-webkit-scrollbar{width:10px;height:10px}
   ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
   @media (max-width:820px){
@@ -100,6 +111,10 @@
       <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
       <h1>☸️ Kubernetes Mastery</h1>
       <p>Beginner → Advanced • .NET focus • বাংলায়</p>
+      <div class="search-wrap">
+        <input type="text" id="courseSearch" class="search-box" placeholder="🔍 এই কোর্সে সার্চ করুন..." autocomplete="off">
+        <div class="search-meta" id="searchMeta"></div>
+      </div>
     </div>
   </nav>
   <main class="main" id="main"></main>
@@ -1375,15 +1390,105 @@ spec:
     main.appendChild(pg);
   });
 
+  const searchIndex = {};
+  (function buildIndex(){
+    const tmp = document.createElement('div');
+    pages.forEach(p=>{
+      tmp.innerHTML = templates[p.id] || '';
+      searchIndex[p.id] = ((p.title||'') + ' ' + tmp.textContent).toLowerCase();
+    });
+  })();
+
+  let currentQuery = '';
+
+  function clearHighlights(root){
+    root.querySelectorAll('mark.hl').forEach(m=>{ m.replaceWith(document.createTextNode(m.textContent)); });
+    root.normalize();
+  }
+
+  function highlightIn(root, q){
+    if(!q) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        const p = node.parentNode;
+        if(!node.nodeValue || !p || p.tagName==='SCRIPT' || p.tagName==='STYLE' || p.tagName==='MARK') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes=[]; let n; while((n=walker.nextNode())) nodes.push(n);
+    const ql = q.toLowerCase();
+    nodes.forEach(node=>{
+      const text = node.nodeValue, lower = text.toLowerCase();
+      if(!lower.includes(ql)) return;
+      const frag = document.createDocumentFragment();
+      let idx=0, pos;
+      while((pos = lower.indexOf(ql, idx)) !== -1){
+        if(pos>idx) frag.appendChild(document.createTextNode(text.slice(idx,pos)));
+        const mark = document.createElement('mark');
+        mark.className='hl';
+        mark.textContent = text.slice(pos, pos+ql.length);
+        frag.appendChild(mark);
+        idx = pos+ql.length;
+      }
+      if(idx<text.length) frag.appendChild(document.createTextNode(text.slice(idx)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  function applyHighlight(){
+    const active = main.querySelector('.page.active');
+    if(!active) return;
+    clearHighlights(active);
+    if(currentQuery) highlightIn(active, currentQuery);
+  }
+
   function show(id){
     document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
     document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
-    window.scrollTo(0,0);
+    applyHighlight();
+    const active = main.querySelector('.page.active');
+    const firstMark = active ? active.querySelector('mark.hl') : null;
+    if(firstMark && firstMark.scrollIntoView) firstMark.scrollIntoView({block:'center'});
+    else window.scrollTo(0,0);
     if(history.replaceState) history.replaceState(null,'','#'+id);
   }
 
   sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
   main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const searchInput = document.getElementById('courseSearch');
+  const searchMeta = document.getElementById('searchMeta');
+  if(searchInput){
+    searchInput.addEventListener('input', ()=>{
+      const q = searchInput.value.trim();
+      currentQuery = q;
+      const ql = q.toLowerCase();
+      let matchCount = 0, firstMatch = null;
+      pages.forEach(p=>{
+        const btn = sidebar.querySelector('.navbtn[data-target="'+p.id+'"]');
+        const matches = !ql || searchIndex[p.id].includes(ql);
+        if(matches){ matchCount++; if(!firstMatch) firstMatch = p; }
+        if(btn) btn.classList.toggle('hide', !matches);
+      });
+      if(!ql) searchMeta.textContent = '';
+      else if(matchCount===0) searchMeta.textContent = 'কোনো ফলাফল নেই';
+      else searchMeta.textContent = matchCount + 'টা অধ্যায়ে ফলাফল পাওয়া গেছে';
+
+      const active = main.querySelector('.page.active');
+      const activeId = active ? active.id.replace('page-','') : null;
+      const activeMatches = !!(ql && activeId && searchIndex[activeId] && searchIndex[activeId].includes(ql));
+      if(ql && !activeMatches && firstMatch){
+        show(firstMatch.id);
+      } else {
+        applyHighlight();
+        const mark = active ? active.querySelector('mark.hl') : null;
+        if(ql && mark && mark.scrollIntoView) mark.scrollIntoView({block:'center'});
+      }
+    });
+    searchInput.addEventListener('keydown', e=>{
+      if(e.key==='Escape'){ searchInput.value=''; searchInput.dispatchEvent(new Event('input')); searchInput.blur(); }
+    });
+  }
 
   const h=location.hash.replace('#','');
   if(h && pages.some(p=>p.id===h)) show(h);
