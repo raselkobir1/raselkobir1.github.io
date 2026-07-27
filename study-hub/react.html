@@ -1265,6 +1265,95 @@ function ResponsiveComponent() {
 }</pre>
 <p><b>ব্যাখ্যা:</b> এই প্রশ্নে interviewer দেখতে চান — dependency array সঠিক (<code>[]</code>, কারণ listener একবারই বসানো দরকার), cleanup function আছে কিনা (না থাকলে প্রতিবার re-mount-এ নতুন listener জমতে থাকবে — memory leak), আর hook নামকরণ কনভেনশন (<code>use</code> prefix) মানা হয়েছে কিনা।</p>
 
+<h3>১৪) useState থাকতে useReducer কবে বেছে নেবেন?</h3>
+<pre><span class="c">// একাধিক sub-value একসাথে, নির্দিষ্ট নিয়মে বদলাচ্ছে — useReducer এখানে যুক্তি এক জায়গায় জড়ো করে</span>
+function cartReducer(state, action) {
+  switch (action.type) {
+    case "add":    return { ...state, items: [...state.items, action.item] };
+    case "remove": return { ...state, items: state.items.filter(i =&gt; i.id !== action.id) };
+    default: return state;
+  }
+}
+const [state, dispatch] = useReducer(cartReducer, { items: [] });</pre>
+<p><b>ব্যাখ্যা:</b> একটা স্বাধীন, সরল মান (boolean toggle, একটা input value) হলে <code>useState</code>-ই যথেষ্ট। কিন্তু যখন state-এর একাধিক sub-value একই action-এ একসাথে, নির্দিষ্ট নিয়মে বদলানো দরকার হয়, তখন আলাদা আলাদা <code>useState</code> রাখলে "কোন state কীভাবে বদলাবে" এই যুক্তি component জুড়ে ছড়িয়ে পড়ে। <code>useReducer</code> এই পুরো update logic-কে একটা pure reducer function-এ কেন্দ্রীভূত করে — অনেকটা Redux-এর reducer প্যাটার্ন, কিন্তু কোনো external library ছাড়াই (Advanced Hooks অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৫) "Text content does not match server-rendered HTML" — এই hydration mismatch error কেন হয়, আর কীভাবে ঠিক করবেন?</h3>
+<pre><span class="c">// ❌ সার্ভার আর ক্লায়েন্ট প্রথম render-এ ভিন্ন ফলাফল দিচ্ছে</span>
+function Clock() {
+  return &lt;p&gt;{new Date().toLocaleTimeString()}&lt;/p&gt;;   <span class="c">// সার্ভারের সময় ≠ ব্রাউজারে hydrate হওয়ার সময়</span>
+}
+
+<span class="c">// ✅ প্রথম render দুই জায়গাতেই এক রাখা — সময়-নির্ভর মান mount-এর পরে সেট করা</span>
+function Clock() {
+  const [time, setTime] = useState(null);
+  useEffect(() =&gt; { setTime(new Date().toLocaleTimeString()); }, []);
+  return &lt;p&gt;{time ?? "--:--:--"}&lt;/p&gt;;
+}</pre>
+<p><b>ব্যাখ্যা:</b> React আশা করে সার্ভারে render হওয়া HTML আর ক্লায়েন্টে hydrate করার সময় প্রথম render-এর ফলাফল একই হবে। <code>new Date()</code>, <code>Math.random()</code>, বা সরাসরি <code>typeof window !== "undefined"</code>-এর মতো কিছু render-এর ভেতরে ব্যবহার করলে সার্ভার আর ক্লায়েন্ট ভিন্ন আউটপুট দেয়, ফলে React mismatch warning/error দেখায়। সমাধান — এমন ডেটা render-এ সরাসরি না বসিয়ে <code>useEffect</code>-এ (যা শুধু client-এ, mount-এর পরে চলে) সেট করা, যাতে প্রথম render দুই জায়গাতেই অভিন্ন থাকে (Server Components অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৬) useTransition আসলে কী সমস্যা সমাধান করে, আর এটা debounce থেকে আলাদা কীভাবে?</h3>
+<pre>const [isPending, startTransition] = useTransition();
+function handleChange(e) {
+  setQuery(e.target.value);              <span class="c">// urgent — সাথে সাথে দেখানো লাগবে</span>
+  startTransition(() =&gt; {
+    setFiltered(allProducts.filter(p =&gt; p.name.includes(e.target.value)));  <span class="c">// non-urgent</span>
+  });
+}</pre>
+<p><b>ব্যাখ্যা:</b> একটা ভারী update (বড় list filter/sort)-কে "non-urgent" চিহ্নিত করে দিলে React সেটাকে interruptible রাখে — input typing-এর responsiveness বজায় থাকে, কারণ নতুন urgent update এলে চলমান non-urgent render বাতিল করে আবার শুরু হয়। Debounce-এ filter শুরু হতেই একটা fixed delay (যেমন ৩০০ms) অপেক্ষা করতে হয়, টাইপ করা থামার পরেই; <code>startTransition</code>-এ filter সাথে সাথেই শুরু হয় কিন্তু কখনো input-কে block করে না — আর <code>isPending</code> দিয়ে হালকা loading ইঙ্গিতও দেখানো যায় (Performance অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৭) React Router-এর data router-এ loader ব্যবহার করলে কী সুবিধা পাওয়া যায়?</h3>
+<pre>{
+  path: "products/:productId",
+  element: &lt;ProductDetail /&gt;,
+  loader: async ({ params }) =&gt; fetch(`/api/products/${params.productId}`).then(r =&gt; r.json()),
+}
+<span class="c">// component-এ</span>
+function ProductDetail() {
+  const product = useLoaderData();   <span class="c">// render হওয়ার আগেই ডেটা প্রস্তুত</span>
+  return &lt;h2&gt;{product.name}&lt;/h2&gt;;
+}</pre>
+<p><b>ব্যাখ্যা:</b> পুরনো প্যাটার্নে component আগে mount হয়ে <code>useEffect</code>-এ fetch শুরু করে — UI প্রথমে খালি/loading অবস্থায় render হয়, তারপর ডেটা এলে আবার render হয় ("render-then-fetch")। <code>loader</code> দিয়ে navigation শুরু হওয়ার সাথে সাথেই fetch শুরু হয়ে যায়, component render হয় শুধু ডেটা প্রস্তুত হলে ("fetch-then-render") — এতে loading spinner-এর ঝাপটানি কমে এবং perceived performance ভালো হয় (Routing অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৮) useEffect দিয়ে সরাসরি fetch করার বদলে React Query/SWR ব্যবহার করলে কী কী সমস্যা এমনিতেই সমাধান হয়ে যায়?</h3>
+<pre><span class="c">// ❌ useEffect fetch — race condition ঝুঁকিপূর্ণ, caching নেই</span>
+useEffect(() =&gt; {
+  fetch(`/api/users/${userId}`).then(r =&gt; r.json()).then(setUser);
+}, [userId]);
+
+<span class="c">// ✅ React Query — caching, race condition handling, retry — সব built-in</span>
+const { data: user, isLoading } = useQuery({
+  queryKey: ["user", userId],
+  queryFn: () =&gt; fetch(`/api/users/${userId}`).then(r =&gt; r.json()),
+});</pre>
+<p><b>ব্যাখ্যা:</b> ম্যানুয়াল <code>useEffect</code> fetch-এ <code>userId</code> দ্রুত বদলালে পুরনো response পরে ফিরে এসে নতুন state ওভাররাইট করতে পারে (race condition), কোনো caching নেই (একই ডেটার জন্য বারবার fetch), retry/background-refetch লজিক নিজে লিখতে হয়। React Query/SWR <code>queryKey</code>-ভিত্তিক caching, deduplication, স্বয়ংক্রিয় race-condition handling, আর retry-with-backoff বিল্ট-ইন দেয় — "server state" ব্যবস্থাপনাকে একটা সমাধান করা সমস্যা হিসেবে দেখে (Data Fetching অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৯) Testing Library-তে getByRole/getByLabelText রেখে সবসময় data-testid ব্যবহার না করার পরামর্শ কেন দেওয়া হয়?</h3>
+<pre><span class="c">// ❌ শেষ অবলম্বন হিসেবেই ব্যবহার করা উচিত</span>
+screen.getByTestId("submit-btn")
+
+<span class="c">// ✅ ব্যবহারকারী/screen reader যেভাবে element চেনে, সেভাবেই খোঁজা</span>
+screen.getByRole("button", { name: /submit/i })</pre>
+<p><b>ব্যাখ্যা:</b> RTL-এর দর্শন হলো — "যত বেশি সম্ভব টেস্ট আসল সফটওয়্যার ব্যবহারের সাথে মিলবে, তত বেশি আত্মবিশ্বাস দেবে"। <code>data-testid</code> ব্যবহারকারীর অভিজ্ঞতা থেকে সম্পূর্ণ বিচ্ছিন্ন একটা attribute — একটা বাটনে সঠিক <code>aria-label</code> না থাকলেও testid দিয়ে টেস্ট পাস করে যাবে, অথচ screen reader ব্যবহারকারী সেটা বুঝতে পারবেন না। <code>getByRole</code>/<code>getByLabelText</code> প্রথমে ব্যবহার করলে টেস্টই accessibility-এর একটা checker হিসেবে কাজ করে (Testing অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>২০) Compound Components প্যাটার্ন কী সমস্যা সমাধান করে?</h3>
+<pre>&lt;Tabs defaultValue="profile"&gt;
+  &lt;Tabs.List&gt;
+    &lt;Tabs.Tab value="profile"&gt;Profile&lt;/Tabs.Tab&gt;
+    &lt;Tabs.Tab value="settings"&gt;Settings&lt;/Tabs.Tab&gt;
+  &lt;/Tabs.List&gt;
+  &lt;Tabs.Panel value="profile"&gt;Profile content&lt;/Tabs.Panel&gt;
+&lt;/Tabs&gt;</pre>
+<p><b>ব্যাখ্যা:</b> এখানে <code>Tabs</code>, <code>Tabs.List</code>, <code>Tabs.Tab</code>, <code>Tabs.Panel</code> Context দিয়ে implicit ভাবে সংযুক্ত, কিন্তু ব্যবহারকারী নিজের ইচ্ছামতো ক্রম ও গঠনে সাজাতে পারেন — একটামাত্র বড়, prop-heavy configuration object-এর বদলে HTML-এর নিজস্ব <code>&lt;select&gt;</code>/<code>&lt;option&gt;</code>-এর মতো flexible composition পাওয়া যায়। এজন্যই বেশিরভাগ headless UI library (Radix, Headless UI) এই প্যাটার্নে বানানো (Patterns অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>২১) Error Boundary এখনো কেন class component হিসেবেই লিখতে হয়, আর পুরো অ্যাপকে একটামাত্র বড় Error Boundary দিয়ে wrap করা কেন ভুল?</h3>
+<pre>class ErrorBoundary extends React.Component {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error, info) { logErrorToService(error, info); }
+  render() { return this.state.hasError ? this.props.fallback : this.props.children; }
+}</pre>
+<p><b>ব্যাখ্যা:</b> <code>getDerivedStateFromError</code> ও <code>componentDidCatch</code> lifecycle method-এর এখনো কোনো hook সমতুল্য নেই — তাই Error Boundary একমাত্র জায়গা যেখানে class component লেখা বাধ্যতামূলক। পুরো অ্যাপকে একটামাত্র বড় Error Boundary দিয়ে wrap করলে, একটা ছোট widget crash করলেই পুরো পেজ সাদা স্ক্রিন হয়ে যায় — প্রতিটা independent widget/section-কে আলাদা Error Boundary দিয়ে wrap করলে একটা অংশ ভেঙে গেলেও বাকি অ্যাপ স্বাভাবিকভাবে চলতে থাকে (Production Concerns অধ্যায়ে বিস্তারিত)।</p>
+
 <div class="callout best"><span class="tag">Interview-এ সোনালি টিপ</span>
 <ul>
 <li>"কেন re-render হচ্ছে" জাতীয় প্রশ্ন এলেই → <b>referential equality</b> (object/function/array প্রতি render-এ নতুন reference) নিয়ে ভাবুন।</li>

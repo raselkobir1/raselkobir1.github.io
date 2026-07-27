@@ -120,6 +120,7 @@ const pages = [
   {id:"security",       icon:"🛡️", title:"DevSecOps — Shift-Left Security"},
   {id:"artifact",       icon:"📦", title:"Artifact ও Environment Promotion"},
   {id:"platform",       icon:"🛤️", title:"Platform Engineering ও Developer Experience"},
+  {id:"interview",      icon:"🎯", title:"১৪. Interview প্রশ্নোত্তর"},
 ];
 </script>
 
@@ -683,6 +684,71 @@ DevOps-এর "পুরো দায়িত্ব একই টিমের" 
 
 <h3>সবকিছু একসাথে — এই কোর্সের সম্পূর্ণ চিত্র</h3>
 <p>একজন ডেভেলপার কোড commit করেন → CI pipeline build/test করে, image push করে (২ নম্বর) → manifest repo-তে commit যায়, Argo CD/Flux সেটা cluster-এ sync করে (৬ নম্বর), deployment strategy অনুযায়ী নিরাপদে rollout হয় (৩ নম্বর) → Observability সবকিছু পর্যবেক্ষণ করে (৮ নম্বর), SLO-এর বিপরীতে error budget ট্র্যাক হয় (৯ নম্বর) → কোনো সমস্যা হলে incident lifecycle অনুসরণ করে দ্রুত সমাধান ও শেখা হয় (১০ নম্বর) → পুরো সময় জুড়ে security scanning ও secrets management প্রতিটা স্তরে সক্রিয় থাকে (৭ ও ১১ নম্বর) — আর একটা Platform Engineering টিম এই পুরো প্রবাহকে একটা সহজ, স্ব-সেবা golden path হিসেবে সব প্রোডাক্ট টিমের জন্য উপলব্ধ করে। এটাই আধুনিক DevOps-এর সম্পূর্ণ ছবি — একটা টুল নয়, একটা সংযুক্ত সিস্টেম।</p>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৪. Interview প্রশ্নোত্তর</h2>
+<p class="lead">DevOps ইন্টারভিউতে বারবার ঘুরেফিরে আসা প্রশ্ন — basic থেকে advanced পর্যন্ত, এই কোর্সের প্রতিটা অধ্যায়ের সাথে সংযুক্ত করে বাংলায় ব্যাখ্যা।</p>
+
+<h3>১) DORA-এর চারটা মেট্রিক কী কী, আর কেন "দ্রুত deploy করলে stability কমবে" এই ধারণাটা ভুল?</h3>
+<p><b>ব্যাখ্যা:</b> Deployment Frequency, Lead Time for Changes, Change Failure Rate, আর Time to Restore Service (MTTR) — এই চারটা (Foundation অধ্যায়ে বিস্তারিত)। DORA-এর গবেষণা দেখায় যেসব টিম বেশি ঘন ঘন, ছোট ব্যাচে deploy করে, তাদের Change Failure Rate সাধারণত কমই থাকে — কারণ ছোট change ধরা ও rollback করা সহজ। তাই গতি আর স্থিতিশীলতা পরস্পরবিরোধী নয়, ভালোভাবে করলে একসাথেই ভালো হয়।</p>
+
+<h3>২) Continuous Integration, Continuous Delivery, আর Continuous Deployment — এই তিনটার পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> CI মানে প্রতিটা commit স্বয়ংক্রিয়ভাবে build/test হওয়া। Continuous Delivery মানে প্রতিটা সফল build সবসময় production-ready থাকে, কিন্তু আসল deploy একটা ম্যানুয়াল অনুমোদনে হয়। Continuous Deployment-এ মানুষের অনুমোদন ছাড়াই প্রতিটা সফল build স্বয়ংক্রিয়ভাবে প্রোডাকশনে চলে যায় (CD অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৩) Blue-Green আর Canary deployment-এর পার্থক্য কী, আর কখন কোনটা বেছে নেবেন?</h3>
+<pre>Blue-Green: ১০০% ট্রাফিক এক ধাক্কায় blue → green-এ সুইচ (দ্রুততম rollback, কিন্তু দ্বিগুণ infra)
+Canary:     ৫% → ২৫% → ৫০% → ১০০% — ধাপে ধাপে metric দেখে ট্রাফিক বাড়ানো</pre>
+<p><b>ব্যাখ্যা:</b> Blue-Green-এ দুইটা সম্পূর্ণ identical environment থাকে, সুইচ instant ও rollback সবচেয়ে দ্রুত — কিন্তু সবসময় দ্বিগুণ infrastructure চালু রাখতে হয় বলে খরচ বেশি। Canary-তে প্রথমে সামান্য শতাংশ ট্রাফিক নতুন version-এ পাঠিয়ে error rate/latency পর্যবেক্ষণ করা হয়, তারপর ধীরে ধীরে বাড়ানো হয় — খরচ কম কিন্তু rollout সম্পূর্ণ হতে বেশি সময় লাগে। বড়, ব্যয়বহুল infrastructure-ভিত্তিক সিস্টেমে Canary বেশি প্রচলিত; ছোট, কম-ট্রাফিক সার্ভিসে Blue-Green-এর বাড়তি খরচ গ্রহণযোগ্য (CD অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৪) Feature flag ব্যবহার করে "deploy করা" আর "release করা"-কে কীভাবে আলাদা করা যায়?</h3>
+<pre>if (await featureManager.IsEnabledAsync("NewCheckoutFlow"))
+    return await newCheckoutService.ProcessAsync(order);
+return await legacyCheckoutService.ProcessAsync(order);</pre>
+<p><b>ব্যাখ্যা:</b> Deploy মানে নতুন কোড প্রোডাকশন সার্ভারে চলছে; release মানে ব্যবহারকারী সেই আচরণ দেখতে পাচ্ছেন। Feature flag বন্ধ রেখে কোড deploy করা যায় — flag চালু না করা পর্যন্ত ব্যবহারকারী পুরনো আচরণই দেখবেন। এতে deploy ঘন ঘন, ছোট, low-risk হতে পারে, আর release যখন business-এর জন্য সঠিক সময় তখন হতে পারে — একটা সমস্যা দেখা দিলে redeploy ছাড়াই শুধু flag বন্ধ করে (kill switch) সাথে সাথে আগের আচরণে ফেরা যায় (CD অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৫) Terraform-এর state file কেন দরকার — cloud provider-কে সরাসরি query করলেই তো চলে?</h3>
+<p><b>ব্যাখ্যা:</b> তিনটা কারণে না। প্রথমত <b>mapping</b> — cloud জানে <code>i-0abcd1234</code> একটা EC2 instance আছে, কিন্তু এটা যে কোডের <code>aws_instance.web</code>-এর প্রতিনিধিত্ব করছে তা state ফাইলই সংযোগ করে রাখে। দ্বিতীয়ত <b>performance</b> — শত শত resource-এ প্রতিবার সব resource-এর জন্য API call করা ধীর, local state থেকে read করা মুহূর্তের মধ্যে হয়। তৃতীয়ত, dependency-এর ক্রম বা auto-generated মানের মতো <b>metadata</b> শুধু state-এই থাকে, cloud API-তে না (IaC অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৬) Infrastructure drift কী, আর কেন Terraform-তৈরি resource ম্যানুয়ালি এডিট করা উচিত না?</h3>
+<p><b>ব্যাখ্যা:</b> Drift ঘটে যখন কেউ cloud console-এ গিয়ে সরাসরি একটা Terraform-তৈরি resource বদলে দেয় — তখন state ফাইল আর বাস্তব অবস্থা অসামঞ্জস্যপূর্ণ হয়ে যায়। পরের <code>terraform apply</code> সেই ম্যানুয়াল পরিবর্তন বাতিল করে আগের অবস্থায় ফিরিয়ে দিতে পারে, বা conflict দেখাতে পারে। একবার IaC দিয়ে resource তৈরি হলে সব পরবর্তী পরিবর্তন কোড দিয়েই হওয়া উচিত — GitOps-এ "Git-ই একমাত্র সত্য" নীতির infrastructure-স্তরের সংস্করণ (IaC অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৭) Ansible-এ idempotency বলতে কী বোঝায়?</h3>
+<pre>- name: Install nginx
+  apt:
+    name: nginx
+    state: present     <span class="c"># "থাকতে হবে" — ইতিমধ্যে থাকলে কিছুই করবে না</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>state: present</code> "nginx ইনস্টল করো" কমান্ড নয়, বরং "nginx-এর অস্তিত্ব নিশ্চিত করো" ঘোষণা — playbook একবার চালান বা একশবার, ফলাফল একই থাকে, এটাই idempotency। এটা Kubernetes-এর declarative reconciliation-এরই ধারণা, শুধু এবার প্রয়োগ হচ্ছে একটা running VM-এর ভেতরে (Configuration Management অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৮) Ansible-এ <code>handler</code>/<code>notify</code> দিয়ে service restart করা হয় কেন, সরাসরি একটা restart টাস্ক না রেখে?</h3>
+<p><b>ব্যাখ্যা:</b> <code>copy</code> টাস্ক নিজেই idempotent — ফাইলের কন্টেন্ট আগে থেকেই একই থাকলে কিছুই বদলায় না (<code>changed: false</code>), আর কিছু না বদলালে সংশ্লিষ্ট handler কখনো trigger হয় না। সরাসরি "restart nginx" টাস্ক রাখলে প্রতিবার playbook চালানোর সাথে config-এ কোনো প্রকৃত পরিবর্তন না থাকলেও nginx restart হতো, প্রতিটা রুটিন রান-এই অকারণ downtime তৈরি করত — handler idempotency-এর নীতিকে side-effect-ful অপারেশনেও বজায় রাখে (Configuration Management অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৯) GitOps-এ Pull মডেল Push মডেল থেকে কীভাবে আলাদা, আর নিরাপত্তার দিক থেকে সুবিধা কী?</h3>
+<p><b>ব্যাখ্যা:</b> Push মডেলে (প্রথাগত CI deploy) CI pipeline নিজেই cluster credential নিয়ে সরাসরি deploy চালায়। Pull মডেলে (GitOps/Argo CD/Flux) cluster-এর ভেতরে একটা controller ক্রমাগত Git repo পর্যবেক্ষণ করে, নিজেই cluster-কে তার সাথে মিলিয়ে দেয় — CI-এর হাতে কোনো cluster credential-ই থাকে না। Push মডেলে CI compromise হলে আক্রমণকারী সরাসরি production-এ write access পায়; Pull মডেলে cluster-এ লেখার একমাত্র পথ in-cluster controller, যা বাইরে থেকে সরাসরি আক্রমণযোগ্য নয় (GitOps অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১০) SLI, SLO, আর SLA-এর পার্থক্য কী, আর SLO সবসময় SLA-এর চেয়ে কঠোর রাখা হয় কেন?</h3>
+<p><b>ব্যাখ্যা:</b> SLI হলো প্রকৃত পরিমাপ করা মেট্রিক ("গত ৫ মিনিটে ৯৯.৫% request সফল হয়েছে"), SLO হলো টিমের অভ্যন্তরীণ লক্ষ্য ("৩০ দিনে ৯৯.৯%"), আর SLA হলো গ্রাহকের সাথে চুক্তিবদ্ধ প্রতিশ্রুতি (না মানলে জরিমানা)। SLO-কে ইচ্ছাকৃতভাবে SLA-এর চেয়ে কঠোর রাখা হয়, যাতে চুক্তি ভাঙার আগেই টিম নিজে সমস্যা টের পেয়ে ঠিক করার সুযোগ পায় — SLA ভাঙা মানে ততক্ষণে ইতিমধ্যে দেরি হয়ে গেছে (SRE অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১১) Error budget আর burn rate কী, আর এগুলো deploy-এর সিদ্ধান্তে কীভাবে ব্যবহার হয়?</h3>
+<pre>SLO ৯৯.৯% হলে error budget = ০.১% (৩০ দিনে প্রায় ৪৩ মিনিট downtime বরাদ্দ)
+১x burn rate  → বাজেট ঠিক মাসের শেষে শূন্যে ঠেকবে (স্বাভাবিক)
+১০x burn rate → বাজেট মাত্র কয়েক ঘণ্টাতেই নিঃশেষ হবে (জরুরি সংকেত)</pre>
+<p><b>ব্যাখ্যা:</b> SLO ৯৯.৯% হলে বাকি ০.১% হলো error budget — "ব্যর্থ" হতে পারার অনুমোদিত বাজেট। Budget অনেকখানি অবশিষ্ট থাকলে টিম দ্রুত নতুন ফিচার শিপ করতে পারে; budget প্রায় শেষ হয়ে গেলে ঝুঁকিপূর্ণ deploy স্থগিত রেখে শুধু reliability-সংক্রান্ত কাজে মনোযোগ দেওয়া হয়। Burn rate মাপে বাজেট কত দ্রুত ফুরাচ্ছে — এটাই "গতি বনাম স্থিতিশীলতা" বিতর্ককে সংখ্যা দিয়ে সমাধান করে (SRE অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১২) Latency মাপার সময় average-এর বদলে p95/p99 percentile ব্যবহার করা হয় কেন?</h3>
+<p><b>ব্যাখ্যা:</b> Average একটামাত্র সংখ্যায় পুরো distribution মিশিয়ে ফেলে — হাজার request-এর মধ্যে ৯৯৫টা ২০ ms-এ শেষ হলেও বাকি ৫টা ৫ সেকেন্ড লাগলে average তখনো "স্বাভাবিক" দেখাবে। p95 মানে ৯৫% request এর চেয়ে দ্রুত শেষ হয়েছে (বাকি সবচেয়ে ধীর ৫%-কেই টার্গেট করা হয়), p99 সবচেয়ে ধীরতম ১%-কে আলাদা করে দেখায়। প্রোডাকশন SLO তাই প্রায় সবসময় p95/p99-এর ওপর সংজ্ঞায়িত হয় (Observability অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৩) Secret rotation কেন গুরুত্বপূর্ণ, আর Vault-এর dynamic secrets স্থির (static) secret থেকে কীভাবে ভালো?</h3>
+<p><b>ব্যাখ্যা:</b> একটা secret যত বেশিদিন অপরিবর্তিত থাকে, তার leak হওয়ার সঞ্চিত ঝুঁকি তত বাড়ে — কতজনের access ছিল, কতগুলো log/backup-এ ছড়িয়েছে। HashiCorp Vault-এর dynamic secrets-এ একটা app database-এ কানেক্ট করতে চাইলে Vault একটা নতুন, স্বল্পস্থায়ী credential তৈরি করে দেয়, যা মেয়াদ শেষে নিজে থেকেই অকার্যকর হয়ে যায় — একটা চিরস্থায়ী password-এর বদলে। Rotation ম্যানুয়াল প্রক্রিয়া হলে তা প্রায়ই পিছিয়ে যায়, তাই cloud secret manager-এর বিল্ট-ইন rotation বা Vault-এর dynamic secrets দিয়ে rotation-কে infrastructure-এর অংশ বানানো উচিত (Secrets Management অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৪) DevSecOps-এ SAST, Dependency Scanning, Container Image Scanning, আর DAST-এর মধ্যে পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> SAST নিজের কোডে দুর্বলতার প্যাটার্ন খোঁজে (কম্পাইল না করেই, প্রতিটা commit/PR-এ)। Dependency scanning ব্যবহৃত third-party লাইব্রেরির পরিচিত CVE খোঁজে। Container image scanning image-এর base layer/OS প্যাকেজে দুর্বলতা খোঁজে, push করার আগেই। DAST চলমান অ্যাপ্লিকেশনে বাইরে থেকে আক্রমণ চালিয়ে দুর্বলতা খোঁজে, staging-এ deploy হওয়ার পর — শিফট-লেফট মানে এই সবগুলো যত আগে সম্ভব CI pipeline-এই চালানো, যাতে খরচ কম থাকতে ধরা পড়ে (DevSecOps অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৫) "Build once, promote everywhere" নীতিটা কী, আর প্রতিটা environment-এর জন্য আলাদা করে rebuild করা কেন ভুল?</h3>
+<p><b>ব্যাখ্যা:</b> dev, staging, প্রোডাকশন-এর জন্য প্রতিটাতে আলাদা rebuild করলে, compiler version বা dependency resolution-এর সামান্য পার্থক্যে দুইটা "একই" build আসলে সামান্য ভিন্ন বাইনারি হয়ে যেতে পারে — তখন "staging-এ টেস্ট করা জিনিসটাই প্রোডাকশনে যাচ্ছে" এই গ্যারান্টি হারিয়ে যায়। সঠিক পদ্ধতি হলো একবার build করা একটা immutable artifact-কে dev → staging → production ক্রমে promote করা, শুধু configuration বদলানো, বাইনারি নয় (Artifact ও Environment Promotion অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৬) সিনারিও — প্রোডাকশনে p99 latency হঠাৎ বেড়ে গেছে আর error budget burn rate ১০x দেখাচ্ছে। আপনি on-call ইঞ্জিনিয়ার, প্রথমে কী করবেন?</h3>
+<p><b>ব্যাখ্যা:</b> Incident lifecycle অনুযায়ী আগে <b>mitigate</b>, root cause খোঁজা পরে — সবচেয়ে দ্রুত ক্ষতি কমানোর পথ বের করা (সাম্প্রতিক deploy rollback করা, বা সংশ্লিষ্ট feature flag বন্ধ করে দেওয়া kill switch দিয়ে)। এরপর distributed tracing দিয়ে দেখা কোন service-এ span সবচেয়ে বেশি সময় নিচ্ছে (Observability অধ্যায়ের trace_id উদাহরণ), আর severity/owner নির্ধারণ করে triage করা। সমস্যা resolve হওয়ার পর একটা blameless postmortem লেখা হবে — timeline, 5 Whys দিয়ে root cause, আর নির্দিষ্ট owner/deadline-সহ action item — "human error" বলে না থামিয়ে সিস্টেম কেন এই ভুলকে সম্ভব করল তা খুঁজে বের করা (Incident Management অধ্যায়ে বিস্তারিত)।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->

@@ -120,6 +120,7 @@ const pages = [
   {id:"dotnet",       icon:"💜", title:"Docker for .NET"},
   {id:"prod",         icon:"🏦", title:"Troubleshooting · Best Practices"},
   {id:"cli",          icon:"⌨️", title:"Essential CLI Commands"},
+  {id:"interview",    icon:"🎯", title:"Interview প্রশ্নোত্তর"},
 ];
 </script>
 
@@ -1149,6 +1150,122 @@ Chiseled/distroless image-এ shell নেই, তাই <code>exec sh</code> �
 <div class="callout mistake"><span class="tag">Common mistake</span>
 <code>docker system prune -a --volumes</code> কোনো confirmation ছাড়াই স্ক্রিপ্টে/cron-এ রাখা — এটা চলমান নয় এমন প্রতিটা image আর volume মুছে দেয়। CI/CD বা automation-এ চালানোর আগে নিশ্চিত হয়ে নিন কোনটা আসলে দরকার নেই।</div>
 </template>
+
+<template data-page="interview">
+<h2 class="title">১৪. Interview প্রশ্নোত্তর</h2>
+<p class="lead">Docker ইন্টারভিউতে বারবার ঘুরেফিরে আসা প্রশ্ন — basic থেকে advanced, প্রতিটার সংক্ষিপ্ত ব্যাখ্যা ও প্রাসঙ্গিক অধ্যায়ের রেফারেন্স সহ।</p>
+
+<h3>১) Image আর Container-এর মধ্যে পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> <code>Image</code> একটা read-only template — app + dependency + config-এর snapshot। <code>Container</code> সেই image-এর একটা চলন্ত instance। Class vs object-এর মতো (Images অধ্যায়ে দেখুন) — একটা image থেকে একাধিক container চালানো যায়, প্রতিটা container image-এর ওপর নিজের একটা পাতলা writable layer পায়, আর নিচের image layer অপরিবর্তিত থাকে।</p>
+
+<h3>২) Docker layer caching কীভাবে কাজ করে, আর .csproj আলাদা করে COPY করার কৌশল কেন কার্যকর?</h3>
+<pre><span class="c"># ভুল: source বদলালেই restore আবার হবে</span>
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY . .
+RUN dotnet restore
+RUN dotnet publish -c Release -o /app/publish
+
+<span class="c"># ঠিক: csproj আলাদা → restore layer cache থেকে আসে</span>
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY *.csproj ./
+RUN dotnet restore
+COPY . .
+RUN dotnet publish -c Release -o /app/publish</pre>
+<p><b>ব্যাখ্যা:</b> Docker প্রতিটা instruction-কে একটা layer হিসেবে cache করে — instruction ও তার input অপরিবর্তিত থাকলে cache থেকে নেয়, কিন্তু একটা layer বদলালে তার পরের সব layer আবার চালাতে হয় (Dockerfile অধ্যায়ে বিস্তারিত)। আগে <code>.csproj</code> copy করে restore করলে, শুধু source code বদলালে (csproj নয়) restore layer cache-থেকেই আসে — build অনেক দ্রুত হয়।</p>
+
+<h3>৩) Multi-stage build কী সমস্যা সমাধান করে? Single-stage দিয়ে কেন যথেষ্ট নয়?</h3>
+<p><b>ব্যাখ্যা:</b> একটাই stage-এ SDK দিয়ে build ও চালানো দুটোই করলে final image-এ পুরো SDK, source code, আর restore cache থেকে যায় — image বড় (৮০০MB+) এবং attack surface বেশি (compiler/tool থেকে যায়)। Multi-stage-এ প্রথম stage-এ ভারী SDK দিয়ে build করে শুধু published output দ্বিতীয়, ছোট runtime stage-এ <code>COPY --from=build</code> দিয়ে আনা হয় (Dockerfile অধ্যায়ে দেখুন) — ফলাফল ~200MB, দ্রুত pull, কম vulnerability।</p>
+
+<h3>৪) CMD আর ENTRYPOINT-এর পার্থক্য কী?</h3>
+<pre>ENTRYPOINT ["dotnet", "MyApi.dll"]
+CMD ["--environment=Production"]     <span class="c"># override করা যায়</span>
+
+<span class="c"># docker run img --environment=Staging দিলে CMD অংশটুকু override হয়,</span>
+<span class="c"># কিন্তু ENTRYPOINT (dotnet MyApi.dll) সবসময় চলবেই</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>ENTRYPOINT</code> container-এর মূল executable ঠিক করে — সহজে override হয় না। <code>CMD</code> default argument/command দেয় যা <code>docker run img &lt;নতুন cmd&gt;</code> দিলেই override হয়ে যায়। দুটো একসাথে দিলে ENTRYPOINT = কী চালাবে, CMD = default argument (Dockerfile Instructions অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৫) Exec form বনাম shell form — এটা কেন graceful shutdown-এর জন্য গুরুত্বপূর্ণ?</h3>
+<pre>ENTRYPOINT ["dotnet", "MyApi.dll"]    <span class="c"># exec form — সুপারিশকৃত</span>
+ENTRYPOINT dotnet MyApi.dll           <span class="c"># shell form — /bin/sh -c এর ভেতরে চলে</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>docker stop</code> প্রথমে SIGTERM পাঠায়। Exec form-এ process সরাসরি PID 1 হিসেবে চলে, তাই SIGTERM সরাসরি app-এ পৌঁছায় → graceful shutdown কাজ করে। Shell form-এ signal <code>sh</code>-এ আটকে যেতে পারে, app কখনো SIGTERM পায় না, ফলে grace period শেষে জোর করে SIGKILL হয় — in-flight request কেটে যায় (Containers অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৬) Named volume, bind mount আর tmpfs-এর মধ্যে পার্থক্য কী, কখন কোনটা?</h3>
+<p><b>ব্যাখ্যা:</b> <span class="kw">Named volume</span> Docker-পরিচালিত এলাকায় থাকে, পোর্টেবল, backup সহজ — production database-এর জন্য উপযুক্ত। <span class="kw">Bind mount</span> host-এর নির্দিষ্ট path সরাসরি container-এ মাউন্ট করে — dev-এ live code reload-এর জন্য ভালো, কিন্তু host path-নির্ভর বলে কম পোর্টেবল। <span class="kw">tmpfs</span> host-এর RAM-এ থাকে, disk-এ কিছু লেখে না, container মুছলেই ডেটা হারায় — ক্ষণস্থায়ী/sensitive data-র জন্য (Volumes অধ্যায়ে টেবিল দেখুন)।</p>
+
+<h3>৭) Named volume আর anonymous volume-এর পার্থক্য কী, আর Dockerfile-এ VOLUME instruction নিয়ে সাবধানতা কেন দরকার?</h3>
+<pre><span class="c"># Anonymous volume — নাম নেই, ট্র্যাক করা কঠিন</span>
+docker run -d -v /var/lib/postgresql/data postgres:16
+
+<span class="c"># Named volume — স্পষ্ট নাম, পরে খুঁজে/backup করা যায়</span>
+docker run -d -v pgdata:/var/lib/postgresql/data postgres:16</pre>
+<p><b>ব্যাখ্যা:</b> শুধু container path দিলে (নাম ছাড়া) Docker একটা anonymous volume বানায় — এলোমেলো hash নাম, সহজে যুক্ত/backup করা যায় না। Dockerfile-এ <code>VOLUME /data</code> থাকলে প্রতিটা <code>run</code>-এ auto anonymous volume তৈরি হয়, এমনকি নিজে <code>-v</code> না দিলেও — এতে অনেক dangling volume জমে যায় (Volumes অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৮) Bridge আর host network mode-এর পার্থক্য কী, কখন কোনটা ব্যবহার করবেন?</h3>
+<pre>docker run -d -p 8080:8080 myapi:1.0        <span class="c"># bridge (default) — NAT দিয়ে port map</span>
+docker run -d --network host myapi:1.0      <span class="c"># host — সরাসরি host network stack</span></pre>
+<p><b>ব্যাখ্যা:</b> <span class="kw">bridge</span> container-দের জন্য private virtual network তৈরি করে, port publish-এ NAT/DNAT rule লাগে (isolation ভালো, সামান্য overhead)। <span class="kw">host</span> mode-এ container সরাসরি host-এর network ব্যবহার করে — NAT overhead নেই, বেশি performance, কিন্তু isolation নেই ও host-এর অন্য process-এর সাথে port conflict হতে পারে (Networking অধ্যায়ে বিস্তারিত)। বেশিরভাগ production সেটআপে user-defined bridge-ই যথেষ্ট।</p>
+
+<h3>৯) Default bridge network-এ DNS দিয়ে container একে অপরকে খুঁজে পায় না কেন, কিন্তু user-defined bridge-এ পায়?</h3>
+<p><b>ব্যাখ্যা:</b> ইনস্টলের সাথেই আসা default <code>bridge</code> network-এ built-in DNS নেই — শুধু IP দিয়ে যোগাযোগ সম্ভব। কিন্তু নিজের বানানো <code>docker network create appnet</code>-এর মতো user-defined bridge-এ Docker একটা embedded DNS server (<code>127.0.0.11</code>) চালায়, যা container name ↔ IP resolve করে দেয় — তাই <code>db</code>, <code>api</code> নাম দিয়েই যোগাযোগ করা যায় (Networking অধ্যায়ে বিস্তারিত)। এজন্যই Docker Compose প্রতিটা project-এর জন্য নিজে একটা user-defined network বানায়।</p>
+
+<h3>১০) EXPOSE ইনস্ট্রাকশন আর -p ফ্ল্যাগের মধ্যে পার্থক্য কী?</h3>
+<pre>EXPOSE 8080                       <span class="c"># শুধু documentation — port নিজে থেকে খোলে না</span>
+docker run -d -p 8080:8080 myapi  <span class="c"># বাইরে থেকে access পেতে এটাই লাগবে</span></pre>
+<p><b>ব্যাখ্যা:</b> Dockerfile-এর <code>EXPOSE</code> শুধু metadata/documentation — এটা container port host-এ নিজে থেকে প্রকাশ করে না। বাইরে থেকে access পেতে <code>docker run -p</code> (বা Compose-এ <code>ports:</code>) অবশ্যই দিতে হবে (Networking অধ্যায়ে "EXPOSE ≠ publish" callout দেখুন)।</p>
+
+<h3>১১) Docker-এ secret নিরাপদে দেওয়ার সঠিক উপায় কী, আর environment variable-এ secret কেন ঝুঁকিপূর্ণ?</h3>
+<pre><span class="c"># compose.yaml — secret ফাইল হিসেবে mount, env এ নয়</span>
+services:
+  api:
+    image: myapi:1.0
+    secrets: [db_password]
+secrets:
+  db_password:
+    file: ./db_password.txt</pre>
+<p><b>ব্যাখ্যা:</b> <code>docker run -e DB_PASSWORD=...</code> image-এ bake হয় না ঠিকই, কিন্তু <code>docker inspect</code>-এর আউটপুটে plaintext দেখা যায়, container-এর ভেতর থেকে <code>/proc/&lt;pid&gt;/environ</code>-এ readable থাকে, আর crash log-এ environment dump হলে সেখানেও ফাঁস হতে পারে। Docker secrets ফাইল হিসেবে <code>/run/secrets/&lt;name&gt;</code>-এ mount হয় — file permission দিয়ে সীমিত করা যায়, env/inspect কোথাও দেখা যায় না (Config · Secrets · Security অধ্যায়ে বিস্তারিত)। Vault/AWS Secrets Manager-এর মতো বাইরের secret manager আরও ভালো।</p>
+
+<h3>১২) Linux capability কী, আর <code>--cap-drop ALL</code> কীভাবে container-কে বেশি নিরাপদ করে?</h3>
+<pre>docker run -d \
+  --cap-drop ALL \
+  --cap-add NET_BIND_SERVICE \
+  --security-opt no-new-privileges \
+  --read-only --tmpfs /tmp \
+  myapi:1.0</pre>
+<p><b>ব্যাখ্যা:</b> Linux kernel root-এর ক্ষমতাকে ছোট ছোট <span class="kw">capability</span>-তে ভাগ করেছে (যেমন <code>NET_BIND_SERVICE</code>, <code>SYS_ADMIN</code>, <code>CHOWN</code>)। Container ডিফল্টভাবে root হলেও সব capability পায় না — একটা ছোট নিরাপদ default subset পায়। <code>--cap-drop ALL</code> দিয়ে সেই default subset-ও বাদ দিয়ে শূন্য থেকে শুরু করা যায়, app-এর সত্যিই যা লাগে শুধু সেটুকু <code>--cap-add</code> দিয়ে ফিরিয়ে দিলে container escape হলেও attacker-এর হাতে কার্যত কোনো ক্ষমতা থাকে না (Security অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৩) Docker Compose-এর <code>depends_on</code>-এর ফাঁদ কী, আর <code>condition: service_healthy</code> কীভাবে সমাধান করে?</h3>
+<pre>depends_on:
+  db:
+    condition: service_healthy   <span class="c"># শুধু start নয়, healthcheck pass হলে তবেই</span></pre>
+<p><b>ব্যাখ্যা:</b> সাধারণ <code>depends_on</code> শুধু container start হওয়ার order ঠিক করে — service প্রস্তুত কি না তা নিশ্চিত করে না। DB container চালু হয়ে গেলেও এখনো connection নিতে না-ও পারে। <code>condition: service_healthy</code> + DB-তে <code>healthcheck</code> ব্যবহার করলে Compose api-কে তখনই চালু করে যখন db সত্যিই "healthy" (Docker Compose অধ্যায়ে বিস্তারিত), নাহলে app-এ retry logic রাখা উচিত।</p>
+
+<h3>১৪) .NET runtime image-এ <code>HEALTHCHECK ... CMD curl</code> লিখলে প্রায়ই fail করে কেন?</h3>
+<pre><span class="c"># ফাঁদ — chiseled/distroless এ curl/shell নেই, তাই সবসময় fail করবে</span>
+HEALTHCHECK --interval=30s --timeout=3s CMD curl -f http://localhost:8080/health || exit 1</pre>
+<p><b>ব্যাখ্যা:</b> .NET-এর <code>aspnet</code> runtime image, আর বিশেষ করে <code>chiseled</code>/distroless variant-এ, কোনো shell বা <code>curl</code> ইনস্টল থাকে না — তাই এই ধরনের HEALTHCHECK সবসময় fail দেখাবে। সমাধান: orchestrator/Compose-এর HTTP probe ব্যবহার করা, non-chiseled image-এ আলাদা করে <code>curl</code> install করা, বা container HEALTHCHECK একেবারে এড়িয়ে যাওয়া (Docker for .NET অধ্যায়ে "HEALTHCHECK-এ curl নেই" callout দেখুন)।</p>
+
+<h3>১৫) Container "Exited (137)" দেখালে এর মানে কী, কীভাবে debug করবেন?</h3>
+<pre>docker logs api                 <span class="c"># crash-এর কারণ খুঁজুন</span>
+docker inspect api --format='{{.State.OOMKilled}}'   <span class="c"># true হলে OOM নিশ্চিত</span>
+docker run -d --memory="1g" --name api myapi:1.0     <span class="c"># limit বাড়ান</span></pre>
+<p><b>ব্যাখ্যা:</b> Exit code 137 মানে process SIGKILL (128+9) পেয়ে থেমেছে — সাধারণত <code>--memory</code> limit পার হয়ে যাওয়ায় kernel OOM-killer container-কে মেরে ফেলেছে। সমাধান: memory limit বাড়ানো, বা app-এ memory leak খুঁজে বের করা; <code>.NET</code> container-aware হওয়ায় (Docker for .NET অধ্যায়ে দেখুন) দেওয়া limit অনুযায়ী GC heap tune হয়, তাই limit বাস্তব workload মেপে দেওয়া উচিত (Troubleshooting অধ্যায়ে টেবিল দেখুন)।</p>
+
+<h3>১৬) Multi-container Compose stack-এ ৫টা api replica সবাই startup-এ EF Core migration চালালে কী সমস্যা হয়, সঠিক উপায় কী?</h3>
+<pre><span class="c"># সঠিক — আলাদা init container একবারই migrate চালায়</span>
+services:
+  migrate:
+    image: myapi:1.0
+    entrypoint: ["dotnet", "MyApi.dll", "--migrate-only"]
+    depends_on:
+      db: { condition: service_healthy }
+  api:
+    depends_on:
+      migrate: { condition: service_completed_successfully }</pre>
+<p><b>ব্যাখ্যা:</b> সব replica যদি startup-এ <code>db.Database.Migrate()</code> চালায়, তাহলে একই migration parallel-এ চলে DB-তে lock/error হতে পারে। সঠিক উপায় — একটা আলাদা এক-shot init container/job মাইগ্রেশন একবারই চালাবে, তারপর <code>service_completed_successfully</code> condition দিয়ে api চালু হবে (Docker for .NET অধ্যায়ে "EF Core migration container-এ" সেকশন দেখুন)।</p>
+</template>
+
 
 <!-- ============================ RENDER ============================ -->
 <script>

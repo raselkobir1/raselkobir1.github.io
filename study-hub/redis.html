@@ -116,6 +116,7 @@ const pages = [
   {id:"patterns",     icon:"🛠️", title:"Locks · Rate Limit · Leaderboard"},
   {id:"dotnet",       icon:"💜", title:"Redis in .NET"},
   {id:"prod",         icon:"🏦", title:"Security · Monitoring · Best Practices"},
+  {id:"interview",    icon:"🎯", title:"Interview প্রশ্নোত্তর"},
 ];
 </script>
 
@@ -731,6 +732,91 @@ Redis-কে auth ছাড়া, public IP-তে খুলে রাখা �
 </div>
 </div>
 </div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৩. Interview প্রশ্নোত্তর</h2>
+<p class="lead">Redis ইন্টারভিউতে বারবার ঘুরেফিরে আসা প্রশ্ন — basic থেকে advanced, প্রতিটার বাংলায় ব্যাখ্যা, আগের অধ্যায়ের সাথে সংযুক্ত করে।</p>
+
+<h3>১) Redis single-threaded হয়েও এত দ্রুত কেন?</h3>
+<p><b>ব্যাখ্যা:</b> Foundation অধ্যায়ে দেখেছি — Redis সব data RAM-এ রাখে (disk seek নেই), efficient C data structure ও event-driven non-blocking I/O (epoll) ব্যবহার করে, আর command execution single-threaded বলে কোনো lock/contention লাগে না (প্রতিটা command atomic)। Redis 6+ শুধু network I/O-তে multi-thread ব্যবহার করে, তবু command execution single-threaded-ই থাকে।</p>
+
+<h3>২) String, List, Hash, Set, Sorted Set — কোনটা কখন বাছবেন?</h3>
+<pre><span class="c"># object → Hash (field-ভিত্তিক আলাদা key না বানিয়ে)</span>
+HSET user:1000 name "Rasel" role "SWE"
+
+<span class="c"># leaderboard/ranking → Sorted Set (score দিয়ে sorted, O(log n))</span>
+ZADD leaderboard 1500 "rasel"
+ZREVRANGE leaderboard 0 9 WITHSCORES</pre>
+<p><b>ব্যাখ্যা:</b> Data Types অধ্যায়ে দেখা হয়েছে — object রাখতে অনেকগুলো আলাদা key-এর বদলে Hash (কম key, compact); queue/stack-এ List; unique membership/relation-এ Set; ranking/leaderboard-এ Sorted Set (DB-তে <code>ORDER BY</code>-র চেয়ে বহু গুণ দ্রুত)। সঠিক type বাছাই-ই বেশিরভাগ design সমস্যার সমাধান।</p>
+
+<h3>৩) Production-এ <code>KEYS *</code> চালানো কেন বিপজ্জনক, বদলে কী ব্যবহার করবেন?</h3>
+<pre><span class="c"># খারাপ — পুরো keyspace scan করে single-threaded Redis-কে পুরোপুরি block করে</span>
+KEYS user:*
+
+<span class="c"># ভালো — cursor দিয়ে অল্প অল্প করে, non-blocking</span>
+SCAN 0 MATCH user:* COUNT 100</pre>
+<p><b>ব্যাখ্যা:</b> Keys · TTL অধ্যায়ে বলা হয়েছে — <code>KEYS</code> এক ধাপে পুরো keyspace scan করে, আর Redis single-threaded বলে এই সময় বাকি সব client আটকে যায় (লাখো key হলে সেকেন্ডের পর সেকেন্ড)। <code>SCAN</code> cursor-ভিত্তিক, ছোট ছোট batch-এ iterate করে, তাই block করে না — production-এ এটাই ব্যবহার করা উচিত।</p>
+
+<h3>৪) RDB বনাম AOF — trade-off কী, production-এ কী করবেন?</h3>
+<p><b>ব্যাখ্যা:</b> Persistence অধ্যায়ে বলা হয়েছে — RDB নির্দিষ্ট সময় পরপর পুরো dataset-এর snapshot নেয় (compact, দ্রুত restart, কিন্তু দুই snapshot-এর মাঝের data crash-এ হারায়)। AOF প্রতিটা write command log করে (বেশি durable, <code>appendfsync everysec</code>-এ সর্বোচ্চ ~1s ডেটা হারায়, কিন্তু ফাইল বড় ও restart ধীর)। Durability গুরুত্বপূর্ণ হলে দুটোই চালু রাখুন (AOF দিয়ে restart, RDB দিয়ে backup); pure cache (data DB-তে আছে) হলে persistence পুরোপুরি বন্ধ রাখাই ভালো।</p>
+
+<h3>৫) Redis single-threaded হয়েও <code>BGSAVE</code>/AOF rewrite main thread block করে না কেন?</h3>
+<p><b>ব্যাখ্যা:</b> Persistence অধ্যায়ে ব্যাখ্যা করা হয়েছে — Redis <code>fork()</code> দিয়ে একটা child process বানায়, যেটা snapshot/rewrite লেখে; OS copy-on-write (COW) ব্যবহার করে বলে fork মুহূর্তে পুরো memory কপি হয় না, parent-child একই memory page শেয়ার করে, শুধু কোনো page-এ write হলে তখন সেটার নতুন কপি বানানো হয়। এই কারণেই parent process normal command চালিয়ে যেতে পারে, তবে write-heavy workload-এ অনেক page বদলালে RAM ব্যবহার সাময়িকভাবে প্রায় দ্বিগুণ হয়ে যেতে পারে (memory spike/OOM ঝুঁকি)।</p>
+
+<h3>৬) <code>maxmemory-policy</code>-তে <code>allkeys-lru</code> বনাম <code>allkeys-lfu</code> — পার্থক্য কী, কখন কোনটা?</h3>
+<p><b>ব্যাখ্যা:</b> Memory · Eviction অধ্যায়ে দেখা হয়েছে — LRU (Least Recently Used) শেষ কবে access হয়েছে (recency) দেখে evict করে, আর LFU (Least Frequently Used) কতবার access হয়েছে (frequency) দেখে। যেসব key মাঝে মাঝে জনপ্রিয় হয় কিন্তু সবসময় নয়, সেখানে LFU ভালো — কারণ একবার-ব্যবহৃত সাম্প্রতিক key জনপ্রিয় পুরনো key-কে সরিয়ে দেয় না। Pure cache-এ <code>allkeys-lru/lfu</code>, কিন্তু Redis-কে data store হিসেবে ব্যবহার করলে <code>noeviction</code> বাছা উচিত — যাতে data নীরবে না হারায়, বরং write fail করে সতর্ক করে।</p>
+
+<h3>৭) Pub/Sub আর Streams-এর মধ্যে পার্থক্য কী, কখন কোনটা বাছবেন?</h3>
+<pre><span class="c"># Pub/Sub — persist হয় না, subscriber না থাকলে message হারায়</span>
+SUBSCRIBE notifications
+PUBLISH notifications "hello"
+
+<span class="c"># Streams — persist হয়, replay করা যায়, consumer group + ack</span>
+XADD orders "*" user 1000 amount 500
+XREADGROUP GROUP billing worker1 COUNT 10 STREAMS orders "&gt;"</pre>
+<p><b>ব্যাখ্যা:</b> Pub/Sub · Streams অধ্যায়ে বলা হয়েছে — Pub/Sub শুধু fire-and-forget broadcast, message persist হয় না ও কোনো ack নেই (publish মুহূর্তে subscriber না থাকলে message চিরতরে হারায়)। Streams append-only log হিসেবে message persist করে, id দিয়ে replay করা যায়, আর consumer group দিয়ে একাধিক worker কাজ ভাগ করে + ack করে — তাই "message হারানো যাবে না" এমন reliable queue-তে Streams, শুধু real-time notification-এ Pub/Sub।</p>
+
+<h3>৮) Stream consumer group-এ একটা worker message পড়ে ack না করেই crash করলে কী হয়?</h3>
+<pre>XPENDING orders billing              <span class="c"># unacknowledged message দেখা</span>
+XCLAIM orders billing worker2 0 1690000000000-0   <span class="c"># অন্য consumer claim করে</span>
+XAUTOCLAIM orders billing worker2 60000 0-0       <span class="c"># idle threshold অনুযায়ী auto-claim</span></pre>
+<p><b>ব্যাখ্যা:</b> Pub/Sub · Streams অধ্যায়ে ব্যাখ্যা করা হয়েছে — <code>XREADGROUP</code> দিয়ে message পড়া মাত্র সেটা ঐ consumer-এর <b>Pending Entries List (PEL)</b>-এ যোগ হয় (delivered কিন্তু ack হয়নি)। worker crash করলে message হারায় না, PEL-এ পড়ে থাকে। <code>XPENDING</code> দিয়ে এসব unacknowledged message দেখা যায়, আর <code>XCLAIM</code>/<code>XAUTOCLAIM</code> দিয়ে অন্য একটা জীবিত consumer সেগুলো নিজের নামে claim করে আবার process করে — এভাবেই "at-least-once delivery" নিশ্চিত হয়।</p>
+
+<h3>৯) Redis transaction (<code>MULTI</code>/<code>EXEC</code>) কি rollback দেয়? <code>WATCH</code> কীভাবে কাজ করে?</h3>
+<p><b>ব্যাখ্যা:</b> Transactions অধ্যায়ে বলা হয়েছে — Redis-এ SQL-এর মতো rollback নেই; <code>EXEC</code>-এর মধ্যে কোনো command runtime error দিলেও বাকিগুলো চলতে থাকে (MULTI/EXEC শুধু atomicity + isolation দেয়, "all-or-nothing" নয়)। <code>WATCH key</code> করলে EXEC-এর আগে যদি ঐ key অন্য কেউ বদলায়, transaction fail করে (nil ফেরে) — এটাই optimistic locking/check-and-set, তখন client আবার retry করে।</p>
+
+<h3>১০) Redis দিয়ে সঠিকভাবে distributed lock কীভাবে বানাবেন?</h3>
+<pre><span class="c"># lock নেওয়া (atomic): শুধু না থাকলে সেট, TTL সহ</span>
+SET lock:order:5 &lt;unique-token&gt; NX PX 30000
+
+<span class="c"># release — নিজের token যাচাই করে Lua দিয়ে atomic DEL</span>
+EVAL "if redis.call('GET',KEYS[1])==ARGV[1] then return redis.call('DEL',KEYS[1]) else return 0 end" 1 lock:order:5 &lt;token&gt;</pre>
+<p><b>ব্যাখ্যা:</b> Locks · Rate Limit অধ্যায়ে বলা হয়েছে — <code>SET key token NX PX ttl</code> দিয়ে lock নিলে TTL ছাড়া deadlock এড়ানো যায় (holder crash করলেও lock সময়মতো মুক্ত হয়)। Release-এ শুধু <code>DEL</code> করলে ভুল হতে পারে — আপনার TTL শেষ হয়ে অন্য কেউ lock নিয়ে থাকতে পারে, তাই Lua script দিয়ে atomic-ভাবে নিজের token মিলিয়ে তবেই DEL করতে হয়।</p>
+
+<h3>১১) Redlock কী, আর এর সমালোচনা/trade-off কী?</h3>
+<p><b>ব্যাখ্যা:</b> Locks অধ্যায়ে বলা হয়েছে — একটা মাত্র Redis instance-এ lock নিলে সেটা down/network-partition হলে lock-এর সত্য অবস্থা নিয়ে সংশয় থাকে। Redlock তাই N-টা independent Redis master-এ (একে অপরের replica নয়) একসাথে lock নেওয়ার চেষ্টা করে; majority থেকে একটা সময়সীমার মধ্যে lock পেলে তবেই lock অর্জিত ধরা হয়। কিন্তু clock drift বা GC/process pause-এর কারণে এটা কড়া correctness guarantee দেয় না বলে সমালোচনা আছে (Martin Kleppmann-এর বিশ্লেষণ) — সত্যিকারের strict correctness দরকার হলে fencing token বা dedicated lock service (etcd/ZooKeeper) বিবেচনা করা উচিত।</p>
+
+<h3>১২) Cache-aside বনাম Write-through — পার্থক্য ও কখন কোনটা বাছবেন?</h3>
+<p><b>ব্যাখ্যা:</b> Caching Patterns অধ্যায়ে বলা হয়েছে — Cache-aside-এ app নিজে cache manage করে: miss হলে DB থেকে পড়ে cache ভরে (সরল, সবচেয়ে প্রচলিত, প্রথম hit ধীর ও stale হওয়ার সুযোগ থাকে)। Write-through-এ প্রতিটা write একসাথে cache + DB-তে যায় (cache সবসময় fresh থাকে, কিন্তু write ধীর হয়)। সাধারণ read-heavy API-তে cache-aside যথেষ্ট; সবসময় fresh data লাগলে write-through।</p>
+
+<h3>১৩) Cache Stampede (Thundering Herd) কী, কীভাবে ঠেকাবেন?</h3>
+<p><b>ব্যাখ্যা:</b> Caching Patterns অধ্যায়ে বলা হয়েছে — একটা জনপ্রিয় key expire হওয়ার সাথে সাথে হাজারো request একসাথে miss করে সবাই DB-তে ঝাঁপালে DB overload হয়। সমাধান: প্রথম miss একটা lock/single-flight নিয়ে DB পড়ে cache ভরুক আর বাকিরা অপেক্ষা করুক বা পুরনো value পাক; সব key একই মুহূর্তে expire না করে TTL-এ jitter যোগ করা; বা TTL শেষ হওয়ার একটু আগেই background-এ early recompute করা।</p>
+
+<h3>১৪) Redis Cluster-এ কোন key কোন node-এ যায়, আর <code>MOVED</code> reply কী?</h3>
+<p><b>ব্যাখ্যা:</b> Replication · Sentinel · Cluster অধ্যায়ে বলা হয়েছে — প্রতিটা key-এর জন্য Redis <code>CRC16(key) mod 16384</code> হিসাব করে একটা hash slot (0–16383) বের করে; প্রতিটা master node শুরুতেই একটা slot-range-এর দায়িত্ব নেয়, তাই client নিজেই হিসাব করে বুঝে যায় key কোন node-এ পাঠাতে হবে। ভুল node-এ request গেলে সেই node <code>MOVED</code> reply দিয়ে সঠিক node-এর দিকে নির্দেশ করে। একাধিক key নিয়ে multi-key operation (MGET, transaction, Lua) করতে চাইলে <code>{user:1000}:profile</code>-এর মতো hash tag ব্যবহার করে একই slot-এ রাখতে হয়।</p>
+
+<h3>১৫) Redis Sentinel কীভাবে automatic failover করে?</h3>
+<p><b>ব্যাখ্যা:</b> Replication · Sentinel অধ্যায়ে বলা হয়েছে — একাধিক Sentinel process master-কে monitor করে; master down হলে quorum সংখ্যক Sentinel একমত হলে একটা replica-কে promote করে নতুন master বানায় এবং client-দের নতুন master-এর ঠিকানা জানায়। সাধারণ replication নিজে থেকে failover করে না (async, manual), Sentinel-ই HA-র watchdog + failover manager হিসেবে কাজ করে।</p>
+
+<h3>১৬) .NET-এ Redis নিয়ে সবচেয়ে সাধারণ ভুল কী, আর <code>RedisTimeoutException</code>-এর আসল কারণ কী?</h3>
+<pre><span class="c">// ভুল: প্রতি request-এ নতুন connection — connection storm</span>
+ConnectionMultiplexer.Connect("localhost:6379");
+
+<span class="c">// ঠিক: একটাই singleton multiplexer, পুরো app জুড়ে reuse</span>
+builder.Services.AddSingleton&lt;IConnectionMultiplexer&gt;(
+    ConnectionMultiplexer.Connect("localhost:6379"));</pre>
+<p><b>ব্যাখ্যা:</b> Redis in .NET অধ্যায়ে বলা হয়েছে — প্রতি request-এ নতুন <code>ConnectionMultiplexer.Connect()</code> করা সবচেয়ে সাধারণ ভুল; এটা ব্যয়বহুল ও thread-safe বলে একটাই বানিয়ে singleton হিসেবে reuse করা উচিত। <code>RedisTimeoutException</code> বেশিরভাগ সময় Redis ধীর বলে নয়, বরং sync-over-async (<code>.Result</code>/<code>.Wait()</code>), বিশাল/big key transfer, ধীর O(N) command পুরো server block করা, বা প্রতি request-এ নতুন multiplexer বানানোর কারণে হয় — সমাধান সবসময় async, singleton multiplexer, আর big key ভাঙা।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->

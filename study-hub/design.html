@@ -121,6 +121,7 @@ const pages = [
   {id:"antipatterns", icon:"💩", title:"Anti-patterns ও Code Smells"},
   {id:"webhook",       icon:"🪝", title:"Webhooks — ডিজাইন, নিরাপত্তা ও নির্ভরযোগ্যতা"},
   {id:"synthesis",    icon:"🏛️", title:"সবকিছু একসাথে — Clean Architecture Case Study"},
+  {id:"interview",    icon:"🎯", title:"১৫. Interview প্রশ্নোত্তর"},
 ];
 </script>
 
@@ -3306,6 +3307,151 @@ Stripe ── payment_succeeded webhook ──▶ StripeWebhookHandler (HMAC + i
 <div class="callout best"><span class="tag">কোর্স সারাংশ ও পরবর্তী পদক্ষেপ</span>
 এই পুরো কোর্সটা আসলে একটাই মানসিক মডেল তৈরির জন্য, ধাপে ধাপে। <b>OOP-এর চার স্তম্ভ</b> (ch.১) আপনাকে দিয়েছে vocabulary — encapsulation, abstraction, inheritance, polymorphism নিয়ে কথা বলার ভাষা। <b>Composition-over-inheritance</b> (ch.২) আর <b>SOLID</b> (ch.৩-৭) দিয়েছে নীতি — কোড <b>কেন</b> একরকম আকারে থাকা উচিত তার যুক্তি। <b>Gang-of-Four প্যাটার্নগুলো</b> (ch.৮-১১) হলো প্রমাণিত, নামকরণ-করা <b>আকার</b> (shape) — একই ধরনের সমস্যা বারবার এলে সেই নীতিগুলো বাস্তবে কীভাবে সাজাতে হয় তার রেসিপি। <b>Anti-pattern</b>গুলো (ch.১২) দেখায় কী হয় যখন এই নীতিগুলো উপেক্ষা করা হয় — অথবা judgment ছাড়া, প্রতিটা জায়গায় জোর করে প্রয়োগ করা হয়। আর <b>Webhook</b> চ্যাপ্টার (ch.১৩) দেখিয়েছে এই একই নীতিগুলো একটা খুবই বাস্তব, প্রতিদিনকার integration সমস্যা সমাধান করছে।<br/><br/>
 সবচেয়ে গুরুত্বপূর্ণ শিক্ষা এটাই: নতুন কোড ডিজাইন করার সময় শুরু করুন <b>আসল সমস্যা</b> থেকে, আর কাঠামোকে সেখান থেকে জন্ম নিতে দিন। কোনো pattern ব্যবহার করুন কারণ আপনি আপনার সমস্যায় সেই pattern-এর <b>আকারটা চিনতে পেরেছেন</b> — একটা নামকরা pattern ব্যবহার করা "sophisticated" লাগবে বলে না। এই judgment-টাই — কখন প্রয়োগ করবেন, আর কখন সংযত থাকবেন — একজন ভালো ইঞ্জিনিয়ার আর একজন pattern-obsessed ইঞ্জিনিয়ারের মধ্যে আসল পার্থক্য।</div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৫. Interview প্রশ্নোত্তর</h2>
+<p class="lead">OOP, SOLID আর Design Pattern নিয়ে ইন্টারভিউতে বারবার ঘুরেফিরে আসা প্রশ্ন — কোড-শনাক্তকরণ, pattern-confusion জোড়া, আর anti-pattern চেনার প্রশ্ন একসাথে। প্রতিটার উত্তর কোর্সের নির্দিষ্ট চ্যাপ্টার রেফার করে লেখা — মুখস্থ না করে যুক্তিটা ধরুন।</p>
+
+<h3>১) নিচের <code>Employee</code> class-টা SRP লঙ্ঘন করছে কিনা, আর কেন — ব্যাখ্যা করুন</h3>
+<pre>public class Employee
+{
+    public decimal CalculatePay()
+    {
+        <span class="c">// ১) ট্যাক্স ব্র্যাকেট আর বোনাস ফর্মুলা — Finance দল ঠিক করে</span>
+        decimal gross = BaseSalary + Bonus - TaxDeduction;
+
+        <span class="c">// ২) payroll batching ও external payroll API-র output format — IT/Payroll-Ops ঠিক করে</span>
+        return FormatForPayrollApi(gross);
+    }
+}</pre>
+<p><b>ব্যাখ্যা:</b> হ্যাঁ, লঙ্ঘন করছে — যদিও method একটাই এবং দেখতে "একটাই কাজ" মনে হয়। চ্যাপ্টার ৩-এ শেখা সংজ্ঞা অনুযায়ী SRP গোনে <span class="kw">reason to change</span>, method সংখ্যা না। এখানে দুইটা ভিন্ন actor — Finance (ট্যাক্স/বোনাস রুল) আর IT/Payroll-Ops (API format) — সম্পূর্ণ ভিন্ন কারণে একই method বদলাতে চাইবে। ফলে Finance-এর একটা পরিবর্তন ভুলবশত IT-এর অংশে bug ঢুকিয়ে দিতে পারে। সমাধান: দুইটা আলাদা class — একটা <code>PayCalculator</code> (business rule), আরেকটা <code>PayrollApiFormatter</code> (integration format) — প্রতিটার একটাই actor, একটাই reason to change।</p>
+
+<h3>২) নিচের <code>DiscountCalculator</code>-এ নতুন "Corporate" customer type যোগ করতে গেলে কোন নীতি লঙ্ঘন হবে, আর সঠিক ডিজাইন কী?</h3>
+<pre>public class DiscountCalculator
+{
+    public decimal CalculateDiscount(string customerType, decimal amount)
+    {
+        switch (customerType)
+        {
+            case "Regular": return amount * 0.02m;
+            case "Premium": return amount * 0.05m;
+            case "VIP":     return amount * 0.10m;
+            default: throw new ArgumentException("Unknown type");
+        }
+    }
+}</pre>
+<p><b>ব্যাখ্যা:</b> এটা <span class="kw">Open/Closed Principle</span> (চ্যাপ্টার ৪) লঙ্ঘন করে — নতুন customer type মানেই existing, production-এ ইতিমধ্যে কাজ করা <code>switch</code> এডিট করা, যা regression-এর ঝুঁকি তৈরি করে। সঠিক ডিজাইন: একটা <code>IDiscountStrategy</code> interface বানিয়ে প্রতিটা customer type-এর জন্য আলাদা implementation (<code>RegularDiscount</code>, <code>PremiumDiscount</code>, <code>VipDiscount</code>) লেখা, আর <code>DiscountCalculator</code>-কে constructor-এ injected strategy-র উপর নির্ভরশীল করা। নতুন <code>CorporateDiscount : IDiscountStrategy</code> যোগ করলে পুরনো কোনো ক্লাসই এডিট করতে হয় না — শুধু নতুন ফাইল যোগ হয়।</p>
+
+<h3>৩) নিচের কোডে <code>Console.WriteLine(r.Area())</code> কী output দেবে, আর এটা কেন LSP লঙ্ঘনের ক্লাসিক উদাহরণ?</h3>
+<pre>void ResizeRectangle(Rectangle r)
+{
+    r.Width = 5;
+    r.Height = 10;
+    Console.WriteLine(r.Area());
+}
+
+ResizeRectangle(new Square(10));</pre>
+<p><b>ব্যাখ্যা:</b> Output হবে <code>100</code>, প্রত্যাশিত <code>50</code> নয় — কারণ <code>Square</code>-এ <code>Height</code> সেট করলে ভেতরে <code>Width</code>-ও সমান করে দেওয়া হয় (invariant রক্ষা করতে), ফলে দুটোই শেষমেশ ১০ হয়ে যায়। চ্যাপ্টার ৫-এ শেখানো হয়েছে — জ্যামিতিকভাবে square সত্যিই rectangle-এর একটা ধরন (is-a সত্য), কিন্তু <span class="kw">Liskov Substitution Principle</span> শুধু টাইপ মেলা যথেষ্ট মনে করে না — <code>Rectangle</code> ব্যবহারকারী কোড ধরে নেয় Width আর Height স্বাধীনভাবে বদলানো যায়, আর <code>Square</code> সেই আচরণগত প্রতিশ্রুতি (contract) রাখতে পারে না। তাই <code>Square</code>, <code>Rectangle</code>-এর জায়গায় নিরাপদে substitute করা যায় না।</p>
+
+<h3>৪) নিচের <code>IWorker</code> ইন্টারফেসে <code>RobotWorker.Eat()</code>-এ <code>NotImplementedException</code> ছোঁড়া হচ্ছে কেন সমস্যাজনক, আর সমাধান কী?</h3>
+<pre>public interface IWorker
+{
+    void Work();
+    void Eat();
+}
+
+public class RobotWorker : IWorker
+{
+    public void Work() { /* ২৪/৭ ওয়েল্ডিং */ }
+    public void Eat() =&gt; throw new NotImplementedException();
+}</pre>
+<p><b>ব্যাখ্যা:</b> এটা <span class="kw">Interface Segregation Principle</span> (চ্যাপ্টার ৬) লঙ্ঘন — একটা "fat interface" ক্লায়েন্টকে এমন method-এর প্রতিশ্রুতি দিতে বাধ্য করছে যা তার জন্য অর্থহীন। সমস্যাটা শুধু ডিজাইন-অসুন্দর না — যে কোনো কোড (যেমন <code>Scheduler</code>) <code>IWorker.Eat()</code> কল করলে সেটা কম্পাইল-টাইমে নিরাপদ মনে হয়, কিন্তু <code>RobotWorker</code>-এর সাথে চললে runtime crash করবে। সমাধান — ইন্টারফেসটা ভূমিকা (role) অনুযায়ী ভাঙা: <code>IWorkable { Work(); }</code> আর <code>IFeedable { Eat(); }</code> আলাদা। <code>RobotWorker</code> শুধু <code>IWorkable</code> implement করবে, আর <code>Eat()</code> কল করার চেষ্টা তখন compile-time type error হবে, runtime exception না।</p>
+
+<h3>৫) Dependency Inversion Principle (DIP) আর Dependency Injection (DI) — এই দুটো কি একই জিনিস?</h3>
+<p><b>ব্যাখ্যা:</b> না, প্রায়ই গুলিয়ে ফেলা হয় কিন্তু আলাদা স্তরের জিনিস। <span class="kw">DIP</span> (চ্যাপ্টার ৭) একটা <b>ডিজাইন নীতি</b> — high-level module concrete low-level class-এর উপর সরাসরি নির্ভর না করে দুই পক্ষই একটা abstraction (<code>IOrderRepository</code>)-এর উপর নির্ভর করবে। <span class="kw">DI</span> হলো সেই নির্ভরতাকে বাস্তবে "wire" করার একটা <b>টেকনিক</b> — constructor-এর মাধ্যমে বাইরে থেকে dependency পাস করে দেওয়া, আর ASP.NET Core-এর DI container রানটাইমে সঠিক concrete implementation resolve করে। অর্থাৎ DIP না মেনেও DI ব্যবহার করা সম্ভব (constructor-এ সরাসরি concrete class পাস করলে), আবার DI container ছাড়াও DIP মেনে চলা সম্ভব (manual constructor injection)। DI হলো DIP প্রয়োগ করার সবচেয়ে প্রচলিত হাতিয়ার, কিন্তু নীতিটা টুলের চেয়ে বড়।</p>
+
+<h3>৬) <code>ElectricCar : Car</code>-এ <code>Accelerate()</code> override করতে গিয়ে <code>_rpm</code> ফিল্ড অপ্রাসঙ্গিক হয়ে যাচ্ছে কেন, আর composition দিয়ে এটা কীভাবে ঠিক হয়?</h3>
+<pre><span class="c">// Composition দিয়ে সমাধান — Car আর ইঞ্জিনের ধরন সম্পর্কে কিছুই জানে না</span>
+public interface IEngine
+{
+    void Start();
+    void Accelerate();
+}
+
+public class Car
+{
+    private readonly IEngine _engine;
+    public Car(IEngine engine) =&gt; _engine = engine;   <span class="c">// has-a</span>
+    public void Accelerate() =&gt; _engine.Accelerate();
+}</pre>
+<p><b>ব্যাখ্যা:</b> চ্যাপ্টার ২-এ দেখানো <span class="kw">fragile base class problem</span>-এর উদাহরণ — inheritance হলো white-box reuse, তাই <code>ElectricCar</code>-কে <code>Car</code>-এর internal state (<code>_rpm</code>) সম্পর্কে জানতে হয় এমনকি সেটা তার জন্য অর্থহীন হলেও, আর প্রতিটা method override করতে বাধ্য হতে হয়। Composition দিয়ে সমাধানে <code>Car</code> শুধু <code>IEngine</code> contract-টুকু চেনে (black-box reuse) — <code>GasEngine</code> বা <code>ElectricEngine</code> ভেতরে কীভাবে কাজ করে তা <code>Car</code>-এর জানারই দরকার নেই, আর নতুন <code>HybridEngine</code> যোগ করতে <code>Car</code>-এর একটা লাইনও বদলাতে হয় না।</p>
+
+<h3>৭) হাতে-বানানো static Singleton class ব্যবহার করলে ইউনিট টেস্টে কী সমস্যা হতে পারে, আর আধুনিক .NET কোডে এর বিকল্প কী?</h3>
+<p><b>ব্যাখ্যা:</b> চ্যাপ্টার ৮ ও ১২ (<span class="kw">Singleton Abuse</span>)-এ আলোচিত দুইটা বাস্তব ক্ষতি — (১) <b>Test flakiness</b>: singleton-এর ভেতরের mutable state এক টেস্ট থেকে আরেকটায় leak করে, ফলে টেস্ট আলাদাভাবে চালালে pass করলেও নির্দিষ্ট ক্রমে চালালে fail করতে পারে। (২) <b>Hidden dependency</b>: একটা method-এর signature দেখে বোঝা যায় না সে ভেতরে চুপচাপ <code>Logger.Instance</code>-এর মতো global state ব্যবহার করছে। আধুনিক সমাধান — হাতে-বানানো static ক্লাস না লিখে DI container-এর <code>services.AddSingleton&lt;T&gt;()</code> lifetime ব্যবহার করা, যাতে dependency constructor-এ explicit থাকে, mock করা সহজ হয়, আর container টেস্টের জন্য আলাদা instance দিতে পারে।</p>
+
+<h3>৮) একটা cross-platform UI kit-এ Button, Checkbox আর Scrollbar-কে সবসময় একই থিমের (সব Dark, অথবা সব Light) সাথে সামঞ্জস্যপূর্ণভাবে তৈরি করতে হবে। Factory Method নাকি Abstract Factory — কোনটা মানানসই, আর কেন?</h3>
+<p><b>ব্যাখ্যা:</b> <span class="kw">Abstract Factory</span> (চ্যাপ্টার ৮)। Factory Method একটা <b>একক ধরনের product</b>-এর ভিন্ন ভিন্ন implementation তৈরি করে (যেমন শুধু <code>Button</code>-এর জন্য <code>DarkButton</code>/<code>LightButton</code>)। কিন্তু এখানে সমস্যাটা একগুচ্ছ <b>সম্পর্কিত product</b> (Button + Checkbox + Scrollbar) সবসময় একসাথে, সামঞ্জস্যপূর্ণভাবে তৈরি হওয়া নিশ্চিত করা — একটা Dark Button-এর পাশে ভুলবশত একটা Light Checkbox বসে যাওয়া রোধ করতে হবে। Abstract Factory ঠিক এই "পুরো পরিবার একসাথে, নাহলে না" সমস্যাটাই সমাধান করে — একটা <code>IWidgetFactory</code> (<code>DarkFactory</code>/<code>LightFactory</code>) থেকে পুরো family একবারে আসে।</p>
+
+<h3>৯) একটা constructor-এ ৮টা optional parameter দরকার হলে সরাসরি constructor overload বাড়ানোর বদলে Builder pattern কেন ভালো পছন্দ?</h3>
+<p><b>ব্যাখ্যা:</b> ৮টা optional parameter-এর জন্য বহু constructor overload লিখলে তৈরি হয় <span class="kw">telescoping constructor</span> — কল-সাইটে কোন positional argument কী বোঝায় তা বোঝা কঠিন হয়ে যায়, আর নতুন optional field যোগ হলেই নতুন overload লাগে। <span class="kw">Builder</span> (চ্যাপ্টার ৮) object-টাকে ধাপে ধাপে, readable ফ্লুয়েন্ট মেথড চেইন দিয়ে (<code>.WithX().WithY().Build()</code>) তৈরি করতে দেয়, আর সবশেষে <code>Build()</code>-এর ভেতরে একবারই সব invariant validate করে। <code>StringBuilder</code> বা ASP.NET Core-এর <code>WebApplicationBuilder</code> এই প্যাটার্নেরই বাস্তব উদাহরণ।</p>
+
+<h3>১০) Adapter আর Facade — দুটোই একগুচ্ছ ক্লাসকে "wrap" করে, তাহলে পার্থক্যটা ঠিক কোথায়?</h3>
+<p><b>ব্যাখ্যা:</b> চ্যাপ্টার ৯-এ এই জোড়াটাই আলোচিত। <span class="kw">Adapter</span> সমাধান করে একটা <b>ইন্টারফেস বেমানানের</b> সমস্যা — একটা existing (প্রায়ই legacy বা third-party) ইন্টারফেসকে ক্লায়েন্ট যে shape আশা করে সেই shape-এ অনুবাদ করে দেয় (যেমন <code>ILegacyPaymentGateway</code>-এর string-based API-কে আধুনিক <code>IPaymentGateway</code>-এ রূপান্তর)। <span class="kw">Facade</span> সমাধান করে একটা <b>জটিলতার</b> সমস্যা — একগুচ্ছ ইতিমধ্যে সামঞ্জস্যপূর্ণ ক্লাস (Inventory, Payment, Shipping, Notification service) coordinate করার জন্য একটা সরল, একীভূত entry point দেয়, কোনো ইন্টারফেস অনুবাদ ছাড়াই। শর্টকাট: Adapter থাকে যখন দুইটা shape "মেলে না"; Facade থাকে যখন শেপ ঠিকই আছে কিন্তু কল করার ক্রম/সংখ্যা জটিল।</p>
+
+<h3>১১) নিচের <code>VirtualReportProxy</code>-টা কি Decorator, নাকি Proxy — আর কীভাবে বুঝবেন?</h3>
+<pre>public class VirtualReportProxy : IReportGenerator
+{
+    private HeavyReportGenerator? _real;
+
+    public byte[] Generate()
+    {
+        _real ??= new HeavyReportGenerator();   <span class="c">// প্রথম অ্যাক্সেসেই তৈরি হয়</span>
+        return _real.Generate();
+    }
+}</pre>
+<p><b>ব্যাখ্যা:</b> এটা <span class="kw">Proxy</span> (চ্যাপ্টার ৯-এ Virtual Proxy হিসেবে আলোচিত), Decorator না। নিয়ম মনে রাখার শর্টকাট — <b>Decorator সবসময় delegate করে, শুধু বাড়তি behavior যোগ করে</b> (call কখনো আটকায় না)। <b>Proxy delegate করতে পারে অথবা নাও করতে পারে</b> — সিদ্ধান্তটাই তার মূল কাজ। এখানে <code>VirtualReportProxy</code> কোনো নতুন behavior (logging, formatting) যোগ করছে না — সে শুধু real object কবে তৈরি হবে তা নিয়ন্ত্রণ করছে (lazy initialization), যেটা একটা access-control সিদ্ধান্ত। যদি এখানে <code>Generate()</code>-এর আগে-পরে logging যোগ হতো (call সবসময় real object পর্যন্ত পৌঁছাতো), সেটা Decorator হতো।</p>
+
+<h3>১২) নিচের <code>IOrderState</code> কোডটা কোন pattern, আর এটা কীভাবে Strategy থেকে আলাদা?</h3>
+<pre>public interface IOrderState
+{
+    IOrderState Pay(Order order);
+    IOrderState Ship(Order order);
+}
+
+public class PendingState : IOrderState
+{
+    public IOrderState Pay(Order order) { order.ChargedAt = DateTime.UtcNow; return new PaidState(); }
+    public IOrderState Ship(Order order) =&gt; throw new InvalidOperationException("Pay না করে Ship করা যাবে না");
+}</pre>
+<p><b>ব্যাখ্যা:</b> এটা <span class="kw">State</span> pattern (চ্যাপ্টার ১১), Strategy না — যদিও কাঠামোগতভাবে দুটোই "interface-এর পেছনে behavior লুকানো, আর object সেটার একটা reference ধরে রাখে" এই একই আকার শেয়ার করে, তাই ইন্টারভিউতে গুলিয়ে ফেলা হয়। পার্থক্যটা <b>কে বদলায় আর কখন</b>-এ। Strategy-তে caller বাইরে থেকে explicit ভাবে একটা algorithm বেছে ইনজেক্ট করে, আর সেটা object-এর জীবনচক্রে সাধারণত স্থির থাকে (যেমন <code>IDiscountStrategy</code>)। State-এ context object (<code>Order</code>) নিজেই তার internal transition-এর ফলাফল হিসেবে নিজের current state বদলায় (<code>State = State.Pay(this)</code>) — caller কখনো সরাসরি state বেছে দেয় না, শুধু event trigger করে (<code>Pay()</code>) আর object নিজে সিদ্ধান্ত নেয় পরের state কী হবে।</p>
+
+<h3>১৩) Strategy আর Command — দুটোই একটা interface-এর পেছনে behavior রাখে এবং inject করা যায়, তাহলে পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> চ্যাপ্টার ১০-এ এই "common interview confusion" সরাসরি আলোচিত। পার্থক্যটা উদ্দেশ্যে, গঠনে না। <span class="kw">Strategy</span> পাল্টায় <b>একই operation কীভাবে</b> সম্পন্ন হবে — "sort" সবসময় sort-ই থাকে, শুধু algorithm পাল্টায় (<code>IComparer&lt;T&gt;</code>)। <span class="kw">Command</span> পাল্টায় আদৌ <b>কী operation</b> সম্পন্ন হবে, আর সেই action-টাকেই একটা storable, queueable, undoable value বানিয়ে ফেলে (MediatR-এর <code>IRequest</code>, undo/redo stack)। এক কথায়: Strategy interchangeable algorithm-এর জন্য, Command storable action-এর জন্য — Command-এ সাধারণত <code>Execute()</code>/<code>Undo()</code> থাকে এবং সেটা কোথাও queue/log হয়, Strategy সাধারণত সাথে সাথে, synchronously কল হয়ে যায়।</p>
+
+<h3>১৪) C#-এর <code>event</code> দিয়ে বানানো Observer pattern-এ subscriber যদি <code>-=</code> দিয়ে unsubscribe করতে ভুলে যায়, তাহলে কী সমস্যা হতে পারে?</h3>
+<p><b>ব্যাখ্যা:</b> চ্যাপ্টার ১০-এ সতর্ক করা হয়েছে — subject (publisher) observer-এর reference ধরে রাখে যতক্ষণ subscription active থাকে। Subscriber object logically আর দরকার না থাকলেও (যেমন একটা UI page বন্ধ হয়ে গেছে), যদি সেটা subject থেকে unsubscribe না করে, subject সেই reference-টা এখনো ধরে রাখবে — ফলে .NET-এর garbage collector সেই subscriber object-টাকে collect করতে পারবে না, কারণ কেউ না কেউ এখনো তাকে reference করছে। এটাই <span class="kw">memory leak</span> — দীর্ঘ-জীবিত subject-এর সাথে যুক্ত থাকা স্বল্প-জীবিত subscriber-রা কখনো GC হয় না, ধীরে ধীরে মেমরি বাড়তে থাকে।</p>
+
+<h3>১৫) নিচের <code>Order</code> ক্লাসটা কোন anti-pattern-এর উদাহরণ, আর কীভাবে ঠিক করবেন?</h3>
+<pre>public class Order
+{
+    public decimal Total { get; set; }
+    public OrderStatus Status { get; set; }
+}
+
+public class OrderService
+{
+    public void ApplyDiscount(Order o, decimal pct)
+    {
+        <span class="c">// কেউ চাইলেই negative total সেট করে দিতে পারে, Order নিজে কিছুই আটকাচ্ছে না</span>
+        o.Total = o.Total - (o.Total * pct);
+    }
+}</pre>
+<p><b>ব্যাখ্যা:</b> এটা <span class="kw">Anemic Domain Model</span> (চ্যাপ্টার ১২) — সবচেয়ে বিভ্রান্তিকর anti-pattern, কারণ দেখতে পুরোপুরি OOP মনে হয় (ক্লাস আছে, প্রপার্টি আছে), কিন্তু সব behavior/business logic টেনে বের করে আলাদা <code>OrderService</code>-এ রাখা হয়েছে, আর <code>Order</code> নিজের কোনো invariant রক্ষা করে না (যেমন Shipped অর্ডারে discount দেওয়া রোধ করা)। এটা চ্যাপ্টার ১-এর <span class="kw">encapsulation</span>-এর মূল নীতিই ভাঙে — data আর সেই data-কে নিয়ন্ত্রণকারী নিয়ম একসাথে থাকা উচিত। ঠিক করার উপায় — <code>Total</code>/<code>Status</code>-এর setter <code>private</code> করে <code>ApplyDiscount()</code>-কে নিজেই <code>Order</code>-এর একটা method বানানো, যাতে সে নিজের নিয়ম (Shipped হলে discount নিষেধ) নিজেই প্রয়োগ করে — এটাই <b>rich domain model</b>।</p>
+
+<h3>১৬) Webhook receiver-এ signature verify করার সময় <code>if (expectedHex == receivedSignatureHex)</code> লেখা কেন ভুল, আর কী ব্যবহার করা উচিত?</h3>
+<p><b>ব্যাখ্যা:</b> চ্যাপ্টার ১৩-এ আলোচিত — সাধারণ string equality প্রথম অমিল character পেলেই তাৎক্ষণিক false রিটার্ন করে (early-exit), ফলে execution time গোপনে বলে দেয় কতগুলো character পর্যন্ত মিলেছে। এই সূক্ষ্ম সময়ের পার্থক্য মেপে একজন আক্রমণকারী ধীরে ধীরে সঠিক signature অনুমান করে ফেলতে পারে — এটাই <span class="kw">timing attack</span>। এই বাগ কোনো functional test দিয়ে ধরা পড়ে না, কারণ সঠিক input-এ ঠিকই কাজ করে। সমাধান — .NET-এর <code>CryptographicOperations.FixedTimeEquals</code>-এর মতো <span class="kw">constant-time comparison</span> ব্যবহার করা, যা সবসময় একই পরিমাণ সময় নেয়। এর পাশাপাশি, signature ঠিক থাকলেও একই webhook একাধিকবার (at-least-once delivery-এর কারণে) আসতে পারে, তাই handler-কে <span class="kw">idempotent</span>ও হতে হয় — event ID আগেই process হয়েছে কিনা তা persist করে চেক করে।</p>
+
 </template>
 
 <!-- ============================ RENDER ============================ -->

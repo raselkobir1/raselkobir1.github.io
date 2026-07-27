@@ -121,6 +121,7 @@ const pages = [
   {id:"troubleshoot",icon:"🛠️", title:"Troubleshooting"},
   {id:"cli",         icon:"⌨️", title:"Essential kubectl Commands"},
   {id:"gitops",      icon:"🚀", title:"GitOps · Argo CD/Flux · CI/CD Tooling"},
+  {id:"interview",   icon:"🎯", title:"Interview প্রশ্নোত্তর"},
 ];
 </script>
 
@@ -1242,6 +1243,107 @@ CI (GitHub Actions)  ── build/test/push image ──▶ Container Registry
 </pre></div>
 <div class="callout best"><span class="tag">এই চ্যাপ্টারের সারাংশ</span>
 GitOps মূলত Foundation চ্যাপ্টারের সেই মূল নীতিরই সম্প্রসারণ — declarative state + reconciliation loop — শুধু "state" এখন একটা Git repo, আর "reconciler" এখন Argo CD/Flux। বাকি সব টুল (Terraform, Sealed Secrets/External Secrets, Kyverno, Prometheus stack) একেকটা নির্দিষ্ট উদ্বেগ (infrastructure, secret, policy, observability)-কে এই একই declarative মডেলে নিয়ে আসে।</div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৫. Interview প্রশ্নোত্তর</h2>
+<p class="lead">Kubernetes ইন্টারভিউতে বারবার আসা প্রশ্ন — basic থেকে advanced পর্যন্ত, প্রতিটার সাথে সংশ্লিষ্ট চ্যাপ্টারের রেফারেন্স-সহ বাংলা ব্যাখ্যা।</p>
+
+<h3>১) Pod, ReplicaSet, আর Deployment-এর মধ্যে পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> <code>Pod</code> হলো সবচেয়ে ছোট deployable একক — এক/একাধিক container-এর মোড়ক, নিজে self-healing নয়। <code>ReplicaSet</code> নিশ্চিত করে ঠিক N-সংখ্যক Pod সবসময় চলছে, একটা মরে গেলে নতুন তৈরি করে। <code>Deployment</code> ReplicaSet-এর উপরের স্তর — এটাই rolling update ও rollback সুবিধা দেয়, আর বাস্তবে প্রায় সবসময় সরাসরি Deployment তৈরি করা হয়, ReplicaSet নয় (Pod · ReplicaSet · Deployment চ্যাপ্টার দেখুন)।</p>
+
+<h3>২) Production-এ কেন সরাসরি একটা Pod তৈরি করা উচিত নয়?</h3>
+<p><b>ব্যাখ্যা:</b> একটা standalone Pod crash করলে বা যে node-এ ছিল সেটা মরে গেলে কেউ সেটা আবার তোলে না — Pod নিজে self-healing নয়। Deployment ব্যবহার করলে তার নিয়ন্ত্রণাধীন ReplicaSet controller ক্রমাগত পর্যবেক্ষণ করে, একটা Pod হারালেই স্বয়ংক্রিয়ভাবে replace করে (Objects চ্যাপ্টারের "Common mistake — সরাসরি Pod deploy করা" দেখুন)।</p>
+
+<h3>৩) Service-এর ClusterIP, NodePort, আর LoadBalancer টাইপের মধ্যে পার্থক্য কী?</h3>
+<pre>apiVersion: v1
+kind: Service
+metadata: { name: myapi-svc }
+spec:
+  type: LoadBalancer      <span class="c"># ডিফল্ট হলে ClusterIP</span>
+  selector: { app: myapi }
+  ports: [{ port: 80, targetPort: 8080 }]</pre>
+<p><b>ব্যাখ্যা:</b> <code>ClusterIP</code> (ডিফল্ট) শুধু cluster-এর ভেতর থেকে অ্যাক্সেসযোগ্য — internal service-এর জন্য। <code>NodePort</code> প্রতিটা worker node-এর IP-তে একটা নির্দিষ্ট (৩০০০০-৩২৭৬৭) port খুলে দেয় — dev/test-এ দ্রুত বাইরে থেকে অ্যাক্সেসের জন্য। <code>LoadBalancer</code> cloud provider-কে একটা external load balancer provision করতে বলে — production internet-facing service-এর জন্য (Networking চ্যাপ্টারের Service টেবিল দেখুন)।</p>
+
+<h3>৪) Service থাকতে Ingress কেন দরকার?</h3>
+<p><b>ব্যাখ্যা:</b> প্রতিটা Service-এর জন্য আলাদা LoadBalancer (এবং আলাদা cloud cost) তৈরি করা অপচয়। <code>Ingress</code> একটাই entry point দিয়ে path/host-ভিত্তিক L7 routing দেয়, একাধিক Service-কে একটাই external IP-এর পেছনে রাখে। তবে Ingress object নিজে শুধু একটা নিয়মের ঘোষণা — বাস্তবায়নের জন্য cluster-এ একটা Ingress Controller (NGINX/Traefik) আলাদাভাবে install থাকতে হয় (Networking চ্যাপ্টার দেখুন)।</p>
+
+<h3>৫) readinessProbe আর livenessProbe-এর পার্থক্য কী, আর দুটোতে একই endpoint ব্যবহার করলে কী সমস্যা হয়?</h3>
+<pre>livenessProbe:
+  httpGet: { path: /health/live, port: 8080 }   <span class="c"># হালকা — শুধু process বেঁচে আছে কিনা</span>
+readinessProbe:
+  httpGet: { path: /health/ready, port: 8080 }  <span class="c"># DB/dependency-সহ পূর্ণ চেক</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>livenessProbe</code> ব্যর্থ হলে container <b>restart</b> হয় (deadlock/hang detect করতে), আর <code>readinessProbe</code> ব্যর্থ হলে Pod শুধু Service-এর endpoint তালিকা থেকে সাময়িক বাদ পড়ে, restart হয় না। একই endpoint দুটোতে ব্যবহার করে সেটা database connectivity-ও চেক করলে, database সাময়িক downtime হলে liveness-ও fail করবে আর Kubernetes অযথা app restart করা শুরু করবে, যদিও app নিজে সুস্থ (Scheduling চ্যাপ্টারের Common mistake দেখুন)।</p>
+
+<h3>৬) startupProbe কেন আলাদাভাবে দরকার, livenessProbe থাকতে?</h3>
+<p><b>ব্যাখ্যা:</b> ধীরে-শুরু-হওয়া app (ভারী migration/cache warm-up) স্বাভাবিক livenessProbe-এর <code>initialDelaySeconds</code>-এর চেয়ে বেশি সময় নিতে পারে — এমন হলে liveness probe ভুল করে "hang হয়ে গেছে" ভেবে বারবার restart করতে থাকবে। <code>startupProbe</code> সফল না হওয়া পর্যন্ত liveness/readiness শুরুই হয় না, ফলে ধীর startup-কে ভুলভাবে unhealthy ধরা থেকে বাঁচায় (Scheduling চ্যাপ্টারের Probe টেবিল দেখুন)।</p>
+
+<h3>৭) PersistentVolume, PersistentVolumeClaim, আর StorageClass — এই তিনটার সম্পর্ক ব্যাখ্যা করুন।</h3>
+<pre>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: pgdata-pvc }
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: standard-ssd
+  resources: { requests: { storage: 10Gi } }</pre>
+<p><b>ব্যাখ্যা:</b> <code>PersistentVolume (PV)</code> cluster-স্তরের একটা storage resource — আসল disk-এর প্রতিনিধিত্ব করে। <code>PersistentVolumeClaim (PVC)</code> হলো একটা Pod-এর "এত সাইজ, এই access mode-এর storage চাই" আবেদন — Kubernetes এটাকে মিলে-যাওয়া একটা PV-এর সাথে bind করে। <code>StorageClass</code> এই PV তৈরিকে স্বয়ংক্রিয় (dynamic provisioning) করে — PVC তৈরি হলেই প্রয়োজনমতো নতুন PV নিজে থেকেই তৈরি হয়, admin-কে হাতে PV বানাতে হয় না (Storage চ্যাপ্টার দেখুন)।</p>
+
+<h3>৮) PVC মুছে ফেললে ডেটার কী হয়?</h3>
+<p><b>ব্যাখ্যা:</b> এটা নির্ভর করে PV-এর <code>reclaimPolicy</code>-এর ওপর। <code>Delete</code> (dynamic provisioning-এ প্রায়ই ডিফল্ট) মানে PVC মোছার সাথে সাথেই পেছনের cloud disk-ও মুছে যায় — ডেটা ফেরানো অসম্ভব। <code>Retain</code> মানে PV ও তার ডেটা টিকে থাকে (status <code>Released</code>), কিন্তু নতুন কোনো PVC স্বয়ংক্রিয়ভাবে bind হবে না — admin-কে হাতে সেটা আবার ব্যবহারযোগ্য করতে হয়। Database-এর মতো critical data-তে <code>Retain</code>-ই নিরাপদ (Storage চ্যাপ্টারের Reclaim Policy অংশ দেখুন)।</p>
+
+<h3>৯) StatefulSet কখন ব্যবহার করবেন, Deployment নয়?</h3>
+<p><b>ব্যাখ্যা:</b> Deployment-এর সব Pod একে অপরের সাথে বিনিময়যোগ্য — কোনটা কোনটা তা গুরুত্বপূর্ণ নয়। কিন্তু database cluster-এর মতো ক্ষেত্রে প্রতিটা replica-র নিজস্ব, স্থায়ী পরিচয় (<code>db-0</code>, <code>db-1</code>) ও নিজস্ব storage দরকার — একটার ডেটা আরেকটার সাথে গুলিয়ে গেলে চলবে না। <code>StatefulSet</code> ক্রমিক, স্থায়ী নাম আর <code>volumeClaimTemplates</code> দিয়ে প্রতিটা Pod-এর নিজস্ব PVC guarantee দেয় — Database, message queue, distributed cache-এর জন্য উপযুক্ত (Storage চ্যাপ্টারের Deployment vs StatefulSet টেবিল দেখুন)।</p>
+
+<h3>১০) Horizontal Pod Autoscaler (HPA) কীভাবে কাজ করে, আর এটা চালাতে কী কী লাগে?</h3>
+<pre>apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: myapi-hpa }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: myapi }
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }</pre>
+<p><b>ব্যাখ্যা:</b> HPA একটা metric (সাধারণত CPU utilization) দেখে replica সংখ্যা স্বয়ংক্রিয়ভাবে বাড়ায়/কমায় — উদাহরণে গড় CPU ৭০%-এর বেশি হলে replica ৩ থেকে সর্বোচ্চ ১০ পর্যন্ত বাড়বে। এটা কাজ করার জন্য cluster-এ <code>metrics-server</code> চলতে হবে, আর Deployment-এ অবশ্যই <code>resources.requests</code> সেট থাকতে হবে — percentage utilization request-এর সাপেক্ষেই গণনা হয় (Scaling চ্যাপ্টার দেখুন)।</p>
+
+<h3>১১) HPA, VPA, আর Cluster Autoscaler-এর মধ্যে পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> <code>HPA</code> replica-র <b>সংখ্যা</b> বদলায় (traffic বাড়লে ৩টা থেকে ৮টা Pod)। <code>VPA</code> প্রতিটা Pod-এর resource <b>request/limit</b> adjust করে, replica সংখ্যা নয়। <code>Cluster Autoscaler</code> worker <b>node</b>-এর সংখ্যা বদলায় — Pending Pod-এর জন্য জায়গা না থাকলে নতুন node provision করে। একই CPU/memory metric-এ HPA আর VPA একসাথে চালালে দুটো controller-এর সিদ্ধান্ত সংঘর্ষে যেতে পারে (Scaling চ্যাপ্টার দেখুন)।</p>
+
+<h3>১২) Rolling update-এ maxSurge আর maxUnavailable কী নিয়ন্ত্রণ করে?</h3>
+<pre>strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1          <span class="c"># বাড়তি কতগুলো Pod সাময়িক তৈরি হতে পারে</span>
+    maxUnavailable: 0    <span class="c"># সবসময় সব replica available থাকবে</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>maxSurge</code> বলে দেয় desired replica-র চেয়ে বাড়তি কতগুলো নতুন Pod সাময়িকভাবে তৈরি করা যাবে, আর <code>maxUnavailable</code> বলে দেয় একসাথে সর্বোচ্চ কতগুলো Pod unavailable থাকতে পারবে। <code>maxUnavailable: 0</code> মানে zero-downtime deploy, কিন্তু নতুন Pod তখনই "রেডি" ধরা হয় যখন তার <code>readinessProbe</code> পাস করে — তাই readinessProbe সঠিক না থাকলে rolling update-এর এই নিরাপত্তা ভেঙে পড়ে (Scaling চ্যাপ্টার দেখুন)।</p>
+
+<h3>১৩) Kubernetes Secret কি সত্যিই এনক্রিপ্টেড? এটা নিরাপদ রাখতে কী করা উচিত?</h3>
+<p><b>ব্যাখ্যা:</b> না — <code>Secret</code> শুধু <b>base64-encoded</b>, এনক্রিপ্ট নয়, কয়েক সেকেন্ডে decode করা যায়। ডিফল্টভাবে etcd-এ এটা প্রায় plaintext আকারেই থাকে। প্রকৃত নিরাপত্তার জন্য (১) etcd-এ encryption at rest চালু করা, (২) RBAC দিয়ে Secret পড়ার অনুমতি কড়াকড়িভাবে সীমিত করা, (৩) সম্ভব হলে HashiCorp Vault/AWS Secrets Manager-এর মতো external secret manager ব্যবহার করা উচিত (Config চ্যাপ্টারের "সবচেয়ে বেশি ভুল-বোঝা বিষয়" callout দেখুন)।</p>
+
+<h3>১৪) RBAC-এ Role, RoleBinding, ClusterRole, আর ClusterRoleBinding-এর পার্থক্য কী?</h3>
+<pre>apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: { namespace: production, name: pod-reader }
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]</pre>
+<p><b>ব্যাখ্যা:</b> <code>Role</code> একটা নির্দিষ্ট namespace-এ scoped অনুমতির তালিকা, <code>RoleBinding</code> সেই Role-কে একটা namespace-এর ভেতর user/ServiceAccount-এর সাথে যুক্ত করে। <code>ClusterRole</code>/<code>ClusterRoleBinding</code> একই কাজ করে কিন্তু পুরো cluster-জুড়ে বা namespace-নির্বিশেষে/cluster-scoped resource (যেমন Node)-এর জন্য। সবসময় least privilege মেনে চলা উচিত — সবকিছুতে <code>cluster-admin</code> বেঁধে দিলে সেই Pod compromise হলে পুরো cluster-এর নিয়ন্ত্রণ চলে যেতে পারে (Security চ্যাপ্টার দেখুন)।</p>
+
+<h3>১৫) NetworkPolicy-এর ডিফল্ট আচরণ কী, আর এটা apply করার সময় কোন ভুল প্রায়ই হয়?</h3>
+<pre>apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: db-allow-only-api }
+spec:
+  podSelector: { matchLabels: { app: postgres } }
+  ingress:
+    - from:
+        - podSelector: { matchLabels: { app: myapi } }</pre>
+<p><b>ব্যাখ্যা:</b> কোনো NetworkPolicy না থাকলে cluster-এর যেকোনো Pod যেকোনো Pod-এর সাথে কথা বলতে পারে — ডিফল্ট আচরণ allow-all। কিন্তু একটা Pod যদি কোনো NetworkPolicy-এর <code>podSelector</code>-এ (একবার) ধরা পড়ে, তাহলে সেই direction-এ শুধু explicitly allow করা traffic-ই ঢুকতে পারবে — বাকি সব (মনিটরিং এজেন্ট, debug curl সহ) deny হয়ে যায়। তাই NetworkPolicy "additive allow-list" নয়, বরং "একবার touch করলেই বাকি সব বন্ধ" — না জেনে apply করলে নিজের monitoring/debug টুলই ব্লক হয়ে যেতে পারে (Security ও Networking চ্যাপ্টার দেখুন)।</p>
+
+<h3>১৬) CPU limit ছাড়িয়ে গেলে কী হয়, আর memory limit ছাড়িয়ে গেলে কী হয় — একই আচরণ?</h3>
+<p><b>ব্যাখ্যা:</b> না, সম্পূর্ণ ভিন্ন। CPU একটা <b>compressible</b> resource — limit-এর বেশি ব্যবহার করলে container শুধু <b>throttle</b> হয় (ধীর হয়ে যায়), kill হয় না। Memory <b>incompressible</b> — limit ছাড়ালেই container সাথে সাথে <b>OOMKilled</b> হয়ে যায়। এজন্য memory limit বসানোর আগে প্রকৃত ব্যবহার পরিমাপ করে নেওয়া জরুরি, নাহলে অহেতুক OOMKilled loop শুরু হতে পারে (Scheduling ও Troubleshooting চ্যাপ্টার দেখুন)।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->

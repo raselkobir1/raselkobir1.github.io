@@ -123,6 +123,7 @@ const pages = [
   {id:"secmon",     icon:"🔐", title:"Security · Monitoring"},
   {id:"dotnet",     icon:"💜", title:"RabbitMQ.Client (.NET)"},
   {id:"prod",       icon:"🏦", title:"Troubleshooting · Best Practices"},
+  {id:"interview",  icon:"🎯", title:"১৩. Interview প্রশ্নোত্তর"},
 ];
 </script>
 
@@ -883,6 +884,93 @@ channel.BasicConsume("billing", autoAck:false, consumer);           <span class=
 </div>
 </div>
 </div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৩. Interview প্রশ্নোত্তর</h2>
+<p class="lead">Basic থেকে advanced পর্যন্ত RabbitMQ ইন্টারভিউতে বারবার ঘুরেফিরে আসা প্রশ্ন — প্রতিটার সংক্ষিপ্ত বাংলা ব্যাখ্যা, আগের অধ্যায়গুলোর টার্মিনোলজি অনুসরণ করে।</p>
+
+<h3>১) RabbitMQ ঠিক কী করে, আর producer কি সরাসরি queue-তে পাঠায়?</h3>
+<p><b>ব্যাখ্যা:</b> RabbitMQ একটা message broker — producer কখনো সরাসরি queue-তে পাঠায় না, সে পাঠায় একটা <span class="kw">exchange</span>-এ (Foundation অধ্যায়)। Exchange তার binding ও routing key দেখে ঠিক করে message কোন queue-তে যাবে। এই indirection-ই routing-কে নমনীয় করে এবং RabbitMQ-কে "smart broker, dumb consumer" মডেল বানায় — Kafka-র উল্টো, যেখানে broker শুধু log রাখে আর consumer নিজে বুদ্ধি খাটায়।</p>
+
+<h3>২) AMQP কী, আর RabbitMQ কোন version ব্যবহার করে?</h3>
+<p><b>ব্যাখ্যা:</b> AMQP (Advanced Message Queuing Protocol) হলো একটা binary wire-level protocol যা connection, channel, exchange, queue, binding-এর সংজ্ঞা দেয় (AMQP Protocol অধ্যায়)। RabbitMQ মূলত <b>AMQP 0-9-1</b> বাস্তবায়ন করে (AMQP 1.0 আলাদা প্রোটোকল, plugin দিয়ে সমর্থিত)। যেকোনো ভাষার client একই broker-এর সাথে কথা বলতে পারে কারণ protocol ভাষা-নিরপেক্ষ।</p>
+
+<h3>৩) Connection আর Channel-এর মধ্যে পার্থক্য কী, আর কেন channel এত গুরুত্বপূর্ণ?</h3>
+<p><b>ব্যাখ্যা:</b> Connection হলো client-broker-এর মধ্যে একটা ব্যয়বহুল TCP সংযোগ। Channel হলো সেই connection-এর ভেতরে একটা lightweight virtual sub-connection যার ওপর প্রায় সব AMQP কাজ (publish, consume, ack) হয় (Connections & Channels অধ্যায়)। একটা connection-এর ভেতরে অনেক channel multiplex করা যায়, কিন্তু <b>channel thread-safe নয়</b> — একাধিক thread একটা channel share করলে corruption/exception হতে পারে; প্রতি thread/worker-এর নিজের channel থাকা উচিত।</p>
+
+<h3>৪) RabbitMQ-তে exchange-এর চার প্রকার কী কী, আর কোনটা কখন ব্যবহার করবেন?</h3>
+<pre>direct  → routing key == binding key হুবহু মিললে         (নির্দিষ্ট queue-তে পাঠানো)
+fanout  → routing key উপেক্ষা করে সব bound queue-তে       (broadcast)
+topic   → routing key প্যাটার্ন মিলিয়ে (* এক শব্দ, # একাধিক)  (নমনীয় routing)
+headers → routing key নয়, message header মিলিয়ে           (একাধিক attribute দিয়ে)</pre>
+<p><b>ব্যাখ্যা:</b> চারটাই core AMQP-তে built-in (Exchange · Queue · Binding · Routing অধ্যায়)। direct নির্দিষ্ট এক গন্তব্যের জন্য, fanout সবাইকে একই event পাঠাতে (broadcast), topic নমনীয় pattern-ভিত্তিক routing-এর জন্য (যেমন <code>order.created.eu</code>), আর headers routing key-এর বদলে একাধিক attribute দিয়ে সিদ্ধান্ত নিতে। একটা প্লাগ-ইন হিসেবে পঞ্চম ধরনও আছে — <b>consistent-hash exchange</b>, যা key hash করে একটাকে বেছে পাঠায় (per-key ordering-এর জন্য দরকারি)।</p>
+
+<h3>৫) Routing key আর binding key-এর মধ্যে পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> Routing key হলো producer যা message পাঠানোর সময় দেয় ("এই message-এর ঠিকানা")। Binding key হলো queue যখন exchange-এ bind হয় তখন দেয় ("আমি এই ঠিকানার message চাই") — Exchange · Queue · Binding · Routing অধ্যায়ে এই পার্থক্য বিস্তারিত। Exchange দুটো মিলিয়ে route করার সিদ্ধান্ত নেয়। fanout exchange-এ routing key সম্পূর্ণ উপেক্ষা করা হয়, তাই সেখানে binding key-এর কোনো অর্থ নেই।</p>
+
+<h3>৬) কোনো queue-তে route না হওয়া (unroutable) message-এর কী হয়, আর কীভাবে ঠেকাবেন?</h3>
+<p><b>ব্যাখ্যা:</b> Default-এ exchange যদি কোনো matching binding না পায়, message নীরবে <b>drop</b> হয়ে যায় — production-এ নীরব data loss (Exchange · Queue · Binding · Routing অধ্যায়)। দুটো সমাধান: publish-এ <code>mandatory=true</code> দিলে broker route না হলে message publisher-কে <code>basic.return</code> দিয়ে ফেরত পাঠায়; অথবা exchange-এ <code>alternate-exchange</code> সেট করলে unmatched message স্বয়ংক্রিয়ভাবে একটা catch-all exchange/queue-তে চলে যায়। Production-এ গুরুত্বপূর্ণ exchange-এ Alternate Exchange রাখা best practice।</p>
+
+<h3>৭) ack, nack, আর reject-এর মধ্যে পার্থক্য কী?</h3>
+<pre>basic.ack                     → সফল; broker queue থেকে message স্থায়ীভাবে মুছে দেয়
+basic.nack(requeue=true)       → ব্যর্থ, আবার queue-তে ফেরত (retry)
+basic.nack(requeue=false)      → ব্যর্থ, requeue নয় → DLX/drop (poison message)
+basic.reject(requeue=true/false) → nack-এর মতোই, শুধু একবারে একটা delivery tag-এ (multiple নেই)</pre>
+<p><b>ব্যাখ্যা:</b> এই তিনটাই manual acknowledgement mode-এর অংশ (Publisher Confirms · Manual Acks · Prefetch অধ্যায়)। <code>ack</code> মানে message সফলভাবে process হয়েছে। <code>nack</code>/<code>reject</code> ব্যর্থতা বোঝায়, আর <code>requeue</code> flag ঠিক করে message আবার একই queue-তে ফিরবে (transient error), নাকি DLX/drop হবে (poison message)। <code>nack</code>-এ <code>multiple=true</code> দিয়ে একসাথে একাধিক delivery একবারে ack/nack করা যায়, <code>reject</code>-এ যা সম্ভব নয়।</p>
+
+<h3>৮) Publisher confirms কী এবং কেন শুধু publish করাই যথেষ্ট নয়?</h3>
+<p><b>ব্যাখ্যা:</b> Default-এ <code>basic.publish</code> "fire and forget" — broker সত্যিই পেল কি না জানার উপায় নেই, connection মাঝপথে মরলে message নীরবে হারাতে পারে (Publisher Confirms অধ্যায়)। <code>confirm.select</code> চালু করলে broker প্রতিটা message নিরাপদে গ্রহণ (persistent হলে disk-এ লেখা) করার পর publisher-কে একটা ack ফেরত দেয়। Throughput ধরে রাখতে প্রতি message-এ sync অপেক্ষা না করে batch/async confirm ব্যবহার করা উচিত।</p>
+
+<h3>৯) Unacked message বলতে কী বোঝায়, আর consumer crash করলে কী হয়?</h3>
+<p><b>ব্যাখ্যা:</b> Consumer message পেয়েছে কিন্তু এখনো ack/nack করেনি — এই অবস্থাকেই unacked বলে (Publisher Confirms · Manual Acks · Prefetch অধ্যায়)। Consumer crash বা connection বন্ধ হলে broker সেই unacked message আবার অন্য consumer-কে <b>redeliver</b> করে (<code>redelivered=true</code> flag সহ), যা "at-least-once" নিশ্চিত করে কিন্তু duplicate তৈরি করতে পারে — তাই consumer সবসময় idempotent হওয়া উচিত (যেমন <code>message_id</code> দিয়ে dedup)।</p>
+
+<h3>১০) Prefetch (QoS) কী করে, আর prefetch=1 কখন ব্যবহার করবেন?</h3>
+<pre>channel.BasicQos(prefetchSize:0, prefetchCount:20, global:false);</pre>
+<p><b>ব্যাখ্যা:</b> <code>basic.qos(prefetchCount)</code> বলে দেয় একসাথে সর্বোচ্চ কতগুলো unacked message একটা consumer-কে দেওয়া যাবে — ack না করা পর্যন্ত আর নয় (Publisher Confirms · Manual Acks · Prefetch অধ্যায়)। ভারী/দীর্ঘ কাজে <code>prefetch=1</code> দিলে ন্যায্য বণ্টন হয় (round-robin-এ ধীর consumer উপচে পড়ে না); হালকা/দ্রুত কাজে বড় prefetch (৫০–৩০০) round-trip কমিয়ে throughput বাড়ায়। <code>global</code> flag ডিফল্টে <code>false</code> থাকে — তাই limit প্রতিটা consumer আলাদাভাবে মেনে চলে; <code>global=true</code> দিলে পুরো channel-এর সব consumer মিলিয়ে একসাথে গোনা হয়, যা প্রায়ই অনিচ্ছাকৃত।</p>
+
+<h3>১১) DLX আর TTL মিলিয়ে delayed retry pattern কীভাবে বানাবেন?</h3>
+<pre>main queue ──nack(requeue=false)──► retry.dlx ──► wait queue (x-message-ttl=30s,
+                                                       DLX = main exchange)
+                                                          │  30s পরে TTL শেষ
+                                                          ▼
+                                              আবার main queue-তে ফিরে আসে → পুনরায় চেষ্টা</pre>
+<p><b>ব্যাখ্যা:</b> DLX (Dead Letter Exchange) হলো একটা সাধারণ exchange যেখানে reject (requeue=false), TTL শেষ, বা queue length limit পার হলে message স্বয়ংক্রিয়ভাবে dead-letter হয়ে যায় (DLX · DLQ · TTL · Retry অধ্যায়)। সরল <code>nack(requeue=true)</code> সাথে সাথে busy loop তৈরি করতে পারে — তাই ব্যর্থ message-কে একটা "wait" queue-তে পাঠিয়ে সেখানে TTL সময় বসিয়ে রাখা হয়, TTL শেষে সেটা dead-letter হয়ে মূল queue-তে ফিরে আসে। এভাবে immediate busy-loop ছাড়াই delay সহ retry পাওয়া যায়। আধুনিক বিকল্প: quorum queue-তে <code>x-delivery-limit</code> সেট করলে broker নিজেই নির্দিষ্ট বার redeliver-এর পর message dead-letter করে দেয়, manual retry-count গোনার দরকার পড়ে না।</p>
+
+<h3>১২) Quorum queue, classic queue, আর classic mirrored queue-এর মধ্যে পার্থক্য কী?</h3>
+<table>
+<tr><th></th><th>Classic queue</th><th>Quorum queue</th></tr>
+<tr><td>Replication</td><td>না (একটা node)</td><td>হ্যাঁ (Raft, majority)</td></tr>
+<tr><td>Node fail-এ</td><td>queue হারাতে/থামতে পারে</td><td>টিকে থাকে (failover)</td></tr>
+<tr><td>সুপারিশ</td><td>ক্ষণস্থায়ী/অগুরুত্বপূর্ণ</td><td>Production default</td></tr>
+</table>
+<p><b>ব্যাখ্যা:</b> Classic queue-এর data একটা মাত্র node-এ থাকে, সেই node down হলে queue unavailable হয়ে যায় (Clustering · Quorum Queues অধ্যায়)। Quorum queue Raft consensus ব্যবহার করে — একটা leader ও কয়েকটা follower বিভিন্ন node-এ, majority replica লিখলে তবেই confirmed। Leader down হলে follower থেকে নতুন leader নির্বাচিত হয়, queue চালু থাকে। পুরনো classic <b>mirrored</b> queue (HA policy দিয়ে mirror করা) এখন deprecated — quorum queue তার আধুনিক, নির্ভরযোগ্য প্রতিস্থাপন।</p>
+
+<h3>১৩) RabbitMQ flow control কীভাবে কাজ করে?</h3>
+<p><b>ব্যাখ্যা:</b> Producer consumer-এর চেয়ে দ্রুত পাঠালে broker-এর memory/disk ভরে যেতে পারে (Flow Control · Performance অধ্যায়)। <code>vm_memory_high_watermark</code> (~৪০% RAM) পার হলে broker publisher-দের <b>block</b> করে দেয় (<code>connection.blocked</code> event) — memory আবার watermark-এর নিচে নামলে স্বয়ংক্রিয়ভাবে unblock হয় (<code>connection.unblocked</code>)। এজন্যই publish ও consume আলাদা connection-এ রাখা জরুরি — নাহলে publisher block হলে একই connection-এর consumer-ও আটকে যায়, memory কখনো নামবে না (deadlock-সদৃশ)।</p>
+
+<h3>১৪) Network partition আর split-brain কী, RabbitMQ cluster কীভাবে এটা সামলায়?</h3>
+<p><b>ব্যাখ্যা:</b> Cluster-এর node-গুলো একে অপরকে network-এ না দেখতে পেলেও নিজেরা ও client-রা বেঁচে আছে ভাবলে সেটা network partition; দুই পাশই যদি নিজেকে "আসল cluster" ভেবে স্বাধীনভাবে read/write নিতে থাকে, সেটাই split-brain (Clustering · Quorum Queues অধ্যায়)। <code>cluster_partition_handling = pause_minority</code> সেট করলে যে পাশে node সংখ্যা কম সেই পাশ নিজেই pause হয়ে যায়, majority পাশ একাই চলতে থাকে — split-brain ঠেকে। Quorum queue (Raft) নিজেই বাড়তি সুরক্ষা দেয় কারণ লেখার জন্য majority replica-র সম্মতি লাগে, minority পাশ কোনো write গ্রহণ করতে পারে না।</p>
+
+<h3>১৫) একটা queue-তে message ordering গ্যারান্টি করার উপায় কী?</h3>
+<p><b>ব্যাখ্যা:</b> RabbitMQ একটা একক queue-তে message FIFO ক্রমে রাখে, কিন্তু একাধিক consumer parallel-এ process করলে বা <code>nack(requeue=true)</code> হলে সেই ক্রম সহজেই ভেঙে যায় (Producer · Consumer · Message Lifecycle অধ্যায়)। কঠোর ordering দরকার হলে queue declare-এ <code>x-single-active-consumer=true</code> দিলে একসাথে শুধু একটা consumer active থাকে (বাকিরা standby); সে মরলে broker স্বয়ংক্রিয়ভাবে পরের standby-কে active করে — order + failover একসাথে পাওয়া যায়। Per-key order যথেষ্ট হলে consistent-hash exchange দিয়ে key অনুযায়ী আলাদা queue-তে routing করে প্রতি queue-তে order আর queue-গুলোর মধ্যে parallelism রাখা যায়।</p>
+
+<h3>১৬) .NET-এ কেন <code>autoAck:true</code> "নিরাপদ" নয়, আর একটা reliable consumer-এ কী কী থাকা উচিত?</h3>
+<pre>channel.BasicQos(prefetchSize:0, prefetchCount:20, global:false);
+consumer.Received += (sender, ea) =&gt; {
+    try {
+        Handle(msg);                                          <span class="c">// idempotent handler</span>
+        channel.BasicAck(ea.DeliveryTag, multiple:false);
+    }
+    catch (TransientException) {
+        channel.BasicNack(ea.DeliveryTag, multiple:false, requeue:true);
+    }
+    catch {
+        channel.BasicNack(ea.DeliveryTag, multiple:false, requeue:false);   <span class="c">// poison → DLX</span>
+    }
+};
+channel.BasicConsume("billing", autoAck:false, consumer);</pre>
+<p><b>ব্যাখ্যা:</b> <code>autoAck=true</code> রাখলে broker push করার সাথে সাথেই message queue থেকে মুছে দেয় — process শেষ হওয়ার আগে consumer crash করলে message স্থায়ীভাবে হারায় (RabbitMQ.Client (.NET) অধ্যায়)। Reliable consumer-এ দরকার: <code>autoAck:false</code> + যথাযথ prefetch + try/catch-এ transient error-এ <code>requeue:true</code>, permanent/poison error-এ <code>requeue:false</code> (DLX-এ যাবে) + idempotent handler (duplicate redelivery সামলাতে) + exception চেপে না গিয়ে সবসময় ack অথবা nack করা, নাহলে message চিরকাল unacked থেকে যাবে।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->

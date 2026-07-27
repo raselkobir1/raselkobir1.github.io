@@ -121,6 +121,7 @@ const pages = [
   {id:"patterns",     icon:"🏗️", title:"Design Patterns — CQRS, Saga, Circuit Breaker"},
   {id:"scalability",  icon:"📈", title:"Scalability, Load Balancing ও Caching"},
   {id:"casestudies",  icon:"🏛️", title:"Real-World Case Studies"},
+  {id:"interview",    icon:"🎯", title:"Interview প্রশ্নোত্তর"},
 ];
 </script>
 
@@ -2164,6 +2165,73 @@ Partition leader নির্বাচন আর ISR সদস্যপদ ব�
 পুরো কোর্সের মূল মানসিক মডেল একটা লাইনে বলা যায়: distributed system ডিজাইন করা মানে একগুচ্ছ স্বাধীন সিদ্ধান্তের সমষ্টি, প্রতিটার নিজস্ব ট্রেড-অফ। <b>Time ও ordering</b> (ch.২) ঠিক করে আপনি ঘটনার ক্রম কীভাবে বলবেন — physical clock, Lamport, নাকি vector clock দিয়ে। <b>Consistency model</b> (ch.৩) ঠিক করে read কতটা আপ-টু-ডেট দেখাবে। <b>CAP/PACELC</b> (ch.৪) মনে করিয়ে দেয় partition-এর সময় (এবং সাধারণ অবস্থাতেও) consistency আর latency/availability-এর মধ্যে বিনামূল্যে কিছু নেই। <b>Replication</b> (ch.৫) ও <b>consensus</b> (ch.৬) ঠিক করে ডেটার একাধিক কপি কীভাবে সমন্বিত থাকবে। <b>Partitioning</b> (ch.৭) ঠিক করে ডেটা স্কেলের জন্য কীভাবে ছড়ানো থাকবে। <b>Distributed transaction</b> (ch.৮), <b>failure detection</b> (ch.৯), আর <b>coordination/leader election</b> (ch.১০) মিলে ঠিক করে একাধিক অংশ জুড়ে কাজ কীভাবে নির্ভরযোগ্যভাবে সম্পন্ন হবে, নোড মরে গেলে কীভাবে ধরা পড়বে, আর কে সিদ্ধান্ত নেওয়ার অধিকার রাখে তা কীভাবে বিতর্কহীন থাকবে। <b>Messaging</b> (ch.১১), <b>design pattern</b> (ch.১২), আর <b>scalability/caching</b> (ch.১৩) সেই ভিত্তির উপর ব্যবহারিক আর্কিটেকচার তৈরি করে।<br><br>
 নিজের সিস্টেম ডিজাইন করার সময় সবচেয়ে বড় ভুল হলো প্রশ্ন শুরু করা "কোন trendy database/technology ব্যবহার করব" দিয়ে। সঠিক শুরুর বিন্দু হলো নিজের actual requirement বিশ্লেষণ করা — এই নির্দিষ্ট ডেটার জন্য consistency আসলে কতটা শক্তিশালী হওয়া দরকার (একটা ব্যাংক ব্যালেন্স আর একটা "লাইক কাউন্ট"-এর উত্তর সম্পূর্ণ ভিন্ন), availability/latency-র বাস্তব বাজেট কত, আর কোন failure মডেল (নেটওয়ার্ক partition, নোড ক্র্যাশ, ধীর clock) সহ্য করতে হবে তা স্পষ্ট করা। এই তিনটা প্রশ্নের উত্তর থেকেই ch.২-১৩-এর ব্লকগুলো থেকে সঠিকগুলো বেছে নেওয়া সম্ভব হয় — ঠিক যেভাবে Spanner, DynamoDB, Cassandra ও Kafka-র ডিজাইনাররা নিজেদের প্রশ্নের উত্তর থেকে নিজেদের ব্লকগুলো বেছে নিয়েছিলেন।
 </div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৫. Interview প্রশ্নোত্তর</h2>
+<p class="lead">Distributed systems ইন্টারভিউতে বারবার ফিরে আসা প্রশ্ন — basic থেকে advanced পর্যন্ত, প্রতিটার সংক্ষিপ্ত ব্যাখ্যা বাংলায়, এই কোর্সের নির্দিষ্ট চ্যাপ্টার রেফারেন্স সহ।</p>
+
+<h3>১) CAP theorem আসলে কী বলে, আর "যেকোনো ২টা বেছে নাও" কেন ভুল ব্যাখ্যা?</h3>
+<p><b>ব্যাখ্যা:</b> CAP বলে — network partition ঘটলে Consistency আর Availability দুটো একসাথে পুরোপুরি রাখা যায় না, একটা ছাড় দিতে হয় (অধ্যায় ৪)। এটা "C+A+P থেকে ২টা বেছে নাও" নয়, কারণ Partition Tolerance কোনো ঐচ্ছিক বিকল্প নয় — বাস্তব নেটওয়ার্কে partition ঘটবেই। তাই আসল প্রশ্ন: "partition ঘটলে, C ছাড় দেবে নাকি A?" — normal অবস্থায় (partition না থাকলে) C ও A দুটোই একসাথে পাওয়া সম্ভব।</p>
+
+<h3>২) Linearizability আর Serializability-এর পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> Linearizability (অধ্যায় ৩) আলাদা আলাদা একক operation (একটা read/write) নিয়ে কথা বলে — একাধিক replica জুড়ে সেগুলো real-time ক্রম মেনে চলবে কিনা। Serializability একাধিক operation নিয়ে গঠিত পুরো transaction নিয়ে কথা বলে (ACID-এর Isolation, অধ্যায় ৮) — একগুচ্ছ concurrent transaction যেন কোনো এক serial ক্রমে চলেছে এমন আচরণ করবে। একটা সিস্টেম serializable হয়েও linearizable নাও হতে পারে, কারণ দুটো ভিন্ন প্রশ্নের উত্তর দেয়।</p>
+
+<h3>৩) Quorum read/write কীভাবে কাজ করে? W + R &gt; N শর্তটা কেন যথেষ্ট?</h3>
+<pre><span class="c">// N=৫ replica, W=৩, R=৩ হলে W+R=৬ &gt; N=৫</span>
+write সফল ধরা হয় যখন ৩টা replica ack দেয়
+read পাঠানো হয় ৩টা replica-কে, তাদের মধ্যে সাম্প্রতিকতম version নেওয়া হয়</pre>
+<p><b>ব্যাখ্যা:</b> Leaderless replication-এ (অধ্যায় ৫) quorum formula W+R &gt; N নিশ্চিত করে যেকোনো write-সেট আর read-সেট-এর মধ্যে অন্তত একটা common replica থাকবেই (pigeonhole principle) — তাই read সবসময় সাম্প্রতিকতম write-এর অন্তত একটা কপি দেখতে পাবে। W ও R ছোট রাখলে latency কমে কিন্তু stale replica পাওয়ার ঝুঁকি বাড়ে (read repair/hinted handoff দিয়ে প্রশমিত করা হয়); বড় রাখলে উল্টো।</p>
+
+<h3>৪) Paxos আর Raft-এর মূল পার্থক্য কী, দুটোই তো majority quorum ব্যবহার করে?</h3>
+<p><b>ব্যাখ্যা:</b> দুটোই একই সমস্যার সমাধান — বহু নোড একটা মান/log entry নিয়ে একমত হওয়া, majority quorum-এর ওভারল্যাপের ওপর ভিত্তি করে (অধ্যায় ৬)। পার্থক্যটা মূলত ডিজাইন-লক্ষ্যে। Paxos (Prepare/Promise + Accept/Accepted) একটামাত্র মান নিয়ে সিদ্ধান্তকে সাধারণীকৃতভাবে প্রমাণ করে, কিন্তু বাস্তবে implement করা কঠিন — leader election আলাদা করে বলা নেই, log replication-এর জন্য Multi-Paxos-এর মতো এক্সটেনশন দরকার। Raft একই safety guarantee দেয়, কিন্তু understandability-কে স্পষ্ট ডিজাইন গোল বানিয়ে — একটামাত্র elected leader, randomized election timeout, আর একটা কড়াকড়িভাবে সংজ্ঞায়িত replicated log দিয়ে। ব্যবহারিকভাবে Raft-ই আজকাল বেশি জনপ্রিয় (etcd, Consul, Kafka KRaft) কারণ implement ও ডিবাগ করা সহজ।</p>
+
+<h3>৫) Split-brain কী, আর majority quorum কীভাবে এটা ঠেকায়?</h3>
+<p><b>ব্যাখ্যা:</b> Split-brain হলো যখন network partition-এ cluster দুই ভাগে ভাগ হয়ে যায়, আর দুই পাশই independently নিজেদের leader নির্বাচন করে ফেলে — ফলে দুই leader-ই সমান্তরালে লেখা গ্রহণ করে, ডেটা ভিন্ন হয়ে যায় (অধ্যায় ১০)। Majority quorum এটা গাণিতিকভাবে অসম্ভব করে দেয় — একটা N-নোডের cluster-এ যেকোনো দুইটা majority সেট অন্তত একটা নোডে ওভারল্যাপ করবেই, তাই কখনোই দুইটা ভিন্ন majority (৩+৩ বা তার বেশি একই সাথে, N=৫-এ) থাকতে পারে না। ফলে partition-এর minority অংশ কখনো যথেষ্ট ভোট পায় না, নতুন leader নির্বাচিত হয় না — সেই অংশ unavailable/read-only থেকে যায়।</p>
+
+<h3>৬) Vector clock কী, আর এটা Lamport clock থেকে কীভাবে ভিন্ন?</h3>
+<pre><span class="c">// Vector clock — প্রতিটা node তার নিজের counter-সহ একটা array রাখে</span>
+NodeA: [A:2, B:1, C:0]
+NodeB: [A:1, B:3, C:0]
+<span class="c">// দুটো ভিন্ন clock-এর কোনোটাই অন্যটার চেয়ে "বড়" নয় (এক ঘরে বেশি, আরেক ঘরে কম)</span>
+<span class="c">// ⇒ concurrent event, causally সম্পর্কিত নয়</span></pre>
+<p><b>ব্যাখ্যা:</b> Lamport clock (অধ্যায় ২) একটামাত্র integer counter দিয়ে "before/after" নির্ণয় করে, কিন্তু দুটো event সত্যিই causally related নাকি শুধু concurrent তা নিশ্চিতভাবে বলতে পারে না। Vector clock প্রতিটা node-এর জন্য আলাদা counter রাখা একটা array — তুলনা করে বলা যায় একটা clock আরেকটার চেয়ে সব ঘরে বড়/সমান হলে সেটা causally পরে, নাহলে দুটো event concurrent (conflict সম্ভাবনা আছে)। এই কারণেই Dynamo/Cassandra-স্টাইল সিস্টেম conflict detect করতে vector clock (বা তার ভ্যারিয়েন্ট) ব্যবহার করে, শুধু একটা counter দিয়ে যথেষ্ট হয় না।</p>
+
+<h3>৭) Two-Phase Commit (2PC)-এর সবচেয়ে বড় দুর্বলতা কী?</h3>
+<p><b>ব্যাখ্যা:</b> 2PC-তে (অধ্যায় ৮) একটা coordinator সব participant-কে prepare করতে বলে, সবাই "হ্যাঁ" বললে commit পাঠায়। সবচেয়ে বড় দুর্বলতা — coordinator যদি সব participant "prepared" অবস্থায় থাকার পর, কিন্তু commit/abort পাঠানোর আগে ক্র্যাশ করে, তাহলে participant-রা একটা blocked অবস্থায় আটকে থাকে — তারা নিজেরা কমিট করতে পারে না (হয়তো coordinator abort বলত), আবার নিজেরা abort-ও করতে পারে না (হয়তো coordinator commit বলত), যতক্ষণ না coordinator ফিরে আসে। এই কারণেই বাস্তবে (মাইক্রোসার্ভিসে) 2PC-র বদলে প্রায়ই Saga pattern ব্যবহার করা হয়।</p>
+
+<h3>৮) Saga pattern কীভাবে distributed transaction-এর বিকল্প হয়? Choreography বনাম orchestration?</h3>
+<p><b>ব্যাখ্যা:</b> Saga (অধ্যায় ৮ ও ১২) একটা লম্বা ব্যবসায়িক অপারেশনকে একাধিক স্থানীয় transaction-এ ভেঙে ফেলে, প্রতিটা তার নিজের service-এ কমিট হয়। কোনো ধাপ ব্যর্থ হলে, আগের সফল ধাপগুলোর জন্য compensating action (উল্টো action) চালিয়ে সিস্টেমকে যুক্তিসঙ্গত অবস্থায় ফেরানো হয় — কোনো গ্লোবাল lock/coordinator ব্লক করে রাখে না। Choreography-তে প্রতিটা service event শুনে নিজে সিদ্ধান্ত নেয় পরের ধাপ কী হবে (কেন্দ্রীয় নিয়ন্ত্রণ নেই, কিন্তু বড় saga-তে ট্রেস করা কঠিন); orchestration-এ একটা কেন্দ্রীয় orchestrator প্রতিটা ধাপ explicitly কল করে (ট্রেস করা সহজ, কিন্তু orchestrator নিজেই একটা critical component হয়ে যায়)।</p>
+
+<h3>৯) CQRS কী সমস্যার সমাধান করে, আর এর দাম কী?</h3>
+<p><b>ব্যাখ্যা:</b> CQRS (Command Query Responsibility Segregation, অধ্যায় ১২) write model আর read model আলাদা করে — write model normalized ও validation-focused, read model denormalized ও query-optimized। এতে read আর write আলাদাভাবে scale করা যায় এবং read model নির্দিষ্ট query pattern অনুযায়ী সাজানো যায়। দাম হলো — read model write model-এর সাথে eventually consistent, অর্থাৎ একটা write হওয়ার পরপরই read model সেটা নাও দেখাতে পারে (propagation delay), আর দুটো মডেল maintain করার বাড়তি জটিলতা।</p>
+
+<h3>১০) Event Sourcing-এ পুরনো ইভেন্ট বারবার replay করলে পারফরম্যান্স সমস্যা হয় না?</h3>
+<p><b>ব্যাখ্যা:</b> হয়, যদি প্রতিটা read-এ শুরু থেকে সব ইভেন্ট replay করা হয় (অধ্যায় ১২)। বাস্তব সমাধান হলো <b>snapshotting</b> — নির্দিষ্ট বিরতিতে (যেমন প্রতি ১০০০ ইভেন্ট পরপর) বর্তমান অবস্থার একটা snapshot সংরক্ষণ করা হয়, যাতে replay শুরু থেকে না করে সর্বশেষ snapshot থেকে করা যায় এবং শুধু তার পরের ইভেন্টগুলো apply করা লাগে।</p>
+
+<h3>১১) Consistent hashing কী সমস্যা সমাধান করে? সাধারণ modulo hashing (hash % N) কেন যথেষ্ট নয়?</h3>
+<pre><span class="c">// সাধারণ modulo hashing — node সংখ্যা বদলালে প্রায় সব key remap হয়</span>
+node = hash(key) % N   <span class="c">// N=৪ থেকে N=৫ হলে প্রায় ৮০% key-ই ভিন্ন node-এ চলে যায়</span>
+
+<span class="c">// Consistent hashing — একটা ring-এ node ও key দুটোই hash করে বসানো হয়</span>
+<span class="c">// node যোগ/বাদ দিলে শুধু ring-এর সংলগ্ন অংশের key-ই সরে, বাকিসব অপরিবর্তিত</span></pre>
+<p><b>ব্যাখ্যা:</b> Partitioning-এ (অধ্যায় ৭) node সংখ্যা বাড়ানো/কমানো একটা সাধারণ ঘটনা। Modulo hashing ব্যবহার করলে node সংখ্যা N বদলালেই প্রায় সব key ভিন্ন node-এ চলে যায় — বিশাল rebalancing দরকার হয়। Consistent hashing একটা ring-এর ওপর node ও key দুটোকেই hash করে বসায়, প্রতিটা key তার clockwise-এ সবচেয়ে কাছের node-এ যায়। একটা node যোগ/বাদ দিলে শুধু ring-এর সেই অংশের key-ই প্রভাবিত হয়, বাকি সব node অপরিবর্তিত থাকে — rebalancing খরচ অনেক কমে যায়। Virtual node ব্যবহার করে load আরও সমানভাবে ছড়ানো হয়।</p>
+
+<h3>১২) Failure detection-এ কেন কখনো ১০০% নিশ্চিত হওয়া যায় না যে একটা node মৃত?</h3>
+<p><b>ব্যাখ্যা:</b> Timeout হলে জানার উপায় নেই node আসলেই ক্র্যাশ করেছে, নাকি শুধু ধীর (GC pause, CPU overload), নাকি response-টাই নেটওয়ার্কে হারিয়ে গেছে (অধ্যায় ১ ও ৯)। বাইরে থেকে "মৃত" আর "ধীর"-কে নিশ্চিতভাবে আলাদা করার কোনো উপায় নেই — তাই failure detector সবসময় একটা node-কে "suspected" ঘোষণা করে, "নিশ্চিতভাবে মৃত" নয়। Phi accrual failure detector-এর মতো ব্যবহারিক সমাধান একটা probability score দেয়, বাইনারি সিদ্ধান্ত নয়।</p>
+
+<h3>১৩) Circuit Breaker pattern-এর তিনটা state কী কী, আর Bulkhead pattern থেকে এটা কীভাবে ভিন্ন?</h3>
+<p><b>ব্যাখ্যা:</b> Circuit Breaker (অধ্যায় ১২)-এর তিনটা state — Closed (স্বাভাবিক, ব্যর্থতা গোনা হয়), Open (threshold পার হলে trip করে, কোনো call-ই downstream-এ যায় না, fail fast), Half-Open (cooldown শেষে সীমিত trial request পাঠানো হয়)। এটা সিদ্ধান্ত নেয় <b>কখন</b> কল বন্ধ রাখতে হবে। Bulkhead pattern ভিন্ন সমস্যা সমাধান করে — প্রতিটা downstream dependency-র জন্য আলাদা resource pool (thread/connection) বরাদ্দ করে, যাতে একটা dependency-র সমস্যা অন্যদের resource কেড়ে না নেয়। দুটো পরিপূরক, বিকল্প নয় — production-এ একসাথে ব্যবহৃত হয়।</p>
+
+<h3>১৪) At-least-once, at-most-once, আর exactly-once delivery-র মধ্যে পার্থক্য কী? সত্যিকারের exactly-once কি সম্ভব?</h3>
+<p><b>ব্যাখ্যা:</b> At-least-once মানে message হারায় না, কিন্তু duplicate হতে পারে (retry-এর কারণে)। At-most-once মানে duplicate হয় না, কিন্তু message হারাতে পারে (retry না করলে)। প্রকৃত exactly-once (একবারই, কখনো হারাবে না, কখনো ডুপ্লিকেট হবে না) দুটো স্বাধীন সিস্টেম জুড়ে প্রমাণযোগ্যভাবে অসম্ভব (Two Generals Problem, অধ্যায় ১ ও ১১)। ব্যবহারিক সমাধান হলো at-least-once delivery + idempotent processing (যেমন unique message ID দিয়ে ডুপ্লিকেট শনাক্ত ও বাদ দেওয়া) — যার ফলাফল কার্যত exactly-once "effect" দেয়, যদিও নেটওয়ার্ক-স্তরে সত্যিকারের exactly-once delivery নেই।</p>
+
+<h3>১৫) Strong consistency চাইলে সবসময়ই কি বেশি latency মেনে নিতে হয়? PACELC এখানে কী যোগ করে?</h3>
+<p><b>ব্যাখ্যা:</b> সাধারণত হ্যাঁ। CAP শুধু partition-এর সময়ের ট্রেড-অফ বলে, কিন্তু PACELC (অধ্যায় ৪) দেখায় normal (সুস্থ) অবস্থাতেও একটা trade-off থাকে — strongly consistent read নিশ্চিত করতে leader/majority-এর সাথে একটা network round-trip লাগে (ধীর), অথচ nearest local replica থেকে পড়লে দ্রুত কিন্তু potentially stale ডেটা পাওয়া যায়। Google Spanner-এর TrueTime এই penalty পুরোপুরি সরায় না, বরং synchronized clock দিয়ে কমায় — round-trip-এর প্রয়োজনীয়তা একটা bounded clock-uncertainty দিয়ে প্রতিস্থাপন করে।</p>
+
+<h3>১৬) একটা shopping cart আর একটা bank balance-এর জন্য consistency model বাছাই একই রকম হওয়া উচিত কি?</h3>
+<p><b>ব্যাখ্যা:</b> না — এটাই এই পুরো কোর্সের কেন্দ্রীয় ব্যবহারিক শিক্ষা (অধ্যায় ৩, ৪, ১৪)। Bank balance-এ সামান্য stale/conflicting read ব্যবসায়িক ক্ষতি করতে পারে (double-spend, ভুল overdraft সিদ্ধান্ত) — তাই এখানে linearizability/strong consistency দরকার, latency-র বিনিময়েও। Shopping cart বা like-count-এ সাময়িক inconsistency (দুইটা device-এ ভিন্ন cart state কিছুক্ষণের জন্য) গ্রহণযোগ্য এবং পরে merge/reconcile করা যায় — তাই সেখানে eventual consistency-ই বরং বেশি availability ও কম latency দেয়। সঠিক প্রশ্ন সবসময় "কোন consistency model সবচেয়ে ভালো" নয়, বরং "এই নির্দিষ্ট ডেটার জন্য কতটা staleness/conflict ব্যবসায়িকভাবে গ্রহণযোগ্য"।</p>
+
 </template>
 
 <!-- ============================ RENDER ============================ -->

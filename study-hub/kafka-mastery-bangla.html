@@ -130,6 +130,7 @@ const pages = [
   {id:"security", icon:"🔐", title:"Security"},
   {id:"operations", icon:"📟", title:"Operations & Monitoring"},
   {id:"production", icon:"🏦", title:"Production: Accounting System"},
+  {id:"interview", icon:"🎯", title:"Interview প্রশ্নোত্তর"},
 ];
 </script>
 
@@ -1962,6 +1963,75 @@ max.poll.records=100                    <span class="c"># DB batch এর সা
 <li>এই production integration ডিজাইন (এই ট্যাব) — Inbox + Outbox, idempotency, retry, DLQ, offset</li>
 </ol>
 এই ক্রমে গেলে concept-এর ভিত মজবুত হয়ে তারপর সেটা আপনার real accounting system-এ প্রয়োগ হবে।</div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৬. Interview প্রশ্নোত্তর</h2>
+<p class="lead">Kafka ইন্টারভিউতে বারবার আসা প্রশ্ন — basic থেকে advanced পর্যন্ত, প্রতিটার সংক্ষিপ্ত বাংলা ব্যাখ্যা, আগের chapter-গুলোর রেফারেন্স সহ।</p>
+
+<h3>১) Partition কী, আর একটা topic-এ একাধিক partition কেন লাগে?</h3>
+<p><b>ব্যাখ্যা:</b> Topic একটা logical stream; সেটা ভাগ হয় কয়েকটা <span class="kw">partition</span>-এ — প্রতিটা independent, ordered, append-only log (Architecture ট্যাব)। Partition-ই parallelism-এর একক: producer একাধিক partition-এ একসাথে লিখতে পারে, আর একটা consumer group-এর একাধিক consumer partition ভাগ করে নিয়ে parallel পড়তে পারে। Ordering guarantee শুধু একটা partition-এর ভেতরে থাকে — পুরো topic জুড়ে নয়।</p>
+
+<h3>২) Offset কী, আর এটা কে track করে — broker না consumer?</h3>
+<p><b>ব্যাখ্যা:</b> Offset হলো একটা partition-এ প্রতিটা message-এর sequential position। Traditional queue-তে broker consumer-এর progress track করে; Kafka-তে উল্টো — <span class="kw">consumer নিজে</span> তার offset track করে এবং <code>__consumer_offsets</code> internal topic-এ commit করে (Foundation ও Consumer ট্যাব)। এই ডিজাইনের কারণেই একাধিক consumer group একই data স্বাধীনভাবে, নিজের নিজের গতিতে পড়তে পারে এবং প্রয়োজনে পুরনো offset-এ ফিরে গিয়ে data <b>replay</b> করা যায়।</p>
+
+<h3>৩) Consumer group কীভাবে কাজ করে — একটা partition একসাথে দুইজন consumer পড়তে পারে কি?</h3>
+<p><b>ব্যাখ্যা:</b> না। একই <code>group.id</code>-এর মধ্যে একটা partition ঠিক <b>একটা</b> consumer পড়ে — এভাবেই কাজ ভাগ (load balancing) হয় (Consumer ট্যাব)। তবে ভিন্ন group-এর consumer একই partition স্বাধীনভাবে পড়তে পারে (fan-out)। Consumer সংখ্যা partition সংখ্যার বেশি হলে অতিরিক্ত consumer idle বসে থাকে, কারণ ভাগ করার মতো আর partition অবশিষ্ট থাকে না।</p>
+<pre>Topic orders (4 partitions), Group billing (2 consumers)
+  Consumer A → P0, P1
+  Consumer B → P2, P3
+  <span class="c">// ৩য় consumer যোগ করলে rebalance হয়ে ভাগ পুনর্বণ্টন হবে, কমপক্ষে একটা consumer এখনো ২টা partition পাবে</span></pre>
+
+<h3>৪) acks=0, acks=1, আর acks=all-এর মধ্যে পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> <code>acks</code> ঠিক করে producer কখন একটা write "সফল" ধরবে (Producer ও Internal Working ট্যাব)। <code>acks=0</code>-এ কোনো confirmation ছাড়াই সফল ধরা হয় — সবচেয়ে দ্রুত কিন্তু data হারানোর ঝুঁকি সবচেয়ে বেশি। <code>acks=1</code>-এ শুধু leader লিখলেই যথেষ্ট — leader replicate করার আগে crash করলে message হারায়। <code>acks=all</code> (<code>-1</code>)-এ সব ISR replica লিখলে তবেই সফল — সবচেয়ে নিরাপদ, <code>min.insync.replicas</code>-এর সাথে মিলিয়ে ব্যবহার করা হয়।</p>
+
+<h3>৫) ISR (In-Sync Replicas) কী, আর min.insync.replicas ঠিক কী করে?</h3>
+<p><b>ব্যাখ্যা:</b> <span class="kw">ISR</span> হলো সেই follower-দের সেট যারা leader-এর সাথে <code>replica.lag.time.max.ms</code>-এর মধ্যে sync আছে (Replication ট্যাব)। <code>min.insync.replicas=2</code> (RF=3-এ) মানে <code>acks=all</code> write সফল হতে অন্তত ২টা replica (leader সহ) লেখা লাগবে। ISR এই সংখ্যার নিচে নামলে producer <code>NotEnoughReplicasException</code> পায় — Kafka নীরবে data হারানোর চেয়ে write আটকে দেওয়া পছন্দ করে।</p>
+
+<h3>৬) High Watermark (HW) কী, আর consumer কেন এর বেশি offset পড়তে পারে না?</h3>
+<pre>Leader:      [0][1][2][3][4][5]   ← LEO = 6 (leader-এর শেষ offset)
+Follower1:   [0][1][2][3][4]
+Follower2:   [0][1][2][3]
+                          ▲
+                 High Watermark = 4 (সব ISR-এ replicate হওয়া সর্বোচ্চ offset)
+<span class="c">// consumer শুধু offset 0-3 পড়তে পারে; 4,5 এখনো "uncommitted"</span></pre>
+<p><b>ব্যাখ্যা:</b> HW হলো সেই সর্বোচ্চ offset যা সব ISR replica-তে পৌঁছেছে (Replication ট্যাব)। Consumer শুধু HW পর্যন্তই পড়তে পারে, কারণ এর নিচের data guaranteed durable — leader crash করলেও নতুন leader (কোনো ISR replica) সেই data-সহই আসবে। HW-এর ওপরের data consumer কখনো দেখেই না, তাই leader crash হয়ে সেটা হারালেও consistency ভাঙে না।</p>
+
+<h3>৭) Leader epoch কী, আর এটা কোন সমস্যা সমাধান করে?</h3>
+<p><b>ব্যাখ্যা:</b> Leader বদলানোর সময় পুরনো Kafka-তে follower নিজের log leader-এর HW পর্যন্ত blindly truncate করত — কিন্তু বিরল crash-sequence-এ (leader দ্রুত পরপর বদলালে) এটা replica-দের মধ্যে silent log divergence ঘটাতে পারত (Replication ট্যাব)। <span class="kw">Leader epoch</span> সমাধান দেয়: প্রতিবার নতুন leader নির্বাচিত হলে একটা monotonically increasing সংখ্যা বাড়ে, আর leader প্রতিটা offset range ঠিক কোন epoch-এ লেখা হয়েছে সেটা <code>leader-epoch-checkpoint</code> ফাইলে track করে। Follower rejoin করার সময় <code>OffsetsForLeaderEpoch</code> API দিয়ে leader-কে জিজ্ঞেস করে ঠিক কোথায় নিরাপদে truncate করা যাবে — blind truncation নয়।</p>
+
+<h3>৮) Unclean leader election কী, আর financial data-তে এটা off রাখা হয় কেন?</h3>
+<p><b>ব্যাখ্যা:</b> Leader ও সব ISR down হয়ে গেলে, <code>unclean.leader.election.enable=true</code> থাকলে একটা out-of-sync replica-কে জোর করে leader বানানো হয় — availability ফেরে কিন্তু ISR-এ না-থাকা কিছু committed data হারাতে পারে (Replication ট্যাব)। Accounting/financial system-এ <code>unclean.leader.election.enable=false</code> রাখা হয়, কারণ এখানে data হারানোর চেয়ে সাময়িক unavailability অনেক কম ক্ষতিকর — durability, availability-এর ওপরে অগ্রাধিকার পায়।</p>
+
+<h3>৯) Idempotent producer কীভাবে duplicate message ঠেকায়?</h3>
+<pre>① send (PID=42, seq=5) → broker log-এ লেখে ✓
+② ack broker → producer পথে হারালো (network glitch)
+③ producer retry — আবার (PID=42, seq=5) পাঠায়
+   broker দেখে "seq=5 তো আগেই লিখেছি" → আবার লেখে না, শুধু ack ফেরত</pre>
+<p><b>ব্যাখ্যা:</b> <code>enable.idempotence=true</code> দিলে প্রতিটা producer একটা <span class="kw">Producer ID (PID)</span> পায় এবং প্রতি partition-এ একটা বাড়তে থাকা <span class="kw">sequence number</span> পাঠায় (Producer ট্যাব)। Broker প্রতিটা <code>(PID, partition, sequence)</code> মনে রাখে; ack হারিয়ে producer retry করলেও একই sequence দ্বিতীয়বার এলে broker সেটা silently dedup করে — ফলে retry নিরাপদ, log-এ কখনো duplicate লেখা হয় না। এটাই <b>exactly-once per partition write</b>, তবে এটা শুধু producer→broker লেখার duplicate ঠেকায়, পুরো end-to-end exactly-once নয়।</p>
+
+<h3>১০) Kafka-তে exactly-once semantics (EOS) ঠিক কীভাবে অর্জন হয়?</h3>
+<p><b>ব্যাখ্যা:</b> দুটো জিনিসের সমন্বয়ে (Reliability ট্যাব): (১) <b>idempotent producer</b> — retry-তে broker-side duplicate write বাদ দেয়; (২) <b>transactions</b> — <code>beginTransaction()</code>/<code>commitTransaction()</code> দিয়ে একাধিক partition/topic-এ atomic write, আর <code>sendOffsetsToTransaction()</code> দিয়ে consumer offset commit ও output produce একই transaction-এ বাঁধা থাকে (Consume-Transform-Produce pattern)। <code>isolation.level=read_committed</code> consumer শুধু COMMIT marker পাওয়া data-ই দেখে, ABORT হওয়া record skip করে। গুরুত্বপূর্ণ সীমাবদ্ধতা: এটা শুধু Kafka-থেকে-Kafka ক্ষেত্রে সম্পূর্ণ কাজ করে — output একটা external DB হলে (যেমন PostgreSQL) Kafka transaction একা যথেষ্ট নয়, তখন Inbox pattern লাগে (Production ট্যাব)।</p>
+
+<h3>১১) commitTransaction() abort হলে output topic-এ লেখা data-র কী হয়?</h3>
+<p><b>ব্যাখ্যা:</b> সেগুলো "মুছে" যায় না — Kafka append-only log, মাঝপথে কিছু delete করে না (Reliability ট্যাব)। Transaction শেষে broker প্রতিটা involved partition-এ একটা ছোট <span class="kw">control record</span> (COMMIT বা ABORT marker) লেখে। Data record আগে থেকেই physically log-এ বসে থাকে; marker শুধু বলে দেয় সেগুলো valid কিনা। <code>read_committed</code> consumer marker না দেখা পর্যন্ত ঐ transaction-এর record buffer করে রাখে — ABORT পেলে skip করে, COMMIT পেলে deliver করে।</p>
+
+<h3>১২) Consumer rebalance কী, আর কখন ট্রিগার হয়?</h3>
+<p><b>ব্যাখ্যা:</b> <span class="kw">Rebalance</span> হলো consumer group-এর মধ্যে partition-এর পুনর্বণ্টন — নতুন consumer যোগ হলে, কেউ বিদায় নিলে, crash করলে, বা কেউ <code>max.poll.interval.ms</code>-এর মধ্যে <code>poll()</code> না ডাকলে (dead ধরে নেওয়া হয়) ঘটে (Consumer ট্যাব)। Consumer background-এ <code>heartbeat.interval.ms</code>-এ heartbeat পাঠায়; <code>session.timeout.ms</code>-এর মধ্যে না পেলে coordinator তাকে dead ধরে group থেকে বাদ দেয় এবং rebalance শুরু করে।</p>
+
+<h3>১৩) Eager আর Cooperative Sticky rebalance-এর পার্থক্য কী?</h3>
+<table>
+<tr><th></th><th>Eager (পুরনো)</th><th>Cooperative Sticky (আধুনিক)</th></tr>
+<tr><td>রীতি</td><td>সব consumer সব partition ছেড়ে দেয় ("stop-the-world"), তারপর নতুন করে বণ্টন</td><td>শুধু যেসব partition আসলে move হবে সেগুলোই ছাড়ে</td></tr>
+<tr><td>প্রভাব</td><td>পুরো group কিছুক্ষণ থমকে যায়</td><td>বাকি consumer-রা কাজ চালিয়ে যায়</td></tr>
+</table>
+<p><b>ব্যাখ্যা:</b> Eager rebalance-এ প্রতিটা rebalance-এ পুরো group-এর সব partition ownership আগে ছেড়ে (revoke) তারপর নতুন করে বণ্টন হয় — সংক্ষিপ্ত সময়ের জন্য পুরো group থেমে যায় (Consumer ট্যাব)। <code>CooperativeStickyAssignor</code>-এ শুধু যেটুকু নড়াচড়া দরকার ততটুকুই হয়, বাকি consumer নিজের আগের partition ধরে রেখেই কাজ চালিয়ে যায় — downtime অনেক কমে। এই কারণে production-এ এখন cooperative sticky-ই সাধারণ default choice।</p>
+
+<h3>১৪) Static membership কেন দরকার, আর group.instance.id কী করে?</h3>
+<p><b>ব্যাখ্যা:</b> Kubernetes-এ rolling deploy বা pod restart-এ প্রতিটা consumer কয়েক সেকেন্ডের জন্য চলে যায় ও ফেরে — সাধারণভাবে প্রতিবারই একটা rebalance ট্রিগার হয়, ১০টা pod restart মানে ১০+ বার group থমকে যাওয়া (Consumer ট্যাব)। <span class="kw">Static membership</span>-এ প্রতিটা consumer-কে একটা স্থায়ী <code>group.instance.id</code> দেওয়া হয়; coordinator তখন জানে "এই instance ফিরে আসবে" এবং <code>session.timeout.ms</code>-এর মধ্যে ফিরলে rebalance ছাড়াই তাকে আগের partition ফেরত দেয়। এতে rolling deploy-তে অপ্রয়োজনীয় rebalance storm এড়ানো যায়।</p>
+
+<h3>১৫) Auto commit বনাম manual commit — কোনটায় কী ঝুঁকি?</h3>
+<p><b>ব্যাখ্যা:</b> <code>enable.auto.commit=true</code>-তে নির্দিষ্ট interval-এ offset automatic commit হয় — process করার আগেই commit হয়ে গেলে crash-এ ঐ message আর প্রসেস না হয়েই বাদ যায় (data loss)। Manual <code>commitSync()</code> business logic <b>process করার পরে</b> ডাকলে at-least-once নিশ্চিত হয় — কিন্তু commit-এর আগে crash হলে message পুনরায় আসতে পারে (duplicate), তাই consumer-কে idempotent হতে হয় (Consumer ও Production ট্যাব)। Financial/accounting pipeline-এ তাই সবসময় <code>enable.auto.commit=false</code> + process-পরবর্তী manual commit + DB-side idempotency (Inbox pattern) ব্যবহার করা হয়।</p>
 </template>
 
 <script>

@@ -119,6 +119,7 @@ const pages = [
   {id:"workflow",    icon:"👥", title:"Team Workflow · Best Practices"},
   {id:"troubleshoot",icon:"🛠️", title:"Troubleshooting"},
   {id:"cli",         icon:"⌨️", title:"Essential CLI Commands"},
+  {id:"interview",   icon:"🎯", title:"Interview প্রশ্নোত্তর"},
 ];
 </script>
 
@@ -855,6 +856,92 @@ git fetch / pull / pull --rebase
 git push -u origin branch     git push --force-with-lease
 git reset --soft/mixed/hard   git revert hash
 git reflog                    git clean -n / -fd</pre>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৩. Interview প্রশ্নোত্তর</h2>
+<p class="lead">Git ইন্টারভিউতে বারবার ঘুরেফিরে আসা প্রশ্ন — basic থেকে advanced, প্রতিটার সাথে বাস্তব command ও বাংলায় ব্যাখ্যা।</p>
+
+<h3>১) Working Directory, Staging Area আর Repository — এই তিনটার পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> Foundation অধ্যায়ে দেখানো তিন-স্তরের মডেল অনুযায়ী — Working Directory হলো যেখানে ফাইল সরাসরি এডিট করেন, <code>git add</code> দিলে সেই পরিবর্তন Staging Area (Index)-এ যায় (পরের commit-এর "প্রস্তাব"), আর <code>git commit</code> দিলে সেটা Repository (<code>.git</code>)-এ স্থায়ী snapshot হয়ে যায়। Staging area থাকার কারণেই একবারে সব ফাইল commit না করে বেছে বেছে ছোট, অর্থবহ commit বানানো যায়।</p>
+
+<h3>২) Git-এর তিনটা মূল object type কী কী, আর একটা commit ঠিক কীভাবে একটা tree ও blob-এর সাথে যুক্ত থাকে?</h3>
+<pre>commit  →  tree (root)  →  blob (index.html), blob (style.css), tree (src/)
+   │
+   └── parent commit (আগের commit)</pre>
+<p><b>ব্যাখ্যা:</b> Internals অধ্যায়ে আলোচিত হয়েছে — <code>blob</code> একটা ফাইলের কন্টেন্ট ধরে রাখে (নাম ছাড়া), <code>tree</code> একটা ডিরেক্টরির snapshot (ফাইলনাম ↔ blob/tree mapping), আর <code>commit</code> একটা tree-কে point করে + parent commit + author/message/timestamp রাখে। প্রতিটা object তার নিজের content থেকে গণনা করা SHA hash দিয়ে চেনা যায় — এই content-addressing-ই Git-কে tamper-evident করে তোলে।</p>
+
+<h3>৩) Merge আর Rebase-এর মধ্যে মূল পার্থক্য কী, আর কখন কোনটা ব্যবহার করবেন?</h3>
+<pre>git switch feature
+git merge main        <span class="c"># history-তে branch structure দৃশ্যমান থাকে, নতুন merge commit তৈরি হয়</span>
+git rebase main        <span class="c"># feature-এর commit-গুলো replay হয়, নতুন hash পায়, সরলরৈখিক history</span></pre>
+<p><b>ব্যাখ্যা:</b> Rebase চ্যাপ্টারে দেখানো হয়েছে — merge আসল branch history ঠিক রাখে ও দুই parent-সহ একটা merge commit বানায়, নিরাপদ shared branch-এও। Rebase একই কমিটগুলোকে নতুন base-এর উপর replay করে নতুন hash দেয় — history সরলরৈখিক দেখায় কিন্তু পুরনো commit প্রতিস্থাপিত হয়। নিজের local/না-শেয়ার-করা feature branch পরিষ্কার রাখতে rebase, আর shared/public branch একত্র করতে merge ব্যবহার করা হয়।</p>
+
+<h3>৪) Three-way merge আসলে কীভাবে কাজ করে — Git ঠিক কোন তিনটা জিনিস তুলনা করে?</h3>
+<pre>git merge-base main feature   <span class="c"># দুই branch-এর সর্বশেষ কমন ancestor commit দেখায়</span></pre>
+<p><b>ব্যাখ্যা:</b> Branching চ্যাপ্টারে ব্যাখ্যা করা হয়েছে — Git তিনটা snapshot তুলনা করে: (১) merge base (দুই branch যেখান থেকে diverge করেছিল, তাদের কমন ancestor), (২) বর্তমান branch-এর tip, (৩) অন্য branch-এর tip। প্রতিটা ফাইলে merge base-এর তুলনায় দুই দিকের পরিবর্তন আলাদাভাবে মেলানো হয় — এক দিক বদলালে ও অন্য দিক অপরিবর্তিত থাকলে সেই পরিবর্তন স্বয়ংক্রিয়ভাবে নেওয়া হয়। Conflict তখনই হয় যখন দুই দিকই ঠিক একই লাইনে ভিন্ন পরিবর্তন করেছে।</p>
+
+<h3>৫) Fast-forward merge কখন হয়, আর <code>--no-ff</code> কেন ব্যবহার করা হয়?</h3>
+<pre>git merge --no-ff feature   <span class="c"># fast-forward সম্ভব হলেও জোর করে merge commit বানায়</span></pre>
+<p><b>ব্যাখ্যা:</b> Branching চ্যাপ্টার অনুযায়ী — fast-forward তখনই হয় যখন <code>main</code>-এ feature branch তৈরির পর থেকে নতুন কোনো commit পড়েনি; তখন শুধু pointer এগিয়ে যায়, নতুন commit তৈরি হয় না। <code>--no-ff</code> দিলে fast-forward সম্ভব হলেও জোর করে একটা merge commit বানানো হয়, যাতে "এখানে একটা feature branch merge হয়েছিল" তথ্যটা history-তে স্পষ্ট থেকে যায়।</p>
+
+<h3>৬) Interactive rebase-এ <code>squash</code> আর <code>fixup</code>-এর মধ্যে পার্থক্য কী?</h3>
+<pre>pick   a1b2c3 Add login form
+squash d4e5f6 Fix typo in login form   <span class="c"># আগের commit-এর সাথে মিশবে, message একত্র করার সুযোগ দেবে</span>
+fixup  7g8h9i Remove debug log         <span class="c"># মিশবে, কিন্তু এই commit-এর message বাদ পড়বে</span></pre>
+<p><b>ব্যাখ্যা:</b> Rebase চ্যাপ্টারের Interactive Rebase অংশে দেখানো হয়েছে — দুটোই commit-কে আগেরটার সাথে একত্র করে, কিন্তু <code>squash</code> দুই commit-এর message একত্র করার প্রম্পট দেয়, আর <code>fixup</code> চুপচাপ মিশিয়ে দেয় ও এই commit-এর message পুরোপুরি বাদ দেয়। PR পাঠানোর আগে "WIP", "fix typo"-এর মতো ছোট commit পরিষ্কার করতে এগুলো ব্যবহার হয়।</p>
+
+<h3>৭) Cherry-pick আর rebase — দুটোই তো পুরনো commit নতুন জায়গায় replay করে, তাহলে পার্থক্য কোথায়?</h3>
+<pre>git cherry-pick d4f8a91     <span class="c"># শুধু একটা নির্দিষ্ট commit বর্তমান branch-এ আনে</span>
+git rebase main             <span class="c"># বর্তমান branch-এর সব unique commit-ই replay করে</span></pre>
+<p><b>ব্যাখ্যা:</b> Rebase চ্যাপ্টারে ব্যাখ্যা করা আছে — <code>rebase</code> একটা branch-এর <b>সব</b> commit-কে নতুন base-এর উপর এক এক করে replay করে, পুরো branch-ই সরলরৈখিকভাবে সরে যায়। <code>cherry-pick</code> শুধু <b>একটা নির্দিষ্ট</b> commit বেছে নিয়ে বর্তমান branch-এ একটা নতুন commit হিসেবে যোগ করে — বাকি branch-এর সাথে কোনো সম্পর্ক তৈরি হয় না। সাধারণ ব্যবহার: পুরো feature branch এখনো ready নয়, কিন্তু তার একটা জরুরি bugfix commit আলাদাভাবে <code>main</code>/release branch-এ পাঠাতে হবে।</p>
+
+<h3>৮) Detached HEAD অবস্থা কী, আর এতে commit করলে কী ঝুঁকি থাকে?</h3>
+<pre>git checkout 9c2e7b3        <span class="c"># branch নয়, সরাসরি একটা commit checkout — HEAD এখন detached</span>
+git switch -c recovered-branch   <span class="c"># নতুন কাজ শুরুর সাথে সাথেই একটা নাম দিয়ে দিন</span></pre>
+<p><b>ব্যাখ্যা:</b> Internals ও Troubleshooting চ্যাপ্টারে আলোচিত — সাধারণত <code>HEAD</code> একটা branch-কে point করে, আর সেই branch একটা commit-কে। সরাসরি কোনো commit/tag checkout করলে <code>HEAD</code> কোনো branch ছাড়াই সরাসরি সেই commit-কে point করে — এটাই detached HEAD। এই অবস্থায় commit করলে সেই commit কোনো branch-এর অংশ হয় না, তাই branch পরিবর্তন করলেই সেটা হারিয়ে যাওয়ার মতো মনে হয় (আসলে কিছুদিন <code>reflog</code>-এ থাকে)। সমাধান হলো detached HEAD-এ কাজ শুরু করার সাথে সাথেই <code>git switch -c</code> দিয়ে একটা branch নাম দিয়ে ফেলা।</p>
+
+<h3>৯) সিনারিও: আপনি ভুলবশত <code>git reset --hard</code> চালিয়ে একটা দরকারি commit হারিয়ে ফেলেছেন। কীভাবে ফেরত আনবেন?</h3>
+<pre>$ git reflog
+9c2e7b3 (HEAD -> main) HEAD@{0}: reset: moving to 9c2e7b3
+d4f8a91 HEAD@{1}: commit: Add tax calculation to invoice total
+
+$ git reset --hard HEAD@{1}   <span class="c"># reset চালানোর ঠিক আগের অবস্থায় ফেরত</span></pre>
+<p><b>ব্যাখ্যা:</b> Undo · Recovery চ্যাপ্টারের মূল শিক্ষা এটাই — commit করা কাজ প্রায় কখনো সত্যিকারভাবে হারায় না, কারণ <code>reflog</code> HEAD-এর movement history রাখে (সাধারণত ~৯০ দিন)। প্রথমে <code>git reflog</code> চালিয়ে reset চালানোর আগের <code>HEAD@{N}</code> এন্ট্রি খুঁজে বের করে <code>git reset --hard HEAD@{N}</code> দিলেই হারানো commit ফেরত আসে। এজন্যই reflog-কে "শেষ ভরসা" বলা হয়েছে।</p>
+
+<h3>১০) <code>git reset --soft</code>, <code>--mixed</code>, আর <code>--hard</code>-এর মধ্যে ফলাফলের পার্থক্য কী?</h3>
+<pre>git reset --soft 9c2e7b3    <span class="c"># বাতিল commit-এর পরিবর্তন staged থাকে</span>
+git reset --mixed 9c2e7b3   <span class="c"># পরিবর্তন working directory-তে থাকে, unstaged (ডিফল্ট)</span>
+git reset --hard 9c2e7b3    <span class="c"># পরিবর্তন সম্পূর্ণ মুছে যায় ⚠</span></pre>
+<p><b>ব্যাখ্যা:</b> Undo · Recovery চ্যাপ্টারে একই উদাহরণ (Calculator.cs/Invoice.cs) দিয়ে দেখানো হয়েছে — তিনটাই branch pointer-কে একই commit-এ সরায়, কিন্তু <code>--soft</code> বাতিল হওয়া commit-এর পরিবর্তন staging area-তে রেখে দেয় (সাথে সাথেই re-commit করা যায়), <code>--mixed</code> সেটা working directory-তে নামিয়ে আনে কিন্তু unstage করে দেয় (ডিফল্ট flag), আর <code>--hard</code> পরিবর্তনটাই মুছে ফেলে — uncommitted অংশ থাকলে তা reflog-এও ফেরত পাওয়া যায় না।</p>
+
+<h3>১১) কোনো commit ইতিমধ্যে push হয়ে সহকর্মীরা pull করে ফেলেছে — এখন সেটা বাতিল করতে <code>reset</code> নাকি <code>revert</code> ব্যবহার করবেন, আর কেন?</h3>
+<pre>git revert d4f8a91   <span class="c"># পুরনো history অক্ষত রেখে বিপরীত পরিবর্তনসহ নতুন commit তৈরি করে</span></pre>
+<p><b>ব্যাখ্যা:</b> Undo · Recovery চ্যাপ্টারের "Reset বনাম Revert" আলোচনা অনুযায়ী — shared/push-হওয়া commit-এ কখনো <code>reset</code> ব্যবহার করা উচিত না, কারণ তাতে আপনার আর সহকর্মীদের history আলাদা হয়ে যায়। <code>revert</code> পুরনো commit মুছে না দিয়ে তার বিপরীত পরিবর্তনসহ একটা <b>নতুন</b> commit তৈরি করে — সহকর্মীরা <code>git pull</code> করলেই এই revert তাদের কাছেও পৌঁছে যায়, কোনো history-conflict ছাড়াই। শুধু commit-টা এখনো নিজের local branch-এ, push হয়নি এমন হলেই <code>reset</code> নিরাপদ।</p>
+
+<h3>১২) "Golden Rule of Rebasing" কী, আর এটা ভাঙলে কী সমস্যা হয়?</h3>
+<p><b>ব্যাখ্যা:</b> Rebase চ্যাপ্টারে সবচেয়ে গুরুত্বপূর্ণ সতর্কতা হিসেবে বলা হয়েছে — যে branch অন্যরা ইতিমধ্যে pull করেছে/ব্যবহার করছে, তা কখনো rebase করা উচিত না। Rebase পুরনো commit-কে নতুন hash দিয়ে প্রতিস্থাপন করে; অন্য কারো কাছে থাকা পুরনো hash-এর কপির সাথে নতুন history মিলবে না, ফলে পরের sync-এ duplicate commit ও জটিল conflict তৈরি হয়। নিয়ম: নিজের local/না-শেয়ার-করা branch-এ rebase করুন, shared branch একত্র করতে merge ব্যবহার করুন।</p>
+
+<h3>১৩) <code>git fetch</code> আর <code>git pull</code>-এর মধ্যে পার্থক্য কী?</h3>
+<pre>git fetch origin      <span class="c"># শুধু origin/main pointer আপডেট হয়, নিজের branch অপরিবর্তিত</span>
+git pull               <span class="c"># fetch + merge (বা --rebase দিলে fetch + rebase) — নিজের branch সাথে সাথেই বদলে যায়</span></pre>
+<p><b>ব্যাখ্যা:</b> Remote · Collaboration চ্যাপ্টারে ব্যাখ্যা করা হয়েছে — <code>fetch</code> শুধু remote-এর নতুন commit local-এ নামিয়ে আনে, নিজের working ফাইল/branch বদলায় না, merge-ও হয় না। <code>pull</code> আসলে <code>fetch</code>+<code>merge</code> (বা <code>--rebase</code> দিলে <code>fetch</code>+<code>rebase</code>) একসাথে করে, সাথে সাথেই বর্তমান branch-এ প্রয়োগ করে ফেলে — যা মাঝে মাঝে অপ্রত্যাশিত conflict নিয়ে আসতে পারে।</p>
+
+<h3>১৪) <code>git push --force</code> আর <code>git push --force-with-lease</code>-এর মধ্যে পার্থক্য কী, আর কোনটা নিরাপদ?</h3>
+<pre>git push --force              <span class="c"># remote branch বিনাশর্তে প্রতিস্থাপন — অন্যের নতুন commit থাকলেও মুছে যেতে পারে</span>
+git push --force-with-lease   <span class="c"># remote-এ কারো নতুন commit থাকলে safety check ব্যর্থ হয়ে থেমে যায়</span></pre>
+<p><b>ব্যাখ্যা:</b> Remote চ্যাপ্টারের Force-push বিপদ আলোচনায় বলা হয়েছে — নিজের feature branch rebase/amend করার পর push করতে হলে সবসময় <code>--force-with-lease</code> ব্যবহার করা উচিত, কারণ এটা remote-এ আপনার অজান্তে অন্য কারো push হয়ে থাকলে সেটা detect করে থেমে যায়। <code>--force</code> কোনো check ছাড়াই remote history প্রতিস্থাপন করে, তাই shared branch (<code>main</code>, <code>develop</code>)-এ এটা ব্যবহার করা উচিত না।</p>
+
+<h3>১৫) <code>git stash</code> ব্যবহার করলে ঠিক কী ঘটে, আর এটা কোনো নির্দিষ্ট branch-এর সাথে বাঁধা থাকে কি?</h3>
+<pre>git stash        <span class="c"># staged + unstaged পরিবর্তন সরিয়ে working directory পরিষ্কার করে</span>
+git stash list   <span class="c"># stash@{0}, stash@{1}... তালিকা</span>
+git stash pop    <span class="c"># সর্বশেষ stash ফেরত আনে, তালিকা থেকে মুছে দেয়</span></pre>
+<p><b>ব্যাখ্যা:</b> Stash · Tags চ্যাপ্টার অনুযায়ী — Git uncommitted পরিবর্তন নিয়ে branch switch করতে বাধা দেয় বলে <code>stash</code> সেই পরিবর্তন একটা আলাদা জায়গায় সাময়িকভাবে সরিয়ে রাখে, working directory শেষ commit-এর মতো পরিষ্কার করে দেয়। Stash কোনো branch-এর সাথে বাঁধা নয় — যে branch-এ stash করেছেন তার বাইরে অন্য যেকোনো branch-এ গিয়েও <code>pop</code>/<code>apply</code> করা যায়, তাই ভুল branch-এ apply করলে অপ্রাসঙ্গিক পরিবর্তন ঢুকে যাওয়ার ঝুঁকি থাকে।</p>
+
+<h3>১৬) Submodule আর Worktree — এই দুইটা কেন আলাদা সমস্যার সমাধান করে?</h3>
+<pre>git submodule add &lt;url&gt; libs/shared     <span class="c"># অন্য repo-র একটা নির্দিষ্ট commit reference হিসেবে যুক্ত করে</span>
+git worktree add ../hotfix hotfix-branch <span class="c"># একই .git history শেয়ার করা আলাদা ফোল্ডার, ভিন্ন branch checkout করা</span></pre>
+<p><b>ব্যাখ্যা:</b> Advanced চ্যাপ্টারে ব্যাখ্যা করা হয়েছে — submodule একটা <b>ভিন্ন repository</b>-র নির্দিষ্ট commit-কে নিজের প্রজেক্টের ভেতরে reference হিসেবে রাখার সমাধান (shared library কোড কপি-পেস্ট না করে)। Worktree সম্পূর্ণ ভিন্ন সমস্যার সমাধান — একই repository-র <b>একাধিক branch একসাথে, আলাদা ফোল্ডারে</b> খোলা রাখা (যেমন feature build চলাকালীন hotfix করা), stash করে IDE/build restart না করেই।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->

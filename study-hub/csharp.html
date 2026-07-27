@@ -122,6 +122,7 @@ const pages = [
   {id:"aspnet",      icon:"🌐", title:"ASP.NET Core Fundamentals"},
   {id:"efcore",      icon:"🗃️", title:"Entity Framework Core"},
   {id:"testing",     icon:"🧪", title:"Testing — Unit · Mock · Integration"},
+  {id:"interview",   icon:"🎯", title:"Interview প্রশ্নোত্তর"},
 ];
 </script>
 
@@ -3284,6 +3285,174 @@ public void Add_VariousInputs_ReturnsExpectedSum(int a, int b, int expected)
 <h3>৭. পুরো কোর্সের সারাংশ</h3>
 <p>এই অধ্যায় দিয়েই বিশ অধ্যায়ের যাত্রা শেষ হলো — এখন একবার পুরো চিত্রটা এক জায়গায় দেখা যাক।</p>
 <div class="callout best"><span class="tag">পুরো কোর্সের সারাংশ</span> আমরা শুরু করেছিলাম C#-এর ভাষাগত ভিত্তি ও syntax দিয়ে, তারপর OOP, generics আর LINQ দিয়ে ডেটা আর টাইপ মডেল করা শিখেছি। এরপর delegate, exception, async/await দিয়ে প্রবাহ নিয়ন্ত্রণ, আর memory ও performance দিয়ে দক্ষতা বোঝা হয়েছে। আধুনিক C# ফিচার আর reflection আমাদের দিয়েছে সংক্ষিপ্ত, মেটাপ্রোগ্রামযোগ্য কোড লেখার ক্ষমতা। এরপর DI, ASP.NET Core, EF Core দিয়ে দেখেছি কীভাবে এসব টুকরো মিলে একটা বাস্তব অ্যাপ্লিকেশন আর্কিটেকচার তৈরি হয়। আর এখন, testing দিয়ে সেই পুরো সিস্টেমটাই আসলেই ঠিকভাবে কাজ করছে কিনা — সেই আত্মবিশ্বাস অর্জনের হাতিয়ার হাতে পেলাম। ভাষা থেকে আর্কিটেকচার, আর্কিটেকচার থেকে যাচাই — এটাই একজন দক্ষ C#/.NET ডেভেলপার হওয়ার সম্পূর্ণ চক্র।</div>
+</template>
+
+
+<template data-page="interview">
+<h2 class="title">২১. Interview প্রশ্নোত্তর</h2>
+<p class="lead">C#/.NET ইন্টারভিউতে বারবার ঘুরেফিরে আসা প্রশ্ন — basic থেকে advanced পর্যন্ত, প্রতিটার সংক্ষিপ্ত কোড উদাহরণ (যেখানে প্রযোজ্য) + বাংলায় ব্যাখ্যা, আগের অধ্যায়গুলোর রেফারেন্স সহ।</p>
+
+<h3>১) dotnet run চালালে ভেতরে ঠিক কী ঘটে — IL, JIT, CLR এর ভূমিকা কী?</h3>
+<p><b>ব্যাখ্যা:</b> Roslyn কম্পাইলার C# সোর্স থেকে সরাসরি native machine code বানায় না — প্রথমে <code>IL</code> (Intermediate Language) আর metadata-সহ একটা assembly (.dll/.exe) তৈরি করে। প্রোগ্রাম রান করার সময় CLR সেই assembly লোড করে, আর প্রতিটা method প্রথমবার কল হওয়ার ঠিক আগে JIT compiler সেই method-এর IL-টুকু বর্তমান CPU-এর জন্য native code-এ কম্পাইল করে (.NET Foundation অধ্যায়ে বিস্তারিত)। এই মাঝের IL-স্তরটাই .NET-কে cross-platform আর multi-language interop সক্ষম করে তোলে।</p>
+
+<h3>২) struct আর class ভ্যারিয়েবল assign করলে ভিন্ন আউটপুট আসে কেন?</h3>
+<pre>public struct PointStruct { public int X; }
+public class PointClass { public int X; }
+
+PointStruct a = new PointStruct { X = 1 };
+PointStruct b = a;
+b.X = 99;
+Console.WriteLine(a.X);   <span class="c">// আউটপুট: 1</span>
+
+PointClass c = new PointClass { X = 1 };
+PointClass d = c;
+d.X = 99;
+Console.WriteLine(c.X);   <span class="c">// আউটপুট: 99</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>struct</code> একটা value type — assign করলে পুরো ডেটার একটা স্বতন্ত্র কপি তৈরি হয়, তাই <code>b.X</code> বদলালে <code>a.X</code> অপরিবর্তিত থাকে। <code>class</code> একটা reference type — assign করলে শুধু heap-এর একই object-এর ঠিকানা কপি হয়, তাই <code>c</code> আর <code>d</code> একই object-কে নির্দেশ করে এবং একটা দিয়ে বদলালে অন্যটাতেও দেখা যায় (Memory Management অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৩) Boxing/Unboxing কী, আর এটা কেন পারফরম্যান্সের জন্য ক্ষতিকর হতে পারে?</h3>
+<pre>int number = 42;
+object boxed = number;      <span class="c">// boxing — heap-এ নতুন allocation</span>
+int unboxed = (int)boxed;   <span class="c">// unboxing — ডেটা কপি হয়ে ফেরে</span>
+
+ArrayList list = new ArrayList();
+for (int i = 0; i &lt; 100000; i++)
+    list.Add(i);   <span class="c">// প্রতিটি int box হচ্ছে — ১ লক্ষ heap allocation!</span></pre>
+<p><b>ব্যাখ্যা:</b> কোনো value type-কে <code>object</code> বা কোনো interface টাইপে assign করলে .NET একটা heap allocation করে সেটা বাক্সে (box) মোড়ায়; আবার আসল টাইপে ফেরত আনতে explicit cast (unboxing) লাগে যেখানে ডেটা আবার কপি হয়। লুপের ভেতরে বারবার হলে প্রচুর heap allocation তৈরি হয়ে GC-এর ওপর চাপ বাড়ায় — এই কারণেই non-generic <code>ArrayList</code>-এর বদলে generic <code>List&lt;T&gt;</code> ব্যবহার করা হয়, কারণ এতে কোনো boxing হয় না (Memory Management অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৪) .NET-এর Generational GC ঠিক কীভাবে কাজ করে, আর IDisposable কেন দরকার?</h3>
+<p><b>ব্যাখ্যা:</b> GC heap-এর অবজেক্টকে তিনটা generation-এ ভাগ করে — Gen 0 (নতুন, স্বল্পস্থায়ী অবজেক্ট, সবচেয়ে ঘন ঘন কালেক্ট হয়), Gen 1 (Gen 0-এ বেঁচে যাওয়া), আর Gen 2 (দীর্ঘজীবী অবজেক্ট, সবচেয়ে কম ঘন ঘন কালেক্ট হয়) — "most objects die young" এই ধারণার উপর ভিত্তি করে। কিন্তু GC শুধু <b>মেমরি</b> সামলায় — ফাইল হ্যান্ডেল, ডাটাবেজ কানেকশনের মতো unmanaged resource সামলায় না। তাই <code>IDisposable</code> ইন্টারফেস আর <code>using</code>/<code>using var</code> ব্যবহার করে deterministic cleanup নিশ্চিত করা হয়, কারণ finalizer-এর ওপর নির্ভর করলে resource release অনির্দিষ্ট সময় পর্যন্ত আটকে থাকতে পারে (Memory Management অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৫) base class-এ virtual লিখতে ভুলে গেলে polymorphism-এ কী সমস্যা হয়?</h3>
+<pre>class Animal
+{
+    public void MakeSound() { Console.WriteLine("Some generic sound."); }  <span class="c">// virtual নেই!</span>
+}
+class Dog : Animal
+{
+    public new void MakeSound() { Console.WriteLine("Bark!"); }
+}
+
+Animal a = new Dog();
+a.MakeSound();  <span class="c">// আউটপুট: "Some generic sound." — Bark! আসেনি!</span></pre>
+<p><b>ব্যাখ্যা:</b> base class-এর method <code>virtual</code> না থাকলে derived class-এ <code>override</code> লেখা যায় না — compiler নীরবে সেটাকে <code>new</code> (method hiding) হিসেবে ধরে নেয়। ফলে কোন method কল হবে তা ঠিক হয় compile-time reference type (<code>Animal</code>) অনুযায়ী, actual object type (<code>Dog</code>) অনুযায়ী নয়। এই বাগ ধরা কঠিন কারণ কোড নিখুঁতভাবে কম্পাইল হয়, শুধু ভুল আউটপুট দেয় (OOP অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৬) Interface আর Abstract Class-এর মধ্যে পার্থক্য কী, কখন কোনটা বেছে নেবেন?</h3>
+<p><b>ব্যাখ্যা:</b> Interface শুধু একটা contract — কোনো field বা constructor রাখতে পারে না, আর একটা class একাধিক interface implement করতে পারে। Abstract class আংশিক implementation ও field রাখতে পারে, কিন্তু একটা class শুধু একটাই class inherit করতে পারে। নিয়ম হলো — "IS-A" সম্পর্ক আর কোড শেয়ার করতে চাইলে abstract class, শুধু "CAN-DO" ক্ষমতা বর্ণনা করতে চাইলে (যেমন <code>IDisposable</code>) interface ব্যবহার করুন (OOP অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৭) LINQ query define করার পরে underlying collection বদলালে কী হয়?</h3>
+<pre>var numbers = new List&lt;int&gt; { 1, 2, 3 };
+var query = numbers.Where(n =&gt; n &gt; 1);   <span class="c">// এখানে এখনো execute হয়নি</span>
+
+numbers.Add(4);
+
+foreach (var n in query)
+    Console.WriteLine(n);  <span class="c">// আউটপুট: 2, 3, 4 — Add(4) সহ!</span></pre>
+<p><b>ব্যাখ্যা:</b> এটাই LINQ-এর <span class="kw">Deferred Execution</span> — <code>Where</code>, <code>Select</code>-এর মতো operator query define করার সময় কিছুই execute করে না, শুধু একটা iterator (state machine) তৈরি করে। query আসলে চলে যখন <code>foreach</code> দিয়ে enumerate করা হয় বা <code>.ToList()</code>-এর মতো materializing call হয় — তাই মাঝখানে source বদলে গেলে সেই বদলানো ডেটাই ফলাফলে দেখা যায় (LINQ অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৮) একই LINQ query একাধিকবার enumerate করলে কী সমস্যা হতে পারে?</h3>
+<pre>var expensiveQuery = data.Where(x =&gt; SlowCheck(x));
+
+if (expensiveQuery.Any())              <span class="c">// পুরো pipeline ১ম বার চললো</span>
+    foreach (var item in expensiveQuery)   <span class="c">// পুরো pipeline আবার ২য় বার চললো</span>
+        Process(item);</pre>
+<p><b>ব্যাখ্যা:</b> deferred execution-এর কারণে একই query দুইবার enumerate করলে পুরো filter/map pipeline প্রতিবারই শুরু থেকে আবার চলে — ব্যয়বহুল বা external কল থাকলে এটা মারাত্মক পারফরম্যান্স সমস্যা তৈরি করে, এমনকি সোর্স মাঝে বদলে গেলে দুইবার ভিন্ন ফলাফলও আসতে পারে। সমাধান হলো <code>.ToList()</code>/<code>.ToArray()</code> দিয়ে একবার materialize করে ফেলা (LINQ অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৯) IEnumerable&lt;T&gt; আর IQueryable&lt;T&gt;-এর মধ্যে execution model-এর পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> <code>IEnumerable&lt;T&gt;</code>-এর operator সাধারণ delegate-এ কম্পাইল হয় এবং সব লজিক মেমোরিতে, ইতিমধ্যে লোড হওয়া ডেটার উপর চলে। <code>IQueryable&lt;T&gt;</code>-এর operator একটা expression tree তৈরি করে, যা provider (যেমন EF Core) পড়ে সমতুল্য SQL-এ ট্রান্সলেট করে — ফিল্টারিং ডাটাবেজের ভেতরেই ঘটে। একটা <code>IQueryable</code>-কে আগেই <code>.ToList()</code> দিয়ে <code>IEnumerable</code>-এ নামিয়ে আনলে পরের <code>.Where()</code> মেমোরিতে চলে — পুরো টেবিল আগেই লোড হয়ে যায় (LINQ ও EF Core অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১০) for লুপের ভেতরে lambda তৈরি করলে নিচের কোডের আউটপুট কী হবে?</h3>
+<pre>var actions = new List&lt;Action&gt;();
+for (int i = 0; i &lt; 3; i++)
+    actions.Add(() =&gt; Console.WriteLine(i));
+
+foreach (var act in actions) act();
+<span class="c">// আউটপুট: 3  3  3  — 0 1 2 নয়!</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>for</code> লুপে ঘোষিত <code>i</code> পুরো লুপ জুড়ে একটাই শেয়ার্ড ভ্যারিয়েবল — প্রতিটা lambda সেই একই ভ্যারিয়েবলটাকে closure হিসেবে ক্যাপচার করে, কপি করে না। লুপ শেষ হওয়ার পর <code>i</code>-এর মান 3, তাই সব lambda call করলে 3-ই দেখা যায়। (উল্লেখ্য, <code>foreach</code>-এ C# 5.0 থেকে প্রতি ইটারেশনে নতুন ভ্যারিয়েবল স্কোপ হয় বলে সেখানে এই সমস্যা হয় না।) সমাধান — লুপের ভেতরে একটা local কপি বানানো: <code>int local = i;</code> (Delegate · Event · Lambda অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১১) public delegate field-এর বদলে event keyword ব্যবহার করা হয় কেন, আর event সাবস্ক্রাইব করে unsubscribe না করলে কী সমস্যা হয়?</h3>
+<pre>public class Subscriber : IDisposable
+{
+    private readonly OrderProcessor _processor;
+    public Subscriber(OrderProcessor processor)
+    {
+        _processor = processor;
+        _processor.OrderCompleted += OnOrderCompleted;
+    }
+    private void OnOrderCompleted(object? s, OrderEventArgs e) { }
+    public void Dispose() =&gt; _processor.OrderCompleted -= OnOrderCompleted;  <span class="c">// জরুরি!</span>
+}</pre>
+<p><b>ব্যাখ্যা:</b> সাধারণ public delegate field এক্সপোজ করলে বাইরের কোড সরাসরি <code>Invoke()</code> কল করতে পারবে বা <code>=</code> দিয়ে সব সাবস্ক্রাইবার মুছে নিজের হ্যান্ডলার বসিয়ে দিতে পারবে — <code>event</code> keyword এটা এনক্যাপসুলেট করে, বাইরে থেকে শুধু <code>+=</code>/<code>-=</code> ব্যবহারযোগ্য থাকে। আর subscriber যদি <code>-=</code> দিয়ে unsubscribe না করে, publisher (বিশেষত singleton বা দীর্ঘজীবী object) তার delegate তালিকায় subscriber-এর রেফারেন্স ধরে রাখে, ফলে GC সেই subscriber-কে কখনো collect করতে পারে না — এটাই classic .NET event memory leak (Delegate · Event · Lambda অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১২) throw; আর throw ex; -এর মধ্যে পার্থক্য কী?</h3>
+<pre>catch (FormatException ex)
+{
+    LogError(ex);
+    throw;      <span class="c">// ✅ original stack trace সংরক্ষিত থাকে</span>
+}
+catch (FormatException ex)
+{
+    LogError(ex);
+    throw ex;   <span class="c">// ❌ stack trace এই লাইন থেকে রিসেট হয়ে যায়</span>
+}</pre>
+<p><b>ব্যাখ্যা:</b> <code>throw;</code> (কিছু ছাড়াই) original exception-কে তার সম্পূর্ণ stack trace-সহ re-throw করে — exception আসলে কোথায় প্রথম ঘটেছিল সেই তথ্য বজায় থাকে। কিন্তু <code>throw ex;</code> লিখলে stack trace ঐ লাইন থেকেই নতুন করে শুরু হয়ে যায়, ফলে মূল error কোথায় ঘটেছিল সেই তথ্য হারিয়ে যায় — production debugging-এ এটা বড় সমস্যা তৈরি করে (Exception Handling অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৩) async void মেথড ব্যবহার করা কেন বিপজ্জনক, async Task এর বদলে?</h3>
+<p><b>ব্যাখ্যা:</b> <code>async void</code> মেথডের ভেতরের exception কোনো Task-এ ধরা থাকে না — সরাসরি SynchronizationContext-এ থ্রো হয় এবং সাধারণত পুরো প্রসেস ক্র্যাশ করে দেয়, caller-এর try/catch কখনো সেটা ধরতে পারে না। তাছাড়া <code>async void</code>-কে await করারও কোনো উপায় নেই, তাই caller জানতেও পারে না কাজ কখন শেষ হলো। এজন্য <code>async void</code> শুধু UI event handler-এর মতো একেবারে top-level জায়গায় ব্যবহার করা উচিত, বাকি সব ক্ষেত্রে <code>async Task</code> রিটার্ন করা উচিত (Async/Await অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৪) .Result বা .Wait() ব্যবহার করলে কীভাবে deadlock হতে পারে?</h3>
+<pre>public void Button_Click(object sender, EventArgs e)
+{
+    string data = GetDataAsync().Result;  <span class="c">// DEADLOCK! (UI/ASP.NET-এর মতো context-এ)</span>
+}
+public async Task&lt;string&gt; GetDataAsync()
+{
+    var result = await client.GetStringAsync(url);
+    return result;  <span class="c">// continuation captured context-এ ফিরতে চায়</span>
+}</pre>
+<p><b>ব্যাখ্যা:</b> <code>.Result</code> UI থ্রেডকে ব্লক করে ফেলে, আর <code>GetDataAsync</code>-এর ভেতরের <code>await</code> সম্পন্ন হওয়ার পর তার continuation captured <code>SynchronizationContext</code>-এ (একই UI থ্রেডে) ফিরে আসতে চায় — কিন্তু সেই থ্রেড তো ইতিমধ্যে <code>.Result</code>-এ ব্লকড হয়ে বসে আছে, তাই continuation কখনো চলতে পারে না। মডার্ন ASP.NET Core-এ কোনো SynchronizationContext না থাকায় এই নির্দিষ্ট deadlock সাধারণত ঘটে না, কিন্তু WPF/WinForms-এর মতো UI অ্যাপে এই ঝুঁকি এখনো বাস্তব (Async/Await অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৫) ConfigureAwait(false) আসলে কী করে, আর কখন ব্যবহার করা উচিত?</h3>
+<p><b>ব্যাখ্যা:</b> <code>ConfigureAwait(false)</code> continuation-কে বলে দেয় যে original captured context-এ ফিরে আসার দরকার নেই, যেকোনো ThreadPool থ্রেডে চললেই হবে। এটা মূলত library কোডে best practice হিসেবে ব্যবহার করা হয়, কারণ library জানে না caller কোন ধরনের context (UI থ্রেড, ASP.NET request context) থেকে আসছে — এতে deadlock ঝুঁকি কমে এবং সামান্য পারফরম্যান্স সুবিধাও পাওয়া যায় (Async/Await অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৬) DI-তে Transient, Scoped আর Singleton lifetime-এর পার্থক্য কী, আর Captive Dependency bug কীভাবে ঘটে?</h3>
+<pre>public class ReportCache
+{
+    private readonly AppDbContext _dbContext;
+    public ReportCache(AppDbContext dbContext) { _dbContext = dbContext; }  <span class="c">// captured!</span>
+}
+builder.Services.AddSingleton&lt;ReportCache&gt;();
+builder.Services.AddScoped&lt;AppDbContext&gt;();</pre>
+<p><b>ব্যাখ্যা:</b> <code>Transient</code> প্রতিবার নতুন instance দেয়, <code>Scoped</code> একই scope (সাধারণত একটা HTTP request)-এর মধ্যে একটাই instance দেয়, আর <code>Singleton</code> পুরো অ্যাপ্লিকেশনের জীবনকালে একটাই instance রাখে। উপরের কোডে <code>ReportCache</code> Singleton হওয়ায় একবারই তৈরি হয় — তার constructor-এ যে Scoped <code>AppDbContext</code> প্রথমবার resolve হয়, সেটাই চিরকালের জন্য আটকে (captured) থাকে, ফলে পরবর্তী প্রতিটা request নিজের আলাদা <code>DbContext</code> না পেয়ে সেই একই পুরনো instance ব্যবহার করতে বাধ্য হয় — এটাই <span class="kw">Captive Dependency</span> bug, যা race condition ও ভুল ডেটা তৈরি করে। সমাধান — Singleton-এর ভেতরে প্রয়োজনের সময় <code>IServiceScopeFactory</code> দিয়ে নিজে একটা নতুন scope তৈরি করা (Dependency Injection অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৭) EF Core-এ N+1 query problem কী, আর এটা কীভাবে সমাধান করবেন?</h3>
+<pre>var customers = await dbContext.Customers.ToListAsync(); <span class="c">// ১টা কোয়েরি</span>
+foreach (var customer in customers)
+    Console.WriteLine($"{customer.Name}: {customer.Orders.Count}");
+    <span class="c">// প্রতিবার customer.Orders access হলে lazy loading নতুন কোয়েরি পাঠায়!</span></pre>
+<p><b>ব্যাখ্যা:</b> lazy loading চালু থাকলে লুপের প্রতিটা ইটারেশনে navigation property (<code>customer.Orders</code>) access করার মুহূর্তে একটা করে আলাদা কোয়েরি ডাটাবেজে যায় — N জন কাস্টমারের জন্য মোট 1+N কোয়েরি চলে, যেখানে ১টা কোয়েরিতেই কাজ শেষ হওয়ার কথা ছিল। সমাধান হলো <code>.Include(c =&gt; c.Orders)</code> দিয়ে eager loading করে একই কোয়েরিতে JOIN-সহ সম্পর্কিত ডেটা আগে থেকেই নিয়ে আসা। পাশাপাশি, শুধু পড়ার জন্য (রিপোর্ট, তালিকা) কোয়েরিতে <code>AsNoTracking()</code> ব্যবহার করলে change-tracking-এর অতিরিক্ত খরচ বাঁচে (Entity Framework Core অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৮) record টাইপ default equality-এর দিক থেকে class থেকে আলাদা কেন?</h3>
+<pre>public record PointRecord(int X, int Y);
+public class PointClass { public int X, Y; }
+
+var r1 = new PointRecord(3, 4);
+var r2 = new PointRecord(3, 4);
+Console.WriteLine(r1 == r2);   <span class="c">// True — value equality</span>
+
+var c1 = new PointClass { X = 3, Y = 4 };
+var c2 = new PointClass { X = 3, Y = 4 };
+Console.WriteLine(c1 == c2);   <span class="c">// False — reference equality</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>class</code>-এ default <code>==</code>/<code>.Equals()</code> reference equality করে — দুইটা variable একই heap object পয়েন্ট করছে কিনা তা চেক করে, ভেতরের ডেটা এক হলেও নয়। <code>record</code> কম্পাইলার নিজেই <code>Equals</code>, <code>GetHashCode</code>, <code>==</code>/<code>!=</code> জেনারেট করে দেয় property-wise (value) তুলনার জন্য, তাই সব property সমান হলে দুইটা record সমান বিবেচিত হয় — এটা immutable ডেটা মডেল/DTO-এর জন্য উপযোগী, যেখানে identity নয়, ভেতরের মানই গুরুত্বপূর্ণ (Modern C# অধ্যায়ে বিস্তারিত)।</p>
+
+<div class="callout best"><span class="tag">Interview-এ সোনালি টিপ</span>
+<ul>
+<li>কোনো "আউটপুট কী হবে" জাতীয় প্রশ্নে প্রথমেই ভাবুন — value type নাকি reference type, deferred নাকি immediate execution।</li>
+<li>Async নিয়ে যেকোনো প্রশ্নে deadlock ঝুঁকি (<code>.Result</code>/<code>.Wait()</code>), exception propagation, আর <code>ConfigureAwait</code> — এই তিনটার সংযোগ মনে রাখুন।</li>
+<li>DI lifetime প্রশ্নে সবসময় Captive Dependency-এর কথা তুলুন — এটাই এই টপিকের সবচেয়ে "senior-level" সিগনাল।</li>
+<li>EF Core প্রশ্নে N+1 আর deferred execution-এর সম্পর্কটা টেনে আনলে বোঝা যায় আপনি concept গুলো বিচ্ছিন্নভাবে নয়, একসাথে বুঝেছেন।</li>
+</ul>
+</div>
 </template>
 
 

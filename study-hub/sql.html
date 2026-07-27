@@ -1216,6 +1216,76 @@ Blocking এড়াতে সবখানে <code>WITH (NOLOCK)</code> (= REA
 <li>Duplicate-এ → GROUP BY HAVING (খোঁজা), ROW_NUMBER (মোছা)।</li>
 <li>উত্তরের আগে সবসময় <b>edge case</b> বলুন: NULL, tie, খালি group — interviewer এটাই দেখতে চায়।</li>
 </ul></div>
+
+<h3>১৪) পরপর দিন Login Streak (Gaps & Islands)</h3>
+<pre><span class="k">WITH</span> r <span class="k">AS</span> (
+  <span class="k">SELECT</span> user_id, login_date,
+         login_date - (<span class="k">ROW_NUMBER</span>() <span class="k">OVER</span> (<span class="k">PARTITION BY</span> user_id <span class="k">ORDER BY</span> login_date)) * <span class="k">INTERVAL</span> <span class="k">'1 day'</span> <span class="k">AS</span> grp
+  <span class="k">FROM</span> logins
+),
+streaks <span class="k">AS</span> (
+  <span class="k">SELECT</span> user_id, grp, <span class="k">COUNT</span>(*) <span class="k">AS</span> streak_len,
+         <span class="k">MIN</span>(login_date) <span class="k">AS</span> streak_start, <span class="k">MAX</span>(login_date) <span class="k">AS</span> streak_end
+  <span class="k">FROM</span> r <span class="k">GROUP BY</span> user_id, grp
+)
+<span class="k">SELECT</span> user_id, <span class="k">MAX</span>(streak_len) <span class="k">AS</span> longest_streak
+<span class="k">FROM</span> streaks <span class="k">GROUP BY</span> user_id <span class="k">ORDER BY</span> longest_streak <span class="k">DESC</span>;</pre>
+<p><b>ব্যাখ্যা:</b> এটাই বিখ্যাত "gaps & islands" trick। <code>ROW_NUMBER()</code> প্রতিটা row-এ ১,২,৩… ক্রমিক নম্বর দেয় — টানা (consecutive) দিনগুলোর জন্য <code>login_date</code>-ও ঠিক ১ করে বাড়ে। তাই <code>login_date</code> থেকে সেই ক্রমিক নম্বর (দিনে রূপান্তর করে) বাদ দিলে — টানা প্রতিটা দিনের জন্য একই ধ্রুবক মান (<code>grp</code>) থেকে যায়, যেন একটা "island" চিহ্নিত হলো। এরপর <code>user_id, grp</code> দিয়ে group করে row গুনলেই সেই island-এর দৈর্ঘ্য (streak_len), আর সবচেয়ে বড়টাই longest streak। SQL Server-এ <code>DATEADD(DAY, -ROW_NUMBER() OVER(...), login_date)</code> দিয়ে একই ধারণা।</p>
+
+<h3>১৫) প্রতি department-এ প্রথম ও সর্বশেষ যোগ দেওয়া employee (FIRST_VALUE/LAST_VALUE)</h3>
+<pre><span class="k">SELECT DISTINCT</span> department_id,
+  <span class="k">FIRST_VALUE</span>(name) <span class="k">OVER</span> (<span class="k">PARTITION BY</span> department_id <span class="k">ORDER BY</span> hire_date) <span class="k">AS</span> first_hired,
+  <span class="k">FIRST_VALUE</span>(name) <span class="k">OVER</span> (<span class="k">PARTITION BY</span> department_id <span class="k">ORDER BY</span> hire_date <span class="k">DESC</span>) <span class="k">AS</span> last_hired
+<span class="k">FROM</span> employees;</pre>
+<p><b>ব্যাখ্যা:</b> <code>FIRST_VALUE</code> প্রতিটা partition (department)-এর window-এর <b>প্রথম</b> row-এর মান দেয় — <code>ORDER BY hire_date</code>-এ সেটাই প্রথম যোগ দেওয়া employee। "শেষ" employee পেতে <code>LAST_VALUE</code> ব্যবহার না করে <b>উল্টো ক্রমে</b> (<code>ORDER BY hire_date DESC</code>) আবার <code>FIRST_VALUE</code> নিলাম — কারণ অধ্যায় ৭-এ দেখা গেছে <code>LAST_VALUE</code>-এর default frame ("current row পর্যন্ত") প্রায়ই ভুল current-row মান ফেরত দেয়, আর সঠিক frame মনে রাখা ঝামেলার। উল্টো-order <code>FIRST_VALUE</code> সেই ফাঁদ এড়িয়ে একই ফল দেয়। প্রতিটা row-এ একই মান বসে বলে শেষে <code>DISTINCT</code> দিয়ে প্রতি department-এর একটাই row রাখা হলো।</p>
+
+<h3>১৬) পূর্ণ organization hierarchy — level ও path সহ (Recursive CTE)</h3>
+<pre><span class="k">WITH RECURSIVE</span> org <span class="k">AS</span> (
+  <span class="k">SELECT</span> id, name, manager_id, 1 <span class="k">AS</span> lvl, name <span class="k">AS</span> path
+  <span class="k">FROM</span> employees <span class="k">WHERE</span> manager_id <span class="k">IS NULL</span>            <span class="c">-- anchor: সবচেয়ে ওপরের বস (CEO)</span>
+  <span class="k">UNION ALL</span>
+  <span class="k">SELECT</span> e.id, e.name, e.manager_id, o.lvl + 1, o.path || <span class="k">' > '</span> || e.name
+  <span class="k">FROM</span> employees e
+  <span class="k">JOIN</span> org o <span class="k">ON</span> e.manager_id = o.id                    <span class="c">-- recursive step: পরের স্তর</span>
+)
+<span class="k">SELECT</span> id, name, lvl, path <span class="k">FROM</span> org <span class="k">ORDER BY</span> path;</pre>
+<p><b>ব্যাখ্যা:</b> অধ্যায় ৬-এর recursive CTE উদাহরণ একজন নির্দিষ্ট manager-এর অধীনস্থদের লিস্ট করেছিল; এখানে সেই ধারণাটাই বাড়িয়ে প্রতিটা employee-র <b>depth (lvl)</b> ও পুরো <b>reporting chain (path)</b> বের করা হলো। Anchor member শুরু করে root (<code>manager_id IS NULL</code>, লেভেল ১) দিয়ে; recursive step প্রতিবার আগের ফলাফলের (<code>org</code>) সাথে join করে এক লেভেল নিচে নামে, <code>lvl + 1</code> দিয়ে গভীরতা গোনে আর <code>path</code>-এ নাম জুড়ে পুরো chain তৈরি করে। org-chart UI-তে indentation দেখাতে বা "কে কোন স্তরে" বের করতে এই pattern খুবই কাজের।</p>
+
+<h3>১৭) Salary অনুযায়ী quartile ভাগ করা (NTILE)</h3>
+<pre><span class="k">SELECT</span> name, salary,
+       <span class="k">NTILE</span>(4) <span class="k">OVER</span> (<span class="k">ORDER BY</span> salary <span class="k">DESC</span>) <span class="k">AS</span> quartile
+<span class="k">FROM</span> employees;</pre>
+<p><b>ব্যাখ্যা:</b> <code>NTILE(4)</code> সব row-কে (salary অনুযায়ী sorted) প্রায়-সমান ৪টা bucket-এ ভাগ করে — <code>DESC</code> দেওয়ায় quartile 1 হলো সবচেয়ে বেশি salary-র দল। row সংখ্যা ৪ দিয়ে ভাগ না গেলে প্রথম দিকের bucket-গুলো একটা করে বাড়তি row পায়। manual range/CASE না লিখে salary-band/performance-bucket রিপোর্টে এটাই দ্রুততম পথ।</p>
+
+<h3>১৮) Moving Average — ৩ দিনের rolling গড়</h3>
+<pre><span class="k">SELECT</span> day, revenue,
+       <span class="k">ROUND</span>(<span class="k">AVG</span>(revenue) <span class="k">OVER</span> (<span class="k">ORDER BY</span> day
+              <span class="k">ROWS BETWEEN</span> 2 <span class="k">PRECEDING AND CURRENT ROW</span>), 2) <span class="k">AS</span> moving_avg_3d
+<span class="k">FROM</span> daily_sales;</pre>
+<p><b>ব্যাখ্যা:</b> এখানে frame-টা <b>fixed-width</b> — <code>2 PRECEDING AND CURRENT ROW</code> মানে সবসময় "current row + ঠিক আগের ২টা row" = ৩ দিনের জানালা, যেটা প্রতিটা row-এর সাথে সাথে এগিয়ে যায়। এটা প্রশ্ন ৮-এর running total-এর থেকে আলাদা — সেখানে frame ছিল <code>UNBOUNDED PRECEDING</code> (শুরু থেকে current পর্যন্ত, ক্রমাগত বাড়ে), এখানে frame-এর প্রস্থ স্থির থেকে সরে সরে যায়। ফলে দৈনিক ওঠানামা মসৃণ (smooth) হয়ে একটা trend দেখা যায়।</p>
+
+<h3>১৯) একই salary পাচ্ছেন এমন employee (tie group) খোঁজা</h3>
+<pre><span class="k">SELECT</span> salary, <span class="k">COUNT</span>(*) <span class="k">AS</span> cnt, <span class="k">STRING_AGG</span>(name, <span class="k">', '</span>) <span class="k">AS</span> employees
+<span class="k">FROM</span> employees
+<span class="k">GROUP BY</span> salary
+<span class="k">HAVING</span> <span class="k">COUNT</span>(*) &gt; 1
+<span class="k">ORDER BY</span> salary <span class="k">DESC</span>;</pre>
+<p><b>ব্যাখ্যা:</b> প্রশ্ন ২-এর duplicate-email pattern-টাই এখানে <code>salary</code>-তে প্রয়োগ করা হলো — <code>GROUP BY salary</code> করে যাদের salary সমান তাদের একসাথে জড়ো করি, <code>HAVING COUNT(*) &gt; 1</code> দিয়ে শুধু tie-group রাখি (WHERE নয়, কারণ filter-টা aggregate-এর ওপর)। <code>STRING_AGG</code> সেই group-এর সব নাম কমা দিয়ে জোড়া লাগিয়ে এক row-এ দেখায় — payroll-band audit বা "কারা একই pay-grade-এ আছে" বের করতে সরাসরি কাজে লাগে। (PG 9.0+ ও SQL Server 2017+ দুটোতেই আছে।)</p>
+
+<h3>২০) Referential action অনুমান — CASCADE বনাম SET NULL</h3>
+<pre><span class="k">ALTER TABLE</span> orders
+  <span class="k">ADD CONSTRAINT</span> fk_orders_customer
+  <span class="k">FOREIGN KEY</span> (customer_id) <span class="k">REFERENCES</span> customers(id) <span class="k">ON DELETE SET NULL</span>;
+
+<span class="k">DELETE FROM</span> customers <span class="k">WHERE</span> id = 7;   <span class="c">-- customer 7-এর orders-এ কী ঘটবে?</span></pre>
+<p><b>ব্যাখ্যা:</b> অধ্যায় ৮-এর referential-action টেবিল অনুযায়ী এখানে <code>ON DELETE SET NULL</code> বলা আছে — তাই customer 7 মুছে গেলে তার <code>orders</code> row-গুলো মোছে না, শুধু তাদের <code>customer_id</code> column <code>NULL</code> হয়ে যায় (column অবশ্যই NULL-able হতে হবে)। এটা <code>order_items → orders</code>-এর <code>ON DELETE CASCADE</code> (অধ্যায় ৮-এ দেখানো, যেখানে order মুছলে item-ও মুছে যায়) থেকে সম্পূর্ণ ভিন্ন আচরণ — একই ধরনের FK constraint হলেও referential action ভিন্ন হলে ফলাফল ভিন্ন। constraint-এ কিছু না লিখলে default <code>NO ACTION</code>/<code>RESTRICT</code> হতো — তখন child order থাকা অবস্থায় এই <code>DELETE</code>-ই আটকে গিয়ে error দিত।</p>
+
+<h3>২১) কোন Join Algorithm বাছবে engine — reasoning</h3>
+<pre><span class="k">SELECT</span> o.id, o.amount, c.name
+<span class="k">FROM</span> orders o
+<span class="k">JOIN</span> customers c <span class="k">ON</span> o.customer_id = c.id
+<span class="k">WHERE</span> o.customer_id = 42;</pre>
+<p><b>ব্যাখ্যা:</b> অধ্যায় ৪-এর join-algorithm টেবিল অনুযায়ী এখানে <code>WHERE o.customer_id = 42</code> আগেই <code>orders</code>-কে মাত্র কয়েকটা row-এ নামিয়ে দেয় (ছোট outer), আর <code>customers.id</code>-এ PK/unique index আছে ধরে নিলে — engine সম্ভবত <b>Nested Loop</b> বাছবে (কয়েকটা outer row × সস্তা index seek)। কিন্তু <code>WHERE</code> শর্তটা সরিয়ে দিলে (পুরো <code>orders</code> পুরো <code>customers</code>-এর সাথে join), দুই side-ই বড়/unsorted equality join হয়ে যায় — তখন optimizer সম্ভবত <b>Hash Join</b> বেছে নেবে। অর্থাৎ একই query-shape-এ শুধু WHERE filter-এর selectivity বদলেই বেছে নেওয়া algorithm বদলে যেতে পারে — interview-এ এই reasoning দেখাতে পারাটাই আসল দক্ষতা, শুধু নাম মুখস্থ বলা নয়।</p>
 </template>
 
 <template data-page="progobj">

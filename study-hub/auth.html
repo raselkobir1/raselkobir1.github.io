@@ -120,6 +120,7 @@ const pages = [
   {id:"dotnet",      icon:"💜", title:"ASP.NET Core + Keycloak Integration"},
   {id:"pitfalls",    icon:"⚠️", title:"Pitfalls · Best Practices · Troubleshooting"},
   {id:"cli",         icon:"⌨️", title:"Essential Commands — curl · kcadm"},
+  {id:"interview",   icon:"🎯", title:"১৪. Interview প্রশ্নোত্তর"},
 ];
 </script>
 
@@ -858,6 +859,67 @@ kcadm.sh create realms/clients/users -r myrealm -s ...
 kcadm.sh add-roles -r myrealm --uusername ... --rolename ...</pre>
 <div class="callout best"><span class="tag">সংক্ষেপে — পুরো কোর্সের সারাংশ</span>
 Authentication (কে) ও Authorization (কী করতে পারে) আলাদা রাখুন। Password কখনো নিজে হ্যান্ডেল না করে Keycloak-এর মতো IdP-কে বিশ্বাস করুন। Stateless JWT দিয়ে scale করুন, কিন্তু revocation-এর trade-off মনে রাখুন। SPA-তে PKCE + BFF pattern দিয়ে token চুরি ঠেকান। প্রতিটা resource-level action-এ ownership আলাদা করে যাচাই করুন — শুধু login-check যথেষ্ট নয়।</div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৪. Interview প্রশ্নোত্তর</h2>
+<p class="lead">Auth ইন্টারভিউতে বারবার ঘুরেফিরে আসা প্রশ্ন — basic থেকে advanced, প্রতিটার বাংলায় ব্যাখ্যা ও কোর্সের নির্দিষ্ট চ্যাপ্টার রেফারেন্সসহ।</p>
+
+<h3>১) Authentication আর Authorization-এর পার্থক্য কী, আর এই দুইটা গুলিয়ে ফেললে কী ঝুঁকি তৈরি হয়?</h3>
+<p><b>ব্যাখ্যা:</b> Authentication বলে "আপনি কে", Authorization বলে "আপনাকে কী করতে দেওয়া হবে" (Foundation চ্যাপ্টার)। শুধু <code>[Authorize]</code> লাগিয়ে "user login করা আছে" চেক করা যথেষ্ট নয় — প্রতিটা resource-level action-এ আলাদা করে যাচাই করতে হয় সেই user-এর <b>এই নির্দিষ্ট</b> resource-এ অ্যাক্সেস আছে কি না। এটা না করলে সবচেয়ে সাধারণ vulnerability তৈরি হয় — <b>IDOR (Insecure Direct Object Reference)</b>, যেখানে user শুধু URL-এর id বদলে অন্য কারো ডেটা (invoice, order) দেখে ফেলতে পারে।</p>
+
+<h3>২) Password hash করতে সরাসরি SHA-256 ব্যবহার না করে bcrypt/Argon2 কেন ব্যবহার করা হয়?</h3>
+<p><b>ব্যাখ্যা:</b> SHA-256 ইচ্ছাকৃতভাবে দ্রুত — GPU দিয়ে সেকেন্ডে বিলিয়ন হ্যাশ গণনা করা যায়, ফলে brute-force সহজ (Password Security চ্যাপ্টার)। bcrypt/scrypt/Argon2 ইচ্ছাকৃতভাবে ধীর ও memory-intensive (cost/work factor দিয়ে টিউনযোগ্য), তাই legitimate login-এ সামান্য দেরি হলেও attacker-এর জন্য প্রতিটা password try করা ব্যয়বহুল হয়ে যায়। এর সাথে প্রতিটা password-এর জন্য আলাদা <b>salt</b> যোগ করলে precomputed rainbow table পুরোপুরি অকেজো হয়ে যায়, কারণ একই password-এর hash-ও user ভেদে আলাদা হয়ে যায়।</p>
+
+<h3>৩) Session-based authentication আর JWT-based authentication-এর মূল স্থাপত্যগত পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> Session-based auth <b>stateful</b> — server-সাইডে session ID ↔ user data সংরক্ষিত থাকে, cookie শুধু একটা random reference বহন করে (Session চ্যাপ্টার)। JWT-based auth <b>stateless</b> — token নিজেই প্রমাণ ও claim বহন করে, server-কে কিছু "মনে" রাখতে হয় না (JWT চ্যাপ্টার)। Trade-off: session instant revoke করা যায় (DB entry মুছে ফেললেই), কিন্তু horizontal scaling-এ centralized store লাগে। JWT সহজে scale হয় (কোনো lookup ছাড়াই verify), কিন্তু <code>exp</code> পার না হওয়া পর্যন্ত বাতিল করা কঠিন।</p>
+
+<h3>৪) CSRF আক্রমণ ঠিক কীভাবে ঘটে, এবং token-based (Bearer header) auth কেন এটা থেকে স্বাভাবিকভাবেই সুরক্ষিত?</h3>
+<p><b>ব্যাখ্যা:</b> Browser cookie স্বয়ংক্রিয়ভাবে পাঠায় — request কোথা থেকে এসেছে বিবেচনা না করেই। তাই আপনি bank.com-এ login করা অবস্থায় malicious-site.com ভিজিট করলে, সেখানকার একটা hidden form bank.com-এ POST করলেও browser bank.com-এর session cookie সাথে পাঠিয়ে দেয় (Session চ্যাপ্টার)। JWT সাধারণত <code>Authorization: Bearer</code> header-এ পাঠানো হয় — browser কখনো custom header cross-site request-এ auto-attach করে না, তাই attacker-এর সাইট থেকে সেই header বসানো সম্ভব নয় (JWT/Session চ্যাপ্টার)। প্রতিরোধ: <code>SameSite</code> cookie flag, anti-CSRF (synchronizer) token, বা header-based token auth।</p>
+
+<h3>৫) JWT কি এনক্রিপ্টেড? Payload-এ password বা credit card নম্বর রাখা যাবে কি?</h3>
+<pre><span class="c">// এই টোকেনের payload অংশ শুধু Base64URL — যে কেউ ডিকোড করতে পারে:</span>
+echo "eyJzdWIiOiIxMjM0IiwibmFtZSI6IlJhc2VsIn0" | base64 -d
+<span class="c">// → {"sub":"1234","name":"Rasel"}   — সরাসরি পড়া যাচ্ছে, কোনো secret লাগেনি</span></pre>
+<p><b>ব্যাখ্যা:</b> না — JWT শুধু <b>signed</b> (JWS), এনক্রিপ্টেড নয়। Header ও Payload শুধু Base64URL এনকোড করা, jwt.io বা যেকোনো টুলে সেকেন্ডে decode করা যায় (JWT Internals চ্যাপ্টার)। Signature শুধু নিশ্চিত করে payload বদলানো হয়নি, ডেটা গোপন থাকবে তা নয়। তাই payload-এ কখনো password/credit card-এর মতো secret data রাখা উচিত নয় — সত্যিকার গোপনীয়তা দরকার হলে JWE ব্যবহার করতে হয়।</p>
+
+<h3>৬) <code>alg: none</code> vulnerability কী, আর আধুনিক JWT library এটা কীভাবে প্রতিরোধ করে?</h3>
+<p><b>ব্যাখ্যা:</b> পুরনো কিছু JWT library token header-এর <code>alg</code> ফিল্ড অন্ধভাবে বিশ্বাস করত — attacker header বদলে <code>alg: "none"</code> বসিয়ে signature বাদ দিয়ে পাঠাতো, বা RS256-এর জায়গায় HS256 বসিয়ে public key-কেই HMAC secret হিসেবে ব্যবহার করে সাইন করে ফেলত (JWT Internals চ্যাপ্টার)। সমাধান: server-সাইডে <b>প্রত্যাশিত algorithm hard-code</b> করা, token-এর ভেতরের <code>alg</code> ফিল্ড কখনো অন্ধভাবে বিশ্বাস না করা।</p>
+
+<h3>৭) Access token ছোট জীবনকালের (৫-১৫ মিনিট) হয় কেন, আর refresh token rotation কী সমস্যা সমাধান করে?</h3>
+<p><b>ব্যাখ্যা:</b> Stateless JWT একবার ইস্যু হলে <code>exp</code> পার না হওয়া পর্যন্ত বাতিল করা যায় না — ছোট জীবনকাল রেখে চুরি হলেও ক্ষতির পরিসর সীমিত রাখা হয় (JWT Internals চ্যাপ্টার)। Refresh token দীর্ঘ জীবনকালের, তাই এটা চুরি হলে ঝুঁকি বেশি — <b>rotation</b> প্রতিবার ব্যবহারে পুরনোটা বাতিল করে নতুন একটা ইস্যু করে; পুরনোটা আবার ব্যবহারের চেষ্টা (replay) হলে পুরো token family সাথে সাথে revoke করে দেওয়া হয়, যা চুরি হওয়া token দ্রুত ধরতে সাহায্য করে।</p>
+
+<h3>৮) OAuth 2.0-কে "login protocol" বলা কেন ভুল? এর চারটা মূল role কী কী?</h3>
+<p><b>ব্যাখ্যা:</b> OAuth2 আসলে <b>delegated authorization</b>-এর প্রোটোকল — একটা app-কে user-এর পক্ষ থেকে সীমিত access দেওয়ার উপায়, identity প্রমাণের জন্য standard কিছু বলে না (OAuth2 চ্যাপ্টার)। চারটা role: <b>Resource Owner</b> (user), <b>Client</b> (যে app অ্যাক্সেস চাইছে), <b>Authorization Server</b> (token ইস্যু করে), <b>Resource Server</b> (token যাচাই করে ডেটা দেয়)। Identity প্রমাণের জন্য OAuth2-এর উপরে বসানো OpenID Connect (OIDC) লাগে, যেটা ID Token যোগ করে এই ফাঁক পূরণ করে।</p>
+
+<h3>৯) Authorization Code flow-এ <code>redirect_uri</code> ঢিলে (wildcard/আংশিক) validation করলে কী আক্রমণ সম্ভব?</h3>
+<p><b>ব্যাখ্যা:</b> Auth server authorization code-টা নিবন্ধিত <code>redirect_uri</code>-তেই পাঠায় — wildcard/আংশিক মিল মেনে নিলে attacker নিজের নিয়ন্ত্রণে থাকা একটা subdomain/path-কে redirect_uri হিসেবে বসিয়ে authorization code চুরি করতে পারে, এবং সেই code দিয়ে victim-এর token নিজে নিয়ে নিতে পারে (OAuth2 চ্যাপ্টার)। এজন্য production-grade IdP (Keycloak-সহ) <b>exact-match redirect_uri</b> require করে — এক অক্ষরও এদিক-ওদিক হলে flow ব্যর্থ হয়।</p>
+
+<h3>১০) PKCE ঠিক কী সমস্যা সমাধান করে, আর এটা কেন শুধু Confidential client নয়, Public client (SPA/mobile)-এও বাধ্যতামূলক?</h3>
+<pre>code_verifier = random_string()               <span class="c">// client নিজে generate করে, নিজের কাছে রাখে</span>
+code_challenge = BASE64URL(SHA256(code_verifier))  <span class="c">// শুধু এটা auth request-এ পাঠায়</span>
+<span class="c">// token exchange-এর সময় আসল code_verifier পাঠাতে হয়, auth server hash মিলিয়ে দেখে</span></pre>
+<p><b>ব্যাখ্যা:</b> Public client (SPA/mobile)-এর কোনো client_secret নেই — শুধু authorization code দিয়ে token exchange করা যেত, তাহলে code মাঝপথে চুরি হলে (redirect URI intercept) attacker নিজেই সেই code দিয়ে token নিয়ে নিতে পারত (Flows চ্যাপ্টার)। PKCE প্রতিটা login attempt-এ একটা random secret (<code>code_verifier</code>) বানিয়ে শুধু তার hash আগে পাঠায় — code চুরি হলেও চোরের কাছে আসল verifier না থাকায় token exchange ব্যর্থ হবে।</p>
+
+<h3>১১) ID Token আর Access Token-এর মধ্যে পার্থক্য কী? ID Token দিয়ে সরাসরি API call authenticate করলে কী ভুল হবে?</h3>
+<p><b>ব্যাখ্যা:</b> ID Token প্রমাণ করে "এই মুহূর্তে ঠিক এই user authenticate হয়েছে" — এটা <b>client নিজের জন্য</b>, বোঝার জন্য কে login করলো। Access Token প্রমাণ করে "এই client-কে এই resource-এ এই কাজ করতে দেওয়া হয়েছে" — এটা <b>resource server/API-এর জন্য</b> (OIDC চ্যাপ্টার)। ID Token-এর <code>aud</code> claim সাধারণত client_id নিজেই, কোনো resource server নয় — তাই ID Token দিয়ে API authenticate করার চেষ্টা করলে audience mismatch হবে বা resource server ভুলভাবে token গ্রহণ করে ফেলবে। API call-এ সবসময় Access Token পাঠাতে হবে।</p>
+
+<h3>১২) OIDC-এর <code>nonce</code> claim ঠিক কোন আক্রমণ প্রতিরোধ করে?</h3>
+<p><b>ব্যাখ্যা:</b> Attacker যদি কোনোভাবে একটা পুরনো, signature-বৈধ ID token হাতে পেয়ে (network log/browser history থেকে) সেটা victim-এর browser-এ replay করে "login সফল" দেখাতে চায়, <code>nonce</code> ছাড়া client শুধু signature ও <code>exp</code> যাচাই করে সেটা গ্রহণ করে নিতে পারে (OIDC চ্যাপ্টার)। Client প্রতিটা authorization request-এ একটা নতুন random <code>nonce</code> পাঠায় ও নিজের কাছে রাখে; ফেরত আসা ID token-এর <code>nonce</code> না মিললে token প্রত্যাখ্যান করে — ফলে পুরনো কোনো token replay করে চালানো যায় না।</p>
+
+<h3>১৩) Keycloak-এ SPA-কে Confidential client হিসেবে নিবন্ধন করে <code>client_secret</code> frontend bundle-এ বসিয়ে দিলে কী সমস্যা হয়?</h3>
+<p><b>ব্যাখ্যা:</b> Browser-এ পাঠানো যেকোনো JavaScript কোড View Source/DevTools দিয়ে দেখা যায় — তাই frontend bundle-এ বসানো "secret" আসলে গোপন থাকে না, যে কেউ সেই secret বের করে নিজেই client হিসেবে token চাইতে পারে (Keycloak Core চ্যাপ্টার)। SPA/mobile app সবসময় <b>Public</b> client হিসেবে নিবন্ধন করা উচিত, secret-এর বদলে <b>PKCE</b> দিয়ে সুরক্ষিত করতে হয়।</p>
+
+<h3>১৪) RBAC-এর সীমাবদ্ধতা কোথায়, আর Keycloak Authorization Services (PEP/PDP মডেল) কীভাবে এটা সমাধান করে?</h3>
+<p><b>ব্যাখ্যা:</b> RBAC ভালো কাজ করে যখন অনুমতি role-ভিত্তিক ও স্থির, কিন্তু "শুধু নিজের document edit করতে পারবে" বা "office hours-এই action চলবে"-এর মতো context-নির্ভর নিয়মে role বিস্ফোরণ ঘটে (Authorization Models চ্যাপ্টার)। Keycloak Authorization Services-এ application একটা <b>Policy Enforcement Point (PEP)</b> হিসেবে কাজ করে — প্রতিটা sensitive action-এর আগে Keycloak-কে (<b>Policy Decision Point, PDP</b>) জিজ্ঞেস করে অনুমতি আছে কিনা, আর Keycloak কেন্দ্রীয়ভাবে role/time/custom policy মূল্যায়ন করে জবাব দেয় — deploy ছাড়াই নিয়ম বদলানো যায়।</p>
+
+<h3>১৫) SPA-তে access token <code>localStorage</code>-এ রাখা কেন ঝুঁকিপূর্ণ, আর BFF pattern কীভাবে এই ঝুঁকি দূর করে?</h3>
+<p><b>ব্যাখ্যা:</b> XSS vulnerability থাকলে (এমনকি কোনো dependency-এর মাধ্যমেও ঢুকে আসা malicious script) সেই script <code>localStorage.getItem(...)</code> লিখে সরাসরি token চুরি করে নিজের সার্ভারে পাঠাতে পারে (Securing SPA/API চ্যাপ্টার)। BFF (Backend-for-Frontend) pattern-এ SPA নিজে কখনো OAuth2 token ধরেই না — নিজস্ব backend পুরো OIDC flow চালায়, token সার্ভার-সাইড session-এ রাখে, browser-কে শুধু একটা <code>httpOnly</code> session cookie দেয়। Browser-এ token কখনো exposed হয় না — XSS হলেও চুরি করার কিছু নেই।</p>
+
+<h3>১৬) ASP.NET Core-এ <code>[Authorize(Roles = "admin")]</code> Keycloak token দিয়ে কাজ না করার সবচেয়ে সাধারণ কারণ কী?</h3>
+<pre>{ "realm_access": { "roles": ["admin", "customer"] } }
+<span class="c">// ASP.NET Core ডিফল্টভাবে খোঁজে flat "role" claim — এই নেস্টেড structure বুঝতে পারে না</span></pre>
+<p><b>ব্যাখ্যা:</b> Keycloak role পাঠায় নেস্টেড <code>realm_access.roles</code> claim-এর ভেতরে, কিন্তু ASP.NET Core-এর ডিফল্ট JWT bearer middleware সাধারণ, flat <code>role</code> (<code>ClaimTypes.Role</code>) claim আশা করে (ASP.NET Core + Keycloak চ্যাপ্টার)। সমাধান — একটা custom <code>IClaimsTransformation</code> লিখে <code>realm_access.roles</code>-এর প্রতিটা role-কে standard <code>ClaimTypes.Role</code> claim-এ রূপান্তর করা, তারপর থেকেই <code>[Authorize(Roles=...)]</code> ও <code>User.IsInRole(...)</code> প্রত্যাশিতভাবে কাজ করবে।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->

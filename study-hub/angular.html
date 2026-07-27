@@ -957,6 +957,55 @@ export class PersistedSignalService {
 <li>"React-এ এটা কীভাবে করতেন" প্রশ্ন এলে সমতুল্যতা মনে রাখুন: Signal ≈ useState, computed ≈ useMemo, effect() ≈ useEffect, DI service ≈ Context/custom hook।</li>
 </ul>
 </div>
+
+<h3>১৪) input()/output() পুরনো @Input()/@Output()-এর চেয়ে কী সুবিধা দেয়?</h3>
+<pre>export class UserProfileComponent {
+  userId = input.required&lt;number&gt;();          <span class="c">// parent যদি না দেয়, compile-time error</span>
+  selected = output&lt;number&gt;();
+
+  label = computed(() =&gt; `User #${this.userId()}`);  <span class="c">// input বদলালে automatic recompute</span>
+}</pre>
+<p><b>ব্যাখ্যা:</b> <code>input()</code> সরাসরি একটা signal রিটার্ন করে, তাই <code>userId()</code> পড়া মাত্রই তা অন্য যেকোনো signal-এর মতোই automatic dependency tracking-এ ধরা পড়ে — <code>computed()</code>/<code>effect()</code> ভেতরে ব্যবহার করলে ম্যানুয়াল <code>ngOnChanges</code> ছাড়াই ঠিকভাবে re-run হয়। পুরনো <code>@Input()</code> একটা প্লেইন property, তাই Angular-এর reactivity system এটার পরিবর্তন নিজে থেকে ট্র্যাক করতে পারত না। <code>input.required()</code> কম্পাইল-টাইমে নিশ্চিত করে parent বাধ্যতামূলক input পাস করেছে (Signals অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৫) InjectionToken কী, আর কখন এটা লাগে?</h3>
+<pre>export const API_BASE_URL = new InjectionToken&lt;string&gt;('API_BASE_URL');
+
+providers: [{ provide: API_BASE_URL, useValue: 'https://api.example.com' }],
+
+<span class="c">// service-এ</span>
+private baseUrl = inject(API_BASE_URL);</pre>
+<p><b>ব্যাখ্যা:</b> DI সাধারণত class-এর নাম দিয়ে চেনে (<code>inject(UserService)</code>), কিন্তু একটা string/boolean/plain object-এর কোনো class নেই — <code>inject(string)</code> লেখা অর্থহীন, কারণ TypeScript-এ একাধিক জায়গায় একই primitive টাইপ থাকতে পারে। <code>InjectionToken</code> একটা unique, টাইপ-সেফ পরিচয়পত্র তৈরি করে যা provider ঘোষণা আর <code>inject()</code> কল — দুই জায়গাতেই একইভাবে রেফার করা যায়। Environment config বা third-party library configuration সরবরাহের এটাই স্ট্যান্ডার্ড প্যাটার্ন (DI অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৬) Subject আর BehaviorSubject-এর মধ্যে পার্থক্য কী?</h3>
+<pre>const clicks$ = new Subject&lt;void&gt;();        <span class="c">// initial value নেই, আগের emission মিস হয়ে যায়</span>
+const status$ = new BehaviorSubject('idle'); <span class="c">// initial value বাধ্যতামূলক, .value দিয়ে সরাসরি পড়া যায়</span></pre>
+<p><b>ব্যাখ্যা:</b> দুটোই "multicast" — একাধিক subscriber একসাথে একই মান পায় (HttpClient-এর "cold" Observable-এর বিপরীত)। <code>Subject</code>-এ কোনো initial/current value থাকে না — সাবস্ক্রাইব করার আগে কোনো <code>.next()</code> ঘটে থাকলে সেটা মিস হয়ে যায়। <code>BehaviorSubject</code> সবসময় সর্বশেষ মান মনে রাখে, তাই নতুন subscriber সাথে সাথেই সেই মান পায় এবং <code>.value</code> দিয়ে যেকোনো সময় সরাসরি পড়া যায় — তাই state-holding service-এ এটাই বেশি জনপ্রিয় (RxJS অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৭) Router Resolver আর Guard-এর মধ্যে পার্থক্য কী?</h3>
+<pre>export const authGuard: CanActivateFn = (route, state) =&gt; { ... };       <span class="c">// route-এ ঢোকা যাবে কিনা</span>
+export const productResolver: ResolveFn&lt;Product&gt; = (route) =&gt; { ... }; <span class="c">// route activate হওয়ার আগেই data নিয়ে আসা</span></pre>
+<p><b>ব্যাখ্যা:</b> দুটোই route activate হওয়ার আগে চলে এবং <code>inject()</code> দিয়ে dependency নেয়, কিন্তু উদ্দেশ্য ভিন্ন। Guard সিদ্ধান্ত নেয় route-এ ঢোকা যাবে কিনা (true/false/redirect) — এটা authorization-এর প্রশ্ন। Resolver route activate হওয়ার আগেই data ready করে রাখে, যাতে component প্রথমবার render হওয়ার সময়ই data হাতে থাকে — <code>ngOnInit</code>-এ loading spinner দেখিয়ে ম্যানুয়াল fetch করার বদলে। দুটো একসাথেও ব্যবহার করা যায় (Routing অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৮) @defer ব্লক কী সমস্যা সমাধান করে?</h3>
+<pre>@defer (on viewport) {
+  &lt;heavy-analytics-widget /&gt;
+} @placeholder {
+  &lt;div class="skeleton"&gt;&lt;/div&gt;
+}</pre>
+<p><b>ব্যাখ্যা:</b> <code>@defer</code> ব্লক-এর ভেতরের component-এর JavaScript আলাদা chunk-এ থাকে এবং শর্ত (viewport-এ আসা, interaction, idle, বা টাইমার) পূরণ না হওয়া পর্যন্ত ডাউনলোডই হয় না — initial bundle ছোট থাকে, প্রথম পেজ দ্রুত interactive হয়। এটা React-এর <code>React.lazy</code> + <code>Suspense</code>-এর Angular সমতুল্য, তবে compiler-built-in, কোনো বাড়তি লাইব্রেরি ছাড়াই route-independent code splitting দেয় (Performance অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৯) NgRx-এ reducer-কে সবসময় pure function রাখা হয় কেন, আর Effect কী কাজ করে?</h3>
+<p><b>ব্যাখ্যা:</b> Reducer-এর কাজ শুধু আগের state + action থেকে predictable ভাবে নতুন state গণনা করা — কোনো HTTP call/side effect এখানে থাকলে একই action দুইবার dispatch করলে ভিন্ন ফলাফল আসতে পারে, আর time-travel debugging ভেঙে যায়। "cart-এ item যোগ করলে server-এ সিঙ্ক করা"-র মতো side effect-এর জন্য <code>Effect</code> ব্যবহার হয় — এটা একটা action শোনে, side effect চালায়, আর সফল/ব্যর্থ হলে আরেকটা action dispatch করে (State Management অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>২০) TestBed দিয়ে একটা service-নির্ভর component টেস্ট করার সময় মূল বিষয় কী লক্ষ্য রাখতে হয়?</h3>
+<pre>await TestBed.configureTestingModule({
+  imports: [UserProfileComponent],
+  providers: [{ provide: UserService, useValue: { getUser: () =&gt; of({ name: 'Alice' }) } }],
+}).compileComponents();</pre>
+<p><b>ব্যাখ্যা:</b> আসল <code>UserService</code>-এর জায়গায় একটা mock object (যা একই Observable-shape রিটার্ন করে) <code>providers</code>-এ বসিয়ে দেওয়া হয় — component এভাবে আসল HTTP call ছাড়াই টেস্ট করা যায়। এটাই DI-এর মূল সুবিধা: component শুধু জানে "আমার একটা <code>UserService</code> লাগবে", কে সেটা সরবরাহ করছে তা জানার দরকার নেই — production-এ real service, টেস্টে mock (Testing অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>২১) ::ng-deep কেন এড়িয়ে চলা উচিত, বিকল্প কী?</h3>
+<p><b>ব্যাখ্যা:</b> <code>::ng-deep</code> child component-এর encapsulated style ভেদ করে স্টাইল প্রয়োগের একটা shortcut ছিল, কিন্তু deprecated — এটা স্টাইল leak করে অনিচ্ছাকৃতভাবে অন্য component-কেও প্রভাবিত করতে পারে। এর বদলে <code>:host</code> selector, CSS custom property (variable) দিয়ে parent-child styling API তৈরি করা, বা component input দিয়ে class/style pass করাই নিরাপদ ও maintainable (Accessibility ও Styling অধ্যায়ে বিস্তারিত)।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->

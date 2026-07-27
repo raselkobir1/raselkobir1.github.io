@@ -121,6 +121,7 @@ const pages = [
   {id:"containers",      icon:"📦", title:"Containers on Linux — cgroups, namespaces"},
   {id:"security",        icon:"🛡️", title:"Security Hardening"},
   {id:"automation",      icon:"⏰", title:"Automation ও Cron"},
+  {id:"interview",       icon:"🎯", title:"১৫. Interview প্রশ্নোত্তর"},
 ];
 </script>
 
@@ -2867,6 +2868,107 @@ log "পুরোনো backup পরিষ্কার সম্পন্ন �
 <br><br>
 একজন দক্ষ Linux operator-এর আসল দক্ষতা প্রতিটা কমান্ডের প্রতিটা flag মুখস্থ রাখা না — বরং সমস্যা দেখা দিলে <b>কোথায় তাকাতে হবে</b> তা জানা: process আটকে গেলে চ্যাপ্টার ৩-এর <code>ps</code>/signal-এর কথা মনে পড়া, network অচল মনে হলে চ্যাপ্টার ৭-এর <code>ss</code>/<code>dig</code>-এর কথা, ডিস্ক ভরে গেলে চ্যাপ্টার ৮-এর <code>df</code>/<code>du</code>-এর পার্থক্য, service বারবার restart হলে চ্যাপ্টার ৯-এর <code>journalctl</code>। আর সবচেয়ে গুরুত্বপূর্ণ অভ্যাসটা এই শেষ চ্যাপ্টারেরই — <b>যে কাজ দুইবারের বেশি হাতে করেছেন, সেটা automate করার অভ্যাস গড়ে তোলা।</b> এই ১৪টা চ্যাপ্টার একসাথে একটা টুলবক্স তৈরি করে না শুধু — একটা মানসিকতা তৈরি করে: সিস্টেমকে বিশ্বাস করার আগে বোঝা, আর মানুষের স্মৃতির ওপর যতটা সম্ভব কম নির্ভর করা।
 </div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৫. Interview প্রশ্নোত্তর</h2>
+<p class="lead">Linux ইন্টারভিউতে বারবার ঘুরেফিরে আসা প্রশ্ন — basic permission/process concept থেকে শুরু করে production troubleshooting scenario পর্যন্ত, প্রতিটার সংক্ষিপ্ত ব্যাখ্যা আগের চ্যাপ্টারগুলোর রেফারেন্স সহ।</p>
+
+<h3>১) <code>chmod 754 deploy.sh</code> চালালে ঠিক কী permission সেট হয়, আর কেন octal-এ এই সংখ্যাটাই লেখা হয়?</h3>
+<pre><span class="c">$</span> chmod 754 deploy.sh
+<span class="c">$</span> ls -l deploy.sh
+-rwxr-xr-- 1 rasel rasel 220 Jul 27 10:00 deploy.sh</pre>
+<p><b>ব্যাখ্যা:</b> প্রতিটা অঙ্ক একটা ক্যাটাগরির (owner/group/other) rwx bit-এর যোগফল — <code>r=4, w=2, x=1</code>। তাই <code>7=4+2+1=rwx</code> (owner: পড়া/লেখা/execute সব পারবে), <code>5=4+0+1=r-x</code> (group: পড়া ও execute, লেখা না), <code>4=4+0+0=r--</code> (other: শুধু পড়া)। Permissions চ্যাপ্টারে যেভাবে দেখানো হয়েছে, এই তিন অঙ্ক একসাথেই একটা ফাইলের পুরো access model বর্ণনা করে।</p>
+
+<h3>২) একজন ইউজারের shell-এ <code>umask</code>-এর মান <code>022</code> থাকলে নতুন তৈরি হওয়া ফাইল আর ডিরেক্টরি কী permission নিয়ে জন্মাবে?</h3>
+<pre><span class="c">$</span> umask
+0022
+<span class="c">$</span> touch new.txt &amp;&amp; ls -l new.txt
+-rw-r--r-- 1 rasel rasel 0 Jul 27 10:00 new.txt   <span class="c"># 666 - 022 = 644</span>
+<span class="c">$</span> mkdir newdir &amp;&amp; ls -ld newdir
+drwxr-xr-x 2 rasel rasel 4096 Jul 27 10:00 newdir  <span class="c"># 777 - 022 = 755</span></pre>
+<p><b>ব্যাখ্যা:</b> Kernel নতুন ফাইলের সর্বোচ্চ ডিফল্ট ধরে নেয় <code>666</code> (execute bit কখনো ডিফল্টে থাকে না) আর নতুন ডিরেক্টরির <code>777</code>। umask এই সর্বোচ্চ থেকে নির্দিষ্ট bit বিয়োগ (mask out) করে — <code>chmod</code>-এর মতো সরাসরি "সেট" করে না। এই বিয়োগ আর সেট করার পার্থক্যটাই Permissions চ্যাপ্টারে সবচেয়ে বেশি গুলিয়ে যাওয়া জায়গা হিসেবে আলোচনা করা হয়েছে।</p>
+
+<h3>৩) <code>/usr/bin/passwd</code>-এ setuid bit কেন থাকে, আর এটা ঠিক কী নিয়ন্ত্রণ করে?</h3>
+<pre><span class="c">$</span> ls -l /usr/bin/passwd
+-rwsr-xr-x  1 root root  68208 Feb  6 2024 /usr/bin/passwd
+<span class="c"># owner-এর 'x' স্থানে 's' — setuid bit</span></pre>
+<p><b>ব্যাখ্যা:</b> সাধারণ user নিজের password বদলাতে <code>/etc/shadow</code>-এ লিখতে হয়, যেটা শুধু root লিখতে পারে। setuid bit থাকলে exec()-এর সময় kernel process-এর effective UID হিসেবে <b>বাইনারির owner</b>-এর UID বসিয়ে দেয় — চালু কে করল তা বিবেচ্য না। তাই <code>passwd</code> সাময়িকভাবে root privilege নিয়ে চলে, শুধু ওই নির্দিষ্ট কাজটুকুর জন্য। এই কারণেই নিজের কোনো script-এ ইচ্ছাকৃতভাবে setuid বসানো (<code>chmod u+s</code>) একটা মারাত্মক ঝুঁকি — কোডে bug থাকলে সেটা root privilege-এ চলা bug হয়ে যায়।</p>
+
+<h3>৪) <code>ps aux</code>-এর STAT কলামে একটা process অনেকক্ষণ ধরে <code>D</code> অবস্থায় দেখাচ্ছে, আর <code>kill -9</code> দিয়েও সেটা মারা যাচ্ছে না — কেন?</h3>
+<pre>rasel  2210  12.1  0.3  98244  6200 ?        D    09:55   0:04 tar -xzf backup.tar.gz</pre>
+<p><b>ব্যাখ্যা:</b> <code>D</code> মানে Uninterruptible Sleep — process disk বা NFS I/O-এর অপেক্ষায় আছে, আর এই অবস্থায় কোনো signal (এমনকি SIGKILL-ও) ডেলিভার করা যায় না যতক্ষণ না সেই I/O শেষ হয়। Process Management চ্যাপ্টারে যেভাবে বলা হয়েছে, দীর্ঘসময় D-তে আটকে থাকা process disk hardware বা storage subsystem-এ সমস্যার ক্লাসিক লক্ষণ — এখানে <code>iostat -x</code> দিয়ে ডিস্ক সত্যিই saturated কিনা যাচাই করাই আসল পদক্ষেপ, বারবার kill করা চেষ্টা না।</p>
+
+<h3>৫) Production সার্ভারে zombie process-এর সংখ্যা ক্রমাগত বাড়ছে — এটা কী সমস্যা, আর <code>kill -9</code> দিয়ে সমাধান করা যাবে কি?</h3>
+<p><b>ব্যাখ্যা:</b> Zombie process ইতিমধ্যে মৃত — এটা আর কোনো CPU/মেমরি ব্যবহার করছে না, শুধু process table-এ একটা entry বাকি আছে, কারণ parent এখনো তার exit status <code>wait()</code> দিয়ে reap করেনি। <code>kill -9</code> এখানে কাজ করে না কারণ যাকে মারার কথা সে already dead। আসল সমাধান হলো parent process-এর কোড ঠিক করা (সে <code>wait()</code> কল করছে না), অথবা parent restart করা — parent মারা গেলে সেই zombie PID 1-এর কাছে reparent হয়ে সাথে সাথে reap হয়ে যাবে, Process Management চ্যাপ্টারে যেমন ব্যাখ্যা করা হয়েছে।</p>
+
+<h3>৬) SIGTERM আর SIGKILL-এর মধ্যে পার্থক্য কী, আর কেন SIGKILL কখনো একটা process নিজের কোডে "catch" করতে পারে না?</h3>
+<pre><span class="c">$</span> kill -15 1450   <span class="c"># SIGTERM — process নিজের handler-এ cleanup করার সুযোগ পায়</span>
+<span class="c">$</span> kill -9  1450   <span class="c"># SIGKILL — kernel সরাসরি scheduler-স্তরে কার্যকর করে</span></pre>
+<p><b>ব্যাখ্যা:</b> SIGTERM কার্নেল process-এর নিজস্ব signal handler-এ ডেলিভার করে — process চাইলে সেটা catch করে ফাইল flush/socket close করে গ্রেসফুলি বন্ধ হতে পারে। SIGKILL ও SIGSTOP-এর ক্ষেত্রে কার্নেল কোনো handler-এর জন্য অপেক্ষা করে না — user-space কোডে পৌঁছানোর আগেই কার্নেল নিজে process terminate করে দেয়। তাই এটাই শেষ অস্ত্র, কিন্তু বিপজ্জনকও — কোনো cleanup সুযোগ থাকে না। এই কারণেই সঠিক shutdown ক্রম সবসময় প্রথমে SIGTERM পাঠিয়ে কিছুক্ষণ অপেক্ষা করা, তারপরই দরকার হলে SIGKILL।</p>
+
+<h3>৭) একটা background job (<code>&amp;</code> দিয়ে চালানো) SSH সেশন বন্ধ করলেই মারা যাচ্ছে — এটা এড়ানোর উপায় কী?</h3>
+<pre><span class="c"># সমাধান ১ — শুরু থেকেই SIGHUP-প্রুফ করা</span>
+$ nohup ./deploy.sh &gt; deploy.log 2&gt;&amp;1 &amp;
+<span class="c"># সমাধান ২ — ইতিমধ্যে চলমান job-কে session থেকে বিচ্ছিন্ন করা</span>
+$ disown -h %1</pre>
+<p><b>ব্যাখ্যা:</b> <code>&amp;</code> শুধু foreground/background আলাদা করে, টার্মিনালের lifecycle থেকে বিচ্ছিন্ন করে না — সেশন বন্ধ হলে শেল তার সব job-কে <code>SIGHUP</code> পাঠায়, আর ডিফল্ট আচরণ সেই সিগন্যালে terminate হওয়া। <code>nohup</code> SIGHUP ignore করতে বলে শুরু থেকেই, <code>disown</code> চলমান job-কে শেলের job table থেকে সরিয়ে দেয়। Process Management চ্যাপ্টারে যেমন বলা হয়েছে, production-এ এগুলোর বদলে সাধারণত <code>systemd</code> service বা <code>tmux</code>/<code>screen</code>-ই সঠিক সমাধান।</p>
+
+<h3>৮) systemd unit ফাইলে <code>Type=simple</code> আর <code>Type=notify</code>-এর পার্থক্য কী, আর কেন একটা reverse proxy startup-এর প্রথম কয়েক সেকেন্ডে 502 error দিতে পারে?</h3>
+<pre>[Service]
+Type=notify
+ExecStart=/usr/bin/dotnet /var/www/myapi/MyApi.dll</pre>
+<p><b>ব্যাখ্যা:</b> <code>Type=simple</code> (ডিফল্ট) হলো systemd শুধু <code>ExecStart</code>-এর প্রসেস <code>fork()</code> হওয়ার সাথে সাথেই ধরে নেয় "চালু হয়ে গেছে" — অ্যাপ্লিকেশনের নিজের initialization (DB connection, cache warm-up) শেষ কিনা যাচাই করে না। <code>Type=notify</code>-এ process নিজে <code>sd_notify(READY=1)</code> না পাঠানো পর্যন্ত systemd অপেক্ষা করে। systemd ও Service Management চ্যাপ্টারে বলা হয়েছে, <code>Type=simple</code> ব্যবহার করলে <code>After=myapi.service</code> দিয়ে dependent একটা reverse proxy হয়তো myapi-র initialization শেষ হওয়ার আগেই request পাঠানো শুরু করে দেয় — এই কারণেই সত্যিকারের readiness-নির্ভর app-এর জন্য <code>Type=notify</code> ব্যবহার করা উচিত।</p>
+
+<h3>৯) একটা systemd service <code>Restart=on-failure</code> সেট করা থাকলেও কিছুক্ষণ পর নিজে থেকে restart হওয়া বন্ধ হয়ে যাচ্ছে — সম্ভাব্য কারণ কী?</h3>
+<pre>[Unit]
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Restart=on-failure
+RestartSec=5</pre>
+<p><b>ব্যাখ্যা:</b> <code>StartLimitIntervalSec</code>/<code>StartLimitBurst</code> একটা থ্রটল — নির্দিষ্ট সময়ের (এখানে ৬০ সেকেন্ড) মধ্যে <code>StartLimitBurst</code>-এর বেশি (এখানে ৫ বার) restart চেষ্টা হলে systemd ধরে নেয় service crash-loop-এ আটকে আছে, আর আর restart করার চেষ্টা করে না — <code>failed</code> state-এ থেমে যায়। এটা ইচ্ছাকৃত সুরক্ষা, বাগ নয় — উদ্দেশ্য একটা ক্রমাগত crash হওয়া service-কে অনন্তকাল restart করে CPU/log না খেয়ে ফেলা। সমাধান হলো <code>journalctl -u myapi</code> দিয়ে আসল crash-এর কারণ বের করা, তারপর <code>systemctl reset-failed</code> দিয়ে counter রিসেট করা।</p>
+
+<h3>১০) SSH public-key authentication-এ প্রাইভেট কী কি নেটওয়ার্কের মধ্য দিয়ে পাঠানো হয়? আসলে ঠিক কী ঘটে?</h3>
+<p><b>ব্যাখ্যা:</b> না — পাসওয়ার্ড বা প্রাইভেট কী কোনোটাই কখনো নেটওয়ার্কে যায় না। এটা asymmetric cryptography-এর একটা challenge-response: সার্ভার ক্লায়েন্টকে একটা random challenge পাঠায়, ক্লায়েন্ট সেটা তার প্রাইভেট কী দিয়ে sign করে ফেরত পাঠায়, আর সার্ভার সেই স্বাক্ষর তার কাছে থাকা পাবলিক কী দিয়ে verify করে। SSH চ্যাপ্টারে বলা হয়েছে, শুধু সঠিক প্রাইভেট কী-এর মালিকই সঠিকভাবে sign করতে পারবে, কিন্তু verify করতে সার্ভারের প্রাইভেট কী জানারই দরকার নেই — শুধু পাবলিক কী দিয়েই যাচাই সম্ভব।</p>
+
+<h3>১১) একজন ইউজার <code>ssh user@host</code> চালালে <code>Permission denied (publickey)</code> error পাচ্ছেন, যদিও সঠিক পাবলিক কী <code>authorized_keys</code>-এ যোগ করা আছে — সম্ভাব্য কারণ কী?</h3>
+<pre><span class="c"># সার্ভার-সাইডে সঠিক permission:</span>
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys</pre>
+<p><b>ব্যাখ্যা:</b> SSH নিজে থেকেই রিফিউজ করবে যদি <code>~/.ssh</code> ডিরেক্টরি বা <code>authorized_keys</code> ফাইলের permission খুব বেশি ঢিলে (group/other writable বা readable) থাকে — এটা bug না, ইচ্ছাকৃত নিরাপত্তা ব্যবস্থা। SSH চ্যাপ্টারে যেমন সতর্ক করা হয়েছে, permission ভুল থাকলে SSH প্রায়ই কোনো স্পষ্ট error না দিয়েই চুপচাপ সেই key skip করে — সমাধান হলো <code>ssh -v user@host</code> চালিয়ে verbose লগে আসল কারণ দেখা, তারপর সার্ভার-সাইডে <code>~/.ssh</code>-কে <code>700</code> আর <code>authorized_keys</code>-কে <code>600</code>-এ সেট করা।</p>
+
+<h3>১২) <code>df -h /</code> বলছে মাত্র ১৫% ডিস্ক ব্যবহৃত, তবুও নতুন ফাইল তৈরি করতে গেলে "No space left on device" error আসছে — কী হতে পারে?</h3>
+<pre><span class="c">$</span> df -i /
+Filesystem       Inodes   IUsed    IFree IUse% Mounted on
+/dev/sda2       2400000 2398210     1790   100% /</pre>
+<p><b>ব্যাখ্যা:</b> এটা inode exhaustion — Storage চ্যাপ্টারে যেমন ব্যাখ্যা করা হয়েছে, প্রতিটা ফাইলের metadata (permission, owner, size, ডেটার block pointer) রাখা হয় একটা inode-এ, আর inode নিজেই একটা সসীম resource, ফাইলের সাইজ যত ছোটই হোক না কেন প্রতিটা নতুন ফাইলের জন্য একটা নতুন inode লাগে। <code>df -h</code> শুধু বাইট-স্পেস দেখায়, ইনোড না — তাই এই কেসে <code>df -i</code> চালিয়ে দেখতে হবে inode ফুরিয়ে গেছে কিনা, যা সাধারণত লক্ষ লক্ষ ছোট ফাইল (session cache, mail queue) জমে গেলে ঘটে।</p>
+
+<h3>১৩) একটা বড় লগ ফাইল <code>rm</code> দিয়ে মুছে ফেলার পরও <code>df -h</code>-তে ডিস্ক স্পেস ফেরত আসছে না — কেন?</h3>
+<pre><span class="c">$</span> lsof +L1 /var/log   <span class="c"># যেসব ফাইল মুছে ফেলা হয়েছে কিন্তু কোনো process এখনো খোলা রেখেছে</span></pre>
+<p><b>ব্যাখ্যা:</b> Storage চ্যাপ্টারে inode আলোচনায় যেমন বলা হয়েছে, <code>rm</code> শুধু directory entry মুছে দেয় আর inode-এর link count এক কমায় — inode ও তার data block আসলে মুক্ত হয় শুধু তখনই যখন link count শূন্যে নামে <b>এবং</b> কোনো process সেই ফাইলটা খোলা রাখেনি। কোনো long-running process (যেমন একটা logging daemon) যদি ফাইলটা file descriptor দিয়ে এখনো খুলে রেখে থাকে, disk space ফেরত আসবে না যতক্ষণ না সেই process বন্ধ হয় বা descriptor close করে। সমাধান: <code>lsof</code> দিয়ে কোন process এখনো ফাইলটা ধরে রেখেছে বের করে সেটা restart করা।</p>
+
+<h3>১৪) একটা container-এ memory limit ছাড়িয়ে গেলে OOM killer ঠিক কোন process-টাকে বেছে মারে — এলোমেলোভাবে, নাকি কোনো নিয়মে?</h3>
+<pre><span class="c">$</span> cat /proc/&lt;pid&gt;/oom_score        <span class="c"># বেশি মেমরি-ভোগী প্রসেসের score বেশি</span>
+<span class="c">$</span> cat /proc/&lt;pid&gt;/oom_score_adj    <span class="c"># -1000 থেকে 1000 — ম্যানুয়ালি ঝুঁকি বাড়ানো/কমানো যায়</span></pre>
+<p><b>ব্যাখ্যা:</b> এলোমেলো নয় — Containers চ্যাপ্টারে ব্যাখ্যা করা হয়েছে, প্রতিটা প্রসেসের একটা <code>oom_score</code> থাকে, যা মূলত সেই প্রসেস কতটুকু মেমরি ব্যবহার করছে তার ওপর ভিত্তি করে হিসাব হয় — সবচেয়ে বেশি মেমরি-ভোগী প্রসেসের score সবচেয়ে বেশি, আর kernel সবচেয়ে উঁচু score-ওয়ালা প্রসেসটাকেই টার্গেট করে। কোনো নির্দিষ্ট প্রসেসকে ইচ্ছাকৃতভাবে কম ঝুঁকিতে রাখতে <code>oom_score_adj</code> ম্যানুয়ালি বদলানো যায় (<code>-1000</code> মানে "কখনো মারবে না"), তবে সতর্কতার সাথে — এতে বাকি সবার ওপর চাপ বেড়ে যায়।</p>
+
+<h3>১৫) একটা cron job manually চালালে ঠিকঠাক কাজ করে, কিন্তু cron দিয়ে scheduled চালালে ব্যর্থ হয় — সাধারণত কী কারণ?</h3>
+<pre><span class="c"># ভুল — 'node' এর পুরো path নেই, PATH-এর ওপর নির্ভর করছে</span>
+0 2 * * * node /opt/scripts/report.js
+
+<span class="c"># ঠিক — পুরো path ও explicit output redirection</span>
+0 2 * * * /usr/bin/node /opt/scripts/report.js &gt;&gt; /var/log/report.log 2&gt;&amp;1</pre>
+<p><b>ব্যাখ্যা:</b> Automation ও Cron চ্যাপ্টারে ব্যাখ্যা করা এই সবচেয়ে সাধারণ cron বাগ — cron job একটা <b>minimal environment</b>-এ চলে, ইউজারের interactive shell-এর মতো পূর্ণাঙ্গ <code>PATH</code>/env variable নিয়ে না। তাই <code>node</code>, <code>python</code>-এর মতো কমান্ড শুধু নাম দিয়ে ডাকলে "command not found" হতে পারে, যদিও terminal-এ ঠিকই চলে। সমাধান: প্রতিটা কমান্ডের full path ব্যবহার করা, আর error দেখতে output/error explicitly একটা log ফাইলে redirect করা — কারণ ডিফল্টভাবে cron-এর output কোথাও দেখা যায় না।</p>
+
+<h3>১৬) একজন কলিগ বলল "সার্ভার স্লো মনে হচ্ছে" — অনুমান না করে আপনি ঠিক কোন ক্রমে diagnose করবেন?</h3>
+<pre>১. top / htop      <span class="c"># load average দেখুন, nproc দিয়ে core সংখ্যা ভাগ করুন</span>
+২. vmstat          <span class="c"># us+sy বেশি হলে CPU-bound, b কলামে প্রসেস জমলে I/O-bound</span>
+৩. iostat -x       <span class="c"># %util ও await দিয়ে ডিস্ক নিজেই saturated কিনা</span>
+৪. lsof / iotop    <span class="c"># কোন process সবচেয়ে বেশি ডিস্কে চাপ দিচ্ছে</span>
+৫. strace -p &lt;PID&gt; <span class="c"># সেই process ঠিক কোন syscall-এ আটকে — চূড়ান্ত নিশ্চিতকরণ</span></pre>
+<p><b>ব্যাখ্যা:</b> Monitoring ও Performance চ্যাপ্টারে দেওয়া diagnostic flow অনুযায়ী, প্রথমে <code>top</code>/<code>htop</code>-এ load average দেখে <code>nproc</code> দিয়ে ভাগ করতে হবে — যদি core সংখ্যার কাছাকাছি বা কম হয়, বাধা resource-এ নেই, network/app-layer দেখা উচিত। বেশি হলে <code>vmstat</code>-এ <code>us+sy</code> (CPU) বনাম <code>b</code>/<code>wa</code> (I/O) দেখে বাধার ধরন আলাদা করতে হবে, তারপর <code>iostat -x</code> দিয়ে ডিস্ক saturation, আর সবশেষে <code>strace</code> দিয়ে চূড়ান্ত নিশ্চিতকরণ — অনুমান নয়। সবচেয়ে সাধারণ ভুল হলো একটা সংখ্যা (যেমন শুধু "load average 12") দেখেই সিদ্ধান্তে পৌঁছানো, <code>nproc</code>/<code>vmstat</code> চেক না করেই বাড়তি CPU কেনার সিদ্ধান্ত নেওয়া — যেখানে আসল বাধা হয়তো disk I/O, আর বিল বাড়ে অথচ সমস্যা এতটুকুও কমে না।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->

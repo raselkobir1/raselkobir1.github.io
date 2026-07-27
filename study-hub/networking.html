@@ -117,6 +117,7 @@ const pages = [
   {id:"cloudnet",     icon:"☁️", title:"Load Balancing ও Cloud Networking"},
   {id:"security",     icon:"🚨", title:"Network Security, Attacks ও Monitoring Tools"},
   {id:"troubleshoot", icon:"🩺", title:"Troubleshooting ও Performance/QoS"},
+  {id:"interview",    icon:"🎯", title:"১৬. Interview প্রশ্নোত্তর"},
 ];
 </script>
 
@@ -734,6 +735,102 @@ WPA2-এর 4-way handshake একটা আক্রমণকারীকে �
 
 <h3>সবকিছু একসাথে — এই কোর্সের সম্পূর্ণ চিত্র</h3>
 <p>একটা ব্রাউজারে URL টাইপ করার পর — DNS domain-কে IP-তে অনুবাদ করে (৭) → ARP সেই IP-র MAC ঠিকানা বের করে (৪) → routing টেবিল অনুযায়ী একের পর এক router পার হয়ে প্যাকেট গন্তব্যে পৌঁছায় (৫) → TCP handshake সংযোগ প্রতিষ্ঠা করে, TLS সেটা এনক্রিপ্ট করে (৬, ৯) → HTTP request/response আসল ডেটা বহন করে (৮) → পথের মধ্যে NAT/firewall/load balancer প্রতিটা যথাযথ ভূমিকা পালন করে (১০, ১৩) — আর পুরো সময় জুড়ে নিরাপত্তা ও monitoring সক্রিয় থাকে (১৪)। এটাই আধুনিক নেটওয়ার্কিং-এর সম্পূর্ণ ছবি — Layer 1-এর একটা বৈদ্যুতিক সংকেত থেকে শুরু করে Layer 7-এর একটা ওয়েব পেজ পর্যন্ত, প্রতিটা স্তর একে অপরের ওপর নির্ভর করে একটা সুসংগঠিত সিস্টেম তৈরি করে।</p>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৬. Interview প্রশ্নোত্তর</h2>
+<p class="lead">এই কোর্সের basic থেকে advanced পর্যন্ত সবচেয়ে বেশি জিজ্ঞাসিত ইন্টারভিউ প্রশ্ন — প্রতিটার সংক্ষিপ্ত, বাস্তব উদাহরণ-সহ ব্যাখ্যা, নির্দিষ্ট অধ্যায়ের রেফারেন্সসহ।</p>
+
+<h3>১) OSI মডেলের ৭টা layer কী কী, আর একটা HTTP request পাঠালে কোন layer কী কাজ করে?</h3>
+<pre>7. Application   → HTTP request তৈরি (GET /users)
+6. Presentation  → এনকোডিং/এনক্রিপশন (TLS প্রায়ই এখানে গণনা করা হয়)
+5. Session       → সংযোগ শুরু/শেষের নিয়ন্ত্রণ
+4. Transport     → TCP port + segmentation (৬ নম্বর অধ্যায়)
+3. Network       → IP addressing + routing (৩, ৫ নম্বর অধ্যায়)
+2. Data Link     → MAC address + framing (২ নম্বর অধ্যায়)
+1. Physical      → আসল বিট কেবল/রেডিওতে পাঠানো</pre>
+<p><b>ব্যাখ্যা:</b> প্রতিটা layer শুধু নিজের দায়িত্ব পালন করে, নিচের layer কীভাবে কাজ করছে তা না জেনেই (Foundation অধ্যায়ে আলোচিত <span class="kw">encapsulation</span>)। ইন্টারভিউতে সাধারণত একটা ডিভাইস/প্রোটোকল দিয়ে ("switch কোন layer-এ কাজ করে?", "router?") layer চেনার প্রশ্ন হয় — switch = Layer 2 (MAC address দেখে), router = Layer 3 (IP দেখে), firewall/load balancer L4 বা L7 উভয়ই হতে পারে (Cloud Networking অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>২) Encapsulation কী, আর ডেটা পাঠানোর সময় ও গ্রহণ করার সময় এটা কীভাবে কাজ করে?</h3>
+<p><b>ব্যাখ্যা:</b> প্রতিটা layer পার হওয়ার সময় ওপরের layer-এর ডেটাকে নিজের একটা header (কখনো trailer)-এ মুড়ে দেয় — Application ডেটা → TCP segment (port header) → IP packet (IP header) → Ethernet frame (MAC header)। গন্তব্যে পৌঁছে বিপরীত ক্রমে প্রতিটা header খুলে (de-encapsulation) আসল ডেটা বের করা হয়। এই ধারণা ছাড়া VPN tunneling (১১ নম্বর অধ্যায়ে — আসল প্যাকেটকে এনক্রিপ্ট করে নতুন IP header-এ মোড়ানো) বোঝা যায় না।</p>
+
+<h3>৩) একটা Switch কীভাবে সিদ্ধান্ত নেয় একটা frame কোন পোর্টে পাঠাবে, আর Broadcast Storm কীভাবে ঠেকানো হয়?</h3>
+<p><b>ব্যাখ্যা:</b> Switch প্রতিটা পোর্টে আসা frame-এর source MAC শিখে একটা <span class="kw">CAM/MAC address table</span>-এ রাখে, তারপর destination MAC টেবিলে থাকলে সরাসরি সেই পোর্টেই পাঠায় (unknown হলে flood করে)। রিডানডেন্ট লিংকে একটা broadcast frame অনন্তকাল লুপে ঘুরে পুরো নেটওয়ার্ক অচল করে দিতে পারে (broadcast storm) — <span class="kw">STP (Spanning Tree Protocol)</span> একটা root bridge নির্বাচন করে redundant পোর্টগুলোকে blocking অবস্থায় রেখে সক্রিয় টপোলজি থেকে লুপ দূর করে, লিংক ব্যর্থ হলে আবার সেই পোর্ট forwarding-এ ফিরিয়ে আনে (Data Link অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৪) VLAN কী সমস্যা সমাধান করে, আর Access port ও Trunk port-এর পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> VLAN একই physical switch-কে একাধিক আলাদা broadcast domain-এ ভাগ করে (যেমন HR ও Engineering আলাদা VLAN) — নিরাপত্তা ও broadcast traffic কমানো দুটোরই জন্য। <span class="kw">Access port</span> একটামাত্র VLAN-এর সাথে যুক্ত (end-device সংযুক্ত হয়), আর <span class="kw">Trunk port</span> একাধিক VLAN-এর ট্রাফিক একটাই লিংকে বহন করে (802.1Q tag দিয়ে) — সাধারণত switch-থেকে-switch সংযোগে ব্যবহৃত হয়। দুই VLAN-এর মধ্যে যোগাযোগের জন্য একটা router/Layer-3 switch দরকার হয়।</p>
+
+<h3>৫) একটা IP/CIDR দিলে Network Address, Broadcast Address, আর ব্যবহারযোগ্য Host Range কীভাবে বের করবেন?</h3>
+<pre>প্রশ্ন: 192.168.10.75/27 — network, broadcast, ও usable range কী?
+
+/27 → subnet mask 255.255.255.224 → block size = 256 - 224 = 32
+192.168.10.0/27 ব্লকগুলো: .0-.31, .32-.63, .64-.95, .96-.127, ...
+75 পড়ে .64-.95 ব্লকে
+
+Network Address  : 192.168.10.64   (host অংশ সব ০)
+Broadcast Address : 192.168.10.95   (host অংশ সব ১)
+ব্যবহারযোগ্য Range : 192.168.10.65 – 192.168.10.94  (৩০টা হোস্ট)</pre>
+<p><b>ব্যাখ্যা:</b> প্রথমে CIDR থেকে block size বের করা হয় (256 - subnet mask-এর শেষ non-zero octet), তারপর দেওয়া IP কোন ব্লকে পড়ে তা বের করে সেই ব্লকের প্রথম address = network, শেষ address = broadcast, আর মাঝেরগুলো ব্যবহারযোগ্য host (IP Addressing অধ্যায়ে বিস্তারিত)। এই "মাইনাস ২" (network + broadcast বাদ) ভুলে যাওয়াই সবচেয়ে সাধারণ ভুল।</p>
+
+<h3>৬) Private IP আর Public IP-এর পার্থক্য কী, আর NAT কেন দরকার হয়?</h3>
+<p><b>ব্যাখ্যা:</b> Private IP (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 — RFC 1918) ইন্টারনেটে রাউট হয় না, তাই একই রেঞ্জ লক্ষ লক্ষ বাসায় পুনর্ব্যবহৃত হতে পারে — এটাই IPv4-এর সীমিত (~৪.৩ বিলিয়ন) address সমস্যার সমাধান। বাইরের দুনিয়ার সাথে যোগাযোগের জন্য <span class="kw">NAT (PAT/NAPT)</span> একটামাত্র পাবলিক IP-এর পেছনে একাধিক প্রাইভেট ডিভাইসকে ভিন্ন port নম্বরে ম্যাপ করে দেখায় (NAT ও Firewall অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৭) ARP কী, আর এটা কীভাবে কাজ করে?</h3>
+<pre>Host A (192.168.1.10) ──▶ broadcast: "192.168.1.20-এর MAC address কার?"  (ARP Request)
+Host B (192.168.1.20) ──▶ unicast:   "192.168.1.20 = AA:BB:CC:DD:EE:FF"   (ARP Reply)</pre>
+<p><b>ব্যাখ্যা:</b> একই লোকাল নেটওয়ার্কে একটা frame পাঠাতে destination-এর MAC address লাগে, কিন্তু জানা থাকে শুধু IP address — <span class="kw">ARP</span> সেই ফাঁক পূরণ করে ও উত্তর নিজের ARP cache-এ সংরক্ষণ করে। ARP-এ কোনো authentication না থাকায় জাল ARP reply দিয়ে ট্রাফিক নিজের দিকে ঘুরিয়ে নেওয়া যায় (<span class="kw">ARP spoofing</span> — Security অধ্যায়ে আলোচিত একটা সাধারণ Man-in-the-Middle আক্রমণ)।</p>
+
+<h3>৮) DHCP-এর DORA প্রক্রিয়া কী?</h3>
+<pre>Client ──▶ Discover  (broadcast: কোনো DHCP server আছে?)
+Server ──▶ Offer     (এই IP অফার করছি)
+Client ──▶ Request   (এই IP-টাই নিতে চাই)
+Server ──▶ Ack       (নিশ্চিত — এই IP এখন তোমার)</pre>
+<p><b>ব্যাখ্যা:</b> DHCP স্বয়ংক্রিয়ভাবে IP address, subnet mask, default gateway ও DNS server বরাদ্দ করে, চার-ধাপে (Discover-Offer-Request-Acknowledge)। প্রতিটা IP একটা সীমিত সময়ের জন্য <span class="kw">lease</span> দেওয়া হয়, চিরস্থায়ীভাবে নয় — যাতে একটা সীমিত IP pool বহু ডিভাইসের মধ্যে পুনর্ব্যবহৃত হতে পারে (ARP, DHCP ও ICMP অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৯) একই destination network-এর জন্য static route, OSPF, আর RIP আলাদা path শিখলে router কোনটা বাছবে — Administrative Distance বনাম Metric?</h3>
+<p><b>ব্যাখ্যা:</b> <span class="kw">Administrative Distance (AD)</span> প্রথমে সিদ্ধান্ত নেয় কোন উৎসের রুট বিশ্বাসযোগ্য — কম মান মানে বেশি বিশ্বস্ত (directly connected 0, static 1, OSPF 110, RIP 120)। <code>metric</code> শুধু তখনই তুলনা করা হয় যখন একই protocol/উৎস থেকে একাধিক path পাওয়া যায়। এছাড়া একাধিক entry destination-এর সাথে মিললে (যেমন default route ও একটা নির্দিষ্ট subnet route), router সবসময় সবচেয়ে specific/দীর্ঘতম prefix-এর entry বাছে — একে <span class="kw">longest prefix match</span> বলে (Routing অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১০) TCP Three-Way Handshake কীভাবে কাজ করে, আর এটা কেন দরকার?</h3>
+<pre>Client ──▶ SYN                "সংযোগ শুরু করতে চাই, sequence = x"
+Server ──▶ SYN-ACK             "গ্রহণ করলাম (ACK x+1), আমারটা = y"
+Client ──▶ ACK                 "নিশ্চিত (ACK y+1)" ── সংযোগ established</pre>
+<p><b>ব্যাখ্যা:</b> এই তিন-ধাপ handshake উভয় পক্ষকে নিশ্চিত করে যে অপর পক্ষ প্রস্তুত ও পৌঁছানো যাচ্ছে, আর সেই সাথে উভয়ের প্রাথমিক sequence number বিনিময় হয়ে যায় যা পরবর্তী reliable delivery-এর ভিত্তি (Transport Layer অধ্যায়ে বিস্তারিত)। UDP-তে এই ধরনের কোনো handshake নেই — তাই UDP দ্রুত কিন্তু কোনো ডেলিভারি গ্যারান্টি দেয় না।</p>
+
+<h3>১১) TCP আর UDP-এর মধ্যে পার্থক্য কী, আর DNS/VoIP কেন UDP ব্যবহার করে?</h3>
+<p><b>ব্যাখ্যা:</b> TCP connection-oriented, নির্ভরযোগ্য ডেলিভারি ও ক্রম নিশ্চিত করে (ACK, retransmission, congestion control) কিন্তু বেশি overhead। UDP connectionless, কোনো গ্যারান্টি নেই কিন্তু কম latency। DNS-এর query ছোট বলে handshake-এর ওভারহেড এড়াতে মূলত UDP ব্যবহার করে (বড় response হলে TCP-তে fallback করে)। VoIP/video call ইচ্ছাকৃতভাবে UDP বাছে কারণ হারানো একটা প্যাকেট আবার পাঠিয়ে "ঠিক করার" চেষ্টা করাটাই ক্ষতিকর — ততক্ষণে কথোপকথন এগিয়ে গেছে, দেরিতে আসা ফ্রেম কোনো কাজে আসে না (Transport ও DNS অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১২) একটা DNS query browser থেকে শুরু করে কোন ক্রমে resolve হয়?</h3>
+<pre>Browser ──▶ Recursive Resolver (ISP/8.8.8.8): "www.example.com-এর IP কী?"
+Resolver ──▶ Root Server        ──▶ ".com TLD সার্ভার এখানে"
+Resolver ──▶ .com TLD Server     ──▶ "example.com-এর authoritative সার্ভার এখানে"
+Resolver ──▶ Authoritative Server ──▶ "IP = 93.184.216.34"
+Resolver ──▶ Browser              ──▶ "93.184.216.34" (TTL অনুযায়ী cache)</pre>
+<p><b>ব্যাখ্যা:</b> কোনো একক সার্ভার সব রেকর্ড জানে না — hierarchy অনুযায়ী root → TLD → authoritative ক্রমে যেতে হয়, তবে বেশিরভাগ query আসলে resolver-এর cache থেকেই সরাসরি উত্তর পায় (TTL-এর কারণে), পুরো hierarchy পার হতে হয় খুব কম ক্ষেত্রেই (DNS অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৩) TLS Handshake-এর উদ্দেশ্য কী, আর এটা Symmetric ও Asymmetric encryption দুটোই কেন ব্যবহার করে?</h3>
+<pre>Client ──▶ ClientHello         "এই cipher suite-গুলো সাপোর্ট করি"
+Server ──▶ ServerHello + Certificate + key share
+Client    (certificate যাচাই করে, symmetric key বের করে)
+Client ──▶ Finished             ── এনক্রিপ্টেড ডেটা চলাচল শুরু</pre>
+<p><b>ব্যাখ্যা:</b> Asymmetric encryption (public/private key) নিরাপদ কিন্তু ধীর, symmetric encryption দ্রুত কিন্তু key নিরাপদে বিনিময়ের সমস্যা আছে। TLS হ্যান্ডশেকে প্রথমে asymmetric দিয়ে একটা সাময়িক symmetric key নিরাপদে বিনিময় হয় (একবারই), তারপর বাকি পুরো সংযোগ সেই symmetric key দিয়ে এনক্রিপ্ট হয় (হাইব্রিড এনক্রিপশন) — এভাবেই দুটোর সুবিধা একসাথে পাওয়া যায়, আর certificate/CA chain of trust দিয়ে সার্ভারের পরিচয় যাচাই হয় (TLS/SSL অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৪) NAT আর Firewall-এর মধ্যে পার্থক্য কী — NAT থাকলেই কি নিরাপদ?</h3>
+<p><b>ব্যাখ্যা:</b> NAT ডিজাইন হয়েছিল IPv4 address সংকট সমাধানের জন্য (একাধিক private ডিভাইসকে একটা public IP-এর পেছনে লুকানো), নিরাপত্তার জন্য নয়। বাইরে থেকে সরাসরি ভেতরের private IP-তে connection শুরু করা যায় না — এটা একটা পার্শ্ব-প্রতিক্রিয়া মাত্র, প্রকৃত সুরক্ষা নয়। প্রকৃত access control-এর দায়িত্ব <span class="kw">firewall</span>-এর — কোন ট্রাফিক ঢুকতে/বেরোতে পারবে তা rule দিয়ে নিয়ন্ত্রণ করে (stateful inspection, ACL, default-deny নীতি)। দুটো ভিন্ন উদ্দেশ্যে তৈরি ও একসাথেই ব্যবহৃত হয় (NAT ও Firewall অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>১৫) VPN Tunnel আসলে কী, আর Split Tunnel বনাম Full Tunnel-এর পার্থক্য কী?</h3>
+<pre>আসল প্যাকেট         : [ IP Header │ TCP │ Data ]
+VPN Tunnel-এ ঢোকার পর : [ New (Public) IP Header │ Encrypted( IP │ TCP │ Data ) ]</pre>
+<p><b>ব্যাখ্যা:</b> VPN আসল প্যাকেটকে (header সহ) এনক্রিপ্ট করে একটা নতুন IP header দিয়ে মুড়ে দেয়, যাতে পথের মধ্যবর্তী router শুধু বাইরের ঠিকানা দেখে, ভেতরের ট্রাফিক নয়। <span class="kw">Full tunnel</span>-এ ক্লায়েন্টের সব ইন্টারনেট ট্রাফিক VPN দিয়ে যায় (বেশি নিরাপত্তা/monitoring কিন্তু বেশি bandwidth/latency), আর <span class="kw">Split tunnel</span>-এ শুধু কোম্পানির ইন্টারনাল রিসোর্সের ট্রাফিক VPN দিয়ে যায়, বাকি সাধারণ ব্রাউজিং সরাসরি লোকাল ইন্টারনেটে বের হয় (দ্রুততর কিন্তু নিরাপত্তা নিয়ন্ত্রণ কম) — VPN ও Tunneling অধ্যায়ে বিস্তারিত।</p>
+
+<h3>১৬) একটা ওয়েবসাইট লোড হচ্ছে না — Layer-by-Layer কীভাবে ডায়াগনোজ করবেন?</h3>
+<table>
+<tr><th>Layer</th><th>যাচাই</th><th>টুল</th></tr>
+<tr><td>Physical/Data Link</td><td>Cable/Wi-Fi সংযুক্ত? Link light জ্বলছে?</td><td>Physical inspection, <code>ip link</code></td></tr>
+<tr><td>Network</td><td>IP address ঠিক আছে? Gateway/দূরের হোস্ট পৌঁছানো যাচ্ছে?</td><td><code>ping</code>, <code>ip addr</code>, <code>traceroute</code></td></tr>
+<tr><td>Transport</td><td>সঠিক পোর্ট (৪৪৩/৮০) খোলা/শুনছে?</td><td><code>netstat</code>/<code>ss</code>, <code>nmap</code></td></tr>
+<tr><td>Application</td><td>DNS ঠিক resolve হচ্ছে? TLS certificate ঠিক আছে? সার্ভার সঠিক response দিচ্ছে?</td><td><code>dig</code>/<code>nslookup</code>, <code>curl</code>, browser dev tools</td></tr>
+</table>
+<p><b>ব্যাখ্যা:</b> সাধারণত <span class="kw">bottom-up</span> (Physical থেকে শুরু) বা <span class="kw">top-down</span> (Application থেকে শুরু, পরিচিত সিস্টেমে দ্রুততর কারণ সাধারণ কারণ যেমন DNS আগে যাচাই হয়) পদ্ধতিতে এগোনো হয়। বাস্তবে প্রথমে <code>ping</code> দিয়ে network layer বাতিল করে, তারপর <code>dig</code>/<code>curl</code> দিয়ে DNS ও application layer-এ ফোকাস করা সবচেয়ে বেশি ব্যবহৃত — এটাই এই পুরো কোর্সের সবকিছু (DNS → ARP → routing → TCP/TLS → HTTP → NAT/firewall) একসাথে প্রয়োগ করার বাস্তব উদাহরণ (Troubleshooting অধ্যায়ে বিস্তারিত)।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->

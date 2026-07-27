@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Microservices Architecture — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#818cf8; --accent2:#38bdf8;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --pink:#f472b6;
+    --code-bg:#0b0f14; --kw:#a5b4fc;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(129,140,248,.22),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#0b0f2a}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--accent2)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--accent2)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#a5b4fc}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🛰️ Microservices Architecture</h1>
+      <p>Beginner → Advanced • বাংলায় (keyword ইংরেজিতে)</p>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",    icon:"🏛️", title:"Foundation — Monolith বনাম Microservices"},
+  {id:"decomposition", icon:"🧩", title:"Service Decomposition — DDD ও Strangler Fig"},
+  {id:"communication", icon:"📡", title:"Communication Patterns — Sync ও Async"},
+  {id:"gateway",       icon:"🚪", title:"API Gateway ও BFF"},
+  {id:"discovery",     icon:"🧭", title:"Service Discovery ও Load Balancing"},
+  {id:"data",          icon:"🗄️", title:"Data Management — Database per Service ও Saga"},
+  {id:"events",        icon:"📨", title:"Event-Driven Architecture — Outbox, CQRS, Event Sourcing"},
+  {id:"resilience",    icon:"🛡️", title:"Resilience Patterns — Circuit Breaker, Retry, Bulkhead"},
+  {id:"mesh",          icon:"🕸️", title:"Service Mesh — Sidecar, mTLS, Istio"},
+  {id:"config",        icon:"⚙️", title:"Configuration ও Secrets Management"},
+  {id:"observability", icon:"🔬", title:"Observability — Tracing, Logging, Metrics"},
+  {id:"security",      icon:"🔐", title:"Security — Zero Trust ও Service-to-Service Auth"},
+  {id:"testing",       icon:"🧪", title:"Testing Strategies — Contract Testing, Chaos Engineering"},
+  {id:"deployment",    icon:"🚀", title:"Deployment ও Containerization"},
+  {id:"antipatterns",  icon:"⚠️", title:"Anti-patterns ও Common Pitfalls"},
+  {id:"dotnet",        icon:"💜", title:"Microservices in .NET"},
+  {id:"migration",     icon:"🗺️", title:"Migration Roadmap — Monolith থেকে Microservices"},
+  {id:"interview",     icon:"🎯", title:"Interview Prep — প্রশ্নোত্তর"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Foundation — Monolith বনাম Microservices</h2>
+<p class="lead"><span class="kw">Microservices</span> একটা আর্কিটেকচারাল স্টাইল, যেখানে একটা অ্যাপ্লিকেশনকে ছোট ছোট, স্বাধীনভাবে deployable সার্ভিসের সমষ্টি হিসেবে তৈরি করা হয় — প্রতিটা সার্ভিস একটা নির্দিষ্ট বিজনেস ক্যাপাবিলিটি নিয়ে দায়িত্বশীল, নিজের ডেটা নিজে রাখে, আর নেটওয়ার্কের ওপর দিয়ে অন্য সার্ভিসের সাথে কথা বলে। এই কোর্স ধরে নেয় কেন এই স্টাইল দরকার হলো — সেটা বোঝাই প্রথম ধাপ, প্যাটার্ন মুখস্थ করা নয়।</p>
+
+<h3>Monolithic Architecture — একক Deployable Unit</h3>
+<p>একটা <span class="kw">monolith</span>-এ পুরো অ্যাপ্লিকেশন (UI, বিজনেস লজিক, ডেটা অ্যাক্সেস) একটা একক কোডবেসে থাকে, একটা একক প্রসেস হিসেবে চলে, আর একটা একক ডেটাবেসের ওপর নির্ভর করে।</p>
+<div class="diagram"><pre>
+┌─────────────────────────────────┐
+│         একটামাত্র Process         │
+│  ┌───────┐ ┌───────┐ ┌───────┐  │
+│  │ Order │ │ Payment│ │Inventory│  ← সব module একই কোডবেসে, একই deployment
+│  └───────┘ └───────┘ └───────┘  │
+│              │                   │
+│         একটা Database             │
+└─────────────────────────────────┘
+</pre></div>
+<div class="callout best"><span class="tag">Majestic Monolith — একটা ভুল ধারণা ভাঙা প্রয়োজন</span>
+Monolith মানেই "খারাপ/পুরনো ডিজাইন" নয়। একটা ভালোভাবে গঠিত (modular, স্তরে বিভক্ত) monolith ছোট থেকে মাঝারি টিমের জন্য প্রায়ই সবচেয়ে বাস্তবসম্মত পছন্দ — deploy সহজ, debug সহজ, transaction সহজ। Shopify, StackOverflow-এর মতো বিশাল স্কেলের প্রোডাক্টও দীর্ঘদিন monolith-ই ছিল। Microservices কোনো "উন্নত সংস্করণ" নয়, বরং একটা ট্রেড-অফ — নির্দিষ্ট সমস্যার সমাধান, যার নিজের খরচও আছে।</div>
+
+<h3>Microservices Architecture — স্বাধীন সার্ভিসের সমষ্টি</h3>
+<div class="diagram"><pre>
+┌────────┐   HTTP/gRPC   ┌────────┐   HTTP/gRPC   ┌───────────┐
+│ Order  │──────────────▶│Payment │──────────────▶│ Inventory │
+│Service │◀──event──────│Service │               │  Service  │
+└───┬────┘               └───┬────┘               └─────┬─────┘
+    │ own DB                 │ own DB                    │ own DB
+   [DB]                     [DB]                        [DB]
+</pre></div>
+<p>প্রতিটা সার্ভিস আলাদাভাবে deploy, scale, ও এমনকি আলাদা প্রযুক্তিতে (ভিন্ন ভাষা/ডেটাবেস) লেখা যায় — একটাই শর্তে, সার্ভিসগুলো একটা সুস্পষ্ট, স্থিতিশীল contract (API/event) দিয়ে যোগাযোগ করে।</p>
+
+<h3>কেন Microservices — বাস্তব চালিকাশক্তি</h3>
+<table>
+<tr><th>চালিকাশক্তি</th><th>ব্যাখ্যা</th></tr>
+<tr><td><span class="kw">Independent Scaling</span></td><td>যে সার্ভিসে বেশি লোড (যেমন Search) শুধু তাকেই বাড়ানো যায়, পুরো অ্যাপ্লিকেশন নয়</td></tr>
+<tr><td><span class="kw">Independent Deployability</span></td><td>একটা টিম নিজের সার্ভিস deploy করতে পারে অন্য টিমের রিলিজ সাইকেলের জন্য অপেক্ষা না করে</td></tr>
+<tr><td><span class="kw">Team Autonomy (Conway's Law)</span></td><td>একটা টিম একটা সার্ভিসের সম্পূর্ণ মালিক — কোড, ডেটাবেস, ডিপ্লয়মেন্ট, অন-কল</td></tr>
+<tr><td><span class="kw">Fault Isolation</span></td><td>একটা সার্ভিস ক্র্যাশ করলে (সঠিকভাবে ডিজাইন করা থাকলে) পুরো অ্যাপ্লিকেশন ডাউন হয় না</td></tr>
+<tr><td><span class="kw">Technology Heterogeneity</span></td><td>প্রতিটা সার্ভিস তার সমস্যার জন্য সবচেয়ে উপযোগী ভাষা/ডেটাবেস বেছে নিতে পারে</td></tr>
+</table>
+<div class="callout why"><span class="tag">Conway's Law — আর্কিটেকচার টিম গঠনের প্রতিচ্ছবি</span>
+"যে প্রতিষ্ঠান একটা সিস্টেম ডিজাইন করে, সেই সিস্টেমের গঠন প্রতিষ্ঠানের যোগাযোগ-গঠনের অনুকরণ করে" — Melvin Conway-এর এই পর্যবেক্ষণ Microservices adoption-এর সবচেয়ে বড় চালিকাশক্তিদের একটা। একটা বড় প্রতিষ্ঠানে যদি ১০টা স্বাধীন টিম থাকে, একটা মনোলিথ কোডবেসে সবাইকে কোড merge করতে হয় — অনবরত মার্জ কনফ্লিক্ট, পরস্পরের ওপর নির্ভরতা। প্রতিটা টিমকে একটা করে সার্ভিসের মালিকানা দিলে, টিম-গঠন আর্কিটেকচারের সাথে মিলে যায় — এই কারণেই Microservices প্রথমত একটা <b>organizational</b> সমাধান, প্রযুক্তিগত সমাধান পরে।</div>
+
+<h3>Trade-offs — Microservices বিনামূল্যে আসে না</h3>
+<table>
+<tr><th></th><th>Monolith</th><th>Microservices</th></tr>
+<tr><td>Deployment</td><td>একটাই ইউনিট — সহজ কিন্তু সব-বা-কিছুই না</td><td>স্বাধীন — জটিল orchestration কিন্তু গ্রানুলার</td></tr>
+<tr><td>Debugging</td><td>একটা stack trace, একটা লগ ফাইল</td><td>একাধিক সার্ভিস জুড়ে trace করতে হয় (৭ নম্বর/১১ নম্বর অধ্যায়ে বিস্তারিত)</td></tr>
+<tr><td>Transaction</td><td>একটা DB transaction — ACID guarantee সহজ</td><td>Distributed transaction — Saga pattern লাগে (৬ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>Network</td><td>in-process function call — কোনো ব্যর্থতা নেই</td><td>network call — latency, timeout, partial failure সবসময় সম্ভব</td></tr>
+<tr><td>Operational খরচ</td><td>একটা সার্ভার/deployment পাইপলাইন</td><td>একাধিক সার্ভিস → একাধিক পাইপলাইন, মনিটরিং, ইনফ্রাস্ট্রাকচার</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — ছোট টিম/ছোট অ্যাপ্লিকেশনে দ্রুত Microservices বেছে নেওয়া</span>
+Microservices-এর প্রতিটা সুবিধার একটা দাম আছে — network latency, distributed debugging, eventual consistency, অনেক বেশি ইনফ্রাস্ট্রাকচার। একটা ৩-৫ জনের টিমের জন্য যে সমস্যা (team coordination, independent scaling) Microservices সমাধান করে, সেই সমস্যাটাই যদি না থাকে, তাহলে পুরো জটিলতাটাই বিনা কারণে যুক্त হয় — একে <b>"premature microservices"</b> বলা হয়, আর এটা ১৫ নম্বর অধ্যায়ে আলোচিত Distributed Monolith anti-pattern-এর সবচেয়ে সাধারণ উৎস। বাস্তবসম্মত পথ: একটা মডুলার monolith দিয়ে শুরু করা, স্কেলিং/টিম-কোঅর্ডিনেশনের আসল ব্যথা অনুভব করার পরই নির্দিষ্ট সীমানা বরাবর ভাঙা।</div>
+</template>
+
+<template data-page="decomposition">
+<h2 class="title">২. Service Decomposition — DDD ও Strangler Fig</h2>
+<p class="lead">একটা Microservices আর্কিটেকচারের সবচেয়ে গুরুত্বপূর্ণ, আর সবচেয়ে ভুল হওয়ার ঝুঁকিপূর্ণ সিদ্ধান্ত — সার্ভিসের সীমানা কোথায় টানা হবে। ভুল সীমানা টানলে সার্ভিসগুলো এত ঘনিষ্ঠভাবে জড়িয়ে থাকে যে সব সুবিধাই হারিয়ে যায় (১৫ নম্বর অধ্যায়ে "Distributed Monolith")।</p>
+
+<h3>Domain-Driven Design (DDD) সংক্ষেপে — Bounded Context</h3>
+<p>একটা <span class="kw">Bounded Context</span> হলো একটা নির্দিষ্ট সাবডোমেইনের সীমানা, যার ভেতরে একটা শব্দের একটাই অর্থ থাকে (<span class="kw">Ubiquitous Language</span>) — যেমন একটা ই-কমার্স সিস্টেমে "Product"-এর অর্থ Catalog context-এ ভিন্ন (নাম, বিবরণ, ছবি) আর Inventory context-এ ভিন্ন (স্টক পরিমাণ, ওয়্যারহাউস লোকেশন)। প্রতিটা Bounded Context-ই একটা microservice-এর প্রাকৃতিক প্রার্থী।</p>
+<div class="diagram"><pre>
+┌─────────────┐   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐
+│   Catalog    │   │  Inventory   │   │   Ordering   │   │   Shipping   │
+│ "Product" =  │   │ "Product" =  │   │ "Order" =    │   │ "Order" =    │
+│ নাম/দাম/ছবি   │   │ স্টক/লোকেশন   │   │ কার্ট/চেকআউট  │   │ প্যাকেজ/ট্র্যাকিং │
+└─────────────┘   └─────────────┘   └─────────────┘   └─────────────┘
+</pre></div>
+
+<h3>Decomposition Strategies — কীভাবে ভাঙা হয়</h3>
+<table>
+<tr><th>কৌশল</th><th>ব্যাখ্যা</th></tr>
+<tr><td>By Business Capability</td><td>প্রতিষ্ঠান কী কী কাজ করে তার ভিত্তিতে (Order Management, Payment Processing, Shipping)</td></tr>
+<tr><td>By Subdomain (DDD)</td><td>Core (প্রতিযোগিতামূলক সুবিধা), Supporting, Generic subdomain আলাদা করে — Core-এ সবচেয়ে বেশি বিনিয়োগ</td></tr>
+<tr><td>By Team Ownership</td><td>Conway's Law মেনে — একটা টিম যা মালিকানা নিতে পারে তার আকারে সীমানা টানা</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — Technical Layer অনুযায়ী ভাঙা</span>
+"UI Service", "Business Logic Service", "Database Service" — এভাবে টেকনিক্যাল লেয়ার অনুযায়ী ভাঙলে প্রতিটা ছোট ফিচারের জন্যও তিনটা সার্ভিস জুড়ে পরিবর্তন লাগে (highly coupled, chatty — ১৫ নম্বর অধ্যায়ে বিস্তারিত)। সীমানা সবসময় <b>বিজনেস ক্যাপাবিলিটি</b> অনুযায়ী টানতে হবে, টেকনিক্যাল স্তর অনুযায়ী নয় — একটা সার্ভিসের ভেতরেই তার নিজস্ব UI/লজিক/ডেটা স্তর থাকতে পারে।</div>
+
+<h3>Strangler Fig Pattern — ধীরে ধীরে Monolith ভাঙা</h3>
+<p>একটা বিশাল "big bang rewrite" (পুরো সিস্টেম একসাথে নতুন করে লেখা) সবচেয়ে ঝুঁকিপূর্ণ পথ — মাসের পর মাস কোনো নতুন ফিচার শিপ না হয়ে, শেষে দেখা যায় নতুন সিস্টেম পুরনোটার সব edge case মিস করেছে। <span class="kw">Strangler Fig</span> পদ্ধতিতে একটা proxy পুরনো monolith-এর সামনে বসিয়ে, একটা একটা করে ফিচার নতুন সার্ভিসে সরানো হয় — ঠিক যেমন একটা লতাগাছ (fig vine) ধীরে ধীরে একটা গাছকে জড়িয়ে ধরে, একসময় পুরনো গাছটা আর দরকারই থাকে না।</p>
+<div class="diagram"><pre>
+পর্যায় ১:  Client ──▶ Proxy ──▶ Monolith (সবকিছু)
+
+পর্যায় ২:  Client ──▶ Proxy ──┬─▶ Monolith (বাকি সবকিছু)
+                              └─▶ New "Inventory" Service  (একটা ফিচার সরানো হয়েছে)
+
+পর্যায় ৩:  Client ──▶ Proxy ──┬─▶ Monolith (ক্রমশ ছোট হচ্ছে)
+                              ├─▶ Inventory Service
+                              └─▶ Payment Service
+</pre></div>
+<div class="callout why"><span class="tag">কেন Strangler Fig — ঝুঁকি ব্যবস্থাপনা</span>
+প্রতিটা ধাপে সিস্টেম চালু থাকে, প্রতিটা extraction ছোট ও পরীক্ষাযোগ্য, আর কোনো একটা ধাপে সমস্যা হলে সেই একটা ফিচার শুধু রোলব্যাক করা যায় — পুরো migration নয়। এটাই কেন প্রায় প্রতিটা বাস্তব-জীবনের সফল Microservices migration (Amazon, Netflix সহ) এই ধরনের ইনক্রিমেন্টাল পদ্ধতি অনুসরণ করে, একটা সম্পূর্ণ rewrite নয়।</div>
+
+<h3>Database Decomposition Challenges</h3>
+<p>একটা monolith-এ সাধারণত সব টেবিলের মধ্যে foreign key সম্পর্ক থাকে। সার্ভিস আলাদা করার সময় এই সম্পর্কগুলোও ভাঙতে হয় — একটা Order টেবিল থেকে সরাসরি Product টেবিলে join করা যাবে না যদি তারা এখন আলাদা সার্ভিসের আলাদা ডেটাবেসে থাকে।</p>
+<div class="callout behind"><span class="tag">সমাধান — Data Duplication ও Event-driven Sync</span>
+প্রতিটা সার্ভিস তার নিজের প্রয়োজনের জন্য অন্য সার্ভিসের ডেটার একটা ছোট, প্রয়োজনীয় অংশ নিজের কাছে কপি (denormalize) করে রাখে — যেমন Order Service নিজের কাছে Product-এর নাম ও দাম (join করার বদলে) সংরক্ষণ করে, আর Catalog Service-এ দাম বদলালে একটা event পাঠিয়ে Order Service-এর কপি আপডেট করায় (৭ নম্বর অধ্যায়ে event-driven sync বিস্তারিত)। এটা normalize করা একক ডেটাবেসের তুলনায় কম "পরিষ্কার" মনে হতে পারে, কিন্তু এটাই স্বাধীন ডেটাবেসের বাস্তব মূল্য — সামান্য ডুপ্লিকেশন মেনে নিয়ে সার্ভিস স্বাধীনতা কেনা হয়।</div>
+</template>
+
+<template data-page="communication">
+<h2 class="title">৩. Communication Patterns — Sync ও Async</h2>
+<p class="lead">সার্ভিসগুলো আলাদা প্রসেসে চলে, তাই তাদের মধ্যে একটা function call না — নেটওয়ার্কের ওপর দিয়ে একটা message পাঠাতে হয়। এই communication কীভাবে ডিজাইন করা হয় তার ওপর নির্ভর করে সিস্টেম কতটা resilient হবে।</p>
+
+<h3>Synchronous বনাম Asynchronous Communication</h3>
+<table>
+<tr><th></th><th>Synchronous</th><th>Asynchronous</th></tr>
+<tr><td>প্যাটার্ন</td><td>Request পাঠিয়ে Response-এর জন্য অপেক্ষা (REST, gRPC)</td><td>Message পাঠিয়ে এগিয়ে যাওয়া, ফলাফল event-এ পরে আসে (Queue, Pub/Sub)</td></tr>
+<tr><td>Coupling</td><td>Temporal coupling — উভয় সার্ভিস একই সময়ে "up" থাকতে হবে</td><td>Loosely coupled — receiver অফলাইন থাকলেও message অপেক্ষা করে</td></tr>
+<tr><td>ব্যর্থতার প্রভাব</td><td>একটা সার্ভিস ধীর হলে caller-ও ধীর/ব্লক হয় (Cascading Failure ঝুঁকি)</td><td>Producer সবসময় দ্রুত response পায়, ব্যর্থতা isolated থাকে</td></tr>
+<tr><td>উপযুক্ত ক্ষেত্র</td><td>ব্যবহারকারী তৎক্ষণাৎ ফলাফল চান (checkout confirmation)</td><td>ফলাফল তৎক্ষণাৎ দরকার নয় (email পাঠানো, রিপোর্ট জেনারেট)</td></tr>
+</table>
+
+<h3>REST বনাম gRPC</h3>
+<table>
+<tr><th></th><th>REST (JSON over HTTP/1.1)</th><th>gRPC (Protobuf over HTTP/2)</th></tr>
+<tr><td>Payload</td><td>Human-readable JSON — বড় ও ধীর সিরিয়ালাইজেশন</td><td>Binary Protobuf — ছোট, দ্রুত সিরিয়ালাইজেশন</td></tr>
+<tr><td>Contract</td><td>OpenAPI/Swagger (আলগা, কনভেনশন-ভিত্তিক)</td><td><code>.proto</code> ফাইল — কম্পাইল-টাইমে টাইপ-চেক করা strict contract</td></tr>
+<tr><td>Streaming</td><td>সীমিত (long-polling/SSE)</td><td>নেটিভ bidirectional streaming</td></tr>
+<tr><td>ব্যবহার</td><td>Public API, ব্রাউজার ক্লায়েন্ট (ব্যাপক সাপোর্ট)</td><td>Service-to-service ইন্টারনাল কল (কর্মক্ষমতা গুরুত্বপূর্ণ)</td></tr>
+</table>
+<div class="callout behind"><span class="tag">gRPC কেন দ্রুত — Protobuf-এর Binary Encoding</span>
+JSON-এ প্রতিটা ফিল্ডের নাম টেক্সট আকারে প্রতিটা মেসেজে পাঠাতে হয় (<code>{"userId": 42}</code>) — Protobuf-এ .proto ফাইলে আগেই ফিল্ড নম্বর সংজ্ঞায়িত থাকে, তাই ওয়্যারে শুধু নম্বর ও বাইনারি মান যায় (নাম নয়), আর কোনো টেক্সট পার্সিং লাগে না। এটাই কেন internal service-to-service কলে gRPC প্রায়ই REST-এর চেয়ে কয়েক গুণ দ্রুত — বিশেষ করে হাই-থ্রুপুট সিস্টেমে যেখানে প্রতিটা মিলিসেকেন্ড গুরুত্বপূর্ণ।</p></div>
+
+<h3>Message-based Communication — Queue ও Pub/Sub</h3>
+<div class="diagram"><pre>
+Point-to-Point (Queue):  Producer ──▶ [ Queue ] ──▶ একটামাত্র Consumer পড়ে ও সরিয়ে দেয়
+                                       (RabbitMQ-এর queue model — কাজ ভাগ করার জন্য)
+
+Pub/Sub:                 Producer ──▶ [ Topic ] ──┬─▶ Consumer Group A (স্বাধীনভাবে পড়ে)
+                                                    ├─▶ Consumer Group B
+                                                    └─▶ Consumer Group C
+                                       (Kafka topic model — একই event একাধিক সার্ভিস শোনে)
+</pre></div>
+<p>বিস্তারিত broker-নির্দিষ্ট প্যাটার্নের জন্য এই সাইটের <span class="kw">RabbitMQ</span> ও <span class="kw">Kafka</span> কোর্স দেখুন — এখানে গুরুত্বপূর্ণ হলো: কোন সার্ভিস কোন communication style বেছে নেবে তা নির্ভর করে coupling ও latency-এর প্রয়োজনের ওপর, ব্রোকারের choice-এর ওপর নয়।</p>
+
+<h3>API Contract ও Versioning</h3>
+<p>একটা সার্ভিসের API তার সাথে অন্য টিমের একটা চুক্তি — সেই চুক্তি ভাঙলে অন্য টিমের সার্ভিস ভেঙে যায়, প্রায়ই deploy-এর সময় নয়, বরং production-এ প্রথম রিকোয়েস্টেই।</p>
+<div class="callout mistake"><span class="tag">Common mistake — Breaking Change বিনা ভার্সনিং-এ ডিপ্লয় করা</span>
+একটা ফিল্ড রিনেম করা, একটা required ফিল্ড যোগ করা, বা একটা enum ভ্যালু সরিয়ে ফেলা — এসবই "ছোট" মনে হয় কিন্তু consumer সার্ভিসগুলোকে ভেঙে দিতে পারে যদি তারা এখনও পুরনো ফরম্যাট আশা করে। সমাধান: API-কে ভার্সন করা (<code>/v1/orders</code>, <code>/v2/orders</code>) আর পুরনো ভার্সন একটা deprecation window-এর জন্য চালু রাখা, অথবা শুধুমাত্র backward-compatible পরিবর্তন করা (নতুন optional ফিল্ড যোগ, পুরনো কিছু না সরানো)। কোন consumer আসলে কোন contract-এর ওপর নির্ভর করছে সেটা যাচাই করার আনুষ্ঠানিক পদ্ধতিই ১৩ নম্বর অধ্যায়ের Consumer-Driven Contract Testing।</div>
+</template>
+
+<template data-page="gateway">
+<h2 class="title">৪. API Gateway ও BFF</h2>
+<p class="lead">যখন দশটা সার্ভিস থাকে, একটা ক্লায়েন্ট (মোবাইল অ্যাপ, ওয়েব ব্রাউজার) কি প্রতিটার সাথে সরাসরি কথা বলবে? সেটা হলে ক্লায়েন্টকে জানতে হবে প্রতিটা সার্ভিসের অ্যাড্রেস, প্রতিটার auth আলাদাভাবে করতে হবে — <span class="kw">API Gateway</span> এই জটিলতা একটা একক entry point-এর পেছনে লুকিয়ে দেয়।</p>
+
+<h3>API Gateway — একক Entry Point</h3>
+<div class="diagram"><pre>
+                        ┌──▶ Order Service
+Client ──▶ API Gateway ─┼──▶ Payment Service
+ (single URL)           ├──▶ Inventory Service
+                        └──▶ Shipping Service
+</pre></div>
+<table>
+<tr><th>দায়িত্ব</th><th>ব্যাখ্যা</th></tr>
+<tr><td>Routing</td><td>URL path/header দেখে সঠিক ব্যাকএন্ড সার্ভিসে পাঠানো</td></tr>
+<tr><td>Authentication</td><td>একটা কেন্দ্রীয় জায়গায় JWT/token যাচাই — প্রতিটা সার্ভিসে আলাদা করে লাগে না</td></tr>
+<tr><td>Rate Limiting</td><td>প্রতি ক্লায়েন্ট/API key-ভিত্তিক ট্রাফিক সীমাবদ্ধ করা</td></tr>
+<tr><td>Aggregation</td><td>একাধিক সার্ভিসের ডেটা একত্র করে একটা response তৈরি করা</td></tr>
+<tr><td>Protocol Translation</td><td>বাইরে REST/JSON, ভেতরে gRPC — ক্লায়েন্ট জানেই না</td></tr>
+</table>
+
+<h3>BFF (Backend For Frontend) Pattern</h3>
+<p>একটা মোবাইল অ্যাপ আর একটা ওয়েব ড্যাশবোর্ডের একই ডেটার প্রয়োজন ভিন্ন — মোবাইলে কম ডেটা, কম network round-trip দরকার (ব্যাটারি/ডেটা সাশ্রয়), ওয়েবে বিস্তারিত ডেটা এক পেজে দেখানো যায়। একটা একক "সবার জন্য এক" Gateway ক্রমশ জটিল হয়ে যায় প্রতিটা ক্লায়েন্টের বিশেষ প্রয়োজন মেটাতে গিয়ে — <span class="kw">BFF</span> প্রতিটা ফ্রন্টএন্ডের জন্য একটা আলাদা, ছোট, তৈরি-করা gateway layer রাখে।</p>
+<div class="diagram"><pre>
+Mobile App ──▶ Mobile BFF ──┐
+                             ├──▶ Order Service
+Web App    ──▶ Web BFF    ──┤
+                             ├──▶ Payment Service
+Partner API──▶ Partner BFF──┘
+</pre></div>
+<div class="callout why"><span class="tag">Gateway যেন Business Logic-এর "God Object" না হয়</span>
+API Gateway/BFF-এর দায়িত্ব শুধু routing, aggregation, cross-cutting concern — বিজনেস লজিক (যেমন "অর্ডার ভ্যালিড কিনা" যাচাই) নয়। সময়ের সাথে টিমগুলো gateway-তে সুবিধার জন্য একটু একটু বিজনেস লজিক যুক্ত করতে থাকে, আর কয়েক বছরে gateway নিজেই একটা মনোলিথ হয়ে যায় যেটা প্রতিটা রিলিজে সবাইকে ছুঁতে হয় — এটাই microservices-এর মূল সুবিধা (independent deployability) নষ্ট করে দেয়। এই ফাঁদ থেকে বাঁচার নীতি সহজ: Gateway route করে, decide করে না।</div>
+
+<h3>Gateway Aggregation — একাধিক Service থেকে একটা Response</h3>
+<p>একটা প্রোডাক্ট পেজে দেখাতে হবে প্রোডাক্টের তথ্য (Catalog Service), স্টক পরিমাণ (Inventory Service), আর দাম (Pricing Service)। ক্লায়েন্টকে তিনটা আলাদা কল করতে না দিয়ে, gateway একসাথে তিনটাতেই কল করে (parallel), তারপর একটা একক response জোড়া লাগিয়ে ফেরত দেয়।</p>
+
+<h3>প্রচলিত Tools</h3>
+<table>
+<tr><th>Tool</th><th>বিশেষত্ব</th></tr>
+<tr><td>Kong / NGINX</td><td>উচ্চ-পারফরম্যান্স, প্লাগিন-ভিত্তিক, ভাষা-নিরপেক্ষ</td></tr>
+<tr><td>YARP / Ocelot</td><td>.NET-নেটিভ, কোড-প্রথম কনফিগারেশন (১৬ নম্বর অধ্যায়ে বিস্তারিত)</td></tr>
+<tr><td>Envoy</td><td>Cloud-native, Service Mesh-এর data plane-এও ব্যবহৃত (৯ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>AWS API Gateway / Azure APIM</td><td>ম্যানেজড, cloud provider-এর সাথে গভীরভাবে ইন্টিগ্রেটেড</td></tr>
+</table>
+</template>
+
+<template data-page="discovery">
+<h2 class="title">৫. Service Discovery ও Load Balancing</h2>
+<p class="lead">একটা Monolith-এ ফাংশন কল করতে কোনো অ্যাড্রেস লাগে না — কিন্তু Microservices-এ Order Service কীভাবে জানবে Payment Service ঠিক কোন IP:port-এ চলছে, বিশেষ করে যখন সার্ভিস instance ক্রমাগত scale up/down, crash/restart হচ্ছে?</p>
+
+<h3>সমস্যা — Dynamic Environment-এ Service Location</h3>
+<p>Container orchestration (Kubernetes-এর মতো) পরিবেশে সার্ভিস instance-এর IP প্রতিটা deployment/restart-এ বদলে যায় — একটা hardcoded IP তালিকা ব্যবহারিক নয়। <span class="kw">Service Discovery</span> এই সমস্যা সমাধান করে একটা লাইভ, স্বয়ংক্রিয়ভাবে আপডেট হওয়া রেজিস্ট্রি রেখে।</p>
+
+<h3>Client-side বনাম Server-side Discovery</h3>
+<div class="diagram"><pre>
+Client-side Discovery:
+  Service A ──▶ Service Registry: "Payment Service কোথায়?" ──▶ [instance তালিকা]
+  Service A নিজেই load balancing decision নেয়, তারপর সরাসরি একটা instance-কে কল করে
+
+Server-side Discovery:
+  Service A ──▶ Load Balancer/Gateway ──▶ Service Registry দেখে সঠিক instance-এ route করে
+  Service A কে discovery-এর ব্যাপারে কিছুই জানতে হয় না
+</pre></div>
+<table>
+<tr><th></th><th>Client-side</th><th>Server-side</th></tr>
+<tr><td>জটিলতা</td><td>প্রতিটা ক্লায়েন্টে discovery লজিক লাগে</td><td>ক্লায়েন্ট সরল থাকে, লজিক কেন্দ্রীয়</td></tr>
+<tr><td>উদাহরণ</td><td>Netflix Eureka + Ribbon (পুরনো স্টাইল)</td><td>Kubernetes Service, cloud Load Balancer</td></tr>
+</table>
+
+<h3>Service Registry Pattern</h3>
+<table>
+<tr><th>পদ্ধতি</th><th>ব্যাখ্যা</th></tr>
+<tr><td><span class="kw">Self-Registration</span></td><td>সার্ভিস স্টার্টআপে নিজেই রেজিস্ট্রিতে নিজের ঠিকানা লিখে দেয়, আর নিয়মিত heartbeat পাঠায়</td></tr>
+<tr><td><span class="kw">Third-Party Registration</span></td><td>একটা আলাদা "registrar" (orchestrator) সার্ভিসের জীবনচক্র দেখে রেজিস্ট্রি আপডেট করে — সার্ভিসকে নিজে কিছু করতে হয় না</td></tr>
+</table>
+<div class="callout best"><span class="tag">বাস্তবে — Kubernetes-এ Discovery প্রায়ই "invisible"</span>
+Kubernetes-ভিত্তিক পরিবেশে একটা <code>Service</code> object DNS-এর মাধ্যমে discovery দেয় — <code>payment-service.default.svc.cluster.local</code> নামটা কল করলেই kube-proxy/CoreDNS স্বয়ংক্রিয়ভাবে সঠিক, সুস্থ Pod-এ route করে দেয়, third-party registration-এর ধরন অনুসরণ করে। তাই আধুনিক cloud-native স্ট্যাকে Eureka/Consul-এর মতো আলাদা registry প্রায়ই লাগেই না — orchestrator নিজেই সেই দায়িত্ব নেয়।</div>
+
+<h3>Load Balancing অ্যালগরিদম — সংক্ষিপ্ত রেফারেন্স</h3>
+<p>Round Robin, Least Connections, ও IP Hash অ্যালগরিদমের বিস্তারিত ব্যাখ্যা এই সাইটের <span class="kw">Networking</span> কোর্সের Cloud Networking অধ্যায়ে আছে — একই অ্যালগরিদমগুলো এখানেও প্রযোজ্য, পার্থক্য শুধু এটা L4/L7 নেটওয়ার্ক লেয়ারে নয়, সার্ভিস-টু-সার্ভিস কলের স্তরে ঘটে।</p>
+</template>
+
+<template data-page="data">
+<h2 class="title">৬. Data Management — Database per Service ও Saga</h2>
+<p class="lead">Microservices-এর সবচেয়ে কঠিন সমস্যা ডেটা নিয়ে, কোড নিয়ে নয়। প্রতিটা সার্ভিস তার নিজের ডেটাবেসের মালিক হলে, একাধিক সার্ভিস জুড়ে একটা একক "transaction" কীভাবে নিশ্চিত করা যায়?</p>
+
+<h3>Database per Service — কেন প্রতিটা Service নিজের DB রাখে</h3>
+<div class="callout why"><span class="tag">শেয়ার্ড ডেটাবেস আসল Coupling তৈরি করে</span>
+দুটো সার্ভিস একই ডেটাবেস শেয়ার করলে, একটা সার্ভিসের টেবিল স্কিমা বদলালে অন্য সার্ভিস ভেঙে যেতে পারে (এমনকি কোনো API কল না করেও) — এটা সবচেয়ে গোপনীয়, সবচেয়ে বিপজ্জনক ধরনের coupling, কারণ এটা কোনো কোড রিভিউতেই দেখা যায় না। Database per Service নীতি নিশ্চিত করে সার্ভিসের ভেতরের ডেটা মডেল সম্পূর্ণভাবে সেই সার্ভিসের নিজস্ব বিষয় — বাইরের কেউ শুধু API/event-এর মাধ্যমে অ্যাক্সেস পায়, সরাসরি টেবিলে নয়।</div>
+
+<h3>Distributed Transaction সমস্যা — 2PC কেন অব্যবহারিক</h3>
+<p>একক ডেটাবেসে একটা transaction ACID guarantee দেয় — সব বদলায় বা কিছুই বদলায় না। একাধিক ডেটাবেস জুড়ে এটা করার ক্লাসিক্যাল সমাধান <span class="kw">Two-Phase Commit (2PC)</span> — একটা কোঅর্ডিনেটর সব অংশগ্রহণকারীকে "prepare" (লক ধরে রাখা) করতে বলে, সবাই রাজি হলে "commit" নির্দেশ দেয়।</p>
+<div class="callout mistake"><span class="tag">কেন 2PC Microservices-এ ব্যবহার করা হয় না</span>
+2PC-তে প্রতিটা অংশগ্রহণকারী prepare ধাপে তার রিসোর্স লক করে রাখে যতক্ষণ না কোঅর্ডিনেটর চূড়ান্ত সিদ্ধান্ত জানায় — কোঅর্ডিনেটর ক্র্যাশ করলে বা নেটওয়ার্ক পার্টিশন হলে, সেই লক অনির্দিষ্টকালের জন্য আটকে থাকতে পারে (blocking protocol), যা throughput ধ্বংস করে দেয়। এছাড়া এটা দাবি করে প্রতিটা অংশগ্রহণকারী ডেটাবেস 2PC সাপোর্ট করবে, যা ভিন্ন ভিন্ন প্রযুক্তির (SQL + NoSQL + external API) সার্ভিসে বাস্তবসম্মত না। এই কারণেই Microservices জগতে <span class="kw">Saga Pattern</span>-এর মতো eventual-consistency ভিত্তিক সমাধান প্রাধান্য পায়।</div>
+
+<h3>Saga Pattern — Choreography বনাম Orchestration</h3>
+<p>একটা <span class="kw">Saga</span> হলো ধাপে ধাপে চলা local transaction-এর একটা সিরিজ, প্রতিটা ধাপ একটা সার্ভিসের নিজের ডেটাবেসে ঘটে, আর প্রতিটা ধাপের একটা <b>compensating action</b> (উল্টো কাজ) থাকে যদি পরের কোনো ধাপ ব্যর্থ হয়।</p>
+<div class="diagram"><pre>
+Choreography (কেন্দ্রীয় কন্ট্রোলার নেই — প্রতিটা সার্ভিস event শুনে পরের কাজ করে):
+  Order Created ──event──▶ Payment Service (charge) ──event──▶ Inventory Service (reserve)
+                                                                      │ ব্যর্থ হলে
+                          Payment Service (refund) ◀──event──────────┘
+
+Orchestration (একটা কেন্দ্রীয় Saga Orchestrator প্রতিটা ধাপ নির্দেশ দেয়):
+  Saga Orchestrator ──▶ Payment Service: "charge করো"
+                    ◀── OK
+                    ──▶ Inventory Service: "reserve করো"
+                    ◀── FAILED
+                    ──▶ Payment Service: "refund করো"  (compensating action)
+</pre></div>
+<table>
+<tr><th></th><th>Choreography</th><th>Orchestration</th></tr>
+<tr><td>Coupling</td><td>কম — সার্ভিসগুলো একে অপরকে সরাসরি জানে না, event শুনে</td><td>বেশি — orchestrator প্রতিটা সার্ভিসের API জানে</td></tr>
+<tr><td>দৃশ্যমানতা</td><td>কম — পুরো ফ্লো কোথাও একসাথে লেখা নেই, বোঝা কঠিন</td><td>বেশি — পুরো ফ্লো একটা জায়গায় স্পষ্টভাবে সংজ্ঞায়িত</td></tr>
+<tr><td>উপযুক্ত</td><td>ছোট, সরল সাগা (২-৩ ধাপ)</td><td>জটিল, দীর্ঘ সাগা (৫+ ধাপ, শর্তাধীন লজিক)</td></tr>
+</table>
+
+<h3>Compensating Transactions ও Idempotency</h3>
+<div class="callout mistake"><span class="tag">Common mistake — Compensating Action-কে Idempotent না বানানো</span>
+নেটওয়ার্কে timeout/retry সবসময় সম্ভব — যদি "refund করো" কমান্ড দুইবার পাঠানো হয় (একবার আসল কল, একবার retry কারণ প্রথম response হারিয়ে গেছে), ব্যবহারকারী কি দুইবার refund পাবে? প্রতিটা compensating action-কে <span class="kw">idempotent</span> ডিজাইন করতে হবে — একটা ইউনিক Saga/transaction ID দিয়ে ট্র্যাক করে, "এই transaction-এর জন্য refund কি আগেই হয়ে গেছে?" চেক করে তারপর কাজ করা। এটা ছাড়া Saga পুরো সিস্টেমকে আরও অস্থির করে তুলতে পারে, যেটার সমাধান করতে চেয়েছিল তার চেয়ে।</div>
+</template>
+
+<template data-page="events">
+<h2 class="title">৭. Event-Driven Architecture — Outbox, CQRS, Event Sourcing</h2>
+<p class="lead">Saga pattern events-এর ওপর নির্ভর করে কাজ করে — কিন্তু একটা ডেটাবেস write আর একটা event publish, দুটো আলাদা সিস্টেম, একসাথে atomic-ভাবে করা যায় কীভাবে?</p>
+
+<h3>Event Notification বনাম Event-Carried State Transfer</h3>
+<table>
+<tr><th>ধরন</th><th>ব্যাখ্যা</th></tr>
+<tr><td><span class="kw">Event Notification</span></td><td>ছোট event ("OrderCreated: id=42") — শুনতে থাকা সার্ভিসকে বিস্তারিত ডেটার জন্য আবার API কল করতে হয়</td></tr>
+<tr><td><span class="kw">Event-Carried State Transfer</span></td><td>event-এর ভেতরেই প্রয়োজনীয় সব ডেটা থাকে ("OrderCreated: id=42, items=[...], total=99.5") — আবার কল করার দরকার নেই, কিন্তু event পেলোড বড়</td></tr>
+</table>
+
+<h3>Outbox Pattern — Dual Write সমস্যা সমাধান</h3>
+<p>Order Service একটা অর্ডার তার নিজের ডেটাবেসে সেভ করে, তারপর একটা "OrderCreated" event message broker-এ পাঠায় — এই দুটো আলাদা সিস্টেম (DB আর broker), তাই দুটো আলাদা অপারেশন। মাঝখানে সার্ভিস ক্র্যাশ করলে কী হয়?</p>
+<div class="diagram"><pre>
+সমস্যা (Dual Write):
+  1. DB-তে Order সেভ হলো ✅
+  2. [সার্ভিস ক্র্যাশ] ❌
+  3. Event কখনো broker-এ পাঠানো হলো না — Order আছে, কিন্তু কেউ জানে না!
+
+সমাধান (Outbox Pattern):
+  1. একটা transaction-এ একসাথে: Order টেবিলে insert + Outbox টেবিলে event insert  (একই DB, একই ACID transaction — atomic!)
+  2. একটা আলাদা "Relay" প্রসেস Outbox টেবিল পোল করে, broker-এ publish করে, সফল হলে row মার্ক করে
+</pre></div>
+<div class="callout behind"><span class="tag">Outbox কীভাবে Atomicity নিশ্চিত করে</span>
+মূল কৌশল হলো — event publish করার বদলে, event-টাকে <b>একই ডেটাবেসের একই transaction-এর ভেতরে</b> একটা "Outbox" টেবিলে সংরক্ষণ করা হয়, ঠিক Order টেবিলে insert করার সাথেই। যেহেতু এটা একই ডেটাবেসের একটা transaction, DB নিজেই এর atomicity guarantee দেয় — Order সেভ হলে Outbox row-ও সেভ হবে, নাহলে দুটোই rollback হবে। এরপর একটা আলাদা background process (Relay, প্রায়ই Debezium-এর মতো Change Data Capture টুল দিয়ে) Outbox টেবিল পড়ে broker-এ প্রকৃত publish করে — সেই ধাপটা fail করলেও retry করা নিরাপদ, কারণ Order এখনো consistent state-এ আছে।</div>
+
+<h3>CQRS ও Event Sourcing সংক্ষেপে</h3>
+<p><span class="kw">CQRS (Command Query Responsibility Segregation)</span> read আর write মডেল আলাদা করে — একটা normalized write মডেল, আর একটা denormalized, query-এর জন্য অপ্টিমাইজড read মডেল, যেটা event শুনে আপডেট হয় (এই সাইটের Distributed Systems কোর্সের Design Patterns অধ্যায়ে বিস্তারিত ডায়াগ্রাম আছে)। <span class="kw">Event Sourcing</span> আরও এক ধাপ এগিয়ে — বর্তমান state সরাসরি সংরক্ষণ না করে, state-এ নিয়ে যাওয়া প্রতিটা event-ই সংরক্ষণ করা হয় সত্যের একমাত্র উৎস হিসেবে; বর্তমান state সবসময় সেই ইভেন্ট লগ replay করে বের করা যায়।</p>
+<div class="callout why"><span class="tag">Event Sourcing-এর ট্রেড-অফ</span>
+Event Sourcing একটা সম্পূর্ণ audit trail দেয় (প্রতিটা পরিবর্তনের ইতিহাস, "কেন" state এখন যেমন আছে) আর time-travel debugging সম্ভব করে। কিন্তু এর দাম বেশি — প্রতিটা query-র জন্য পুরো event history replay করা ব্যবহারিক না (তাই <span class="kw">snapshot</span> লাগে), আর schema পরিবর্তন (event নিজেই evolve করলে) জটিল হয়ে যায়। এই কারণে বেশিরভাগ সার্ভিস CQRS ব্যবহার করে কিন্তু Event Sourcing শুধু নির্দিষ্ট, audit-ভারী ডোমেইনে (financial ledger, অর্ডার হিস্ট্রি) — সবখানে নয়।</div>
+</template>
+
+<template data-page="resilience">
+<h2 class="title">৮. Resilience Patterns — Circuit Breaker, Retry, Bulkhead</h2>
+<p class="lead">Microservices-এ একটা কল network-এর ওপর দিয়ে যায়, তাই ব্যর্থতা <b>স্বাভাবিক</b>, ব্যতিক্রম নয় — timeout, সংযোগ বিচ্ছিন্ন, ধীর response সবসময় ঘটবে। যে সার্ভিস এটা মেনে নিয়ে ডিজাইন করা হয়নি, তার একটা downstream সার্ভিসের সমস্যা পুরো সিস্টেমে ছড়িয়ে পড়ে (<span class="kw">Cascading Failure</span>)।</p>
+
+<h3>Circuit Breaker — Cascading Failure প্রতিরোধ</h3>
+<div class="diagram"><pre>
+CLOSED (স্বাভাবিক)  ──ব্যর্থতার হার threshold পার হলে──▶  OPEN (সব কল সাথে সাথে fail, downstream-এ কল যায় না)
+     ▲                                                              │
+     │                                          একটা নির্দিষ্ট সময় পর
+     └────── সফল হলে ফিরে CLOSED ◀── HALF-OPEN (কিছু test কল পাঠানো) ◀┘
+</pre></div>
+<p>যখন একটা downstream সার্ভিস ধীর/ব্যর্থ হতে থাকে, circuit breaker সেটা মনে রাখে আর সাথে সাথেই ব্যর্থ হয়ে যায় (fail fast) — downstream-কে আরও চাপ না দিয়ে, আর caller-কে অনির্দিষ্টকাল অপেক্ষা করাতে না দিয়ে।</p>
+<div class="callout why"><span class="tag">কেন Fail Fast — Thread/Connection Exhaustion প্রতিরোধ</span>
+Circuit breaker ছাড়া, একটা ধীর downstream সার্ভিসের প্রতিটা কল caller-এর একটা thread/connection দখল করে রাখে যতক্ষণ timeout না হয়। হাই-ট্রাফিকে এই থ্রেডগুলো দ্রুত ফুরিয়ে যায় (thread pool exhaustion) — এবং caller নিজেই আর কোনো রিকোয়েস্ট (এমনকি যেগুলো downstream-এর সাথে সম্পর্কহীন) প্রসেস করতে পারে না। Circuit breaker "OPEN" অবস্থায় সাথে সাথে fail করে থ্রেড খালি রাখে, একটা সার্ভিসের সমস্যাকে পুরো সিস্টেমে ছড়াতে দেয় না।</div>
+
+<h3>Retry with Backoff ও Jitter</h3>
+<p>ক্ষণস্থায়ী (transient) ব্যর্থতার জন্য retry করা যুক্তিসঙ্গত — কিন্তু ভুলভাবে ডিজাইন করলে retry নিজেই সমস্যা বাড়িয়ে দিতে পারে।</p>
+<div class="callout mistake"><span class="tag">Common mistake — Retry Storm (Jitter ছাড়া Fixed-interval Retry)</span>
+একটা সার্ভিস ধীর হয়ে গেলে, শত শত caller একই সময়ে timeout হয় আর ঠিক একই delay-তে (যেমন ১ সেকেন্ড পর) সবাই একসাথে retry করে — এই synchronized retry wave downstream সার্ভিসকে আরও বেশি চাপ দেয়, যা আরও বেশি timeout তৈরি করে, যা আরও বড় retry wave তৈরি করে (<span class="kw">retry storm</span>)। সমাধান: <span class="kw">exponential backoff</span> (প্রতিবার delay দ্বিগুণ করা) এর সাথে <span class="kw">jitter</span> (একটা র‍্যান্ডম ছোট বিচ্যুতি) যুক্त করা, যাতে সব caller-এর retry ছড়িয়ে পড়ে, একসাথে না ঘটে।</div>
+
+<h3>Timeout ও Bulkhead</h3>
+<div class="diagram"><pre>
+Bulkhead — resource isolation, একটা জাহাজের পানিরোধী বিভাজনের মতো:
+  ┌───────────────┐  ┌───────────────┐
+  │ Thread Pool A  │  │ Thread Pool B  │   ← Service X-এর জন্য কল আলাদা pool ব্যবহার করে,
+  │ (Service X কল) │  │ (Service Y কল) │      Service X ধীর হলেও Service Y-এর pool অক্ষত থাকে
+  └───────────────┘  └───────────────┘
+</pre></div>
+<p>প্রতিটা downstream কলের একটা যুক্তিসঙ্গত <span class="kw">timeout</span> থাকতে হবে (অনির্দিষ্টকাল অপেক্ষা করা নয়), আর <span class="kw">bulkhead</span> প্যাটার্ন নিশ্চিত করে একটা downstream-এর সমস্যা অন্য downstream-এর জন্য বরাদ্দ resource-কে প্রভাবিত না করে।</p>
+
+<h3>Rate Limiting</h3>
+<table>
+<tr><th>অ্যালগরিদম</th><th>ব্যাখ্যা</th></tr>
+<tr><td>Fixed Window</td><td>একটা নির্দিষ্ট সময়ব্লকে সর্বোচ্চ N রিকোয়েস্ট — সরল কিন্তু window-এর সীমানায় burst সম্ভব</td></tr>
+<tr><td>Sliding Window</td><td>যেকোনো N সময়ের মধ্যে সর্বোচ্চ N রিকোয়েস্ট — আরও মসৃণ, কিন্তু বেশি মেমরি লাগে</td></tr>
+<tr><td><span class="kw">Token Bucket</span></td><td>একটা bucket নির্দিষ্ট হারে টোকেন ভরে, প্রতিটা রিকোয়েস্ট একটা টোকেন খরচ করে — burst-কে সীমিত পরিমাণে অনুমতি দেয়, বাস্তবে সবচেয়ে বেশি ব্যবহৃত</td></tr>
+</table>
+<div class="card">
+<b>C# / .NET — Polly দিয়ে Circuit Breaker + Retry (সংক্ষিপ্ত)</b>
+<pre>var pipeline = new ResiliencePipelineBuilder()
+    .AddRetry(new() {
+        MaxRetryAttempts = 3,
+        BackoffType = DelayBackoffType.Exponential,
+        UseJitter = true          <span class="c">// retry storm এড়াতে jitter</span>
+    })
+    .AddCircuitBreaker(new() {
+        FailureRatio = 0.5,
+        SamplingDuration = TimeSpan.FromSeconds(10),
+        BreakDuration = TimeSpan.FromSeconds(15)
+    })
+    .Build();
+
+await pipeline.ExecuteAsync(async ct => await httpClient.GetAsync("/api/payment", ct));</pre>
+</div>
+</template>
+
+<template data-page="mesh">
+<h2 class="title">৯. Service Mesh — Sidecar, mTLS, Istio</h2>
+<p class="lead">আগের অধ্যায়ের Resilience প্যাটার্নগুলো (retry, circuit breaker, timeout) যদি প্রতিটা সার্ভিসের কোডে আলাদাভাবে implement করতে হয় (প্রতিটা ভাষায়, প্রতিটা টিমে), সেটা বিশাল ডুপ্লিকেশন আর অসামঞ্জস্যতার উৎস — <span class="kw">Service Mesh</span> এই লজিক অ্যাপ্লিকেশন কোড থেকে বের করে ইনফ্রাস্ট্রাকচার লেয়ারে নিয়ে যায়।</p>
+
+<h3>Sidecar Pattern</h3>
+<div class="diagram"><pre>
+┌─────────────────────────────┐
+│           Pod                │
+│  ┌───────────┐ ┌──────────┐ │
+│  │    App     │ │  Sidecar │ │   ← App-এর সব ইনবাউন্ড/আউটবাউন্ড ট্রাফিক
+│  │ Container  │◀▶│  Proxy   │◀┼─▶  সাইডকার প্রক্সির মধ্য দিয়ে যায়
+│  │            │ │ (Envoy)  │ │      অ্যাপ কোড এটা জানেই না
+│  └───────────┘ └──────────┘ │
+└─────────────────────────────┘
+</pre></div>
+<p>প্রতিটা সার্ভিস instance-এর পাশে একটা ছোট প্রক্সি (<span class="kw">sidecar</span>) কন্টেইনার হিসেবে বসে — সব নেটওয়ার্ক ট্রাফিক তার মধ্য দিয়ে যায়, তাই retry/timeout/circuit breaker/mTLS সবই সাইডকারে implement হয়, অ্যাপ্লিকেশন কোডে একটা লাইনও নয়।</p>
+
+<h3>Service Mesh Architecture — Data Plane বনাম Control Plane</h3>
+<table>
+<tr><th>স্তর</th><th>দায়িত্ব</th><th>উদাহরণ</th></tr>
+<tr><td><span class="kw">Data Plane</span></td><td>প্রতিটা সার্ভিসের পাশে বসা sidecar প্রক্সি — আসল ট্রাফিক এখান দিয়ে যায়</td><td>Envoy proxy</td></tr>
+<tr><td><span class="kw">Control Plane</span></td><td>সব sidecar-কে কেন্দ্রীয়ভাবে কনফিগার করে (routing rule, TLS সার্টিফিকেট বিতরণ, policy)</td><td>Istiod (Istio-এর control plane)</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন এই বিভাজন — Configuration বনাম Execution আলাদা</span>
+Data plane-কে হালকা ও দ্রুত রাখা হয় (শুধু ট্রাফিক ফরওয়ার্ড ও পলিসি প্রয়োগ), জটিল সিদ্ধান্ত (কোন সার্ভিস কাকে বিশ্বাস করবে, কোন রুট কোন ওয়েটে ট্রাফিক পাবে) control plane কেন্দ্রীয়ভাবে নেয় ও সব sidecar-এ push করে। এভাবে অপারেটর একটা জায়গায় নীতি বদলালে পুরো মেশ জুড়ে তা প্রতিফলিত হয় — প্রতিটা সার্ভিস আলাদাভাবে redeploy করার দরকার নেই।</div>
+
+<h3>mTLS — Zero Trust-এর ভিত্তি</h3>
+<p>Service Mesh-এর সবচেয়ে বড় ব্যবহারিক সুবিধাগুলোর একটা — sidecar প্রক্সিগুলো স্বয়ংক্রিয়ভাবে প্রতিটা সার্ভিস-টু-সার্ভিস কলে <span class="kw">mTLS (mutual TLS)</span> প্রয়োগ করে, অ্যাপ্লিকেশন কোড কোনো সার্টিফিকেট নিয়ে কিছু না জেনেই। এটা ১২ নম্বর অধ্যায়ের Zero Trust security মডেলের ব্যবহারিক ভিত্তি — এই সাইটের Networking কোর্সের mTLS অধ্যায়ে মূল ক্রিপ্টোগ্রাফিক মেকানিজম বিস্তারিত আছে।</p>
+
+<h3>Traffic Management — মেশ-স্তরে Resilience</h3>
+<div class="callout best"><span class="tag">Mesh Configuration দিয়ে Canary Release</span>
+Service Mesh দিয়ে ট্রাফিক স্প্লিটিং (৯০% v1-এ, ১০% v2-এ) কোনো কোড পরিবর্তন ছাড়াই, শুধু একটা YAML কনফিগারেশন দিয়ে করা যায় — যেটা ১৪ নম্বর অধ্যায়ের Canary Deployment-এর ব্যবহারিক বাস্তবায়ন। একইভাবে retry/timeout policy মেশ কনফিগ থেকে নিয়ন্ত্রণ করা যায়, প্রতিটা সার্ভিসের কোড redeploy না করেই — এটাই মূল প্রতিশ্রুতি: resilience অ্যাপ্লিকেশন কোড থেকে সরে অপারেশনাল কনফিগারেশনে চলে যায়।</div>
+</template>
+
+<template data-page="config">
+<h2 class="title">১০. Configuration ও Secrets Management</h2>
+<p class="lead">দশটা সার্ভিসের প্রতিটার নিজস্ব কনফিগারেশন ফাইল থাকলে, একটা ডেটাবেস পাসওয়ার্ড বদলাতে হলে দশটা জায়গায় বদলাতে হয় আর দশটা সার্ভিস redeploy করতে হয় — এটা স্কেল করে না।</p>
+
+<h3>Centralized Configuration — কেন দরকার</h3>
+<p><span class="kw">12-factor app</span> নীতির একটা মূল অংশ — কনফিগারেশন কোড থেকে সম্পূর্ণ আলাদা রাখা, environment-এর মাধ্যমে সরবরাহ করা। Microservices-এ এটা আরও এক ধাপ এগিয়ে — একটা কেন্দ্রীয় config store থাকে, যেখান থেকে প্রতিটা সার্ভিস স্টার্টআপে (বা এমনকি রানটাইমে) তার কনফিগারেশন টেনে নেয়।</p>
+<div class="diagram"><pre>
+Service A ──┐
+Service B ──┼──▶ Config Server (Consul / Azure App Configuration / Spring Cloud Config)
+Service C ──┘         │
+                কেন্দ্রীয়ভাবে সংরক্ষিত: DB connection string, feature flag, timeout মান...
+</pre></div>
+
+<h3>Secrets Management — Vault ও Key Vault</h3>
+<p>ডেটাবেস পাসওয়ার্ড, API key, encryption key — এগুলো সাধারণ কনফিগ থেকে ভিন্নভাবে সামলাতে হয়: এনক্রিপ্টেড at rest, অ্যাক্সেস অডিট করা, আর নিয়মিত rotate করা।</p>
+<div class="callout mistake"><span class="tag">Common mistake — Secrets প্লেইনটেক্সট Environment Variable-এ রাখা</span>
+Environment variable কনফিগ ফাইলে বেক করা secret-এর চেয়ে ভালো, কিন্তু এখনও প্লেইনটেক্সট — <code>docker inspect</code>, প্রসেস লিস্টিং, বা ক্র্যাশ লগে সহজেই দেখা যায় (এই সাইটের Docker কোর্সের Security অধ্যায়ে এই সুনির্দিষ্ট ঝুঁকি বিস্তারিত)। প্রোডাকশন-গ্রেড সমাধান হলো একটা ডেডিকেটেড secret store (<span class="kw">HashiCorp Vault</span>, <span class="kw">Azure Key Vault</span>, <span class="kw">AWS Secrets Manager</span>) — সার্ভিস রানটাইমে একটা short-lived credential দিয়ে secret আনে, secret নিজে ডিস্কে/env var-এ কখনো স্থায়ীভাবে লেখা থাকে না, আর rotation স্বয়ংক্রিয়ভাবে হতে পারে।</div>
+
+<h3>Feature Flags — Deploy ও Release আলাদা করা</h3>
+<p><span class="kw">Feature Flag</span> একটা কোড পরিবর্তনকে production-এ deploy করা আর সেটা ব্যবহারকারীর কাছে "release" করা — এই দুইটা ধারণাকে আলাদা করে দেয়। একটা নতুন ফিচার কোড deploy হয়ে যেতে পারে (flag off অবস্থায়), তারপর ধীরে ধীরে নির্দিষ্ট ব্যবহারকারী গ্রুপের জন্য চালু (on) করা যায়।</p>
+<div class="callout why"><span class="tag">কেন এটা Microservices-এ বিশেষভাবে গুরুত্বপূর্ণ</span>
+Microservices-এ একটা ফিচার প্রায়ই একাধিক সার্ভিসে ছড়িয়ে থাকে (Order + Payment + Notification একসাথে বদলাতে হবে) — সবাইকে ঠিক একই মুহূর্তে deploy করা কঠিন। Feature flag দিয়ে সব সার্ভিস স্বাধীনভাবে deploy করতে পারে (flag off), আর সব প্রস্তুত হলে কেন্দ্রীয়ভাবে একটা flag toggle করে ফিচারটা একসাথে চালু করা যায় — কোনো কোড redeploy ছাড়াই, আর সমস্যা দেখা দিলে সাথে সাথে flag বন্ধ করে rollback করা যায়।</div>
+</template>
+
+<template data-page="observability">
+<h2 class="title">১১. Observability — Tracing, Logging, Metrics</h2>
+<p class="lead">একটা মনোলিথে একটা bug খুঁজতে একটা স্ট্যাক ট্রেস আর একটা লগ ফাইল দেখলেই চলে। দশটা সার্ভিস জুড়ে একটা রিকোয়েস্ট গেলে, একটা সমস্যা কোথায় ঘটেছে বোঝা যায় কীভাবে?</p>
+
+<h3>তিন Pillar — Logs, Metrics, Traces</h3>
+<p>এই তিনটার সাধারণ সংজ্ঞা ও পার্থক্য এই সাইটের DevOps কোর্সের Observability অধ্যায়ে বিস্তারিত আছে। এখানে গুরুত্বপূর্ণ প্রশ্ন হলো Microservices-নির্দিষ্ট: একাধিক সার্ভিস জুড়ে একটা একক রিকোয়েস্টের যাত্রা কীভাবে জোড়া লাগানো হয়?</p>
+
+<h3>Distributed Tracing — Correlation ID ও Trace Propagation</h3>
+<div class="diagram"><pre>
+Client ──▶ Gateway ──▶ Order Svc ──▶ Payment Svc
+              │            │              │
+         trace-id: abc   trace-id: abc  trace-id: abc   ← একই trace-id প্রতিটা hop-এ propagate হয়
+          span-1          span-2         span-3          (প্রতিটা সার্ভিস তার নিজের "span" যুক্ত করে)
+</pre></div>
+<p>প্রতিটা ইনকামিং রিকোয়েস্ট একটা ইউনিক <span class="kw">trace ID</span> পায় (Gateway-তে জেনারেট হয় প্রথমবার), আর সেই ID প্রতিটা downstream কলের সাথে (সাধারণত <code>traceparent</code> HTTP header-এ, W3C Trace Context স্ট্যান্ডার্ড অনুযায়ী) পাস হয়। প্রতিটা সার্ভিস তার নিজের কাজের জন্য একটা <span class="kw">span</span> রেকর্ড করে (কতক্ষণ লাগলো, কী হলো) — একটা tracing backend (Jaeger, Zipkin) সব span একই trace-id দিয়ে জোড়া লাগিয়ে পুরো রিকোয়েস্টের সম্পূর্ণ যাত্রার একটা ভিজুয়াল টাইমলাইন দেখায়।</p>
+<div class="callout mistake"><span class="tag">Common mistake — Async কলে Trace Context হারিয়ে যাওয়া</span>
+HTTP/gRPC কলে trace context propagate করা তুলনামূলক সহজ (header-এ বসিয়ে দেওয়া) — কিন্তু একটা message queue দিয়ে গেলে (Service A একটা event পাঠায়, Service B পরে সেটা প্রসেস করে) trace context ভুলে message metadata-তে না রাখলে সেই সংযোগ হারিয়ে যায়, tracing UI-তে দুটো আলাদা, সম্পর্কহীন trace দেখা যায়। প্রায় প্রতিটা modern messaging library (MassTransit, Kafka client) trace context message header-এ propagate করার বিল্ট-ইন সাপোর্ট দেয় — সেটা সক্রিয় করা ভুলে যাওয়া সবচেয়ে সাধারণ observability গ্যাপ।</div>
+
+<h3>Centralized Logging — Structured Logs + Correlation ID</h3>
+<p>প্রতিটা সার্ভিসের লগ আলাদা সার্ভারে থাকলে, একটা সমস্যা ডায়াগনোজ করতে দশটা সার্ভারে SSH করে লগ খুঁজতে হবে। সমাধান — প্রতিটা সার্ভিস তার লগ একটা কেন্দ্রীয় সিস্টেমে (ELK stack, Loki) পাঠায়, JSON structured ফরম্যাটে, আর প্রতিটা লগ লাইনে সেই একই <span class="kw">trace ID</span> যুক্ত করে — তাহলে একটা trace ID দিয়ে সার্চ করলেই সংশ্লিষ্ট সব সার্ভিসের লগ একসাথে খুঁজে পাওয়া যায়।</p>
+
+<h3>RED Method — Microservices Metrics-এর ব্যবহারিক ফ্রেমওয়ার্ক</h3>
+<table>
+<tr><th>মেট্রিক</th><th>প্রশ্ন যা এটা উত্তর দেয়</th></tr>
+<tr><td><span class="kw">Rate</span></td><td>সার্ভিস প্রতি সেকেন্ডে কত রিকোয়েস্ট পাচ্ছে?</td></tr>
+<tr><td><span class="kw">Errors</span></td><td>এর মধ্যে কত শতাংশ ব্যর্থ হচ্ছে?</td></tr>
+<tr><td><span class="kw">Duration</span></td><td>প্রতিটা রিকোয়েস্টে কত সময় লাগছে (percentile-এ, average নয়)?</td></tr>
+</table>
+<div class="callout best"><span class="tag">প্রতিটা Service-এন্ডপয়েন্টে RED ডিফল্ট Dashboard হওয়া উচিত</span>
+একাধিক সার্ভিসের পরিবেশে, প্রতিটা সার্ভিসের প্রতিটা এন্ডপয়েন্টে এই তিনটা মেট্রিক থাকলে, একটা on-call ইঞ্জিনিয়ার সেকেন্ডের মধ্যেই বলতে পারেন কোন সার্ভিস সমস্যার উৎস — বাকিটা distributed tracing দিয়ে সেই নির্দিষ্ট সার্ভিসের ভেতরে ডুব দেওয়া।</div>
+</template>
+
+<template data-page="security">
+<h2 class="title">১২. Security — Zero Trust ও Service-to-Service Auth</h2>
+<p class="lead">একটা মনোলিথে একবার ফায়ারওয়াল পার হয়ে গেলে ভেতরের সব ফাংশন কল বিশ্বস্ত ধরে নেওয়া যেত। Microservices-এ প্রতিটা সার্ভিস-টু-সার্ভিস কল-ই একটা নেটওয়ার্ক কল — যদি "ভেতরের নেটওয়ার্ক নিরাপদ" ধরে নেওয়া হয়, একটা compromised সার্ভিস পুরো সিস্টেমে অবাধে ঘুরতে পারে।</p>
+
+<h3>Perimeter Security বনাম Zero Trust</h3>
+<div class="callout mistake"><span class="tag">Common misconception — "Internal Network মানেই নিরাপদ"</span>
+এই ধারণা এই সাইটের Networking কোর্সের NAT ও Security অধ্যায়ে আলোচিত "internal network = trusted" ভুল ধারণার সরাসরি Microservices সংস্করণ। একবার একটা আক্রমণকারী (phishing বা একটা vulnerable dependency দিয়ে) একটা সার্ভিসে ঢুকে পড়লে, ফায়ারওয়াল বা VPC-এর ভেতরে থাকা অন্য সব সার্ভিস যদি "একে অপরকে বিশ্বাস করে" ডিজাইন করা হয়, আক্রমণকারী সহজেই lateral movement করে পুরো সিস্টেম অ্যাক্সেস করে ফেলতে পারে। <span class="kw">Zero Trust</span> নীতি ধরে নেয় নেটওয়ার্কের অবস্থান কোনো বিশ্বাসের ভিত্তি নয় — প্রতিটা কল, তার উৎস যেখান থেকেই আসুক, cryptographically যাচাই করতে হয়।</div>
+
+<h3>Service-to-Service Auth — mTLS বনাম JWT</h3>
+<table>
+<tr><th></th><th>mTLS</th><th>Service Account JWT</th></tr>
+<tr><td>যাচাই করে</td><td>কোন সার্ভিস (certificate-ভিত্তিক identity)</td><td>কোন সার্ভিস + কী পারমিশন নিয়ে (claims-ভিত্তিক)</td></tr>
+<tr><td>স্তর</td><td>Transport layer — Service Mesh দিয়ে স্বয়ংক্রিয় (৯ নম্বর অধ্যায়ে)</td><td>Application layer — কোডে explicit token যাচাই লাগে</td></tr>
+<tr><td>সাধারণ ব্যবহার</td><td>Mesh-এর ভেতরে সব কল এনক্রিপ্ট ও যাচাই করা</td><td>কোন specific সার্ভিস কোন resource-এ কী করতে পারবে তার fine-grained নিয়ন্ত্রণ</td></tr>
+</table>
+<p>বাস্তবে দুটো একসাথে ব্যবহৃত হয় — mTLS নিশ্চিত করে "এটা সত্যিই Order Service থেকে আসা কল", আর JWT-এর claims নিশ্চিত করে "Order Service-এর এই নির্দিষ্ট অ্যাকশনটা করার অনুমতি আছে" (এই সাইটের Auth কোর্সের JWT ও OIDC অধ্যায়ে JWT-এর ভেতরের মেকানিজম বিস্তারিত)।</p>
+
+<h3>API Security at the Gateway</h3>
+<p>বাইরের world থেকে আসা রিকোয়েস্টের জন্য API Gateway (৪ নম্বর অধ্যায়ে) authentication-এর প্রথম, কেন্দ্রীয় চেকপয়েন্ট — OAuth2/JWT যাচাই, রেট লিমিটিং দিয়ে abuse প্রতিরোধ (৮ নম্বর অধ্যায়ে বিস্তারিত)। একবার gateway পার হয়ে গেলে, ভেতরের সার্ভিসগুলো পুনরায় নিজেরাই যাচাই করে (Zero Trust) — gateway-এর যাচাইকে সম্পূর্ণ বিশ্বাস করে না।</p>
+
+<h3>Least Privilege — প্রতিটা Service যা প্রয়োজন তাই পায়</h3>
+<div class="callout best"><span class="tag">Best practice — প্রতিটা Service-এর নিজস্ব, সীমিত পারমিশন</span>
+প্রতিটা সার্ভিসকে একটা নির্দিষ্ট, ন্যূনতম পারমিশন সেট দেওয়া উচিত — Order Service-এর যদি শুধু Order টেবিল পড়া/লেখার প্রয়োজন হয়, তাকে পুরো ডেটাবেসে admin অ্যাক্সেস দেওয়া অর্থহীন ঝুঁকি। একটা সার্ভিস compromise হলে, এই সীমাবদ্ধতাই নির্ধারণ করে আক্রমণকারী ঠিক কতটুকু ক্ষতি করতে পারবে — এটাই defense-in-depth-এর মূল ভিত্তি।</div>
+</template>
+
+<template data-page="testing">
+<h2 class="title">১৩. Testing Strategies — Contract Testing, Chaos Engineering</h2>
+<p class="lead">একটা মনোলিথে ইন্টিগ্রেশন টেস্ট মানে একটাই প্রসেস চালিয়ে টেস্ট করা। Microservices-এ পুরো সিস্টেমের প্রতিটা সার্ভিস একসাথে চালিয়ে টেস্ট করা ধীর, ভঙ্গুর, আর ব্যয়বহুল — একটা ভিন্ন কৌশল লাগে।</p>
+
+<h3>Testing শেপ — কেন সব E2E টেস্টে নির্ভর করা যায় না</h3>
+<div class="callout mistake"><span class="tag">Common mistake — বেশি E2E, কম Contract/Unit Test</span>
+প্রতিটা ফিচার Change-এর জন্য পুরো সিস্টেম (১০টা সার্ভিস + ডেটাবেস + broker) স্পিন-আপ করে End-to-End টেস্ট চালানো ধীর (মিনিট) আর অস্থির (flaky — যেকোনো একটা সার্ভিসের সাময়িক সমস্যায় টেস্ট ব্যর্থ হয়, আসল বাগ না থাকলেও)। সমাধান — বেশিরভাগ testing coverage Unit test আর Contract test দিয়ে দ্রুত, নির্ভরযোগ্যভাবে কভার করা, আর E2E টেস্ট শুধু সবচেয়ে গুরুত্বপূর্ণ "critical path" (যেমন checkout ফ্লো)-তে সীমিত রাখা।</div>
+
+<h3>Consumer-Driven Contract Testing (Pact)</h3>
+<p>দুটো সার্ভিস আলাদা টিম মেইনটেন করে — Order Service (consumer) Payment Service (provider)-এর API কল করে। কীভাবে নিশ্চিত হওয়া যায় Payment Service-এর একটা পরিবর্তন Order Service-কে ভাঙবে না, পুরো সিস্টেম spin-up না করেই?</p>
+<div class="diagram"><pre>
+১. Consumer (Order Service) তার প্রত্যাশা লিখে একটা "contract" ফাইল তৈরি করে:
+   "আমি /payments POST করলে, আমি {status, transactionId} ফরম্যাটে response আশা করি"
+
+২. এই contract একটা Broker-এ (Pact Broker) পাবলিশ হয়
+
+৩. Provider (Payment Service)-এর CI pipeline সেই contract নিয়ে, তার নিজের কোডের
+   বিরুদ্ধে যাচাই করে — provider সত্যিই সেই ফরম্যাটে response দেয় কিনা
+
+৪. যাচাই ব্যর্থ হলে, Payment Service-এর deploy আটকে যায় — আসল Order Service
+   স্পিন-আপ না করেই ভাঙন আগেভাগে ধরা পড়ে
+</pre></div>
+<div class="callout why"><span class="tag">কেন এটা Fragile E2E টেস্টের চেয়ে ভালো</span>
+Contract test শুধু "এই দুই সার্ভিসের মধ্যে চুক্তি" যাচাই করে, পুরো সিস্টেমের বাস্তব আচরণ নয় — এটা E2E টেস্টের চেয়ে অনেক দ্রুত (কোনো নেটওয়ার্ক কল নেই, দুই পক্ষই আলাদাভাবে, প্যারালালভাবে টেস্ট করা যায়), কিন্তু তারপরও integration ভাঙন আগেভাগে ধরে ফেলে — E2E টেস্টের মূল সুবিধা কম খরচে পাওয়া যায়। প্রতিটা provider ঠিক জানে কোন consumer তার ওপর নির্ভর করছে ও কী প্রত্যাশা করছে, একটা কেন্দ্রীয় জায়গায় (Pact Broker) নথিভুক্ত।</div>
+
+<h3>Integration Testing with Testcontainers</h3>
+<p>একটা সার্ভিসের ইন্টিগ্রেশন টেস্ট চালাতে একটা আসল PostgreSQL/RabbitMQ ইনস্ট্যান্স লাগে, কিন্তু production ইনস্ট্যান্স ব্যবহার করা বিপজ্জনক আর ভাগাভাগি করলে টেস্ট একে অপরের সাথে সংঘর্ষ করে। <span class="kw">Testcontainers</span> লাইব্রেরি প্রতিটা টেস্ট রানে একটা ডিসপোজেবল, real Docker কন্টেইনার (PostgreSQL, RabbitMQ) স্পিন-আপ করে, টেস্ট শেষে বন্ধ করে দেয় — mock ব্যবহার না করে আসল ডেটাবেস-এর বিরুদ্ধে টেস্ট করা যায়, তাও প্রতিটা টেস্ট রান সম্পূর্ণ আইসোলেটেড।</p>
+
+<h3>Chaos Engineering — Failure Injection</h3>
+<p>একটা সিস্টেম সত্যিই resilient কিনা জানার একমাত্র নির্ভরযোগ্য উপায় — নিয়ন্ত্রিতভাবে সত্যিকারের ব্যর্থতা ঘটিয়ে দেখা।</p>
+<div class="callout best"><span class="tag">Chaos Monkey ফিলোসফি — নিয়ন্ত্রিতভাবে জিনিস ভাঙা</span>
+Netflix-এর Chaos Monkey ইচ্ছাকৃতভাবে production-এ (নিয়ন্ত্রিত পরিসরে, ব্যবসায়িক সময়ে, দ্রুত rollback ক্ষমতা নিয়ে) র‍্যান্ডমভাবে সার্ভিস ইনস্ট্যান্স বন্ধ করে দেয়, নেটওয়ার্ক latency injection করে, বা downstream dependency বন্ধ রাখে — এই লক্ষ্যে যে, দল যদি নিজেরাই নিয়ন্ত্রিতভাবে সিস্টেম ভাঙতে পারে ও দুর্বলতা খুঁজে বের করতে পারে, বাস্তব জীবনের অনিয়ন্ত্রিত outage (peak traffic-এর সময়) আসার আগেই সেই দুর্বলতা ঠিক করা সম্ভব। এই দর্শন ৮ নম্বর অধ্যায়ের Resilience Pattern-গুলো আসলেই কাজ করে কিনা যাচাই করার বাস্তব পথ — শুধু কোড লেখা যথেষ্ট নয়, প্রমাণ করাটাই আসল কাজ।</div>
+</template>
+
+<template data-page="deployment">
+<h2 class="title">১৪. Deployment ও Containerization</h2>
+<p class="lead">দশটা স্বাধীন সার্ভিস মানে দশটা স্বাধীন deployment pipeline, দশটা স্বাধীন runtime environment — এটা ম্যানুয়ালি সামলানো অসম্ভব, containerization ও orchestration ছাড়া।</p>
+
+<h3>Container per Service</h3>
+<p>প্রতিটা সার্ভিস তার নিজের dependency, runtime, ও configuration নিয়ে একটা স্বতন্ত্র <span class="kw">Docker image</span>-এ প্যাকেজ হয় — "এটা আমার মেশিনে কাজ করে" সমস্যা দূর হয়, কারণ একই image dev, staging, ও production-এ ঠিক একইভাবে চলে। এই সাইটের Docker কোর্সে image, layer, ও multi-stage build-এর বিস্তারিত ব্যাখ্যা আছে।</p>
+
+<h3>Orchestration — Kubernetes সংক্ষেপে</h3>
+<p>দশটা সার্ভিসের কয়েকশো কন্টেইনার instance ম্যানুয়ালি চালু/বন্ধ/স্কেল করা অব্যবহারিক — <span class="kw">Kubernetes</span>-এর মতো orchestrator স্বয়ংক্রিয়ভাবে সিদ্ধান্ত নেয় কোন নোডে কোন কন্টেইনার চলবে, ক্র্যাশ করলে restart করে, আর লোড বাড়লে scale করে (৫ নম্বর অধ্যায়ের Service Discovery-ও Kubernetes-এই built-in)। বিস্তারিত Pod/Deployment/Service/Ingress ব্যাখ্যা এই সাইটের Kubernetes কোর্সে আছে।</p>
+
+<h3>Deployment Strategies — স্বাধীন Deployability বাস্তবায়ন</h3>
+<div class="diagram"><pre>
+Rolling Update:  v1,v1,v1,v1 ──▶ v2,v1,v1,v1 ──▶ v2,v2,v1,v1 ──▶ v2,v2,v2,v2  (ধাপে ধাপে প্রতিস্থাপন)
+
+Blue-Green:      [Blue: v1 — লাইভ]     [Green: v2 — প্রস্তুত, টেস্ট হচ্ছে]
+                 ট্রাফিক সুইচ ──▶       [Blue: v1 — standby]  [Green: v2 — লাইভ]   (তাৎক্ষণিক সম্পূর্ণ সুইচ)
+
+Canary:          ৯৫% ──▶ v1  ┐
+                  ৫% ──▶ v2  ┘  ধীরে ধীরে v2-এর শতাংশ বাড়ানো, সমস্যা দেখলে সাথে সাথে ০%-এ ফিরিয়ে আনা
+</pre></div>
+<p>এই স্ট্র্যাটেজিগুলোর বিস্তারিত ব্যাখ্যা এই সাইটের DevOps কোর্সে আছে — Microservices-এর প্রেক্ষাপটে গুরুত্বপূর্ণ বিষয়টা হলো প্রতিটা সার্ভিস তার নিজের deployment strategy স্বাধীনভাবে বেছে নিতে পারে, একটা কেন্দ্রীয় "সবকিছু একসাথে ডিপ্লয়" প্রক্রিয়ার বদলে।</p>
+
+<h3>Independent Deployability — মূল লক্ষ্য</h3>
+<div class="callout best"><span class="tag">Best practice — প্রতিটা Service-এর নিজস্ব CI/CD Pipeline</span>
+Microservices-এর সবচেয়ে বড় প্রতিশ্রুতি (একটা টিম বাকিদের জন্য অপেক্ষা না করে নিজের সার্ভিস ডিপ্লয় করতে পারা) শুধু তখনই বাস্তবায়িত হয় যদি প্রতিটা সার্ভিসের নিজস্ব, স্বাধীন CI/CD pipeline থাকে — একটা কেন্দ্রীয় "সব সার্ভিস একসাথে বিল্ড ও টেস্ট" pipeline থাকলে, সেই একক pipeline-ই আসলে একটা গোপন monolith তৈরি করে ফেলে (deployment-এর দিক থেকে), যদিও কোড আলাদা রিপোজিটরিতে আছে।</div>
+</template>
+
+<template data-page="antipatterns">
+<h2 class="title">১৫. Anti-patterns ও Common Pitfalls</h2>
+<p class="lead">Microservices-এর প্রতিটা সুবিধা ভুলভাবে বাস্তবায়ন করলে হারিয়ে যেতে পারে — এই অধ্যায়ে সবচেয়ে সাধারণ ব্যর্থতার প্যাটার্নগুলো একত্র করা হলো, আগের অধ্যায়ে ছড়িয়ে থাকা সতর্কতাগুলোর একটা সামগ্রিক চিত্র।</p>
+
+<h3>Distributed Monolith — সবচেয়ে সাধারণ ব্যর্থতা</h3>
+<p>এটা তখন ঘটে যখন একটা সিস্টেম শারীরিকভাবে একাধিক সার্ভিসে ভাঙা হয়েছে (আলাদা কোডবেস, আলাদা deployment), কিন্তু সেই সার্ভিসগুলো এতটাই ঘনিষ্ঠভাবে জড়িয়ে আছে যে তাদের এখনও <b>একসাথে deploy করতে হয়</b> — Microservices-এর কোনো আসল সুবিধা ছাড়াই, শুধু network latency ও অপারেশনাল জটিলতার খরচ যুক্ত হয়।</p>
+<table>
+<tr><th>উপসর্গ</th><th>কারণ</th></tr>
+<tr><td>একটা সার্ভিসের পরিবর্তনে আরও ৩টা সার্ভিস redeploy করতে হয়</td><td>ভুল সীমানা — সার্ভিসগুলো একটা বিজনেস ক্যাপাবিলিটি ভাগাভাগি করছে (২ নম্বর অধ্যায়ে decomposition)</td></tr>
+<tr><td>দুটো সার্ভিস একই ডেটাবেস টেবিল অ্যাক্সেস করে</td><td>Database per Service নীতি ভাঙা (৬ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>Synchronous কল চেইন: A→B→C→D, একটা ধীর হলে সব ধীর</td><td>Temporal coupling — নিচের "Chatty Services" দেখুন</td></tr>
+</table>
+
+<h3>Chatty Services — অতিরিক্ত Network Call</h3>
+<div class="diagram"><pre>
+Order Service একটা অর্ডার দেখাতে:
+  ──▶ Customer Service (নাম আনতে)
+  ──▶ Product Service (প্রতিটা আইটেমের জন্য, লুপে!)   ← N+1 problem
+  ──▶ Inventory Service (স্টক চেক)
+  ──▶ Pricing Service (দাম)
+  = একটা পেজ লোড করতে ৪+N টা network call, প্রতিটাই latency ও ব্যর্থতার সম্ভাব্য উৎস
+</pre></div>
+<div class="callout mistake"><span class="tag">Common mistake — একাধিক ছোট সার্ভিসের মধ্যে অতিরিক্ত Fine-grained কল</span>
+সার্ভিসের সীমানা যদি খুব ছোট আকারে টানা হয় (একটা এন্টিটির প্রতিটা attribute-এর জন্য আলাদা সার্ভিস), তাহলে একটা সাধারণ কাজেই ডজন-খানেক network call লাগতে পারে — প্রতিটা কল নিজের latency ও ব্যর্থতার ঝুঁকি নিয়ে আসে। সমাধান একদিকে ৭ নম্বর অধ্যায়ের data duplication (প্রয়োজনীয় ডেটা আগেই কপি রাখা যাতে কল করতে না হয়), অন্যদিকে ৪ নম্বর অধ্যায়ের gateway-level aggregation (একাধিক কল সমান্তরালে করা, ক্লায়েন্টকে একটাই কল দেখানো)।</div>
+
+<h3>Shared Database Anti-pattern</h3>
+<p>ইতিমধ্যে ৬ নম্বর অধ্যায়ে বিস্তারিত আলোচিত — দুটো সার্ভিস একই ডেটাবেস শেয়ার করলে স্কিমা পরিবর্তনের মাধ্যমে গোপন coupling তৈরি হয়, যা কোনো API কনট্র্যাক্ট রিভিউতে ধরা পড়ে না।</p>
+
+<h3>Nanoservices — অতিরিক্ত ভাঙা</h3>
+<div class="callout mistake"><span class="tag">Common mistake — প্রতিটা ফাংশনের জন্য একটা আলাদা সার্ভিস</span>
+Microservices-এর সুবিধা "ছোট" থেকে আসে না, সঠিক সীমানা থেকে আসে। একটা "GetUserEmail" সার্ভিস, একটা "GetUserName" সার্ভিস — এভাবে অতিরিক্ত ভাঙলে (<span class="kw">nanoservices</span>) প্রতিটা ছোট অপারেশনের জন্য পূর্ণ network overhead (serialization, latency, ব্যর্থতার সম্ভাবনা) লাগে, কিন্তু কোনো বাস্তব স্বাধীন-স্কেলিং বা স্বাধীন-টিম সুবিধা নেই — কারণ এই ফাংশনগুলো কখনোই আলাদাভাবে বদলাবে না, একসাথেই বদলাবে। নিয়ম মনে রাখা ভালো: একটা সার্ভিস একটা <b>সম্পূর্ণ বিজনেস ক্যাপাবিলিটি</b>-র মালিক হওয়া উচিত, একটা একক ফাংশনের নয়।</div>
+</template>
+
+<template data-page="dotnet">
+<h2 class="title">১৬. Microservices in .NET</h2>
+<p class="lead">এই অধ্যায়ে আগের প্যাটার্নগুলো .NET ইকোসিস্টেমে বাস্তবায়ন করার কনক্রিট টুল ও কোড উদাহরণ দেখানো হলো — এই সাইটের C#/.NET কোর্সের সাথে একসাথে পড়লে সবচেয়ে ভালো বোঝা যাবে।</p>
+
+<h3>ASP.NET Core Minimal API দিয়ে একটা Service</h3>
+<pre><span class="c">// Order Service — Minimal API, প্রতিটা microservice-এর জন্য common pattern</span>
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddDbContext&lt;OrderDbContext&gt;(opt =&gt; opt.UseNpgsql(connStr));
+builder.Services.AddHttpClient&lt;PaymentClient&gt;();   <span class="c">// downstream সার্ভিস কল করার জন্য typed client</span>
+
+var app = builder.Build();
+app.MapPost("/orders", async (CreateOrderRequest req, OrderDbContext db) =&gt; {
+    var order = new Order(req.CustomerId, req.Items);
+    db.Orders.Add(order);
+    await db.SaveChangesAsync();     <span class="c">// একই transaction-এ Outbox row-ও insert হওয়া উচিত (৭ নম্বর অধ্যায়ে)</span>
+    return Results.Created($"/orders/{order.Id}", order);
+});
+app.Run();</pre>
+
+<h3>YARP — .NET-নেটিভ API Gateway</h3>
+<pre><span class="c">// appsettings.json — YARP reverse proxy রুট কনফিগারেশন</span>
+{
+  "ReverseProxy": {
+    "Routes": {
+      "orders-route": { "ClusterId": "orders-cluster", "Match": { "Path": "/api/orders/{**catch-all}" } }
+    },
+    "Clusters": {
+      "orders-cluster": { "Destinations": { "d1": { "Address": "http://order-service:8080/" } } }
+    }
+  }
+}</pre>
+<p><span class="kw">YARP (Yet Another Reverse Proxy)</span> মাইক্রোসফটের নিজস্ব, কোড-প্রথম API Gateway লাইব্রেরি — কনফিগারেশন ফাইল বা কোডে সরাসরি রুট সংজ্ঞায়িত করা যায়, আর ASP.NET Core middleware pipeline-এর সাথে (auth, rate limiting) স্বাভাবিকভাবেই মিশে যায়।</p>
+
+<h3>MassTransit — Messaging Abstraction</h3>
+<pre><span class="c">// Publish — RabbitMQ/Azure Service Bus নির্বিশেষে একই কোড</span>
+await publishEndpoint.Publish(new OrderCreated(order.Id, order.CustomerId, order.Total));
+
+<span class="c">// Consume — Payment Service-এ</span>
+public class OrderCreatedConsumer : IConsumer&lt;OrderCreated&gt;
+{
+    public async Task Consume(ConsumeContext&lt;OrderCreated&gt; ctx)
+    {
+        await _paymentProcessor.Charge(ctx.Message.CustomerId, ctx.Message.Total);
+    }
+}</pre>
+<div class="callout why"><span class="tag">কেন Abstraction Library — Broker স্বাধীনতা</span>
+<span class="kw">MassTransit</span> প্রকৃত broker (RabbitMQ, Azure Service Bus, Amazon SQS) থেকে অ্যাপ্লিকেশন কোডকে আলাদা রাখে — পাব্লিশ/কনজিউম কোড একই থাকে, ব্রোকার বদলালেও। এটা রিট্রাই, আউটবক্স প্যাটার্ন (৭ নম্বর অধ্যায়ে), ও dead-letter হ্যান্ডলিং-এর মতো cross-cutting concern বিল্ট-ইন দেয়, প্রতিটা সার্ভিসে আলাদাভাবে লেখার বদলে।</div>
+
+<h3>gRPC in .NET — Service-to-Service Communication</h3>
+<pre><span class="c">// order.proto — কনট্র্যাক্ট সংজ্ঞা</span>
+service OrderService {
+  rpc GetOrder (GetOrderRequest) returns (OrderReply);
+}
+
+<span class="c">// Program.cs — সার্ভার সাইড</span>
+builder.Services.AddGrpc();
+app.MapGrpcService&lt;OrderGrpcService&gt;();
+
+<span class="c">// ক্লায়েন্ট সাইড (অন্য সার্ভিস থেকে কল)</span>
+var client = new OrderService.OrderServiceClient(channel);
+var reply = await client.GetOrderAsync(new GetOrderRequest { Id = 42 });</pre>
+<p>ইন্টারনাল, উচ্চ-পারফরম্যান্স সার্ভিস-টু-সার্ভিস কলে (৩ নম্বর অধ্যায়ে আলোচিত কারণে) gRPC .NET-এ প্রথম-শ্রেণির সাপোর্ট পায় — <code>.proto</code> ফাইল থেকে স্বয়ংক্রিয়ভাবে টাইপ-সেফ ক্লায়েন্ট/সার্ভার কোড জেনারেট হয়।</p>
+</template>
+
+<template data-page="migration">
+<h2 class="title">১৭. Migration Roadmap — Monolith থেকে Microservices</h2>
+<p class="lead">এই কোর্সের প্রতিটা প্যাটার্ন এখন পরিচিত — শেষ ধাপে দেখা যাক একটা বাস্তব migration কীভাবে ধাপে ধাপে এগোয়, আর একটা সম্পূর্ণ রিকোয়েস্ট কীভাবে পুরো স্ট্যাক জুড়ে যাত্রা করে।</p>
+
+<h3>ধাপে ধাপে Migration Plan</h3>
+<div class="diagram"><pre>
+ধাপ ১  Domain Mapping        — DDD দিয়ে Bounded Context চিহ্নিত করা (২ নম্বর অধ্যায়)
+ধাপ ২  Observability প্রথমে   — Migration শুরুর আগেই tracing/logging বসানো (১১ নম্বর) —
+                                 নাহলে migration-এর সময় সমস্যা এলে বোঝার উপায় থাকে না
+ধাপ ৩  Strangler Fig          — সবচেয়ে স্বাধীন, সবচেয়ে কম ঝুঁকিপূর্ণ ক্যাপাবিলিটি প্রথমে বের করা (২ নম্বর)
+ধাপ ৪  Data Decoupling        — extracted সার্ভিসের নিজস্ব DB, event-driven sync (৬ ও ৭ নম্বর)
+ধাপ ৫  Resilience যুক্ত করা   — নতুন network boundary-তে circuit breaker/retry বসানো (৮ নম্বর)
+ধাপ ৬  Team পুনর্গঠন          — Conway's Law মেনে টিম-মালিকানা সার্ভিস সীমানার সাথে মেলানো (১ নম্বর)
+ধাপ ৭  পুনরাবৃত্তি              — পরের ক্যাপাবিলিটি বেছে ধাপ ৩-এ ফিরে যাওয়া, একটা একটা করে
+</pre></div>
+<div class="callout best"><span class="tag">Best practice — Migration-এর কোনো "শেষ তারিখ" নেই</span>
+একটা সফল Microservices migration মাসের পর মাস, প্রায়ই বছরের পর বছর ধরে চলা একটা ইনক্রিমেন্টাল প্রক্রিয়া, একটা প্রজেক্ট নয় যার একটা "সমাপ্তি তারিখ" আছে। প্রতিটা ধাপ স্বাধীনভাবে ব্যবসায়িক মূল্য দেয় (একটা ক্যাপাবিলিটি স্বাধীনভাবে স্কেল/deploy করা যাচ্ছে), তাই মাঝপথে থামলেও ক্ষতি নেই — একটা মনোলিথের কিছু অংশ স্থায়ীভাবে থেকে যাওয়াও সম্পূর্ণ স্বাভাবিক, যদি সেই অংশের জন্য microservices-এর ট্রেড-অফ যুক্তিসঙ্গত না হয়।</div>
+
+<h3>সবকিছু একসাথে — একটা Request-এর সম্পূর্ণ যাত্রা</h3>
+<p>একটা ব্যবহারকারী "Order Confirm" বাটনে ক্লিক করার পর — রিকোয়েস্ট API Gateway-তে আসে, JWT যাচাই হয় (১২ নম্বর) → Gateway Order Service-এ route করে (৪ নম্বর) → Order Service নিজের DB-তে অর্ডার সেভ করে একই transaction-এ Outbox event লেখে (৭ নম্বর) → Saga Orchestrator পেমেন্ট ও ইনভেন্টরি সার্ভিসকে ধাপে ধাপে নির্দেশ দেয়, প্রতিটা কলে circuit breaker/retry সক্রিয় থাকে (৬ ও ৮ নম্বর) → Service Mesh প্রতিটা কল mTLS দিয়ে এনক্রিপ্ট করে (৯ নম্বর) → পুরো যাত্রার প্রতিটা span একই trace ID দিয়ে জোড়া লেগে থাকে (১১ নম্বর) → সফল হলে Notification Service event শুনে ইমেইল পাঠায়। এটাই আধুনিক Microservices সিস্টেমের সম্পূর্ণ চিত্র — একটাও কেন্দ্রীয় "ঈশ্বর ফাংশন" নেই, বরং প্রতিটা ছোট, স্বাধীন অংশ তার নিজের দায়িত্ব পালন করে একে অপরের সাথে সুস্পষ্ট চুক্তিতে যোগাযোগ করে।</p>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৮. Interview Prep — প্রশ্নোত্তর</h2>
+<p class="lead">সাধারণত জিজ্ঞাসিত কিছু প্রশ্ন, যেগুলোর উত্তর এই কোর্সের ধারণাগুলো একসাথে জোড়া দিয়ে দেওয়া প্রয়োজন — মুখস্থ উত্তর নয়, বরং কেন সেই উত্তরটাই সঠিক তার যুক্তি।</p>
+
+<h3>প্রশ্ন ১: Microservices কেন বেছে নেবেন, আর কেন নেবেন না?</h3>
+<p>স্বাধীন স্কেলিং, স্বাধীন deployability, ও team autonomy (Conway's Law) — যখন টিম/স্কেল সেই ব্যথা অনুভব করছে (১ নম্বর অধ্যায়)। ছোট টিম/অ্যাপ্লিকেশনে network latency, distributed debugging, ও operational overhead-এর খরচ কোনো বাস্তব সুবিধা ছাড়াই যুক্त হয় — "majestic monolith" প্রায়ই ভালো শুরু বিন্দু।</p>
+
+<h3>প্রশ্ন ২: Distributed Transaction কীভাবে সামলাবেন, 2PC ব্যবহার করবেন না কেন?</h3>
+<p>2PC blocking (কোঅর্ডিনেটর ফেইলিওরে রিসোর্স লক অনির্দিষ্টকাল আটকে থাকে) আর ভিন্ন-ভিন্ন প্রযুক্তির ডেটাবেস জুড়ে বাস্তবসম্মত না। Saga pattern (Choreography/Orchestration) local transaction + compensating action দিয়ে eventual consistency অর্জন করে (৬ নম্বর অধ্যায়)।</p>
+
+<h3>প্রশ্ন ৩: Circuit Breaker কীভাবে কাজ করে?</h3>
+<p>তিনটা state — Closed (স্বাভাবিক), Open (ব্যর্থতার হার threshold পার হলে সব কল সাথে সাথে fail, downstream-কে চাপ না দিয়ে), Half-Open (একটা সময় পর কিছু test কল পাঠিয়ে দেখা downstream ঠিক হয়েছে কিনা)। Cascading failure ও thread pool exhaustion প্রতিরোধ করে (৮ নম্বর অধ্যায়)।</p>
+
+<h3>প্রশ্ন ৪: API Gateway ও Service Mesh-এর পার্থক্য কী?</h3>
+<p>API Gateway বাইরের world থেকে সিস্টেমে ঢোকার একটা একক entry point (north-south traffic) — routing, auth, rate limiting। Service Mesh সিস্টেমের ভেতরে সার্ভিস-টু-সার্ভিস কমিউনিকেশন (east-west traffic) সামলায় — mTLS, retry, traffic splitting, sidecar দিয়ে (৪ ও ৯ নম্বর অধ্যায়)।</p>
+
+<h3>প্রশ্ন ৫: Distributed Monolith কী, কীভাবে চেনা যায়?</h3>
+<p>একাধিক সার্ভিসে ভাঙা কিন্তু এখনও একসাথে deploy করতে হয় এমন সিস্টেম — সাধারণ কারণ: shared database, ভুল সার্ভিস সীমানা (একটা বিজনেস ক্যাপাবিলিটি একাধিক সার্ভিসে ছড়িয়ে), বা দীর্ঘ synchronous কল চেইন। Microservices-এর সব খরচ, কোনো সুবিধা ছাড়াই (১৫ নম্বর অধ্যায়)।</p>
+
+<h3>প্রশ্ন ৬: একটা রিকোয়েস্ট একাধিক সার্ভিস জুড়ে গেলে, কীভাবে debug করবেন?</h3>
+<p>Distributed tracing — একটা trace ID প্রথম entry point-এ জেনারেট হয়ে প্রতিটা downstream কলে propagate হয় (HTTP header/message metadata-তে), প্রতিটা সার্ভিস তার span রেকর্ড করে, tracing backend (Jaeger) সব span জোড়া দিয়ে একটা টাইমলাইন দেখায় (১১ নম্বর অধ্যায়)।</p>
+
+<h3>প্রশ্ন ৭: প্রতিটা সার্ভিস নিজের ডেটাবেস রাখলে, একটা রিপোর্টের জন্য একাধিক সার্ভিসের ডেটা একসাথে দরকার হলে কী করবেন?</h3>
+<p>সরাসরি cross-service join সম্ভব না — সমাধান CQRS-এর read model (প্রয়োজনীয় ডেটা event শুনে আগেই একটা denormalized store-এ একত্র করে রাখা), বা API composition (একাধিক সার্ভিস থেকে সমান্তরালে ডেটা এনে aggregation লেয়ারে জোড়া লাগানো) — সরাসরি ডেটাবেস query শেয়ার করা নয় (৬ ও ৭ নম্বর অধ্যায়)।</p>
+
+<h3>প্রশ্ন ৮: API Gateway ও BFF-এর পার্থক্য কী, কখন BFF দরকার হয়?</h3>
+<p>API Gateway একটা একক, সবার জন্য কমন entry point — routing, auth, rate limiting সব ক্লায়েন্টের জন্য একই রকম। কিন্তু মোবাইল অ্যাপ আর ওয়েব ড্যাশবোর্ডের ডেটার প্রয়োজন ভিন্ন (মোবাইলে কম payload, কম round-trip) — একটাই gateway সব ক্লায়েন্টের বিশেষ প্রয়োজন মেটাতে গিয়ে ক্রমশ জটিল হয়ে ওঠে। BFF (Backend For Frontend) প্রতিটা ফ্রন্টএন্ডের জন্য একটা আলাদা, ছোট, তৈরি-করা gateway layer রাখে, প্রতিটা নিজের ক্লায়েন্টের জন্য অপ্টিমাইজড response দেয় (৪ নম্বর অধ্যায়)।</p>
+
+<h3>প্রশ্ন ৯: Client-side ও Server-side Service Discovery-এর পার্থক্য কী, Kubernetes কোনটা ব্যবহার করে?</h3>
+<p>Client-side discovery-তে caller নিজেই registry-কে জিজ্ঞেস করে instance তালিকা নেয়, তারপর নিজেই load balancing decision নেয় (Netflix Eureka + Ribbon)। Server-side discovery-তে caller শুধু একটা লোড ব্যালান্সার/gateway-কে কল করে, discovery ও routing সিদ্ধান্ত কেন্দ্রীয়ভাবে নেওয়া হয় — caller-কে registry-এর ব্যাপারে কিছুই জানতে হয় না। Kubernetes-এর <code>Service</code> object + DNS server-side মডেল অনুসরণ করে — kube-proxy/CoreDNS স্বয়ংক্রিয়ভাবে সুস্থ Pod-এ route করে দেয় (৫ নম্বর অধ্যায়)।</p>
+
+<h3>প্রশ্ন ১০: Outbox Pattern কী সমস্যা সমাধান করে, কীভাবে কাজ করে?</h3>
+<p>একটা সার্ভিস DB-তে ডেটা সেভ করার পর broker-এ একটা event পাঠায় — এই দুইটা আলাদা সিস্টেম, তাই একসাথে atomic-ভাবে করা যায় না (dual write সমস্যা); মাঝখানে ক্র্যাশ হলে DB-তে ডেটা আছে কিন্তু event কখনো পাঠানো হয়নি। Outbox Pattern-এ event-টাকে সরাসরি broker-এ না পাঠিয়ে, একই DB-এর একই transaction-এ একটা "Outbox" টেবিলে সংরক্ষণ করা হয় — DB নিজেই সেই atomicity guarantee দেয়। একটা আলাদা Relay প্রসেস (প্রায়ই Debezium CDC দিয়ে) পরে Outbox টেবিল পড়ে broker-এ প্রকৃত publish করে (৭ নম্বর অধ্যায়)।</p>
+
+<h3>প্রশ্ন ১১: Consumer-Driven Contract Testing কী, এটা কেন পুরো সিস্টেম নিয়ে E2E টেস্ট করার চেয়ে ভালো?</h3>
+<p>Consumer (যেমন Order Service) তার প্রত্যাশা একটা contract ফাইলে লিখে একটা broker-এ (Pact Broker) পাবলিশ করে — Provider (Payment Service)-এর CI pipeline সেই contract-এর বিরুদ্ধে নিজের কোড যাচাই করে, প্রকৃত Order Service স্পিন-আপ না করেই। এটা পুরো সিস্টেম চালিয়ে E2E টেস্ট করার চেয়ে অনেক দ্রুত ও কম flaky, কিন্তু তারপরও integration ভাঙন deploy-এর আগেই ধরে ফেলে — কোন consumer কোন provider-এর ওপর নির্ভরশীল তা কেন্দ্রীয়ভাবে নথিভুক্ত থাকে (১৩ নম্বর অধ্যায়)।</p>
+
+<h3>প্রশ্ন ১২: Chatty Services / N+1 problem কী, কীভাবে সমাধান করবেন?</h3>
+<p>সার্ভিসের সীমানা খুব ছোট বা ভুলভাবে টানা হলে, একটা সাধারণ কাজেই (যেমন একটা অর্ডার পেজ দেখানো) প্রতিটা আইটেমের জন্য লুপে আলাদা network call লাগে — একটা পেজ লোডে ডজন-খানেক কল, প্রতিটাই latency ও ব্যর্থতার সম্ভাব্য উৎস। সমাধান দুইদিক থেকে: data duplication/event-driven sync (প্রয়োজনীয় ডেটা আগেই কপি রাখা যাতে কল করতে না হয়, ৭ নম্বর অধ্যায়) এবং gateway-level aggregation (একাধিক কল সমান্তরালে করে একটা response জোড়া লাগানো, ৪ নম্বর অধ্যায়) — এটা ১৫ নম্বর অধ্যায়ের একটা মূল anti-pattern।</p>
+
+<h3>প্রশ্ন ১৩: Secret (DB পাসওয়ার্ড, API key) প্লেইন environment variable-এ রাখা কেন যথেষ্ট নিরাপদ নয়?</h3>
+<p>Environment variable কনফিগ ফাইলে বেক করা secret-এর চেয়ে ভালো, কিন্তু এখনও প্লেইনটেক্সট — <code>docker inspect</code>, প্রসেস লিস্টিং, বা ক্র্যাশ লগে সহজেই দেখা যায়, আর rotation করতে হলে সার্ভিস redeploy করতে হয়। প্রোডাকশন-গ্রেড সমাধান একটা ডেডিকেটেড secret store (HashiCorp Vault, Azure Key Vault, AWS Secrets Manager) — সার্ভিস রানটাইমে একটা short-lived credential দিয়ে secret আনে, secret ডিস্কে/env var-এ স্থায়ীভাবে লেখা থাকে না, আর rotation স্বয়ংক্রিয়ভাবে হতে পারে (১০ নম্বর অধ্যায়)।</p>
+
+<h3>প্রশ্ন ১৪: Feature Flag Microservices-এ কেন বিশেষভাবে গুরুত্বপূর্ণ?</h3>
+<p>Feature flag deploy করা আর release করা — এই দুইটাকে আলাদা করে দেয়। Microservices-এ একটা ফিচার প্রায়ই একাধিক সার্ভিসে ছড়িয়ে থাকে (Order + Payment + Notification একসাথে বদলাতে হবে) — সবাইকে ঠিক একই মুহূর্তে deploy করা কঠিন। Flag off রেখে প্রতিটা সার্ভিস স্বাধীনভাবে deploy করতে পারে, সব প্রস্তুত হলে কেন্দ্রীয়ভাবে একটা toggle দিয়ে ফিচারটা একসাথে চালু করা যায়, আর সমস্যা দেখা দিলে কোনো redeploy ছাড়াই সাথে সাথে বন্ধ করে rollback করা যায় (১০ নম্বর অধ্যায়)।</p>
+
+<h3>প্রশ্ন ১৫: Service Mesh-এর sidecar কীভাবে কাজ করে, mTLS কীভাবে Zero Trust বাস্তবায়ন করে?</h3>
+<p>প্রতিটা সার্ভিস instance-এর পাশে একটা ছোট প্রক্সি কন্টেইনার (sidecar, যেমন Envoy) বসে — সব ইনবাউন্ড/আউটবাউন্ড ট্রাফিক তার মধ্য দিয়ে যায়, তাই retry/timeout/circuit breaker/mTLS সব সাইডকারে implement হয়, অ্যাপ্লিকেশন কোড এটা জানেই না। একটা কেন্দ্রীয় control plane (যেমন Istiod) সব sidecar-কে কনফিগার করে ও TLS সার্টিফিকেট বিতরণ করে, ফলে প্রতিটা সার্ভিস-টু-সার্ভিস কল স্বয়ংক্রিয়ভাবে mTLS দিয়ে এনক্রিপ্টেড ও পারস্পরিকভাবে যাচাইকৃত হয় — এটাই "নেটওয়ার্কের অবস্থান কোনো বিশ্বাসের ভিত্তি নয়" নীতির (Zero Trust) ব্যবহারিক বাস্তবায়ন, কোনো অ্যাপ্লিকেশন কোড পরিবর্তন ছাড়াই (৯ ও ১২ নম্বর অধ্যায়)।</p>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>
