@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Domain-Driven Design — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#06b6d4; --accent2:#a78bfa;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --pink:#f472b6;
+    --code-bg:#0b0f14; --kw:#67e8f9;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(6,182,212,.22),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#04222f}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--accent2)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--accent2)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#67e8f9}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  .search-wrap{padding:0 10px 14px}
+  .search-box{
+    width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    border-radius:9px; padding:9px 12px; font-size:13.5px; font-family:inherit;
+    outline:none; transition:border-color .15s;
+  }
+  .search-box:focus{border-color:var(--accent)}
+  .search-box::placeholder{color:var(--muted)}
+  .search-meta{font-size:11.5px; color:var(--muted); padding:6px 2px 0; min-height:14px}
+  .navbtn.hide{display:none}
+  mark.hl{background:#fde047; color:#1a1a1a; padding:0 1px; border-radius:3px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🧠 Domain-Driven Design</h1>
+      <p>Beginner → Advanced • বাংলায় (keyword ইংরেজিতে)</p>
+      <div class="search-wrap">
+        <input type="text" id="courseSearch" class="search-box" placeholder="🔍 এই কোর্সে সার্চ করুন..." autocomplete="off">
+        <div class="search-meta" id="searchMeta"></div>
+      </div>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",    icon:"🧠", title:"Foundation — DDD কী, কেন দরকার"},
+  {id:"ubiquitous",    icon:"🗣️", title:"Ubiquitous Language"},
+  {id:"context",       icon:"🧩", title:"Bounded Context"},
+  {id:"mapping",       icon:"🗺️", title:"Context Mapping"},
+  {id:"building",      icon:"🧱", title:"Entity ও Value Object"},
+  {id:"aggregates",    icon:"🛡️", title:"Aggregate ও Aggregate Root"},
+  {id:"events",        icon:"📨", title:"Domain Events"},
+  {id:"repositories",  icon:"🗄️", title:"Repository Pattern"},
+  {id:"services",      icon:"⚙️", title:"Domain Service বনাম Application Service"},
+  {id:"factories",     icon:"🏭", title:"Factory Pattern"},
+  {id:"strategic",     icon:"🎯", title:"Strategic Design — Subdomain"},
+  {id:"eventstorming", icon:"🗂️", title:"Event Storming"},
+  {id:"architecture",  icon:"🏛️", title:"Layered, Hexagonal ও Onion Architecture"},
+  {id:"cqrs-es",       icon:"🔀", title:"CQRS ও Event Sourcing"},
+  {id:"antipatterns",  icon:"⚠️", title:"Anti-patterns"},
+  {id:"microservices", icon:"🛰️", title:"DDD ও Microservices সম্পর্ক"},
+  {id:"dotnet",        icon:"💜", title:"DDD in .NET"},
+  {id:"interview",     icon:"🎯", title:"Interview প্রশ্নোত্তর"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Foundation — DDD কী, কেন দরকার</h2>
+<p class="lead"><span class="kw">Domain-Driven Design (DDD)</span> এরিক এভান্সের ২০০৩ সালের বই থেকে আসা একটা পদ্ধতি — সফটওয়্যারের গঠনকে সরাসরি বিজনেস ডোমেইনের বাস্তব ধারণার সাথে মিলিয়ে ডিজাইন করা, যাতে কোড নিজেই বিজনেস লজিকের একটা জীবন্ত ডকুমেন্টেশন হয়ে ওঠে।</p>
+
+<h3>Software-এর আসল জটিলতা কোথা থেকে আসে</h3>
+<p>এভান্স দুই ধরনের জটিলতা আলাদা করেছেন — <span class="kw">Accidental Complexity</span> (framework, infrastructure, boilerplate — এগুলো প্রযুক্তিগত সমস্যা, ভালো টুল দিয়ে কমানো যায়) আর <span class="kw">Essential Complexity</span> (বিজনেস ডোমেইনের নিজস্ব জটিলতা — একটা ব্যাংকের সুদ হিসাব করার নিয়ম, একটা ইনস্যুরেন্স ক্লেইমের শর্তাবলি — এটা কোনো ফ্রেমওয়ার্ক দিয়ে দূর করা যায় না)।</p>
+<div class="callout why"><span class="tag">DDD কেন — Essential Complexity সরাসরি মোকাবিলা করা</span>
+বেশিরভাগ ডেভেলপার টুল/ফ্রেমওয়ার্ক/আর্কিটেকচার নিয়ে ব্যস্ত থাকেন, কিন্তু একটা সিস্টেমের দীর্ঘমেয়াদি ব্যর্থতার আসল কারণ প্রায়ই ডোমেইন লজিক ভুলভাবে বোঝা বা কোডে ছড়িয়ে-ছিটিয়ে রাখা। DDD বলে — Essential Complexity-টাকে আড়াল না করে, সরাসরি একটা সমৃদ্ধ <span class="kw">domain model</span>-এ প্রকাশ করতে হবে, যেখানে কোডের গঠন বিজনেস বিশেষজ্ঞের ভাষার সাথে সরাসরি মেলে।</div>
+
+<h3>Model-Driven Design — কোড আর ধারণা একই জিনিস</h3>
+<p>DDD-এর কেন্দ্রীয় ধারণা হলো একটা <span class="kw">model</span> — বাস্তব ডোমেইনের একটা সরলীকৃত, কিন্তু কার্যকরী প্রতিনিধিত্ব। ভালো DDD-তে এই model কোনো ডায়াগ্রামে আটকে থাকে না — এটাই সরাসরি কোড হয়ে যায় (ক্লাস, মেথড, সম্পর্ক), যাতে কোড পড়েই একজন বিজনেস বিশেষজ্ঞ (ডোমেইন এক্সপার্ট নন-টেকনিক্যাল হলেও) মূল ধারণা বুঝতে পারেন।</p>
+<div class="diagram"><pre>
+❌ Anemic মডেল:  Order ক্লাসে শুধু get/set প্রপার্টি, সব লজিক আলাদা OrderService-এ
+✅ Rich মডেল:    Order.Cancel()  — নিজের ভেতরেই জানে কখন cancel করা বৈধ, কী পরিবর্তন হবে
+</pre></div>
+
+<h3>DDD কখন প্রযোজ্য, কখন নয়</h3>
+<table>
+<tr><th>পরিস্থিতি</th><th>DDD উপযুক্ত?</th></tr>
+<tr><td>জটিল বিজনেস নিয়ম, অনেক এজ-কেস (ব্যাংকিং, ইনস্যুরেন্স, লজিস্টিক্স)</td><td>হ্যাঁ — এখানেই DDD সবচেয়ে বেশি মূল্য দেয়</td></tr>
+<tr><td>সাধারণ CRUD অ্যাপ্লিকেশন (কনটেন্ট ম্যানেজমেন্ট, সাধারণ ফর্ম সাবমিশন)</td><td>না — অতিরিক্ত জটিলতা, কোনো লাভ নেই</td></tr>
+<tr><td>Generic Subdomain (login, ইমেইল পাঠানো)</td><td>না — অফ-দ্য-শেল্ফ সমাধান/লাইব্রেরি ব্যবহার করুন</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — প্রতিটা প্রজেক্টে DDD চাপিয়ে দেওয়া</span>
+DDD টুলবক্সের প্রতিটা প্যাটার্ন (Aggregate, Repository, Domain Event) ব্যবহার করতে বাধ্যতামূলক নয়। একটা সাধারণ CRUD সার্ভিসে Aggregate/Repository/Factory ইত্যাদির পূর্ণ কাঠামো বসালে শুধু বয়লারপ্লেট বাড়ে, কোনো বাস্তব সুবিধা মেলে না — DDD সেখানেই প্রয়োগ করা উচিত যেখানে ডোমেইন লজিক সত্যিই জটিল ও প্রতিযোগিতামূলক গুরুত্বপূর্ণ (৯ নম্বর অধ্যায়ে Strategic Design-এ এই সিদ্ধান্ত কীভাবে নেওয়া হয় তা বিস্তারিত)।</div>
+</template>
+
+<template data-page="ubiquitous">
+<h2 class="title">২. Ubiquitous Language</h2>
+<p class="lead">DDD-এর সবচেয়ে ব্যবহারিক, অথচ প্রায়ই উপেক্ষিত অংশ — ডেভেলপার আর ডোমেইন এক্সপার্ট একই শব্দ একই অর্থে ব্যবহার করবেন, আর সেই শব্দগুলোই সরাসরি কোডে (ক্লাসের নাম, মেথডের নাম) প্রতিফলিত হবে।</p>
+
+<h3>সমস্যা যা এটা সমাধান করে — Translation Loss</h3>
+<div class="diagram"><pre>
+ডোমেইন এক্সপার্ট বলেন: "একটা অর্ডার confirm হওয়ার পর, যদি ৩০ মিনিটের মধ্যে পেমেন্ট না আসে, সেটা expire হয়ে যায়"
+                                    │
+                          ডেভেলপার অনুবাদ করেন...
+                                    ▼
+কোডে দেখা যায়:  if (order.status == 2 && DateTime.Now - order.CreatedAt > TimeSpan.FromMinutes(30))
+                 order.status = 4;
+                                    │
+        ছয় মাস পর — "status == 2" মানে কী? "4" মানে কী? কেউ মনে রাখেনি
+</pre></div>
+<p>প্রতিটা অনুবাদে অর্থ হারিয়ে যায় (translation loss) — ডোমেইন এক্সপার্টের ভাষা আর কোডের ভাষা আলাদা হয়ে গেলে, সময়ের সাথে দুটো "ভাষা"ই একে অপরের থেকে দূরে সরে যায়, আর কোড ক্রমশ বিজনেস বাস্তবতা থেকে বিচ্ছিন্ন হয়ে পড়ে।</p>
+
+<h3>Ubiquitous Language বাস্তবায়ন</h3>
+<table>
+<tr><th>নীতি</th><th>ব্যাখ্যা</th></tr>
+<tr><td>একই শব্দ সবখানে</td><td>মিটিং, ডকুমেন্টেশন, কোড, কমিট মেসেজ, ভ্যারিয়েবল নাম — সব জায়গায় একই টার্মিনোলজি</td></tr>
+<tr><td>Magic Number নয়, নাম</td><td><code>order.status == 2</code>-এর বদলে <code>order.Status == OrderStatus.Confirmed</code></td></tr>
+<tr><td>Enum ও Method নাম ডোমেইন থেকে</td><td><code>order.Expire()</code> — ঠিক যে ক্রিয়া ডোমেইন এক্সপার্ট বলেছেন, সেই নামেই মেথড</td></tr>
+<tr><td>ভাষা evolve করে</td><td>নতুন আলোচনায় নতুন শব্দ/সূক্ষ্মতা বের হলে কোড রিফ্যাক্টর করে ভাষা আপডেট করা</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — Glossary নয়, জীবন্ত কোড</span>
+Ubiquitous Language একটা স্ট্যাটিক ডকুমেন্টে (wiki glossary) লিখে রাখাই যথেষ্ট নয় — আসল পরীক্ষা হলো কোড নিজেই। যদি একজন ডোমেইন এক্সপার্ট (প্রোগ্রামার না হয়েও) একটা মেথডের নাম পড়ে বুঝতে পারেন এটা কী করে (<code>order.Cancel()</code>, <code>invoice.MarkAsPaid()</code>), তাহলে ভাষাটা সত্যিই "ubiquitous" — সবখানে সমানভাবে বোঝা যাচ্ছে।</div>
+
+<h3>একই শব্দ, ভিন্ন Context-এ ভিন্ন অর্থ</h3>
+<div class="callout behind"><span class="tag">একই শব্দ সবখানে একই অর্থ রাখা সবসময় সম্ভব নয়</span>
+"Customer" শব্দটা Sales context-এ মানে হতে পারে "যিনি কিনতে আগ্রহী" (lead-এর কাছাকাছি), কিন্তু Support context-এ মানে "যার একটা active সাবস্ক্রিপশন আছে ও টিকিট খুলতে পারেন"। এই দুটো ভিন্ন সংজ্ঞা একই "Customer" শব্দে জোর করে মেলাতে গেলে একটা বিভ্রান্তিকর, সব-কাজে-মানানসই-না ক্লাস তৈরি হয়। সমাধান হলো — Ubiquitous Language একটা <b>নির্দিষ্ট সীমানার ভেতরেই</b> সামঞ্জস্যপূর্ণ থাকে, সেই সীমানাটাই পরের অধ্যায়ের <span class="kw">Bounded Context</span>।</div>
+</template>
+
+<template data-page="context">
+<h2 class="title">৩. Bounded Context</h2>
+<p class="lead">একটা <span class="kw">Bounded Context</span> হলো একটা নির্দিষ্ট মডেল ও Ubiquitous Language-এর সীমানা — এর ভেতরে প্রতিটা শব্দের একটাই, স্পষ্ট অর্থ থাকে। DDD-তে এটাই সবচেয়ে গুরুত্বপূর্ণ কৌশলগত সিদ্ধান্ত।</p>
+
+<h3>এক Model দিয়ে সবকিছু চালানোর সমস্যা</h3>
+<div class="diagram"><pre>
+❌ একটা বিশাল "God Model" — Product ক্লাসে Catalog + Inventory + Pricing + Shipping সব একসাথে
+   → প্রতিটা টিমের পরিবর্তনে বাকি সবার কোড ভাঙে, ক্লাসে ৫০+ প্রপার্টি জমে যায়
+
+✅ প্রতিটা Bounded Context নিজের ছোট, উদ্দেশ্যমূলক Product মডেল রাখে:
+   Catalog Context   : Product { Name, Description, Images }
+   Inventory Context  : Product { SKU, StockLevel, WarehouseLocation }
+   Pricing Context     : Product { SKU, BasePrice, DiscountRules }
+</pre></div>
+<p>প্রতিটা context-এ "Product" আলাদা জিনিস বোঝায় — আর এটাই ঠিক, ভুল নয়। প্রতিটা context শুধু তার নিজের প্রয়োজনীয় অংশটুকু মডেল করে, বাকি সব অপ্রাসঙ্গিক তথ্য বাদ দেয়।</p>
+
+<h3>Bounded Context চিহ্নিত করার সংকেত</h3>
+<table>
+<tr><th>সংকেত</th><th>ব্যাখ্যা</th></tr>
+<tr><td>টিমের সীমানা</td><td>যে অংশ একটা টিম স্বাধীনভাবে মালিকানা নিতে পারে (Conway's Law)</td></tr>
+<tr><td>ভাষার দ্বন্দ্ব</td><td>একই শব্দের একাধিক, পরস্পরবিরোধী সংজ্ঞা পাওয়া গেলে — সেখানে সীমানা টানার ইঙ্গিত</td></tr>
+<tr><td>পরিবর্তনের কারণ</td><td>যে অংশগুলো ভিন্ন কারণে, ভিন্ন সময়ে বদলায় (Sales নিয়ম বদলানো Shipping-কে প্রভাবিত করে না)</td></tr>
+<tr><td>লাইফসাইকেল ভিন্নতা</td><td>একটা Entity ভিন্ন context-এ ভিন্ন গতিতে/নিয়মে তৈরি-আপডেট-মুছে যায়</td></tr>
+</table>
+<div class="callout behind"><span class="tag">Bounded Context = Microservice-এর প্রাকৃতিক সীমানা</span>
+Bounded Context প্রথমে এসেছে মডেলিং সমস্যা সমাধানের জন্য (একই শব্দের একাধিক অর্থ থাকতে পারা), কিন্তু বাস্তবে এটাই আজকের Microservices আর্কিটেকচারের সীমানা টানার সবচেয়ে নির্ভরযোগ্য নীতি হয়ে উঠেছে — প্রতিটা Bounded Context স্বাভাবিকভাবেই একটা স্বাধীন সার্ভিসের প্রার্থী, কারণ এর নিজস্ব মডেল, নিজস্ব ডেটা, নিজস্ব পরিবর্তনের কারণ আছে (১৬ নম্বর অধ্যায়ে এই সম্পর্ক বিস্তারিত)।</div>
+
+<h3>একটা Bounded Context-এর ভেতরে কী থাকে</h3>
+<div class="grid2">
+  <div class="box"><b>Model</b><br>Entity, Value Object, Aggregate — এই context-এর নিজস্ব ডোমেইন ধারণা</div>
+  <div class="box"><b>Ubiquitous Language</b><br>এই context-এর ভেতরে সবাই যে নির্দিষ্ট ভাষায় কথা বলেন</div>
+</div>
+</template>
+
+<template data-page="mapping">
+<h2 class="title">৪. Context Mapping</h2>
+<p class="lead">একাধিক Bounded Context সম্পূর্ণ বিচ্ছিন্ন থাকে না — বাস্তব সিস্টেমে তাদের মধ্যে তথ্য বিনিময় হয়। <span class="kw">Context Mapping</span> এই সম্পর্কগুলোকে স্পষ্টভাবে নাম দিয়ে চিহ্নিত করে, যাতে টিমগুলোর মধ্যে নির্ভরতা লুকিয়ে না থাকে।</p>
+
+<h3>প্রধান Context Mapping প্যাটার্ন</h3>
+<table>
+<tr><th>প্যাটার্ন</th><th>ব্যাখ্যা</th></tr>
+<tr><td><span class="kw">Shared Kernel</span></td><td>দুটো টিম একটা ছোট, সাধারণ মডেল/কোড অংশ শেয়ার করে — পরিবর্তনে উভয় টিমের সম্মতি লাগে</td></tr>
+<tr><td><span class="kw">Customer-Supplier</span></td><td>একটা context (Supplier) অন্যটার (Customer) প্রয়োজন অনুযায়ী তার API ডিজাইন করে — Supplier-এর রোডম্যাপে Customer-এর চাহিদার প্রভাব আছে</td></tr>
+<tr><td><span class="kw">Conformist</span></td><td>Downstream context upstream-এর মডেল হুবহু মেনে নেয়, কোনো অনুবাদ ছাড়াই — upstream বড়/অপরিবর্তনীয় হলে (যেমন থার্ড-পার্টি API)</td></tr>
+<tr><td><span class="kw">Anticorruption Layer (ACL)</span></td><td>একটা অনুবাদ স্তর, যা বাইরের/পুরনো সিস্টেমের মডেলকে নিজের context-এর পরিষ্কার মডেলে রূপান্তর করে</td></tr>
+<tr><td><span class="kw">Open Host Service</span></td><td>একটা context বাইরের সবার জন্য একটা সু-সংজ্ঞায়িত, স্থিতিশীল প্রোটোকল/API প্রকাশ করে</td></tr>
+<tr><td><span class="kw">Partnership</span></td><td>দুটো টিম একসাথে সমন্বয় করে বিকশিত হয়, কোনো একপক্ষ অন্যপক্ষের ওপর নির্ভরশীল নয়</td></tr>
+</table>
+
+<h3>Anticorruption Layer — বিস্তারিত উদাহরণ</h3>
+<div class="diagram"><pre>
+পুরনো Legacy সিস্টেম (৩০ বছরের পুরনো, বিশৃঙ্খল ডেটা মডেল)
+         │
+         ▼
+   ┌─────────────────────┐
+   │ Anticorruption Layer │   ← এখানে Legacy-এর জগাখিচুড়ি মডেল রূপান্তরিত হয়
+   └─────────────────────┘
+         │
+         ▼
+আপনার পরিষ্কার, নতুন Bounded Context (নিজের ভাষায়, নিজের নিয়মে)
+</pre></div>
+<div class="callout why"><span class="tag">কেন ACL দরকার — পুরনো জঞ্জাল নিজের মডেলে ঢুকতে না দেওয়া</span>
+একটা পুরনো/বাইরের সিস্টেমের সাথে সরাসরি ইন্টিগ্রেট করলে, তাদের বিশৃঙ্খল নামকরণ, অসামঞ্জস্যপূর্ণ ডেটা টাইপ, বা পুরনো ব্যবসায়িক নিয়ম ধীরে ধীরে আপনার নতুন, পরিষ্কার মডেলে "লিক" করতে শুরু করে। Anticorruption Layer একটা প্রাচীরের মতো কাজ করে — বাইরের জগাখিচুড়ি এখানেই থেমে যায়, রূপান্তরিত হয়ে ঢোকে, আপনার নিজের মডেল সবসময় পরিষ্কার থাকে।</div>
+
+<h3>Context Map আঁকা কেন গুরুত্বপূর্ণ</h3>
+<div class="callout mistake"><span class="tag">Common mistake — সম্পর্ক অনির্ধারিত রেখে দেওয়া</span>
+টিমগুলো প্রায়ই বুঝে নেয় কে কার ওপর নির্ভরশীল, কিন্তু কখনো স্পষ্টভাবে লেখে না বা আলোচনা করে না — ফলে একদিন upstream টিম একটা "ছোট" পরিবর্তন করে, আর downstream টিম কোনো সতর্কতা ছাড়াই ভেঙে পড়ে। একটা স্পষ্ট Context Map (কে Customer, কে Supplier, কোথায় ACL আছে) দুই টিমকেই তাদের প্রকৃত নির্ভরতা ও দায়িত্ব বুঝতে সাহায্য করে।</div>
+</template>
+
+<template data-page="building">
+<h2 class="title">৫. Entity ও Value Object</h2>
+<p class="lead">DDD-এর দুইটা মৌলিক building block — একটা Identity দিয়ে চেনা যায়, আরেকটা শুধু তার মান দিয়েই সংজ্ঞায়িত। এই পার্থক্য বোঝা প্রতিটা ডোমেইন মডেলের ভিত্তি।</p>
+
+<h3>Entity — Identity-ভিত্তিক সমতা</h3>
+<p>একটা <span class="kw">Entity</span>-র একটা স্থায়ী identity (সাধারণত একটা ID) থাকে, যা তার সব attribute বদলে গেলেও একই থাকে। দুটো Entity একই কিনা তা তাদের ID দিয়ে যাচাই হয়, attribute-এর মান দিয়ে নয়।</p>
+<div class="diagram"><pre>
+Customer(id=42, name="Rasel", email="old@x.com")
+    │  ইমেইল বদলালো
+    ▼
+Customer(id=42, name="Rasel", email="new@x.com")   ← এখনও একই Customer (id=42 অপরিবর্তিত)
+</pre></div>
+
+<h3>Value Object — মান-ভিত্তিক সমতা, Immutable</h3>
+<p>একটা <span class="kw">Value Object</span>-এর কোনো identity নেই — এটা শুধু তার মান দিয়ে সংজ্ঞায়িত, আর সাধারণত <span class="kw">immutable</span> (তৈরি হওয়ার পর বদলানো যায় না, বদলাতে হলে নতুন instance তৈরি করতে হয়)।</p>
+<div class="diagram"><pre>
+Money(amount=100, currency="BDT")  ==  Money(amount=100, currency="BDT")   ← সমান, কারণ মান একই
+Address("Dhaka", "1000")  ==  Address("Dhaka", "1000")                     ← সমান, ID লাগে না
+</pre></div>
+<table>
+<tr><th></th><th>Entity</th><th>Value Object</th></tr>
+<tr><td>সমতা</td><td>ID দিয়ে</td><td>সব attribute-এর মান দিয়ে</td></tr>
+<tr><td>Mutability</td><td>Mutable — সময়ের সাথে বদলাতে পারে</td><td>Immutable — বদলাতে নতুন object লাগে</td></tr>
+<tr><td>উদাহরণ</td><td>Customer, Order, Product</td><td>Money, Address, DateRange, Email</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — সবকিছুকে Entity বানিয়ে ফেলা (একটা ID ও একটা DB টেবিল দিয়ে)</span>
+"Address"-কে একটা আলাদা ID ও ডেটাবেস টেবিল দিয়ে Entity বানানো একটা সাধারণ ভুল — Address-এর নিজস্ব কোনো lifecycle বা identity নেই, এটা শুধু কিছু মানের একটা গুচ্ছ (রাস্তা, শহর, পোস্টকোড)। এটাকে Value Object হিসেবে মডেল করলে (Entity-এর ভেতরে embed করা) কোড সরল হয় — দুটো ঠিকানা সমান কিনা যাচাই করতে ID ম্যাচ করতে হয় না, শুধু মান তুলনা করলেই চলে।</div>
+<div class="callout best"><span class="tag">Best practice — Value Object দিয়ে Primitive Obsession এড়ানো</span>
+<code>decimal amount</code> আর <code>string currency</code> আলাদা প্যারামিটার হিসেবে পাস করার বদলে একটা <code>Money</code> Value Object বানালে — ভুল currency-র সাথে amount যোগ করার মতো বাগ কম্পাইল-টাইমেই আটকানো যায়, আর <code>Money.Add()</code>-এর ভেতরে currency-mismatch validation একবারই লিখতে হয়, সব জায়গায় নয়।</div>
+</template>
+
+<template data-page="aggregates">
+<h2 class="title">৬. Aggregate ও Aggregate Root</h2>
+<p class="lead">একাধিক সম্পর্কিত Entity/Value Object-কে একটা একক ইউনিট হিসেবে দেখাশোনা করার জন্য DDD-এর সবচেয়ে গুরুত্বপূর্ণ, অথচ সবচেয়ে ভুল বোঝা প্যাটার্ন।</p>
+
+<h3>Aggregate কী — Consistency Boundary</h3>
+<p>একটা <span class="kw">Aggregate</span> হলো সম্পর্কিত অবজেক্টের একটা গুচ্ছ, যাদের একসাথে <b>consistent</b> থাকতে হবে — একটা <span class="kw">Order</span> Aggregate-এ Order নিজে (Aggregate Root) আর তার OrderLine-গুলো (child Entity) থাকতে পারে।</p>
+<div class="diagram"><pre>
+┌─────────────────────────────────┐
+│ Order (Aggregate Root)           │
+│  - OrderLine[] (child entities)  │  ← বাইরের কোনো কোড সরাসরি OrderLine বদলাতে পারে না
+│  - TotalAmount (invariant: সবসময়  │     শুধু Order-এর মাধ্যমে (Order.AddLine(), Order.RemoveLine())
+│    OrderLine-গুলোর যোগফলের সমান) │
+└─────────────────────────────────┘
+</pre></div>
+
+<h3>Invariant — Aggregate যা রক্ষা করে</h3>
+<p>একটা <span class="kw">invariant</span> এমন একটা নিয়ম যা সবসময় সত্য থাকতে হবে — যেমন "একটা Order-এর TotalAmount সবসময় তার সব OrderLine-এর যোগফলের সমান হতে হবে"। Aggregate-এর কাজ হলো এই নিয়ম কখনো ভাঙতে না দেওয়া, বাইরের কোড থেকে সরাসরি child entity বদলানোর সুযোগ বন্ধ করে।</p>
+<div class="callout why"><span class="tag">শুধু Aggregate Root-এর রেফারেন্স রাখার নিয়ম কেন</span>
+যদি বাইরের কোড সরাসরি একটা OrderLine ধরে তার quantity বদলে দেয় (Order-কে না জানিয়ে), তাহলে Order-এর TotalAmount সাথে সাথে ভুল হয়ে যাবে — invariant ভেঙে যাবে। তাই নিয়ম হলো: Aggregate-এর বাইরে থেকে <b>শুধু Aggregate Root-এর রেফারেন্স রাখা যাবে</b>, child entity-গুলোর নয় — কোনো পরিবর্তন করতে হলে Root-এর একটা মেথড কল করতে হবে (<code>order.UpdateLineQuantity(lineId, newQty)</code>), যেটা নিজেই invariant বজায় রেখে পরিবর্তন করে।</div>
+
+<h3>Aggregate ছোট রাখার নিয়ম</h3>
+<div class="callout mistake"><span class="tag">Common mistake — বিশাল, সবকিছু-ধরে-রাখা Aggregate</span>
+একটা Customer Aggregate-এর ভেতরে তার সব Order-ও রেখে দিলে ("Customer has many Orders" child collection হিসেবে), প্রতিটা নতুন অর্ডারে পুরো Customer (তার হাজার হাজার পুরনো অর্ডার-সহ) লোড/লক করতে হতে পারে — পারফরম্যান্স ও concurrency দুটোই খারাপ হয়। সাধারণ নিয়ম: Aggregate যতটা সম্ভব ছোট রাখা, শুধু সত্যিকারের transactional invariant-এর জন্য যতটুকু দরকার ততটুকুই — Customer আর Order আলাদা Aggregate, Order শুধু <code>CustomerId</code> রেফারেন্স রাখে।</div>
+
+<h3>এক Transaction-এ একটাই Aggregate</h3>
+<div class="callout best"><span class="tag">Best practice — একটা Transaction একটা Aggregate বদলাবে</span>
+একটা সিঙ্গেল বিজনেস অপারেশন সাধারণত একটাই Aggregate তৈরি করা বা বদলানো উচিত। একাধিক Aggregate একসাথে বদলাতে হলে (যেমন Order তৈরি + Inventory কমানো), সেটা <span class="kw">Domain Event</span> দিয়ে eventually consistent রাখা ভালো (৭ নম্বর অধ্যায়ে) — এতে প্রতিটা Aggregate নিজের ডেটাবেস transaction-এ স্বাধীনভাবে থাকতে পারে, distributed lock-এর দরকার হয় না।</div>
+</template>
+
+<template data-page="events">
+<h2 class="title">৭. Domain Events</h2>
+<p class="lead">একটা <span class="kw">Domain Event</span> ডোমেইনে ঘটে যাওয়া কোনো গুরুত্বপূর্ণ ঘটনা প্রকাশ করে ("OrderPlaced", "PaymentReceived") — অতীতকালে, যা ইতিমধ্যে ঘটে গেছে তা মডেল করে, একটা কমান্ড নয়।</p>
+
+<h3>Domain Event কেন — Aggregate-এর মধ্যে যোগাযোগ</h3>
+<div class="diagram"><pre>
+Order.Place()  ──▶  invariant চেক করে অর্ডার confirm করে  ──▶  OrderPlaced event রেইজ করে
+                                                                        │
+                                            অন্য Aggregate/Bounded Context event শুনে
+                                            নিজের প্রয়োজন অনুযায়ী প্রতিক্রিয়া জানায়
+                                            (Inventory Aggregate: স্টক reserve করে)
+</pre></div>
+<p>যেহেতু আগের অধ্যায়ে দেখা গেছে একটা transaction-এ একটাই Aggregate বদলানো উচিত, Domain Event দুই Aggregate-এর মধ্যে <b>eventual consistency</b> অর্জনের প্রধান উপায় — Order নিজের transaction শেষ করে, তারপর event প্রকাশ করে, Inventory পরে সেই event প্রসেস করে নিজের transaction চালায়।</p>
+
+<h3>Domain Event-এর গঠন</h3>
+<table>
+<tr><th>অংশ</th><th>ব্যাখ্যা</th></tr>
+<tr><td>নাম (অতীতকাল)</td><td><code>OrderPlaced</code>, <code>PaymentReceived</code> — যা ঘটেছে, ভবিষ্যতে কী করতে হবে তা নয়</td></tr>
+<tr><td>Immutable ডেটা</td><td>ঘটনার সময়ের প্রাসঙ্গিক তথ্য (OrderId, CustomerId, TotalAmount) — পরে বদলায় না</td></tr>
+<tr><td>Timestamp</td><td>কখন ঘটেছে, ordering ও debugging-এর জন্য জরুরি</td></tr>
+</table>
+
+<h3>Domain Event বনাম Integration Event</h3>
+<div class="callout behind"><span class="tag">একটা Bounded Context-এর ভেতরে বনাম বাইরে</span>
+<span class="kw">Domain Event</span> একটা Bounded Context-এর ভেতরে, একাধিক Aggregate-এর মধ্যে যোগাযোগের জন্য (in-process, সাধারণত সিঙ্ক্রোনাস মেথড কলে dispatch হয়)। যখন এই খবরটা <b>অন্য Bounded Context/সার্ভিসকেও</b> জানাতে হয় (যেমন Notification সার্ভিসকে ইমেইল পাঠাতে বলা), তখন সেটা একটা <span class="kw">Integration Event</span>-এ রূপান্তরিত হয়ে message broker-এর মাধ্যমে বাইরে পাঠানো হয় (Microservices কোর্সের Event-Driven Architecture অধ্যায়ে এই আউটবক্স-ভিত্তিক প্যাটার্ন বিস্তারিত)। দুটো এক জিনিস নয় — Domain Event-এর প্রতিটাই বাইরে পাঠানোর দরকার নেই।</div>
+</template>
+
+<template data-page="repositories">
+<h2 class="title">৮. Repository Pattern</h2>
+<p class="lead">একটা <span class="kw">Repository</span> Aggregate-এর জন্য একটা ইন-মেমরি কালেকশনের মতো ইন্টারফেস দেয় — ডোমেইন লজিক ডেটাবেস কীভাবে কাজ করে তা না জেনেই Aggregate লোড/সেভ করতে পারে।</p>
+
+<h3>Repository কেন — Persistence Ignorance</h3>
+<div class="diagram"><pre>
+interface IOrderRepository {
+    Order GetById(OrderId id);
+    void Add(Order order);
+    void Update(Order order);
+}
+</pre></div>
+<p>ডোমেইন লেয়ার শুধু এই ইন্টারফেস জানে — SQL, ORM, নেটওয়ার্ক কল কিছুই জানে না। প্রকৃত বাস্তবায়ন (Entity Framework, Dapper, বা এমনকি একটা external API কল) Infrastructure লেয়ারে থাকে, ডোমেইন লেয়ার থেকে সম্পূর্ণ আড়াল।</p>
+<div class="callout why"><span class="tag">Persistence Ignorance কেন গুরুত্বপূর্ণ — টেস্টযোগ্যতা</span>
+ডোমেইন লজিক (Aggregate-এর ভেতরের নিয়ম, invariant) যদি সরাসরি SQL query বা ORM-নির্ভর হয়, তাহলে সেই লজিক টেস্ট করতে একটা আসল ডেটাবেস লাগে — ধীর, ভঙ্গুর টেস্ট। Repository ইন্টারফেসের পেছনে persistence লুকিয়ে রাখলে, ইউনিট টেস্টে একটা সহজ in-memory fake repository ব্যবহার করা যায়, ডোমেইন লজিক বিচ্ছিন্নভাবে দ্রুত টেস্ট করা যায়।</div>
+
+<h3>Repository কী রাখে — Aggregate Root, Child Entity নয়</h3>
+<table>
+<tr><th>নীতি</th><th>ব্যাখ্যা</th></tr>
+<tr><td>এক Aggregate = এক Repository</td><td><code>IOrderRepository</code> আছে, কিন্তু <code>IOrderLineRepository</code> নেই — OrderLine Order-এর ভেতরেই লোড হয়</td></tr>
+<tr><td>পুরো Aggregate লোড/সেভ</td><td>Aggregate-এর কোনো অংশ, পুরোটাই এক ইউনিট হিসেবে load/save হয় (invariant বজায় রাখতে)</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — Repository-কে Generic CRUD Wrapper বানানো</span>
+<code>IRepository&lt;T&gt;.GetAll()</code>, <code>.Where(predicate)</code>-এর মতো জেনেরিক, ORM-এর query API-কে হুবহু নকল করা মেথড দিলে Repository আসলে ORM-এরই একটা পাতলা মোড়ক হয়ে যায় — এতে ডোমেইন লজিক persistence detail থেকে সত্যিকারের বিচ্ছিন্ন হয় না। ভালো Repository ইন্টারফেস ডোমেইনের ভাষায় কথা বলে (<code>GetActiveOrdersForCustomer(customerId)</code>), সাধারণ query মেথড নয়।</div>
+</template>
+
+<template data-page="services">
+<h2 class="title">৯. Domain Service বনাম Application Service</h2>
+<p class="lead">সব লজিক একটা Entity/Value Object-এর ভেতরে স্বাভাবিকভাবে বসে না — কিছু লজিক একাধিক Aggregate জুড়ে কাজ করে, আর কিছু লজিক আসলে ডোমেইনেরই অংশ নয় (orchestration, authorization)। এই দুই ধরনের "Service" আলাদা করে বোঝা জরুরি।</p>
+
+<h3>Domain Service — যখন লজিক কোনো একক Entity-র নয়</h3>
+<p>একটা <span class="kw">Domain Service</span> এমন একটা ডোমেইন লজিক ধারণ করে, যা স্বাভাবিকভাবে কোনো একটা Entity/Value Object-এর ভেতরে বসে না — সাধারণত কারণ এটা একাধিক Aggregate-এর ওপর নির্ভর করে। উদাহরণ: <code>TransferService.Transfer(fromAccount, toAccount, amount)</code> — এই লজিক একটাই Account Aggregate-এর অন্তর্গত নয়, দুটোর মধ্যে সমন্বয় করে।</p>
+
+<h3>Application Service — Orchestration, ডোমেইন লজিক নয়</h3>
+<p>একটা <span class="kw">Application Service</span> ডোমেইন লজিক ধারণ করে না — এটা শুধু একটা use case-এর ধাপগুলো সাজায়: repository থেকে Aggregate আনা, তার ওপর একটা মেথড কল করা, তারপর সেভ করা। এখানে কোনো বিজনেস নিয়ম থাকা উচিত না।</p>
+<div class="diagram"><pre>
+Application Service (Orchestration):
+  1. Repository থেকে Order আনা
+  2. order.Cancel() কল করা          ← আসল বিজনেস লজিক এখানে, Order Aggregate-এর ভেতরে
+  3. Repository দিয়ে সেভ করা
+  4. Domain Event dispatch করা
+</pre></div>
+<div class="callout mistake"><span class="tag">Common mistake — Application Service-এ বিজনেস লজিক ফাঁস হওয়া</span>
+<code>if (order.Status == OrderStatus.Pending) { order.Status = OrderStatus.Cancelled; }</code> — এই ধরনের if-চেক Application Service-এ লিখলে, বিজনেস নিয়ম (কখন cancel করা বৈধ) Aggregate থেকে বেরিয়ে Application লেয়ারে ছড়িয়ে পড়ে — এটাই Anemic Domain Model-এর শুরু (১৫ নম্বর অধ্যায়ে বিস্তারিত)। সঠিক পদ্ধতি: <code>order.Cancel()</code> কল করা, আর Order Aggregate নিজেই ভেতরে সিদ্ধান্ত নেয় এটা বৈধ কিনা, নাহলে একটা exception ছোড়ে।</div>
+</template>
+
+<template data-page="factories">
+<h2 class="title">১০. Factory Pattern</h2>
+<p class="lead">যখন একটা Aggregate তৈরি করা জটিল (একাধিক invariant একসাথে যাচাই করতে হয়, বা তৈরির প্রক্রিয়া একাধিক ধাপের), একটা <span class="kw">Factory</span> সেই জটিলতা ক্যাপসুলেট করে।</p>
+
+<h3>কেন সরাসরি Constructor যথেষ্ট নয়</h3>
+<div class="diagram"><pre>
+❌ জটিল, ভুল-প্রবণ constructor call:
+   var order = new Order(customerId, items, shippingAddress, discount, taxRate, ...);
+   // ১০টা প্যারামিটার — কোনটা কোন ক্রমে, সব ঠিক invariant মেনে দিচ্ছে কিনা কে জানে
+
+✅ Factory Method দিয়ে অর্থপূর্ণ creation:
+   var order = Order.PlaceNewOrder(customer, cartItems);
+   // Factory-র ভেতরে discount/tax গণনা, invariant validation সব হয়ে যায়
+</pre></div>
+
+<h3>Factory কোথায় বসে</h3>
+<table>
+<tr><th>ধরন</th><th>ব্যাখ্যা</th></tr>
+<tr><td>Static Factory Method</td><td>Aggregate Root ক্লাসের ভেতরেই একটা static মেথড (<code>Order.PlaceNewOrder(...)</code>) — সহজ ক্ষেত্রে যথেষ্ট</td></tr>
+<tr><td>আলাদা Factory ক্লাস</td><td>যখন তৈরির প্রক্রিয়া নিজেই জটিল (একাধিক external dependency লাগে, একাধিক ধাপ) — একটা আলাদা <code>OrderFactory</code> ক্লাস</td></tr>
+</table>
+<div class="callout why"><span class="tag">Factory কীভাবে Invariant নিশ্চিত করে জন্ম থেকেই</span>
+Factory-র কাজ হলো নিশ্চিত করা একটা Aggregate কখনো <b>অসম্পূর্ণ বা অবৈধ অবস্থায়</b> তৈরি হবে না — যদি একটা Order-এর অন্তত একটা OrderLine থাকা আবশ্যক (invariant), Factory সেটা constructor-এর ভেতরেই যাচাই করে, নাহলে exception ছোড়ে। এভাবে Aggregate-এর পুরো জীবনচক্র জুড়েই (তৈরির মুহূর্ত থেকে) invariant রক্ষা পায়, কখনো একটা "অর্ধেক তৈরি" অবস্থা কোডে ছড়িয়ে পড়ে না।</div>
+</template>
+
+<template data-page="strategic">
+<h2 class="title">১১. Strategic Design — Subdomain</h2>
+<p class="lead">সব Bounded Context সমান গুরুত্বপূর্ণ নয় — একটা প্রতিষ্ঠানের সীমিত ইঞ্জিনিয়ারিং সময়/মনোযোগ কোথায় সবচেয়ে বেশি বিনিয়োগ করা উচিত, তা ঠিক করাই Strategic Design।</p>
+
+<h3>তিন ধরনের Subdomain</h3>
+<table>
+<tr><th>ধরন</th><th>ব্যাখ্যা</th><th>উদাহরণ (ই-কমার্স)</th></tr>
+<tr><td><span class="kw">Core Domain</span></td><td>প্রতিযোগিতামূলক সুবিধা — যা আপনার প্রতিষ্ঠানকে আলাদা করে, সবচেয়ে বেশি বিনিয়োগ প্রাপ্য</td><td>Recommendation Engine, Pricing Strategy</td></tr>
+<tr><td><span class="kw">Supporting Subdomain</span></td><td>ব্যবসার জন্য দরকারি কিন্তু প্রতিযোগিতামূলক সুবিধা নয় — কাস্টম কোড লাগে, কিন্তু গভীর বিনিয়োগ দরকার নেই</td><td>Order Management, Inventory Tracking</td></tr>
+<tr><td><span class="kw">Generic Subdomain</span></td><td>প্রতিটা প্রতিষ্ঠানেরই দরকার, কোনো ইউনিক ভ্যালু নেই — অফ-দ্য-শেল্ফ সমাধান কেনা/ব্যবহার করা উচিত</td><td>Authentication, Email Sending, Payment Gateway Integration</td></tr>
+</table>
+
+<h3>বিনিয়োগ সিদ্ধান্ত Subdomain অনুযায়ী</h3>
+<div class="callout best"><span class="tag">Best practice — সেরা ইঞ্জিনিয়ার Core Domain-এ</span>
+Core Domain-এই DDD-এর পূর্ণ কাঠামো (rich Aggregate, ডোমেইন এক্সপার্টের সাথে গভীর Event Storming সেশন, সবচেয়ে অভিজ্ঞ ইঞ্জিনিয়ার) বিনিয়োগ করা উচিত — কারণ এখানেই প্রতিযোগিতামূলক সুবিধা তৈরি হয়। Generic Subdomain-এ (যেমন authentication) কাস্টম DDD মডেল বানানোর বদলে Keycloak/Auth0-এর মতো প্রমাণিত সমাধান ব্যবহার করা বুদ্ধিমানের কাজ — নিজে বানালে সময় নষ্ট, কোনো প্রতিযোগিতামূলক সুবিধাও মেলে না।</div>
+<div class="callout mistake"><span class="tag">Common mistake — সব Subdomain-কে সমান গুরুত্ব দেওয়া</span>
+একটা টিম যদি Generic Subdomain (যেমন নিজস্ব ইমেইল-পাঠানো সিস্টেম) নিয়ে যতটা সময় ব্যয় করে Core Domain-এ (যেমন মূল প্রাইসিং অ্যালগরিদম) ততটাই, সেটা একটা কৌশলগত ভুল — সীমিত সময়/এনার্জি এমন জায়গায় ব্যয় হচ্ছে যা প্রতিযোগীও সহজেই কপি বা কিনে নিতে পারে।</div>
+</template>
+
+<template data-page="eventstorming">
+<h2 class="title">১২. Event Storming</h2>
+<p class="lead"><span class="kw">Event Storming</span> একটা কোলাবোরেটিভ ওয়ার্কশপ টেকনিক — ডেভেলপার আর ডোমেইন এক্সপার্ট একসাথে বসে, রঙিন স্টিকি নোট দিয়ে একটা পুরো বিজনেস প্রসেস আবিষ্কার করেন, কোনো কোড লেখার আগেই।</p>
+
+<h3>প্রক্রিয়া — কমলা স্টিকি দিয়ে শুরু</h3>
+<div class="diagram"><pre>
+ধাপ ১  সবাই মিলে "কমলা" স্টিকিতে Domain Event লেখে (অতীতকালে): "OrderPlaced", "PaymentFailed"...
+ধাপ ২  সময়ক্রম অনুযায়ী দেয়ালে সাজানো হয় (timeline)
+ধাপ ৩  "নীল" স্টিকিতে Command যোগ করা হয় — কী কারণে এই event ঘটলো: "PlaceOrder"
+ধাপ ৪  "হলুদ" স্টিকিতে Aggregate/Actor যোগ করা হয় — কে/কী এই command হ্যান্ডেল করে
+ধাপ ৫  "গোলাপি" স্টিকিতে সমস্যা/প্রশ্ন চিহ্নিত করা হয় — যেখানে দল একমত নয়, বা কিছু অস্পষ্ট
+</pre></div>
+
+<h3>কেন এই টেকনিক কার্যকর</h3>
+<div class="callout why"><span class="tag">Event থেকে শুরু করা কেন — Data Model থেকে নয়</span>
+প্রথাগত পদ্ধতি প্রায়ই ডেটাবেস স্কিমা/টেবিল থেকে শুরু হয় — কিন্তু এতে বিজনেস প্রসেস (কী ঘটে, কোন ক্রমে) হারিয়ে যায়। Event Storming ইচ্ছাকৃতভাবে "কী ঘটে" (event) দিয়ে শুরু করে, "ডেটা কীভাবে সংরক্ষণ করব" প্রশ্ন এড়িয়ে — এতে ডোমেইন এক্সপার্ট (যিনি ডেটাবেস জানেন না) পুরোপুরি অংশ নিতে পারেন, আর দল বিজনেস প্রসেসের আসল প্রবাহ বুঝতে পারে টেবিল ডিজাইনের চিন্তায় বাধাগ্রস্ত না হয়ে।</div>
+
+<h3>Event Storming থেকে Bounded Context</h3>
+<div class="callout behind"><span class="tag">স্টিকি নোটের ক্লাস্টার থেকে Context Map</span>
+ওয়ার্কশপ শেষে, দেয়ালে সাজানো event/command/aggregate-গুলো স্বাভাবিকভাবেই কিছু ক্লাস্টারে ভাগ হয়ে যায় — যে events/commands একসাথে ঘন ঘন কাজ করে, একই actor/aggregate নিয়ে ব্যস্ত, সেগুলো একটা ক্লাস্টার তৈরি করে। এই ক্লাস্টারগুলোই প্রায়ই সরাসরি Bounded Context-এর প্রার্থী হয়ে ওঠে (৩ নম্বর অধ্যায়ে) — Event Storming তাই শুধু ডকুমেন্টেশন টুল নয়, Strategic Design-এর একটা ব্যবহারিক discovery পদ্ধতি।</div>
+</template>
+
+<template data-page="architecture">
+<h2 class="title">১৩. Layered, Hexagonal ও Onion Architecture</h2>
+<p class="lead">DDD একটা মডেলিং পদ্ধতি, কোনো নির্দিষ্ট আর্কিটেকচার নয় — কিন্তু কিছু আর্কিটেকচারাল স্টাইল DDD-এর নীতি (persistence ignorance, ডোমেইনকে কেন্দ্রে রাখা) বাস্তবায়নে বিশেষভাবে উপযোগী।</p>
+
+<h3>Layered Architecture — ঐতিহ্যবাহী স্তরবিন্যাস</h3>
+<div class="diagram"><pre>
+┌─────────────────────┐
+│   Presentation        │  (UI, API Controller)
+├─────────────────────┤
+│   Application         │  (Application Service — orchestration)
+├─────────────────────┤
+│   Domain               │  (Entity, Value Object, Aggregate, Domain Service)
+├─────────────────────┤
+│   Infrastructure       │  (Repository বাস্তবায়ন, DB, external API)
+└─────────────────────┘
+       নির্ভরতা ওপর থেকে নিচে — Domain নিচের কিছুই জানে না
+</pre></div>
+
+<h3>Hexagonal (Ports & Adapters) ও Onion Architecture</h3>
+<p>এই আধুনিক স্টাইলগুলো একই মূল ধারণা ভিন্নভাবে প্রকাশ করে — <span class="kw">Domain</span> কেন্দ্রে থাকে, নির্ভরতা সবসময় <b>বাইরে থেকে ভেতরের দিকে</b> (Infrastructure → Domain, কখনো উল্টো নয়)।</p>
+<div class="diagram"><pre>
+        ┌───────────────────────────────┐
+        │   Infrastructure (Adapters)     │   ← DB, Message Broker, External API
+        │  ┌───────────────────────────┐ │
+        │  │   Application               │ │   ← Use case orchestration
+        │  │  ┌───────────────────────┐ │ │
+        │  │  │      Domain (Core)      │ │ │   ← Entity, Aggregate — কোনো বাইরের নির্ভরতা নেই
+        │  │  └───────────────────────┘ │ │
+        │  └───────────────────────────┘ │
+        └───────────────────────────────┘
+                সব তীর ভেতরের দিকে নির্দেশ করে (Dependency Inversion)
+</pre></div>
+<div class="callout why"><span class="tag">কেন Domain-কে কেন্দ্রে রাখা — Dependency Inversion</span>
+Domain লেয়ার Repository-র <b>ইন্টারফেস</b> সংজ্ঞায়িত করে, কিন্তু বাস্তবায়ন জানে না — বাস্তবায়ন (Infrastructure) সেই ইন্টারফেস <b>implement</b> করে। এভাবে নির্ভরতার তীর সবসময় ভেতরের দিকে থাকে, যদিও রানটাইমে ডেটা বাইরে থেকে ভেতরে আসে। এর সুবিধা: Domain লজিক কোনো ফ্রেমওয়ার্ক/ডেটাবেস ছাড়াই সম্পূর্ণ স্বাধীনভাবে টেস্ট করা যায়, আর Infrastructure (ORM, cloud provider) বদলালেও Domain কোড একটুও বদলাতে হয় না।</div>
+
+<h3>Layered বনাম Hexagonal — মূল পার্থক্য</h3>
+<div class="callout behind"><span class="tag">ঐতিহ্যবাহী Layered-এ প্রায়ই উল্টো নির্ভরতা লিক করে</span>
+প্রথাগত Layered Architecture-এ Domain লেয়ার প্রায়ই সরাসরি Infrastructure-এর ওপর নির্ভর করে ফেলে (যেমন Entity ক্লাসে সরাসরি Entity Framework-এর অ্যাট্রিবিউট ব্যবহার) — কারিগরিভাবে "স্তর" থাকলেও Dependency Inversion থাকে না। Hexagonal/Onion স্পষ্টভাবে এই নিয়ম জোর করে: Domain কোনো বাইরের প্যাকেজ/ফ্রেমওয়ার্ক import করবে না, শুধু ইন্টারফেস সংজ্ঞায়িত করবে — এটাই প্রকৃত persistence ignorance অর্জনের চাবিকাঠি।</div>
+</template>
+
+<template data-page="cqrs-es">
+<h2 class="title">১৪. CQRS ও Event Sourcing</h2>
+<p class="lead">জটিল Aggregate-এর read আর write প্রয়োজন প্রায়ই খুব ভিন্ন — এই অধ্যায়ে দেখা যাক কীভাবে CQRS ও Event Sourcing DDD-এর Aggregate/Domain Event ধারণার ওপর স্বাভাবিকভাবেই গড়ে ওঠে।</p>
+
+<h3>CQRS — কেন একই Model দিয়ে Read/Write না করা</h3>
+<p>একটা rich, invariant-রক্ষাকারী Aggregate (Write Model) প্রায়ই একটা ড্যাশবোর্ড রিপোর্টের জন্য অদক্ষ — রিপোর্টে দরকার অনেক Aggregate জুড়ে ডেটা, denormalized আকারে। <span class="kw">CQRS (Command Query Responsibility Segregation)</span> write model (Aggregate, invariant-রক্ষা) আর read model (query-অপ্টিমাইজড, প্রায়ই সম্পূর্ণ আলাদা ডেটাবেস) আলাদা করে — এই সাইটের Distributed Systems কোর্সে এর সম্পূর্ণ ডায়াগ্রাম বিস্তারিত।</p>
+
+<h3>Event Sourcing — Domain Event-ই সত্যের উৎস</h3>
+<div class="diagram"><pre>
+প্রথাগত পদ্ধতি:      Order টেবিলে বর্তমান state সংরক্ষিত (Status="Shipped")
+                     — কীভাবে এখানে পৌঁছালো তার ইতিহাস হারিয়ে গেছে
+
+Event Sourcing:      OrderPlaced → PaymentReceived → OrderShipped
+                     — প্রতিটা Domain Event-ই সংরক্ষিত; বর্তমান state এই event-গুলো
+                       ক্রমানুসারে replay করে বের করা হয়
+</pre></div>
+<div class="callout behind"><span class="tag">Event Sourcing DDD-এর Domain Event ধারণার স্বাভাবিক সম্প্রসারণ</span>
+৭ নম্বর অধ্যায়ে দেখা Domain Event ইতিমধ্যেই "কী ঘটেছে" রেকর্ড করে — Event Sourcing শুধু এই ধারণাটাকে চরমে নিয়ে যায়: state আলাদাভাবে সংরক্ষণ না করে, event-গুলোকেই একমাত্র persistent সত্য ধরে নেওয়া। Aggregate-এর বর্তমান অবস্থা মেমরিতে event history replay করে পুনর্গঠন করা হয় — এটাই কেন Event Sourcing প্রায়ই DDD-ভিত্তিক সিস্টেমে দেখা যায়, বিশেষ করে যেখানে সম্পূর্ণ audit trail (financial ledger, legal compliance) গুরুত্বপূর্ণ।</div>
+
+<h3>কখন এই জটিলতা যুক্তিসঙ্গত</h3>
+<div class="callout mistake"><span class="tag">Common mistake — Generic/Supporting Subdomain-এ CQRS+ES বসানো</span>
+CQRS ও বিশেষভাবে Event Sourcing উল্লেখযোগ্য জটিলতা যোগ করে (snapshot ব্যবস্থাপনা, event schema evolution, দুটো আলাদা ডেটা স্টোর সিঙ্ক রাখা)। এই বিনিয়োগ শুধু Core Domain-এ (১১ নম্বর অধ্যায়ে) যুক্তিসঙ্গত, যেখানে জটিল বিজনেস নিয়ম ও পূর্ণ audit trail-এর প্রকৃত প্রয়োজন আছে — একটা সাধারণ Supporting Subdomain-এ (যেমন সাধারণ config সংরক্ষণ) এই প্যাটার্ন শুধু অপ্রয়োজনীয় জটিলতা।</div>
+</template>
+
+<template data-page="antipatterns">
+<h2 class="title">১৫. Anti-patterns</h2>
+<p class="lead">DDD-এর প্যাটার্ন ভুলভাবে বাস্তবায়ন করলে এর প্রতিশ্রুত সুবিধা হারিয়ে যায়, শুধু জটিলতাই থেকে যায়। সবচেয়ে সাধারণ ব্যর্থতার প্যাটার্নগুলো এখানে।</p>
+
+<h3>Anemic Domain Model — সবচেয়ে সাধারণ ব্যর্থতা</h3>
+<div class="diagram"><pre>
+❌ Anemic Model:
+   class Order { Guid Id; List&lt;OrderLine&gt; Lines; get; set; }   ← শুধু ডেটা bag, কোনো লজিক নেই
+   class OrderService { void Cancel(Order o) { o.Status = "Cancelled"; } }  ← সব লজিক বাইরে
+
+✅ Rich Model:
+   class Order {
+       public void Cancel() {
+           if (Status != OrderStatus.Pending) throw new InvalidOperationException();
+           Status = OrderStatus.Cancelled;
+       }
+   }
+</pre></div>
+<div class="callout mistake"><span class="tag">কেন এটা এত সাধারণ — Object-Relational চিন্তাভঙ্গির প্রভাব</span>
+ORM/ডেটাবেস-প্রথম চিন্তাভাবনায় অভ্যস্ত ডেভেলপাররা প্রায়ই Entity ক্লাসকে ডেটাবেস টেবিলের সরাসরি প্রতিফলন হিসেবে দেখেন (get/set property-এর bag) — লজিক আলাদা "Service" ক্লাসে চলে যায়। এটাই <span class="kw">Anemic Domain Model</span> — কারিগরিভাবে DDD-এর নাম ব্যবহার করলেও, আসল মূল্য (Entity নিজেই তার নিয়ম রক্ষা করে) হারিয়ে যায়, ফলাফল একটা প্রথাগত procedural কোডের DDD-নাম-দেওয়া সংস্করণ মাত্র।</div>
+
+<h3>God Aggregate</h3>
+<p>একটা Aggregate যা অতিরিক্ত বড় (৬ নম্বর অধ্যায়ে আলোচিত) — সব কিছু একসাথে ধরে রাখার চেষ্টায় পারফরম্যান্স ও concurrency দুটোই ভেঙে পড়ে।</p>
+
+<h3>অন্যান্য সাধারণ ভুল</h3>
+<table>
+<tr><th>Anti-pattern</th><th>সমস্যা</th></tr>
+<tr><td>সব জায়গায় Repository&lt;T&gt; জেনেরিক</td><td>Repository ORM-এর পাতলা মোড়ক হয়ে যায়, ডোমেইন ভাষা হারিয়ে যায় (৮ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>Bounded Context ছাড়াই DDD প্যাটার্ন</td><td>একটা বিশাল, ভাগহীন মডেলে Aggregate/Repository বসালে জটিলতাই বাড়ে, স্বচ্ছতা মেলে না</td></tr>
+<tr><td>ডোমেইন এক্সপার্টের সাথে যোগাযোগ ছাড়া DDD</td><td>Ubiquitous Language তৈরিই হয় না — শুধু প্যাটার্নের নাম ব্যবহার হচ্ছে, প্রকৃত ডোমেইন জ্ঞান কোডে নেই</td></tr>
+</table>
+</template>
+
+<template data-page="microservices">
+<h2 class="title">১৬. DDD ও Microservices সম্পর্ক</h2>
+<p class="lead">DDD আর Microservices একসাথে প্রায়ই উল্লেখ করা হয়, কিন্তু এরা আলাদা জিনিস — DDD একটা মডেলিং পদ্ধতি, Microservices একটা ডিপ্লয়মেন্ট আর্কিটেকচার। তাদের সংযোগ একটা নির্দিষ্ট বিন্দুতে: Bounded Context।</p>
+
+<h3>Bounded Context = Microservice-এর সীমানা</h3>
+<div class="diagram"><pre>
+DDD Strategic Design:        Microservices Architecture:
+  Bounded Context "Order"  ═══▶  Order Microservice (নিজস্ব DB, নিজস্ব deployment)
+  Bounded Context "Payment"═══▶  Payment Microservice
+  Bounded Context "Shipping"═══▶ Shipping Microservice
+</pre></div>
+<p>এই সাইটের Microservices কোর্সের Service Decomposition অধ্যায়ে ঠিক এই নীতিই "By Subdomain (DDD)" কৌশল হিসেবে আলোচিত — একটা Bounded Context প্রাকৃতিকভাবেই একটা স্বাধীন সার্ভিসের জন্য উপযুক্ত, কারণ এর নিজস্ব মডেল, নিজস্ব ডেটা, নিজস্ব পরিবর্তনের কারণ আছে।</p>
+
+<h3>একটা Microservice একটা Aggregate নয়</h3>
+<div class="callout mistake"><span class="tag">Common mistake — Aggregate ও Microservice গুলিয়ে ফেলা</span>
+একটা Bounded Context-এ সাধারণত <b>একাধিক</b> Aggregate থাকে (Order Context-এ Order, Cart, Discount — সব আলাদা Aggregate কিন্তু একই Context-এর অংশ)। প্রতিটা Aggregate-কে আলাদা Microservice বানানো একটা সাধারণ ভুল — এটা Microservices কোর্সের Nanoservices anti-pattern তৈরি করে (অতিরিক্ত ছোট সার্ভিস, প্রচুর network overhead)। সঠিক সীমানা হলো Bounded Context, প্রতিটা Aggregate নয়।</div>
+
+<h3>Context Mapping = Microservice Communication Pattern</h3>
+<p>৪ নম্বর অধ্যায়ের Context Mapping প্যাটার্ন সরাসরি Microservices-এর যোগাযোগ ডিজাইনে প্রয়োগ হয় — Anticorruption Layer একটা Microservice-এর মধ্যে একটা adapter/translation লেয়ার হয়ে ওঠে (Legacy সিস্টেমের সাথে ইন্টিগ্রেশনে), আর Open Host Service সরাসরি একটা সার্ভিসের পাবলিক API হয়ে ওঠে।</p>
+<div class="callout why"><span class="tag">DDD ছাড়া Microservices কেন ঝুঁকিপূর্ণ — Distributed Monolith</span>
+যদি সার্ভিসের সীমানা টেকনিক্যাল সুবিধা অনুযায়ী টানা হয় (DDD-এর Bounded Context বিশ্লেষণ ছাড়াই), সার্ভিসগুলো প্রায়ই একে অপরের সাথে অতিরিক্ত জড়িয়ে যায় — Microservices কোর্সের Distributed Monolith anti-pattern-এর সবচেয়ে সাধারণ মূল কারণ আসলে দুর্বল strategic design, দুর্বল কোড না।</div>
+</template>
+
+<template data-page="dotnet">
+<h2 class="title">১৭. DDD in .NET</h2>
+<p class="lead">এই অধ্যায়ে আগের ধারণাগুলো কনক্রিট C# কোডে দেখানো হলো — একটা ছোট Order Aggregate, তার Repository, আর Application Service একসাথে।</p>
+
+<h3>Value Object — C# Record দিয়ে</h3>
+<pre><span class="c">// C# record স্বয়ংক্রিয়ভাবে value-based equality ও immutability দেয়</span>
+public record Money(decimal Amount, string Currency)
+{
+    public static Money operator +(Money a, Money b)
+    {
+        if (a.Currency != b.Currency)
+            throw new InvalidOperationException("Currency mismatch");
+        return new Money(a.Amount + b.Amount, a.Currency);
+    }
+}</pre>
+
+<h3>Aggregate Root — Rich Entity</h3>
+<pre>public class Order   <span class="c">// Aggregate Root</span>
+{
+    private readonly List&lt;OrderLine&gt; _lines = new();
+    public IReadOnlyCollection&lt;OrderLine&gt; Lines =&gt; _lines.AsReadOnly();   <span class="c">// বাইরে থেকে শুধু পড়া যায়</span>
+    public OrderStatus Status { get; private set; }   <span class="c">// private setter — শুধু ভেতর থেকে বদলায়</span>
+
+    public static Order PlaceNewOrder(CustomerId customerId, IEnumerable&lt;CartItem&gt; items)
+    {
+        if (!items.Any()) throw new DomainException("Order must have at least one item");
+        var order = new Order { CustomerId = customerId, Status = OrderStatus.Pending };
+        foreach (var item in items) order._lines.Add(new OrderLine(item.ProductId, item.Quantity));
+        order.AddDomainEvent(new OrderPlaced(order.Id, customerId));
+        return order;
+    }
+
+    public void Cancel()
+    {
+        if (Status != OrderStatus.Pending)
+            throw new DomainException($"Cannot cancel order in {Status} status");
+        Status = OrderStatus.Cancelled;
+        AddDomainEvent(new OrderCancelled(Id));
+    }
+}</pre>
+
+<h3>Repository Interface (Domain) ও EF Core বাস্তবায়ন (Infrastructure)</h3>
+<pre><span class="c">// Domain layer — শুধু ইন্টারফেস, কোনো EF Core নির্ভরতা নেই</span>
+public interface IOrderRepository
+{
+    Task&lt;Order?&gt; GetByIdAsync(OrderId id);
+    Task AddAsync(Order order);
+}
+
+<span class="c">// Infrastructure layer — EF Core বাস্তবায়ন, Domain এটা জানে না</span>
+public class EfOrderRepository : IOrderRepository
+{
+    private readonly AppDbContext _db;
+    public EfOrderRepository(AppDbContext db) =&gt; _db = db;
+    public Task&lt;Order?&gt; GetByIdAsync(OrderId id) =&gt;
+        _db.Orders.Include(o =&gt; o.Lines).FirstOrDefaultAsync(o =&gt; o.Id == id);
+    public Task AddAsync(Order order) { _db.Orders.Add(order); return _db.SaveChangesAsync(); }
+}</pre>
+
+<h3>Application Service — Orchestration</h3>
+<pre>public class CancelOrderHandler
+{
+    private readonly IOrderRepository _repo;
+    public async Task Handle(CancelOrderCommand cmd)
+    {
+        var order = await _repo.GetByIdAsync(cmd.OrderId)
+            ?? throw new NotFoundException();
+        order.Cancel();                 <span class="c">// আসল বিজনেস লজিক — Order Aggregate-এর ভেতরে</span>
+        await _repo.SaveAsync(order);   <span class="c">// শুধু orchestration, কোনো if-চেক নেই</span>
+    }
+}</pre>
+<div class="callout best"><span class="tag">EF Core-এ Value Object ম্যাপ করা — Owned Types</span>
+EF Core-এর <code>OwnsOne()</code> কনফিগারেশন দিয়ে একটা Value Object (যেমন <code>Money</code>) কে Entity-এর নিজের টেবিলের কলাম হিসেবে ম্যাপ করা যায় (আলাদা টেবিল ছাড়াই) — এভাবে ডোমেইন মডেলে Value Object থেকে যায় ঠিক যেমন থাকা উচিত, অথচ ডেটাবেসে স্বাভাবিকভাবেই সংরক্ষিত হয়, কোনো compromise ছাড়াই।</div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৮. Interview প্রশ্নোত্তর</h2>
+<p class="lead">DDD ইন্টারভিউতে বারবার আসা প্রশ্ন — প্রতিটার ব্যাখ্যা basic ধারণা থেকে শুরু করে আরও গভীরে যায়।</p>
+
+<h3>১) Entity আর Value Object-এর পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> Entity-র একটা স্থায়ী identity (ID) থাকে, সমতা ID দিয়ে যাচাই হয়, mutable। Value Object-এর কোনো identity নেই, সমতা সব attribute-এর মান দিয়ে যাচাই হয়, সাধারণত immutable (৫ নম্বর অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>২) Aggregate কী, আর কেন শুধু Aggregate Root-এর রেফারেন্স বাইরে রাখা উচিত?</h3>
+<p><b>ব্যাখ্যা:</b> Aggregate একটা consistency boundary — সম্পর্কিত Entity/Value Object যাদের একসাথে invariant বজায় রাখতে হয়। বাইরের কোড সরাসরি child entity বদলালে invariant ভেঙে যেতে পারে, তাই সব পরিবর্তন Aggregate Root-এর মেথডের মধ্য দিয়ে যেতে হয় (৬ নম্বর অধ্যায়ে)।</p>
+
+<h3>৩) Bounded Context কী, আর কেন একই Entity ভিন্ন Context-এ ভিন্ন দেখাতে পারে?</h3>
+<p><b>ব্যাখ্যা:</b> Bounded Context একটা মডেল ও ভাষার সীমানা। "Product" Catalog Context-এ (নাম/দাম) আর Inventory Context-এ (স্টক) ভিন্ন জিনিস বোঝাতে পারে, কারণ প্রতিটা Context শুধু তার নিজের প্রয়োজনীয় অংশটুকু মডেল করে — এটা ভুল নয়, বরং সঠিক ডিজাইন (৩ নম্বর অধ্যায়ে)।</p>
+
+<h3>৪) Anemic Domain Model কী, কেন এটা এড়ানো উচিত?</h3>
+<p><b>ব্যাখ্যা:</b> Anemic Model-এ Entity শুধু get/set প্রপার্টির bag, সব লজিক আলাদা Service ক্লাসে থাকে — এতে বিজনেস নিয়ম ছড়িয়ে যায়, Entity নিজেই তার invariant রক্ষা করতে পারে না। Rich Model-এ Entity নিজেই মেথড (<code>order.Cancel()</code>) দিয়ে তার নিয়ম রক্ষা করে (১৫ নম্বর অধ্যায়ে)।</p>
+
+<h3>৫) Domain Event কী, আর কখন এটা ব্যবহার করবেন?</h3>
+<p><b>ব্যাখ্যা:</b> Domain Event ডোমেইনে ঘটে যাওয়া কোনো ঘটনা প্রকাশ করে (অতীতকালে)। যখন একটা transaction একাধিক Aggregate বদলানোর প্রয়োজন হয়, একটাই Aggregate সরাসরি বদলে, Domain Event রেইজ করে অন্য Aggregate-কে eventually consistent রাখা হয় (৭ নম্বর অধ্যায়ে)।</p>
+
+<h3>৬) Repository Pattern কী সমস্যা সমাধান করে?</h3>
+<p><b>ব্যাখ্যা:</b> Repository ডোমেইন লজিককে persistence detail (SQL, ORM) থেকে আলাদা রাখে (persistence ignorance) — ডোমেইন লজিক শুধু একটা ইন্টারফেস জানে, বাস্তবায়ন Infrastructure লেয়ারে থাকে। এতে ডোমেইন লজিক দ্রুত, বিচ্ছিন্নভাবে ইউনিট টেস্ট করা যায় (৮ নম্বর অধ্যায়ে)।</p>
+
+<h3>৭) Core, Supporting, Generic Subdomain-এর পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> Core Domain প্রতিযোগিতামূলক সুবিধা, সবচেয়ে বেশি বিনিয়োগ প্রাপ্য। Supporting Subdomain দরকারি কিন্তু ইউনিক নয়। Generic Subdomain সবার দরকার, ইউনিক ভ্যালু নেই — অফ-দ্য-শেল্ফ সমাধান ব্যবহার করা উচিত (১১ নম্বর অধ্যায়ে)।</p>
+
+<h3>৮) Bounded Context আর Microservice কি একই জিনিস?</h3>
+<p><b>ব্যাখ্যা:</b> না, সম্পর্কিত কিন্তু আলাদা — Bounded Context একটা মডেলিং সীমানা, Microservice একটা ডিপ্লয়মেন্ট ইউনিট। বাস্তবে একটা Bounded Context প্রায়ই একটা Microservice-এর সীমানা হিসেবে ব্যবহৃত হয়, কিন্তু একটা Bounded Context-এ একাধিক Aggregate থাকতে পারে — প্রতিটা Aggregate আলাদা Microservice নয় (১৬ নম্বর অধ্যায়ে)।</p>
+
+<h3>৯) Context Mapping-এর Anticorruption Layer কী, কখন দরকার?</h3>
+<p><b>ব্যাখ্যা:</b> ACL একটা অনুবাদ স্তর, যা বাইরের/পুরনো সিস্টেমের বিশৃঙ্খল মডেলকে নিজের পরিষ্কার মডেলে রূপান্তর করে — পুরনো সিস্টেমের জঞ্জাল যেন নিজের নতুন মডেলে "লিক" না করে, তা নিশ্চিত করে (৪ নম্বর অধ্যায়ে)।</p>
+
+<h3>১০) CQRS DDD-এর সাথে কীভাবে সম্পর্কিত?</h3>
+<p><b>ব্যাখ্যা:</b> একটা rich write model (Aggregate, invariant-রক্ষা) প্রায়ই জটিল query-র জন্য অদক্ষ। CQRS write model (Aggregate-ভিত্তিক) ও read model (denormalized, query-অপ্টিমাইজড) আলাদা করে, দুটোই নিজস্ব প্রয়োজন অনুযায়ী অপ্টিমাইজ করা যায় (১৪ নম্বর অধ্যায়ে)।</p>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  const searchIndex = {};
+  (function buildIndex(){
+    const tmp = document.createElement('div');
+    pages.forEach(p=>{
+      tmp.innerHTML = templates[p.id] || '';
+      searchIndex[p.id] = ((p.title||'') + ' ' + tmp.textContent).toLowerCase();
+    });
+  })();
+
+  let currentQuery = '';
+
+  function clearHighlights(root){
+    root.querySelectorAll('mark.hl').forEach(m=>{ m.replaceWith(document.createTextNode(m.textContent)); });
+    root.normalize();
+  }
+
+  function highlightIn(root, q){
+    if(!q) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        const p = node.parentNode;
+        if(!node.nodeValue || !p || p.tagName==='SCRIPT' || p.tagName==='STYLE' || p.tagName==='MARK') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes=[]; let n; while((n=walker.nextNode())) nodes.push(n);
+    const ql = q.toLowerCase();
+    nodes.forEach(node=>{
+      const text = node.nodeValue, lower = text.toLowerCase();
+      if(!lower.includes(ql)) return;
+      const frag = document.createDocumentFragment();
+      let idx=0, pos;
+      while((pos = lower.indexOf(ql, idx)) !== -1){
+        if(pos>idx) frag.appendChild(document.createTextNode(text.slice(idx,pos)));
+        const mark = document.createElement('mark');
+        mark.className='hl';
+        mark.textContent = text.slice(pos, pos+ql.length);
+        frag.appendChild(mark);
+        idx = pos+ql.length;
+      }
+      if(idx<text.length) frag.appendChild(document.createTextNode(text.slice(idx)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  function applyHighlight(){
+    const active = main.querySelector('.page.active');
+    if(!active) return;
+    clearHighlights(active);
+    if(currentQuery) highlightIn(active, currentQuery);
+  }
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    applyHighlight();
+    const active = main.querySelector('.page.active');
+    const firstMark = active ? active.querySelector('mark.hl') : null;
+    if(firstMark && firstMark.scrollIntoView) firstMark.scrollIntoView({block:'center'});
+    else window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const searchInput = document.getElementById('courseSearch');
+  const searchMeta = document.getElementById('searchMeta');
+  if(searchInput){
+    searchInput.addEventListener('input', ()=>{
+      const q = searchInput.value.trim();
+      currentQuery = q;
+      const ql = q.toLowerCase();
+      let matchCount = 0, firstMatch = null;
+      pages.forEach(p=>{
+        const btn = sidebar.querySelector('.navbtn[data-target="'+p.id+'"]');
+        const matches = !ql || searchIndex[p.id].includes(ql);
+        if(matches){ matchCount++; if(!firstMatch) firstMatch = p; }
+        if(btn) btn.classList.toggle('hide', !matches);
+      });
+      if(!ql) searchMeta.textContent = '';
+      else if(matchCount===0) searchMeta.textContent = 'কোনো ফলাফল নেই';
+      else searchMeta.textContent = matchCount + 'টা অধ্যায়ে ফলাফল পাওয়া গেছে';
+
+      const active = main.querySelector('.page.active');
+      const activeId = active ? active.id.replace('page-','') : null;
+      const activeMatches = !!(ql && activeId && searchIndex[activeId] && searchIndex[activeId].includes(ql));
+      if(ql && !activeMatches && firstMatch){
+        show(firstMatch.id);
+      } else {
+        applyHighlight();
+        const mark = active ? active.querySelector('mark.hl') : null;
+        if(ql && mark && mark.scrollIntoView) mark.scrollIntoView({block:'center'});
+      }
+    });
+    searchInput.addEventListener('keydown', e=>{
+      if(e.key==='Escape'){ searchInput.value=''; searchInput.dispatchEvent(new Event('input')); searchInput.blur(); }
+    });
+  }
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,720 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agile ও Scrum — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#f59e0b; --accent2:#38bdf8;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --pink:#f472b6;
+    --code-bg:#0b0f14; --kw:#fbbf24;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(245,158,11,.22),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#2a1600}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--accent2)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--accent2)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#fbbf24}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  .search-wrap{padding:0 10px 14px}
+  .search-box{
+    width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    border-radius:9px; padding:9px 12px; font-size:13.5px; font-family:inherit;
+    outline:none; transition:border-color .15s;
+  }
+  .search-box:focus{border-color:var(--accent)}
+  .search-box::placeholder{color:var(--muted)}
+  .search-meta{font-size:11.5px; color:var(--muted); padding:6px 2px 0; min-height:14px}
+  .navbtn.hide{display:none}
+  mark.hl{background:#fde047; color:#1a1a1a; padding:0 1px; border-radius:3px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🏃 Agile ও Scrum</h1>
+      <p>Beginner → Advanced • বাংলায় (keyword ইংরেজিতে)</p>
+      <div class="search-wrap">
+        <input type="text" id="courseSearch" class="search-box" placeholder="🔍 এই কোর্সে সার্চ করুন..." autocomplete="off">
+        <div class="search-meta" id="searchMeta"></div>
+      </div>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",   icon:"📜", title:"Foundation — Agile Manifesto"},
+  {id:"waterfall",    icon:"🌊", title:"Waterfall বনাম Agile"},
+  {id:"roles",        icon:"👥", title:"Scrum Roles"},
+  {id:"events",       icon:"📅", title:"Scrum Events"},
+  {id:"artifacts",    icon:"📦", title:"Scrum Artifacts"},
+  {id:"stories",      icon:"📝", title:"User Story ও Acceptance Criteria"},
+  {id:"estimation",   icon:"🎲", title:"Estimation — Story Point, Velocity"},
+  {id:"kanban",       icon:"🗂️", title:"Kanban"},
+  {id:"scrumkanban",  icon:"⚖️", title:"Scrum বনাম Kanban"},
+  {id:"backlog",      icon:"📋", title:"Backlog Refinement ও Prioritization"},
+  {id:"definition",   icon:"✅", title:"Definition of Done ও Ready"},
+  {id:"metrics",      icon:"📊", title:"Agile Metrics"},
+  {id:"scaling",      icon:"🏢", title:"Scaling Agile — SAFe, LeSS, Spotify"},
+  {id:"retro",        icon:"🔄", title:"Retrospective Techniques"},
+  {id:"antipatterns", icon:"⚠️", title:"Anti-patterns"},
+  {id:"devops",       icon:"♾️", title:"Agile ও DevOps সম্পর্ক"},
+  {id:"distributed",  icon:"🌍", title:"Remote/Distributed Agile Team"},
+  {id:"interview",    icon:"🎯", title:"Interview প্রশ্নোত্তর"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Foundation — Agile Manifesto</h2>
+<p class="lead">২০০১ সালে ১৭ জন সফটওয়্যার ডেভেলপার উটাহ-এর একটা স্কি রিসোর্টে মিলিত হয়ে <span class="kw">Agile Manifesto</span> লেখেন — চারটা মূল ভ্যালু আর বারোটা নীতি, যা আজও প্রায় প্রতিটা আধুনিক সফটওয়্যার টিমের কাজের ধরন প্রভাবিত করে।</p>
+
+<h3>চারটা মূল Value</h3>
+<table>
+<tr><th>যা বেশি গুরুত্বপূর্ণ</th><th>যার তুলনায় (কম নয়, কিন্তু কম গুরুত্বপূর্ণ)</th></tr>
+<tr><td>ব্যক্তি ও ইন্টারঅ্যাকশন</td><td>প্রক্রিয়া ও টুল</td></tr>
+<tr><td>কার্যকর সফটওয়্যার</td><td>বিস্তারিত ডকুমেন্টেশন</td></tr>
+<tr><td>গ্রাহকের সাথে সহযোগিতা</td><td>কন্ট্রাক্ট নেগোসিয়েশন</td></tr>
+<tr><td>পরিবর্তনে সাড়া দেওয়া</td><td>একটা পরিকল্পনা অনুসরণ করা</td></tr>
+</table>
+<div class="callout why"><span class="tag">"বাম দিকেরটা বেশি মূল্যবান" — ডান দিকেরটা বাতিল নয়</span>
+Manifesto স্পষ্টভাবে বলে "যদিও ডান দিকের জিনিসগুলোরও মূল্য আছে, আমরা বাম দিকেরটাকে বেশি মূল্য দিই" — ডকুমেন্টেশন/প্রক্রিয়া/পরিকল্পনা সম্পূর্ণ বাতিল নয়, শুধু যখন এগুলো ব্যক্তির ইন্টারঅ্যাকশন বা কাজ করা সফটওয়্যারের সাথে সাংঘর্ষিক হয়, তখন অগ্রাধিকার কোন দিকে যাবে তা স্পষ্ট করে দেওয়া হয়েছে। এই সূক্ষ্মতা প্রায়ই ভুল বোঝা হয় — "Agile মানে কোনো ডকুমেন্টেশন লাগে না" ভুল সিদ্ধান্ত (১৫ নম্বর অধ্যায়ে এই ভুল ব্যাখ্যা বিস্তারিত)।</div>
+
+<h3>বারোটা নীতির সারাংশ</h3>
+<div class="grid2">
+  <div class="box"><b>ডেলিভারি ও পরিবর্তন</b><br>দ্রুত, নিয়মিত ডেলিভারি (সপ্তাহ, মাস নয়) — এমনকি ডেভেলপমেন্টের শেষ দিকেও পরিবর্তন স্বাগত জানানো, প্রতিযোগিতামূলক সুবিধার জন্য</div>
+  <div class="box"><b>মানুষ ও সহযোগিতা</b><br>প্রতিদিন বিজনেস আর ডেভেলপার একসাথে কাজ করা, মুখোমুখি কথোপকথনকে সবচেয়ে কার্যকর যোগাযোগ মাধ্যম ধরা, স্ব-সংগঠিত টিমে বিশ্বাস</div>
+  <div class="box"><b>টেকনিক্যাল উৎকর্ষ</b><br>কার্যকর সফটওয়্যারই অগ্রগতির প্রধান মাপকাঠি, টেকনিক্যাল উৎকর্ষ ও ভালো ডিজাইনের প্রতি ক্রমাগত মনোযোগ</div>
+  <div class="box"><b>টেকসই গতি ও প্রতিফলন</b><br>একটা টেকসই গতিতে অনির্দিষ্টকাল কাজ করা যায় এমন ছন্দ বজায় রাখা, নিয়মিত বিরতিতে দল নিজেই নিজের কার্যকারিতা প্রতিফলিত করে সমন্বয় করে</div>
+</div>
+<div class="callout behind"><span class="tag">Agile একটা Methodology নয় — একটা Mindset</span>
+Agile Manifesto নিজে কোনো নির্দিষ্ট প্রক্রিয়া, টুল, বা ধাপ-ভিত্তিক নির্দেশনা দেয় না — এটা একটা দর্শন/মূল্যবোধের সেট। Scrum, Kanban, XP (Extreme Programming) — এগুলো সবই এই একই মূল্যবোধের ওপর ভিত্তি করে তৈরি ভিন্ন ভিন্ন <b>ফ্রেমওয়ার্ক</b>। "আমরা Agile করছি" মানে "আমরা Scrum ব্যবহার করছি" নয় — Scrum একটা নির্দিষ্ট বাস্তবায়ন, Agile তার পেছনের দর্শন (২ নম্বর অধ্যায়ে বিস্তারিত)।</div>
+</template>
+
+<template data-page="waterfall">
+<h2 class="title">২. Waterfall বনাম Agile</h2>
+<p class="lead">Agile কেন এলো তা বোঝার জন্য আগে দেখা দরকার কোন সমস্যার প্রতিক্রিয়ায় এটা তৈরি হয়েছিল — <span class="kw">Waterfall</span> মডেলের সীমাবদ্ধতা।</p>
+
+<h3>Waterfall — ধারাবাহিক, ধাপে-ধাপে</h3>
+<div class="diagram"><pre>
+Requirements ──▶ Design ──▶ Implementation ──▶ Testing ──▶ Deployment ──▶ Maintenance
+     (প্রতিটা ধাপ সম্পূর্ণ শেষ না হলে পরের ধাপ শুরু হয় না — কোনো ফিরে যাওয়ার সুযোগ নেই)
+</pre></div>
+<p>Waterfall-এ পুরো প্রজেক্টের requirements শুরুতেই চূড়ান্ত করে ফেলা হয় — মাসের পর মাস পর প্রথম কার্যকর সফটওয়্যার দেখা যায়, ততদিনে বাজার/প্রয়োজন বদলে গেলেও তা সহজে সমন্বয় করা যায় না।</p>
+
+<h3>Agile — ইটারেটিভ, ইনক্রিমেন্টাল</h3>
+<div class="diagram"><pre>
+Sprint ১ (২ সপ্তাহ): Plan → Build → Test → Review → Demo   → ছোট, কার্যকর ফিচার ডেলিভার
+Sprint ২ (২ সপ্তাহ): Plan → Build → Test → Review → Demo   → আগেরটার ওপর ভিত্তি করে, ফিডব্যাক অনুযায়ী সমন্বয়
+Sprint ৩ ...
+</pre></div>
+<table>
+<tr><th></th><th>Waterfall</th><th>Agile</th></tr>
+<tr><td>Requirements</td><td>শুরুতেই সম্পূর্ণ চূড়ান্ত</td><td>ক্রমশ বিকশিত হয়, প্রতিটা Sprint-এ পরিমার্জিত</td></tr>
+<tr><td>ফিডব্যাক</td><td>প্রজেক্টের শেষে</td><td>প্রতি ২-৪ সপ্তাহে</td></tr>
+<tr><td>পরিবর্তনের খরচ</td><td>দেরিতে পরিবর্তন খুব ব্যয়বহুল</td><td>পরিবর্তন প্রত্যাশিত ও সাশ্রয়ী</td></tr>
+<tr><td>ঝুঁকি</td><td>শেষ পর্যন্ত জানা যায় না প্রোডাক্ট সঠিক কিনা</td><td>প্রতিটা Sprint-এই বাস্তব ফিডব্যাক মেলে</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন Waterfall ব্যর্থ হয় — Requirements আগে থেকে সম্পূর্ণ জানা যায় না</span>
+Waterfall ধরে নেয় শুরুতেই সব requirements নির্ভুলভাবে জানা সম্ভব — বাস্তবে সফটওয়্যার প্রজেক্টে এটা প্রায় কখনোই সত্য নয়, বিশেষ করে জটিল/নতুন ডোমেইনে। ব্যবহারকারী নিজেও প্রায়ই জানেন না তারা ঠিক কী চান, যতক্ষণ না তারা কিছু একটা ব্যবহার করে দেখেন। Agile এই অনিশ্চয়তা মেনে নিয়ে ডিজাইন করা — ছোট ছোট চক্রে কাজ করে, দ্রুত শেখা ও দ্রুত দিক পরিবর্তন করার সুযোগ রাখে।</div>
+<div class="callout mistake"><span class="tag">Common misconception — Waterfall মানেই খারাপ, Agile মানেই ভালো</span>
+কিছু প্রজেক্টে (যেমন নিয়ন্ত্রক প্রয়োজনীয়তা কঠোর, একবারই তৈরি হবে এমন হার্ডওয়্যার-নির্ভর সিস্টেম) requirements সত্যিই স্থিতিশীল ও আগে থেকে জানা যায় — সেখানে একটা কাঠামোবদ্ধ, ধারাবাহিক পদ্ধতি যুক্তিসঙ্গত হতে পারে। Agile সবচেয়ে বেশি মূল্য দেয় যেখানে অনিশ্চয়তা বেশি, প্রয়োজন দ্রুত বদলায় — প্রতিটা প্রজেক্টে অন্ধভাবে একটাই পদ্ধতি চাপানো ভুল।</div>
+</template>
+
+<template data-page="roles">
+<h2 class="title">৩. Scrum Roles</h2>
+<p class="lead"><span class="kw">Scrum</span> Agile-এর সবচেয়ে জনপ্রিয় ফ্রেমওয়ার্ক — তিনটা নির্দিষ্ট ভূমিকা নিয়ে গঠিত, প্রতিটার আলাদা দায়িত্ব, কোনো ওভারল্যাপ নেই।</p>
+
+<h3>তিনটা ভূমিকা</h3>
+<table>
+<tr><th>ভূমিকা</th><th>দায়িত্ব</th></tr>
+<tr><td><span class="kw">Product Owner (PO)</span></td><td>Product Backlog-এর মালিক — কী তৈরি হবে, কোন ক্রমে, তার সিদ্ধান্ত নেন; ROI/ব্যবসায়িক মূল্য সর্বোচ্চ করাই লক্ষ্য</td></tr>
+<tr><td><span class="kw">Scrum Master</span></td><td>Scrum প্রক্রিয়ার রক্ষক ও সহায়ক — বাধা (impediment) দূর করেন, টিমকে coach করেন, কোনো "ম্যানেজার" নন</td></tr>
+<tr><td><span class="kw">Development Team</span></td><td>স্ব-সংগঠিত, cross-functional — কীভাবে কাজ শেষ হবে তার সিদ্ধান্ত নিজেরাই নেয়</td></tr>
+</table>
+
+<h3>Product Owner বনাম Scrum Master — সাধারণ বিভ্রান্তি</h3>
+<div class="callout mistake"><span class="tag">Common mistake — Scrum Master-কে "টিম লিড/ম্যানেজার" ভাবা</span>
+Scrum Master কাউকে কাজ বরাদ্দ করেন না, পারফরম্যান্স রিভিউ করেন না, কাউকে "নির্দেশ" দেন না — এটা একটা <b>servant leadership</b> ভূমিকা। তার কাজ টিমের পথে থাকা বাধা সরানো (যেমন একটা টিমের অ্যাক্সেস না পাওয়া কোনো সার্ভারের অ্যাক্সেস জোগাড় করা), মিটিং ফ্যাসিলিটেট করা, আর Scrum-এর নিয়ম মেনে চলা নিশ্চিত করা। প্রকৃত সিদ্ধান্ত (কী করবে, কীভাবে করবে) যথাক্রমে PO ও Dev Team-এর হাতে।</div>
+
+<h3>PO কীভাবে ROI সর্বোচ্চ করেন</h3>
+<div class="callout why"><span class="tag">কেন একজন PO — Prioritization-এর জন্য একটা একক সিদ্ধান্ত-বিন্দু</span>
+যদি প্রতিটা stakeholder সরাসরি Dev Team-কে বলতে পারতেন "এটা আগে করো", টিম প্রতিদিন দিক বদলাতো, কোনো ধারাবাহিকতা থাকতো না। একজন PO সব stakeholder-এর চাহিদা শুনে, ব্যবসায়িক মূল্য বিবেচনা করে, একটা একক, স্পষ্ট অগ্রাধিকার-ক্রম (Backlog) তৈরি করেন — টিম জানে ঠিক কী পরবর্তী, কোনো দ্বিধা ছাড়াই।</div>
+</template>
+
+<template data-page="events">
+<h2 class="title">৪. Scrum Events</h2>
+<p class="lead">Scrum-এ পাঁচটা নির্দিষ্ট, সময়-বদ্ধ (time-boxed) ইভেন্ট আছে — প্রতিটার একটা নির্দিষ্ট উদ্দেশ্য, একটা নির্দিষ্ট সর্বোচ্চ সময়সীমা।</p>
+
+<h3>Sprint — সবকিছুর কন্টেইনার</h3>
+<p>একটা <span class="kw">Sprint</span> সাধারণত ১-৪ সপ্তাহের একটা নির্দিষ্ট সময়কাল, যার ভেতরে বাকি সব ইভেন্ট ঘটে। Sprint চলাকালীন লক্ষ্য বদলানো যায় না — এটাই টিমকে একটা স্থিতিশীল, পরিকল্পনাযোগ্য কাজের পরিবেশ দেয়।</p>
+
+<h3>Sprint Planning, Daily Standup, Review, Retrospective</h3>
+<table>
+<tr><th>ইভেন্ট</th><th>উদ্দেশ্য</th><th>সময়সীমা (২ সপ্তাহ Sprint-এ)</th></tr>
+<tr><td><span class="kw">Sprint Planning</span></td><td>এই Sprint-এ কী করা হবে (Sprint Goal) ও কীভাবে — Backlog থেকে আইটেম বেছে নেওয়া</td><td>সর্বোচ্চ ৪ ঘণ্টা</td></tr>
+<tr><td><span class="kw">Daily Scrum (Standup)</span></td><td>টিমের নিজেদের মধ্যে সমন্বয় — গতকাল কী হলো, আজ কী হবে, কোনো বাধা আছে কিনা</td><td>সর্বোচ্চ ১৫ মিনিট</td></tr>
+<tr><td><span class="kw">Sprint Review</span></td><td>Stakeholder-দের সামনে সম্পন্ন কাজ demo করা, ফিডব্যাক নেওয়া</td><td>সর্বোচ্চ ২ ঘণ্টা</td></tr>
+<tr><td><span class="kw">Sprint Retrospective</span></td><td>টিম নিজেই নিজের প্রক্রিয়া প্রতিফলিত করে — কী ভালো হলো, কী উন্নত করা যায় (১৪ নম্বর অধ্যায়ে বিস্তারিত)</td><td>সর্বোচ্চ ১.৫ ঘণ্টা</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — Daily Standup-কে Status Report Meeting বানানো</span>
+Daily Standup ম্যানেজার/Scrum Master-কে "রিপোর্ট" করার মিটিং নয় — এটা টিমের নিজেদের মধ্যে সমন্বয়ের জন্য। যখন প্রতিটা সদস্য শুধু Scrum Master-এর দিকে তাকিয়ে "গতকাল আমি X করেছি" বলে যান (একে অপরের কথায় মনোযোগ না দিয়ে), মিটিংটা তার আসল উদ্দেশ্য হারায় — এটাই "Zombie Scrum"-এর একটা লক্ষণ (১৫ নম্বর অধ্যায়ে)।</div>
+<div class="callout why"><span class="tag">Time-boxing কেন — Parkinson's Law মোকাবিলা</span>
+"কাজ তার জন্য বরাদ্দ সময় পূরণ করার জন্য প্রসারিত হয়" (Parkinson's Law) — যদি Sprint Planning-এর কোনো সময়সীমা না থাকতো, এটা সহজেই সারাদিন গড়িয়ে যেতে পারতো। প্রতিটা Scrum ইভেন্টের একটা কঠোর ঊর্ধ্বসীমা রাখা টিমকে দক্ষ, কেন্দ্রীভূত আলোচনায় বাধ্য করে — অসীম আলোচনার সুযোগ না দিয়ে।</div>
+</template>
+
+<template data-page="artifacts">
+<h2 class="title">৫. Scrum Artifacts</h2>
+<p class="lead">Scrum-এর তিনটা artifact — কাজ ও অগ্রগতি নিয়ে স্বচ্ছতা তৈরি করে, যাতে টিম ও stakeholder সবাই একই তথ্যের ভিত্তিতে সিদ্ধান্ত নিতে পারেন।</p>
+
+<h3>Product Backlog — সবকিছুর একক উৎস</h3>
+<p><span class="kw">Product Backlog</span> একটা অর্ডার করা তালিকা — প্রোডাক্টে যা কিছু প্রয়োজন হতে পারে তার সবকিছু (ফিচার, বাগ ফিক্স, টেকনিক্যাল কাজ)। এটা কখনো "সম্পূর্ণ" হয় না — ক্রমাগত বিকশিত হয়, PO-এর মালিকানায়।</p>
+
+<h3>Sprint Backlog ও Increment</h3>
+<table>
+<tr><th>Artifact</th><th>ব্যাখ্যা</th></tr>
+<tr><td><span class="kw">Sprint Backlog</span></td><td>এই Sprint-এর জন্য বাছাই করা Product Backlog আইটেম + সেগুলো ডেলিভার করার পরিকল্পনা — Dev Team-এর মালিকানায়</td></tr>
+<tr><td><span class="kw">Increment</span></td><td>এই Sprint (ও আগের সব Sprint) মিলিয়ে তৈরি হওয়া প্রকৃত, কার্যকর সফটওয়্যার — Definition of Done (১১ নম্বর অধ্যায়ে) পূরণ করতে হবে</td></tr>
+</table>
+<div class="callout behind"><span class="tag">Artifact-গুলো "স্বচ্ছতা" (Transparency) তৈরির জন্য</span>
+Scrum-এর তিনটা স্তম্ভ হলো Transparency, Inspection, Adaptation — Artifact-গুলো প্রথম স্তম্ভ বাস্তবায়ন করে। Product Backlog দেখেই যে কেউ জানতে পারেন পরবর্তী কী আসছে; Sprint Backlog দেখেই বোঝা যায় এই Sprint-এ ঠিক কী প্রতিশ্রুত হয়েছে; Increment-ই একমাত্র সত্যিকারের অগ্রগতির প্রমাণ, কোনো শতাংশ-সম্পন্ন অনুমান নয়। এই স্বচ্ছতা ছাড়া Inspection (পর্যবেক্ষণ) ও Adaptation (সমন্বয়) অর্থহীন হয়ে যায়।</div>
+
+<h3>Backlog Item-এর গঠন</h3>
+<div class="callout best"><span class="tag">Best practice — উপরের দিকের আইটেম বেশি Refined</span>
+Product Backlog-এর ওপরের দিকের আইটেম (যা শীঘ্রই Sprint-এ আসবে) ছোট, ভালোভাবে বোঝা, স্পষ্ট Acceptance Criteria সহ হওয়া উচিত। নিচের দিকের আইটেম বড়, অস্পষ্ট, বিস্তারিতভাবে refine না করা থাকতে পারে — কারণ সেগুলো কার্যকর হওয়ার আগেই পরিস্থিতি বদলে যেতে পারে, আগেভাগে বিস্তারিত পরিকল্পনা করা সময়ের অপচয় (১০ নম্বর অধ্যায়ে Backlog Refinement বিস্তারিত)।</div>
+</template>
+
+<template data-page="stories">
+<h2 class="title">৬. User Story ও Acceptance Criteria</h2>
+<p class="lead">একটা <span class="kw">User Story</span> একটা ফিচারের ছোট, ব্যবহারকারী-কেন্দ্রিক বর্ণনা — একটা টেকনিক্যাল স্পেসিফিকেশন নয়, বরং একটা কথোপকথনের সূচনাবিন্দু।</p>
+
+<h3>User Story ফরম্যাট</h3>
+<div class="diagram"><pre>
+As a &lt;ধরনের ব্যবহারকারী&gt;
+I want &lt;একটা লক্ষ্য&gt;
+So that &lt;একটা কারণ/সুবিধা&gt;
+
+উদাহরণ: "একজন গ্রাহক হিসেবে, আমি আমার অর্ডার ট্র্যাক করতে চাই,
+         যাতে আমি জানতে পারি এটা কখন পৌঁছাবে।"
+</pre></div>
+
+<h3>INVEST নীতি — একটা ভালো Story-র মানদণ্ড</h3>
+<table>
+<tr><th>অক্ষর</th><th>মানে</th></tr>
+<tr><td><span class="kw">I</span>ndependent</td><td>অন্য story-র ওপর নির্ভর না করে আলাদাভাবে ডেভেলপ করা যায়</td></tr>
+<tr><td><span class="kw">N</span>egotiable</td><td>একটা চুক্তি নয় — বিস্তারিত আলোচনার মাধ্যমে ঠিক হবে, story নিজে শুধু একটা সংক্ষিপ্ত বিবরণ</td></tr>
+<tr><td><span class="kw">V</span>aluable</td><td>ব্যবহারকারী/ব্যবসার জন্য স্পষ্ট মূল্য দেয়</td></tr>
+<tr><td><span class="kw">E</span>stimable</td><td>টিম যুক্তিসঙ্গতভাবে অনুমান করতে পারে এটা কতটা কাজ</td></tr>
+<tr><td><span class="kw">S</span>mall</td><td>একটা Sprint-এ শেষ করার মতো যথেষ্ট ছোট</td></tr>
+<tr><td><span class="kw">T</span>estable</td><td>স্পষ্ট Acceptance Criteria আছে, যাচাই করা সম্ভব</td></tr>
+</table>
+
+<h3>Acceptance Criteria — Given/When/Then</h3>
+<div class="diagram"><pre>
+Given  একজন গ্রাহকের একটা active অর্ডার আছে
+When   তিনি "Track Order" বাটনে ক্লিক করেন
+Then   তিনি বর্তমান শিপিং স্ট্যাটাস ও আনুমানিক ডেলিভারি তারিখ দেখতে পান
+</pre></div>
+<div class="callout why"><span class="tag">Acceptance Criteria কেন — "Done"-এর সংজ্ঞা স্পষ্ট করা</span>
+Acceptance Criteria ছাড়া, "এটা শেষ হয়েছে কিনা" একটা বিষয়গত সিদ্ধান্ত হয়ে যায় — ডেভেলপার একরকম ভাবেন, PO আরেকরকম। স্পষ্ট, পরীক্ষাযোগ্য Acceptance Criteria (Given/When/Then ফরম্যাটে) নিশ্চিত করে সবাই ঠিক একই সংজ্ঞায় একমত, আর QA/automated test সরাসরি এই criteria থেকেই টেস্ট কেস বানাতে পারে।</div>
+<div class="callout mistake"><span class="tag">Common mistake — User Story-কে টেকনিক্যাল টাস্ক লেখা</span>
+"Database-এ একটা নতুন কলাম যোগ করা" — এটা User Story নয়, এটা একটা টাস্ক। User Story সবসময় ব্যবহারকারীর দৃষ্টিকোণ থেকে, ব্যবসায়িক মূল্যের ভাষায় লেখা উচিত — টেকনিক্যাল বাস্তবায়নের বিস্তারিত (কোন টেবিল, কোন API) Story-র ভেতরের আলোচনায়/সাব-টাস্কে আসে, Story-র শিরোনামে নয়।</div>
+</template>
+
+<template data-page="estimation">
+<h2 class="title">৭. Estimation — Story Point, Velocity</h2>
+<p class="lead">Agile টিম সাধারণত সময়ে (ঘণ্টা/দিন) নয়, আপেক্ষিক জটিলতায় estimate করে — এই পার্থক্য প্রায়ই নতুনদের কাছে বিভ্রান্তিকর, কিন্তু এর পেছনে শক্ত যুক্তি আছে।</p>
+
+<h3>Story Point কেন সময়ে নয়</h3>
+<div class="callout why"><span class="tag">সময়ে Estimate করা কেন সমস্যাজনক</span>
+"এটা ৮ ঘণ্টা লাগবে" — কার ৮ ঘণ্টা? একজন সিনিয়র ডেভেলপার আর একজন জুনিয়রের সময় আলাদা, একই ব্যক্তির ক্লান্ত দিনে আর তরতাজা দিনেও আলাদা। <span class="kw">Story Point</span> সময়ের বদলে <b>আপেক্ষিক জটিলতা</b> (relative complexity, effort, uncertainty একসাথে) মাপে — "এই story-টা আগের সেই story-র চেয়ে দ্বিগুণ জটিল" বলাটা "এটা ঠিক ৮ ঘণ্টা লাগবে" বলার চেয়ে অনেক বেশি নির্ভরযোগ্য, কারণ মানুষ আপেক্ষিক তুলনায় ভালো, নিরঙ্কুশ সময় অনুমানে খারাপ।</div>
+
+<h3>Planning Poker</h3>
+<div class="diagram"><pre>
+টিমের প্রতিটা সদস্য একটা কার্ড বেছে নেন (Fibonacci-ধাঁচের স্কেল: 1,2,3,5,8,13,21...)
+      সবাই একসাথে কার্ড উল্টায় (কারো মতামত অন্যকে প্রভাবিত না করে)
+                            │
+              ভিন্নমত হলে (যেমন কেউ 3, কেউ 13) — সংক্ষিপ্ত আলোচনা:
+              "তুমি কেন 13 ভাবলে?" "আমি একটা এজ-কেস দেখেছিলাম যা তুমি দেখোনি"
+                            │
+                     আবার ভোট, ঐকমত্যে পৌঁছানো পর্যন্ত
+</pre></div>
+<div class="callout behind"><span class="tag">Fibonacci স্কেল কেন — অনিশ্চয়তা যত বাড়ে, নির্ভুলতা তত কমে</span>
+1,2,3,5,8,13,21-এর মতো ক্রমবর্ধমান ব্যবধানের স্কেল ইচ্ছাকৃতভাবে ব্যবহার করা হয় — ছোট কাজে সূক্ষ্ম পার্থক্য (2 বনাম 3) গুরুত্বপূর্ণ ও অনুমানযোগ্য, কিন্তু বড় কাজে (13 বনাম 21) নির্ভুল পার্থক্য বলা আসলে অর্থহীন একটা মিথ্যা নিশ্চয়তা তৈরি করে। Fibonacci স্কেল এই বাস্তবতা স্বীকার করে — বড় সংখ্যার মধ্যে বড় ব্যবধান রেখে "এটা মোটামুটি বড়" বলার সততা বজায় রাখে।</div>
+
+<h3>Velocity — টিমের ঐতিহাসিক গতি</h3>
+<p><span class="kw">Velocity</span> হলো একটা টিম গড়ে প্রতি Sprint-এ কত Story Point সম্পন্ন করে — এটা একটা পূর্বাভাস টুল, লক্ষ্যমাত্রা নয়।</p>
+<div class="callout mistake"><span class="tag">Common mistake — Velocity-কে Performance Target বানানো</span>
+যদি ম্যানেজমেন্ট "আমাদের velocity প্রতি Sprint বাড়াতে হবে" বলে চাপ দেয়, টিম দ্রুত বুঝে ফেলে বড় সংখ্যায় estimate করলেই "ভালো দেখাবে" — এতে Story Point-এর প্রকৃত অর্থ (আপেক্ষিক জটিলতার সৎ পরিমাপ) নষ্ট হয়ে যায় (এই ঘটনাকে "velocity inflation" বলে)। Velocity শুধু <b>ভবিষ্যৎ পরিকল্পনার জন্য একটা পরিসংখ্যানগত গড়</b> — কোনো টিমের সাথে অন্য টিমের velocity তুলনা করাও অর্থহীন, কারণ Story Point-এর স্কেল প্রতিটা টিমের নিজস্ব, আপেক্ষিক সংজ্ঞা।</div>
+</template>
+
+<template data-page="kanban">
+<h2 class="title">৮. Kanban</h2>
+<p class="lead"><span class="kw">Kanban</span> টয়োটার প্রোডাকশন সিস্টেম থেকে আসা একটা পদ্ধতি — Scrum-এর মতো নির্দিষ্ট Sprint/roles নেই, বরং একটা ক্রমাগত প্রবাহিত কাজের ব্যবস্থা, দৃশ্যমানতা ও কাজের পরিমাণ সীমিত করার ওপর কেন্দ্রীভূত।</p>
+
+<h3>Kanban Board — কাজের দৃশ্যমানতা</h3>
+<div class="diagram"><pre>
+┌──────────┐ ┌──────────────┐ ┌────────────┐ ┌────────┐
+│  To Do    │ │ In Progress   │ │  In Review  │ │  Done   │
+│           │ │  (WIP limit:3)│ │(WIP limit:2)│ │         │
+│  Task A   │ │  Task D       │ │  Task F     │ │ Task H  │
+│  Task B   │ │  Task E       │ │  Task G     │ │ Task I  │
+│  Task C   │ │               │ │             │ │         │
+└──────────┘ └──────────────┘ └────────────┘ └────────┘
+</pre></div>
+
+<h3>WIP Limit ও Pull System</h3>
+<table>
+<tr><th>নীতি</th><th>ব্যাখ্যা</th></tr>
+<tr><td><span class="kw">WIP Limit</span> (Work In Progress)</td><td>প্রতিটা কলামে একসাথে সর্বোচ্চ কতগুলো কাজ থাকতে পারে তার একটা সীমা — নতুন কাজ শুরুর আগে আগেরটা শেষ করতে বাধ্য করে</td></tr>
+<tr><td><span class="kw">Pull System</span></td><td>কাজ ঠেলে (push) দেওয়া হয় না — একজন সদস্য নিজের ক্ষমতা খালি হলে নিজেই পরের কাজ "টেনে" নেন</td></tr>
+</table>
+<div class="callout why"><span class="tag">WIP Limit কেন — Multitasking-এর লুকানো খরচ</span>
+একসাথে অনেক কাজ চালু রাখা (multitasking) স্বজ্ঞাগতভাবে দ্রুত মনে হয়, কিন্তু আসলে context-switching-এর খরচে সামগ্রিক throughput কমিয়ে দেয় — প্রতিটা কাজ "প্রায় শেষ" অবস্থায় আটকে থাকে, কোনোটাই সত্যিকারের "Done" হয় না। WIP Limit জোর করে একটা কাজ শেষ করে তারপর পরেরটা শুরু করতে বাধ্য করে, ফলে জিনিস দ্রুত <b>Done</b> কলামে পৌঁছায় (Little's Law: গড় সময় = WIP / throughput — WIP কমালে সময়ও কমে)।</div>
+
+<h3>Cumulative Flow Diagram (CFD)</h3>
+<div class="callout behind"><span class="tag">CFD কীভাবে Bottleneck দেখায়</span>
+একটা Cumulative Flow Diagram প্রতিটা কলামে সময়ের সাথে কাজের সংখ্যা স্তরে স্তরে (stacked area) দেখায়। যদি কোনো একটা স্তর ক্রমশ চওড়া হতে থাকে (অন্যদের তুলনায়), তার মানে সেই ধাপে কাজ জমা হচ্ছে — একটা bottleneck। এটা visual ভাবে সাথে সাথে বোঝা যায় কোথায় প্রবাহ আটকে যাচ্ছে, কোনো জটিল বিশ্লেষণ ছাড়াই।</div>
+</template>
+
+<template data-page="scrumkanban">
+<h2 class="title">৯. Scrum বনাম Kanban</h2>
+<p class="lead">দুটোই Agile-এর জনপ্রিয় ফ্রেমওয়ার্ক, কিন্তু মৌলিকভাবে ভিন্ন দর্শন — কখন কোনটা বেছে নেবেন তা বোঝা গুরুত্বপূর্ণ।</p>
+
+<h3>মূল পার্থক্য</h3>
+<table>
+<tr><th></th><th>Scrum</th><th>Kanban</th></tr>
+<tr><td>Cadence</td><td>নির্দিষ্ট Sprint (সাধারণত ২ সপ্তাহ)</td><td>ক্রমাগত প্রবাহ, কোনো নির্দিষ্ট time-box নেই</td></tr>
+<tr><td>Roles</td><td>নির্দিষ্ট (PO, SM, Dev Team)</td><td>কোনো বাধ্যতামূলক নির্দিষ্ট role নেই</td></tr>
+<tr><td>পরিবর্তন</td><td>Sprint চলাকালীন Sprint Backlog বদলানো হয় না</td><td>যেকোনো সময় নতুন কাজ যোগ/পুনর্বিন্যাস করা যায়</td></tr>
+<tr><td>মূল নিয়ন্ত্রণ</td><td>Time-boxing (Sprint length)</td><td>WIP Limit</td></tr>
+<tr><td>মেট্রিক</td><td>Velocity (per Sprint)</td><td>Cycle Time, Throughput (continuous)</td></tr>
+</table>
+
+<h3>কখন কোনটা</h3>
+<div class="callout best"><span class="tag">Best practice — কাজের প্রকৃতি অনুযায়ী বাছাই</span>
+Scrum ভালো কাজ করে যখন কাজ পরিকল্পনাযোগ্য ব্যাচে ভাগ করা যায় ও একটা স্থিতিশীল, পূর্বনির্ধারিত Sprint Goal থাকা সম্ভব (নতুন ফিচার ডেভেলপমেন্ট)। Kanban ভালো কাজ করে যখন কাজ অপ্রত্যাশিতভাবে আসে ও অগ্রাধিকার ঘন ঘন বদলায় (Support/Operations টিম, Production incident handling) — সেখানে একটা ২-সপ্তাহের Sprint পরিকল্পনা অবাস্তব, কারণ জরুরি টিকিট যেকোনো সময় আসতে পারে।</div>
+<div class="callout why"><span class="tag">Scrumban — দুটোর সংমিশ্রণ</span>
+অনেক বাস্তব টিম "Scrumban" ব্যবহার করে — Scrum-এর কাঠামো (Sprint, Retrospective) রেখে, Kanban-এর WIP Limit ও continuous flow যোগ করে। এটা দেখায় এই ফ্রেমওয়ার্কগুলো ধর্মীয় নিয়ম নয় — টিমের নিজস্ব প্রয়োজন অনুযায়ী উপাদান বেছে নেওয়া ও মানিয়ে নেওয়াই আসল Agile চেতনা (১ নম্বর অধ্যায়ে "mindset, methodology নয়")।</div>
+</template>
+
+<template data-page="backlog">
+<h2 class="title">১০. Backlog Refinement ও Prioritization</h2>
+<p class="lead">একটা Product Backlog সময়ের সাথে বড়, বিশৃঙ্খল হয়ে যেতে পারে যদি নিয়মিত পরিষ্কার ও অগ্রাধিকার না দেওয়া হয়।</p>
+
+<h3>Backlog Refinement (Grooming)</h3>
+<p><span class="kw">Backlog Refinement</span> একটা চলমান কার্যক্রম — PO ও Dev Team নিয়মিত (সাধারণত সপ্তাহে একবার) মিলে Backlog-এর ওপরের আইটেমগুলো পরিষ্কার করেন: বিস্তারিত করা, ছোট ছোট আইটেমে ভাঙা, Acceptance Criteria যোগ করা, estimate দেওয়া।</p>
+
+<h3>Prioritization Technique</h3>
+<table>
+<tr><th>টেকনিক</th><th>ব্যাখ্যা</th></tr>
+<tr><td><span class="kw">MoSCoW</span></td><td>Must have, Should have, Could have, Won't have — সহজ চার-স্তরের অগ্রাধিকার</td></tr>
+<tr><td><span class="kw">Value vs Effort Matrix</span></td><td>দুই অক্ষে (ব্যবসায়িক মূল্য, বাস্তবায়নের খরচ) আইটেম বসিয়ে "Quick Win" (উচ্চ মূল্য, কম খরচ) খুঁজে বের করা</td></tr>
+<tr><td><span class="kw">WSJF</span> (Weighted Shortest Job First)</td><td>(ব্যবসায়িক মূল্য + সময়ের সংবেদনশীলতা + ঝুঁকি হ্রাস) ÷ কাজের আকার — SAFe-এ ব্যবহৃত</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — সবকিছুকে "High Priority" চিহ্নিত করা</span>
+যদি Backlog-এর ৮০% আইটেম "High Priority" হয়, প্রায়োরিটাইজেশনের কোনো বাস্তব অর্থ থাকে না — এটা একটা সাধারণ ফাঁদ যখন একাধিক stakeholder সবাই নিজের অনুরোধকে সবচেয়ে জরুরি মনে করেন। PO-এর দায়িত্ব একটাই স্পষ্ট, কঠোর অগ্রাধিকার-ক্রম বজায় রাখা — সবাইকে খুশি করার চেষ্টায় একটা সমতল, অর্থহীন তালিকা তৈরি না করা।</div>
+<div class="callout why"><span class="tag">কেন নিয়মিত Refinement — Sprint Planning-কে দ্রুত রাখা</span>
+যদি Backlog আইটেমগুলো আগে থেকে refine করা না থাকে, Sprint Planning মিটিং-এই বিস্তারিত আলোচনা/estimation করতে হয় — যা ৪ ঘণ্টার সময়সীমা দ্রুত শেষ করে ফেলে। নিয়মিত Refinement এই কাজ আগেভাগে ছড়িয়ে দেয়, যাতে Sprint Planning শুধু "কী নেব" সিদ্ধান্তে কেন্দ্রীভূত থাকতে পারে, "এই আইটেমটা আসলে কী মানে" আলোচনায় নয়।</div>
+</template>
+
+<template data-page="definition">
+<h2 class="title">১১. Definition of Done ও Ready</h2>
+<p class="lead">"Done" শব্দটা টিমের প্রতিটা সদস্যের কাছে ভিন্ন অর্থ বহন করতে পারে যদি স্পষ্টভাবে সংজ্ঞায়িত না করা হয় — এই দুটো চেকলিস্ট সেই অস্পষ্টতা দূর করে।</p>
+
+<h3>Definition of Done (DoD)</h3>
+<p><span class="kw">Definition of Done</span> একটা চেকলিস্ট যা প্রতিটা Backlog আইটেমের জন্য প্রযোজ্য — এটা পূরণ না হলে কাজটা "সম্পন্ন" ধরা যাবে না, তা যতই ফাংশনালি কাজ করুক।</p>
+<div class="diagram"><pre>
+উদাহরণ DoD চেকলিস্ট:
+  ☑ কোড লেখা ও পিয়ার-রিভিউ হয়েছে
+  ☑ ইউনিট টেস্ট লেখা ও পাস হয়েছে (coverage ≥ 80%)
+  ☑ Acceptance Criteria অনুযায়ী QA যাচাই করেছে
+  ☑ ডকুমেন্টেশন আপডেট হয়েছে
+  ☑ Staging environment-এ ডিপ্লয় ও যাচাই হয়েছে
+</pre></div>
+
+<h3>Definition of Ready (DoR)</h3>
+<p><span class="kw">Definition of Ready</span> বিপরীত দিক থেকে দেখে — একটা আইটেম Sprint-এ নেওয়ার <b>আগে</b> কী শর্ত পূরণ করা উচিত।</p>
+<table>
+<tr><th>শর্ত</th><th>ব্যাখ্যা</th></tr>
+<tr><td>স্পষ্ট Acceptance Criteria</td><td>কী হলে "সম্পন্ন" তা টিম আগে থেকেই জানে</td></tr>
+<tr><td>Estimate করা হয়েছে</td><td>টিম জানে এটা মোটামুটি কতটা কাজ</td></tr>
+<tr><td>Dependency চিহ্নিত</td><td>অন্য কোনো টিম/সিস্টেমের ওপর নির্ভরতা থাকলে তা স্পষ্ট</td></tr>
+<tr><td>যথেষ্ট ছোট</td><td>এক Sprint-এর মধ্যে বাস্তবসম্মতভাবে শেষ করা সম্ভব</td></tr>
+</table>
+<div class="callout why"><span class="tag">DoR কেন — মাঝপথে "আসলে এটার মানে কী" প্রশ্ন এড়ানো</span>
+Definition of Ready ছাড়া একটা আইটেম Sprint-এ নেওয়ার পর দেখা যেতে পারে এটা আসলে অস্পষ্ট, বা অন্য একটা টিমের ওপর নির্ভরশীল যা কেউ আগে খেয়াল করেনি — Sprint মাঝপথেই আটকে যায়। DoR একটা "গেটকিপার" — যা এই ধরনের সমস্যা Sprint শুরুর আগেই ধরে ফেলে, Sprint-এর ভেতরে নয়।</div>
+<div class="callout mistake"><span class="tag">Common mistake — DoD-কে শুধু "কোড কাজ করে" ধরে নেওয়া</span>
+যদি DoD-তে টেস্টিং, ডকুমেন্টেশন, ডিপ্লয়মেন্ট যাচাই অন্তর্ভুক্ত না থাকে, "Done" আইটেম আসলে প্রায়ই লুকানো কাজ (hidden work) নিয়ে আসে — যা পরে "টেকনিক্যাল ঋণ" হিসেবে জমা হয়। একটা শক্তিশালী DoD নিশ্চিত করে প্রতিটা Sprint-এর Increment সত্যিই production-ready।</div>
+</template>
+
+<template data-page="metrics">
+<h2 class="title">১২. Agile Metrics</h2>
+<p class="lead">একটা টিমের স্বাস্থ্য ও অগ্রগতি পরিমাপের জন্য কয়েকটা সাধারণ মেট্রিক — প্রতিটার সঠিক ব্যাখ্যা ও ভুল ব্যবহারের ঝুঁকি বোঝা জরুরি।</p>
+
+<h3>Burndown বনাম Burnup Chart</h3>
+<div class="diagram"><pre>
+Burndown Chart:                          Burnup Chart:
+বাকি কাজ                                  সম্পন্ন কাজ + মোট Scope
+   │╲                                        │        ┌── মোট Scope (বাড়তে পারে)
+   │ ╲                                        │    ┌───┘
+   │  ╲___                                    │┌───┘
+   │      ╲___  ← আদর্শ রেখা                   ││ ← সম্পন্ন কাজের রেখা
+   └──────────▶ সময়                          └──────────▶ সময়
+</pre></div>
+<div class="callout behind"><span class="tag">Burnup Chart কেন প্রায়ই ভালো — Scope পরিবর্তন দৃশ্যমান রাখে</span>
+Burndown Chart শুধু "বাকি কাজ কমছে" দেখায় — যদি Sprint-এর মাঝে নতুন কাজ যোগ হয় (scope বাড়ে), Burndown Chart-এ সেটা "বাকি কাজ হঠাৎ বেড়ে গেল" হিসেবে দেখায়, যা বিভ্রান্তিকর। Burnup Chart মোট Scope-এর একটা আলাদা রেখা রাখে — তাই scope বাড়লে সেটা স্পষ্টভাবে দেখা যায় (উপরের রেখা ওপরে ওঠে), সম্পন্ন কাজের অগ্রগতি (নিচের রেখা) থেকে আলাদা করে।</div>
+
+<h3>Cycle Time ও Lead Time (Kanban-কেন্দ্রিক)</h3>
+<table>
+<tr><th>মেট্রিক</th><th>মাপে</th></tr>
+<tr><td><span class="kw">Lead Time</span></td><td>একটা কাজের অনুরোধ আসা থেকে সম্পন্ন হওয়া পর্যন্ত মোট সময় (গ্রাহকের দৃষ্টিকোণ থেকে)</td></tr>
+<tr><td><span class="kw">Cycle Time</span></td><td>টিম কাজ শুরু করা থেকে সম্পন্ন হওয়া পর্যন্ত সময় (Lead Time-এর একটা অংশ — অপেক্ষার সময় বাদ)</td></tr>
+</table>
+
+<h3>Velocity-এর সীমাবদ্ধতা পুনরায়</h3>
+<div class="callout mistake"><span class="tag">Common misconception — একাধিক Metric একসাথে না দেখলে ভুল সিদ্ধান্ত</span>
+শুধু Velocity বাড়ছে দেখে ধরে নেওয়া "টিম আরও দক্ষ হচ্ছে" ভুল হতে পারে — যদি একই সময়ে বাগের সংখ্যা বা টেকনিক্যাল ঋণ বাড়ছে, টিম হয়তো মান কমিয়ে গতি বাড়াচ্ছে। ভালো অনুশীলন হলো একাধিক মেট্রিক একসাথে দেখা (Velocity + Escaped Defects + Cycle Time) — কোনো একক সংখ্যা সম্পূর্ণ চিত্র দেয় না।</div>
+</template>
+
+<template data-page="scaling">
+<h2 class="title">১৩. Scaling Agile — SAFe, LeSS, Spotify Model</h2>
+<p class="lead">Scrum মূলত একটা একক, ছোট টিমের (৫-৯ জন) জন্য ডিজাইন করা। যখন একটা প্রতিষ্ঠানে শত শত ইঞ্জিনিয়ার, একাধিক টিম একই প্রোডাক্টে কাজ করে, একটা সমন্বয়ের কাঠামো দরকার হয়।</p>
+
+<h3>প্রধান Scaling Framework</h3>
+<table>
+<tr><th>ফ্রেমওয়ার্ক</th><th>মূল ধারণা</th></tr>
+<tr><td><span class="kw">SAFe</span> (Scaled Agile Framework)</td><td>বহু-স্তরীয়, বিস্তারিত কাঠামো — Team, Program (Agile Release Train), Portfolio স্তর; বড়, প্রথাগত প্রতিষ্ঠানে জনপ্রিয়</td></tr>
+<tr><td><span class="kw">LeSS</span> (Large-Scale Scrum)</td><td>Scrum-এর সরলতা যতটা সম্ভব বজায় রেখে স্কেল করা — একটাই Product Backlog, একটাই PO, একাধিক Team</td></tr>
+<tr><td><span class="kw">Spotify Model</span></td><td>একটা কাঠামো নয়, বরং একটা কেস স্টাডি — Squad (স্বায়ত্তশাসিত মিনি-স্টার্টআপ), Tribe, Chapter, Guild দিয়ে সাংগঠনিক নমনীয়তা</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — Spotify Model হুবহু কপি করা</span>
+Spotify নিজেই স্পষ্ট করেছে তাদের মডেল একটা নির্দিষ্ট সময়ের একটা নির্দিষ্ট সংস্কৃতির প্রতিফলন, কোনো সর্বজনীন "ফ্রেমওয়ার্ক" নয় যা কেনা/বাস্তবায়ন করা যায়। বহু প্রতিষ্ঠান শুধু নামগুলো (Squad, Tribe) ধার করেছে, কিন্তু তার পেছনের বিশ্বাসের সংস্কৃতি (উচ্চ স্বায়ত্তশাসন, কম কর্তৃত্ববাদী নিয়ন্ত্রণ) ছাড়াই — ফলাফল শুধু পুরনো কাঠামোর ওপর নতুন নাম, প্রকৃত পরিবর্তন ছাড়াই।</div>
+
+<h3>Scaling-এর মূল চ্যালেঞ্জ</h3>
+<div class="callout why"><span class="tag">কেন Scaling কঠিন — Team Autonomy বনাম Cross-team Dependency</span>
+একটা একক Scrum টিম স্বাধীনভাবে সিদ্ধান্ত নিতে পারে বলেই দ্রুত চলতে পারে। যখন ১০টা টিম একই প্রোডাক্টে কাজ করে, তাদের কাজ প্রায়ই পরস্পর-নির্ভরশীল (একটা টিমের API আরেকটা টিম ব্যবহার করে) — প্রতিটা scaling framework মূলত এই একই সমস্যার সমাধান খোঁজে: কীভাবে টিম-স্বায়ত্তশাসন বজায় রেখেও cross-team নির্ভরতা সমন্বয় করা যায়, কোনো ভারী কেন্দ্রীয় নিয়ন্ত্রণ ছাড়াই। Microservices কোর্সের Conway's Law আলোচনার সাথে এই সমস্যার গভীর সম্পর্ক আছে — সঠিক টিম সীমানা টানাই আসল সমাধান, শুধু একটা প্রক্রিয়া ফ্রেমওয়ার্ক বসিয়ে দেওয়া নয়।</div>
+</template>
+
+<template data-page="retro">
+<h2 class="title">১৪. Retrospective Techniques</h2>
+<p class="lead">Retrospective Scrum-এর সবচেয়ে গুরুত্বপূর্ণ, অথচ প্রায়ই সবচেয়ে অবহেলিত ইভেন্ট — টিমের ক্রমাগত উন্নতির (continuous improvement) একমাত্র নিয়মিত সুযোগ।</p>
+
+<h3>জনপ্রিয় Retrospective ফরম্যাট</h3>
+<table>
+<tr><th>টেকনিক</th><th>কাঠামো</th></tr>
+<tr><td><span class="kw">Start-Stop-Continue</span></td><td>কী শুরু করা উচিত, কী বন্ধ করা উচিত, কী চালিয়ে যাওয়া উচিত</td></tr>
+<tr><td><span class="kw">4Ls</span></td><td>Liked, Learned, Lacked, Longed For</td></tr>
+<tr><td><span class="kw">Sailboat</span></td><td>বাতাস (যা এগিয়ে নিচ্ছে), নোঙর (যা আটকে রাখছে), পাথর (ঝুঁকি), দ্বীপ (লক্ষ্য) — রূপক দিয়ে আলোচনা সহজ করে</td></tr>
+<tr><td><span class="kw">Mad-Sad-Glad</span></td><td>আবেগভিত্তিক প্রতিফলন — কী নিয়ে টিম হতাশ, দুঃখিত, খুশি</td></tr>
+</table>
+
+<h3>Retrospective কার্যকর করার নীতি</h3>
+<div class="callout best"><span class="tag">Best practice — Action Item ছাড়া Retrospective অর্থহীন</span>
+একটা Retrospective যদি শুধু অভিযোগ/প্রশংসার তালিকা তৈরি করে কোনো নির্দিষ্ট, দায়িত্বপ্রাপ্ত action item ছাড়াই শেষ হয়, পরের Sprint-এও একই সমস্যা আবার আসবে। প্রতিটা Retrospective থেকে সর্বোচ্চ ১-৩টা নির্দিষ্ট, ছোট, পরবর্তী Sprint-এই বাস্তবায়নযোগ্য action item বের করা উচিত — অনেকগুলো বড় পরিবর্তনের প্রতিশ্রুতির চেয়ে কম কিন্তু বাস্তবায়িত পরিবর্তন অনেক বেশি কার্যকর।</div>
+<div class="callout why"><span class="tag">Retrospective Prime Directive</span>
+Norm Kerth-এর লেখা এই নীতি Retrospective শুরুর আগে প্রায়ই পড়া হয়: "আমরা যা কিছুই আবিষ্কার করি না কেন, আমরা বুঝি ও সত্যিকারভাবে বিশ্বাস করি যে সেই সময়ে যা জানা ছিল, যে দক্ষতা ও সম্পদ ছিল, পরিস্থিতি যেমন ছিল, তাতে প্রত্যেকে যতটা ভালো করা সম্ভব ততটাই করেছেন।" এই মানসিকতা ছাড়া Retrospective সহজেই দোষারোপের মিটিং হয়ে যায় — মানুষ রক্ষণাত্মক হয়ে যান, প্রকৃত শেখা বন্ধ হয়ে যায়।</div>
+</template>
+
+<template data-page="antipatterns">
+<h2 class="title">১৫. Anti-patterns</h2>
+<p class="lead">Agile/Scrum-এর নাম ব্যবহার করেই এর মূল দর্শন থেকে দূরে সরে যাওয়া সহজ — সবচেয়ে সাধারণ ব্যর্থতার প্যাটার্নগুলো এখানে।</p>
+
+<h3>Water-Scrum-Fall</h3>
+<p>একটা প্রতিষ্ঠান "Agile গ্রহণ করেছে" বলে দাবি করে, কিন্তু বাস্তবে requirements/design এখনও শুরুতেই সম্পূর্ণ চূড়ান্ত করা হয় (Waterfall-এর মতো), শুধু implementation-টুকু Sprint-এ ভাগ করা হয় — Agile-এর প্রকৃত সুবিধা (দ্রুত ফিডব্যাক, দিক পরিবর্তনের ক্ষমতা) হারিয়ে যায়, শুধু বাহ্যিক আচার-অনুষ্ঠান (Daily Standup, Sprint নাম) থেকে যায়।</p>
+
+<h3>Fake Agile ও Zombie Scrum</h3>
+<table>
+<tr><th>Anti-pattern</th><th>লক্ষণ</th></tr>
+<tr><td><span class="kw">Zombie Scrum</span></td><td>সব Scrum ইভেন্ট নিয়মিত হয়, কিন্তু কোনো উদ্দেশ্য/এনার্জি ছাড়াই — শুধু "আমরা এটা করি কারণ আমাদের করতে বলা হয়েছে"</td></tr>
+<tr><td>Micromanagement Standup</td><td>Daily Standup ম্যানেজারের কাছে রিপোর্ট দেওয়ার মিটিংয়ে পরিণত হওয়া</td></tr>
+<tr><td>Story Point-কে ঘণ্টায় রূপান্তর</td><td>"1 Point = 4 ঘণ্টা" এই সমীকরণ Story Point-এর আপেক্ষিক প্রকৃতিকেই নষ্ট করে দেয় (৭ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>Retrospective ছাড়াই "Agile"</td><td>Continuous improvement-এর একমাত্র নিয়মিত সুযোগ বাদ দেওয়া — টিম কখনো নিজেকে সংশোধন করার সুযোগ পায় না</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — "Agile Transformation"-কে শুধু টুল বসানো ধরে নেওয়া</span>
+একটা Jira বোর্ড বসানো, "Sprint" শব্দ ব্যবহার শুরু করা — এগুলো Agile করে না। DDD/Microservices কোর্সের মতোই এখানেও একটা প্যাটার্ন দেখা যায়: টুল/প্রক্রিয়া বসানো সহজ, কিন্তু আসল পরিবর্তন দরকার সংস্কৃতিতে — মানুষকে সিদ্ধান্ত নেওয়ার ক্ষমতা দেওয়া, ব্যর্থতা থেকে শেখাকে স্বাগত জানানো, স্বচ্ছতাকে ভয় না পাওয়া। এই সাংস্কৃতিক পরিবর্তন ছাড়া, যেকোনো ফ্রেমওয়ার্ক শুধু পুরনো কমান্ড-অ্যান্ড-কন্ট্রোল সংস্কৃতির ওপর একটা নতুন লেবেল মাত্র।</div>
+</template>
+
+<template data-page="devops">
+<h2 class="title">১৬. Agile ও DevOps সম্পর্ক</h2>
+<p class="lead">Agile আর DevOps প্রায়ই একসাথে উল্লেখ করা হয়, কারণ দুটোই একই মূল সমস্যার (ধীর, ঝুঁকিপূর্ণ সফটওয়্যার ডেলিভারি) সমাধান খোঁজে, কিন্তু ভিন্ন দিক থেকে।</p>
+
+<h3>Agile কী সমাধান করে, DevOps কী সমাধান করে</h3>
+<table>
+<tr><th></th><th>Agile</th><th>DevOps</th></tr>
+<tr><td>ফোকাস</td><td>কী তৈরি করব তা ঠিক করা ও পরিমার্জন করা (Product দিক)</td><td>কীভাবে দ্রুত, নির্ভরযোগ্যভাবে ডেলিভার করব (Engineering/Operations দিক)</td></tr>
+<tr><td>মূল প্রশ্ন</td><td>"আমরা সঠিক জিনিস তৈরি করছি কি?"</td><td>"আমরা দ্রুত ও নিরাপদে ডেলিভার করতে পারছি কি?"</td></tr>
+<tr><td>মূল সরঞ্জাম</td><td>Sprint, Backlog, Retrospective</td><td>CI/CD Pipeline, Infrastructure as Code, Observability</td></tr>
+</table>
+<div class="callout why"><span class="tag">একটা ছাড়া আরেকটা অসম্পূর্ণ</span>
+একটা টিম যদি Agile-এর গতিতে ফিচার প্ল্যান করে (প্রতি ২ সপ্তাহে নতুন কিছু) কিন্তু ডেলিভারি pipeline ম্যানুয়াল, ধীর, ভঙ্গুর হয় (কোনো DevOps নেই), তাহলে Sprint শেষে "সম্পন্ন" কাজ production-এ পৌঁছাতে সপ্তাহ লেগে যেতে পারে — Agile-এর দ্রুত ফিডব্যাক লুপের পুরো উদ্দেশ্যই ব্যর্থ হয়ে যায়। এই সাইটের DevOps কোর্সের CI/CD অধ্যায়ে ঠিক এই সমস্যার প্রযুক্তিগত সমাধান বিস্তারিত — Agile ও DevOps একসাথে "ব্যবসায়িক সিদ্ধান্ত থেকে production পর্যন্ত" পুরো লুপকে দ্রুত করে তোলে।</div>
+
+<h3>Definition of Done ও Continuous Delivery</h3>
+<div class="callout behind"><span class="tag">DoD-এর শেষ ধাপই DevOps-এর শুরু</span>
+১১ নম্বর অধ্যায়ের Definition of Done-এ যদি "Staging-এ ডিপ্লয় ও যাচাই" অন্তর্ভুক্ত থাকে, সেই ডিপ্লয়মেন্ট প্রক্রিয়াটাই DevOps কোর্সের Continuous Delivery pipeline — DoD যত কঠোরভাবে "production-ready"-এর কাছাকাছি সংজ্ঞায়িত হয়, ততই Agile-এর Increment ধারণা (প্রতিটা Sprint-এ সত্যিই ব্যবহারযোগ্য কিছু) বাস্তবে পরিণত হয়।</div>
+</template>
+
+<template data-page="distributed">
+<h2 class="title">১৭. Remote/Distributed Agile Team</h2>
+<p class="lead">Scrum মূলত একই ঘরে বসা একটা টিমের জন্য ডিজাইন করা (মুখোমুখি কথোপকথন Manifesto-র একটা মূলনীতি) — দূরবর্তী/বিতরণকৃত টিমে এই অনুশীলনগুলো কীভাবে মানিয়ে নিতে হয় তা বোঝা আজকের বাস্তবতায় অপরিহার্য।</p>
+
+<h3>দূরবর্তী টিমের বিশেষ চ্যালেঞ্জ</h3>
+<table>
+<tr><th>চ্যালেঞ্জ</th><th>প্রভাব</th></tr>
+<tr><td>Time zone পার্থক্য</td><td>একটা সিঙ্ক্রোনাস Daily Standup-এর সময় খুঁজে পাওয়া কঠিন হতে পারে</td></tr>
+<tr><td>Informal যোগাযোগ হারানো</td><td>করিডোরে "আরে, এই সমস্যাটা দেখেছ?" ধরনের স্বতঃস্ফূর্ত আলাপ হয় না</td></tr>
+<tr><td>Body language পড়া কঠিন</td><td>Retrospective-এ কেউ অস্বস্তিতে আছেন কিনা বোঝা কঠিন হয় ভিডিও কলে</td></tr>
+</table>
+
+<h3>মানিয়ে নেওয়ার কৌশল</h3>
+<div class="callout best"><span class="tag">Best practice — Async-first, Sync শুধু যেখানে সত্যিই দরকার</span>
+Daily Standup একটা async টেক্সট আপডেটে (Slack থ্রেড) রূপান্তর করা যায় যদি সময়-অঞ্চল খুব ভিন্ন হয় — কিন্তু Retrospective ও Sprint Review-এর মতো আলোচনাভিত্তিক ইভেন্ট সিঙ্ক্রোনাস (ভিডিও কল) রাখা ভালো, কারণ এখানে প্রকৃত কথোপকথন ও সূক্ষ্ম মতপার্থক্য গুরুত্বপূর্ণ। নিয়ম: রুটিন স্ট্যাটাস আপডেট async, জটিল সিদ্ধান্ত/আলোচনা sync।</div>
+<div class="callout why"><span class="tag">Documentation-এর গুরুত্ব দূরবর্তী টিমে বেড়ে যায়</span>
+সহ-অবস্থিত টিমে একটা সিদ্ধান্ত ভুলে গেলে "আরে, একটু জিজ্ঞেস করি" বলে সহজেই মনে করিয়ে দেওয়া যায় — দূরবর্তী, বিভিন্ন time zone-এর টিমে এই তাৎক্ষণিক clarification সবসময় সম্ভব নয় (উত্তর পেতে কয়েক ঘণ্টা/একদিন লাগতে পারে)। তাই সিদ্ধান্ত, Acceptance Criteria, ও আলোচনার সারাংশ লিখিতভাবে (Backlog আইটেমে, wiki-তে) নথিভুক্ত রাখা দূরবর্তী টিমে আরও বেশি গুরুত্বপূর্ণ হয়ে ওঠে, Manifesto-র "ডকুমেন্টেশনের চেয়ে কার্যকর সফটওয়্যার" নীতির সাথে বিরোধ না করেই (১ নম্বর অধ্যায়ে এই ভারসাম্য বিস্তারিত)।</div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৮. Interview প্রশ্নোত্তর</h2>
+<p class="lead">Agile/Scrum ইন্টারভিউতে বারবার আসা প্রশ্ন — শুধু সংজ্ঞা মুখস্থ নয়, প্রতিটার পেছনের যুক্তি বোঝা।</p>
+
+<h3>১) Agile আর Scrum-এর মধ্যে পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> Agile একটা মূল্যবোধ/দর্শন (Manifesto-তে সংজ্ঞায়িত), কোনো নির্দিষ্ট প্রক্রিয়া নয়। Scrum একটা নির্দিষ্ট ফ্রেমওয়ার্ক যা এই দর্শন বাস্তবায়ন করে (নির্দিষ্ট roles, events, artifacts সহ)। Kanban, XP-ও একই দর্শনের ভিন্ন বাস্তবায়ন (১ নম্বর অধ্যায়ে)।</p>
+
+<h3>২) Product Owner আর Scrum Master-এর দায়িত্বের পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> PO ঠিক করেন <b>কী</b> তৈরি হবে ও কোন ক্রমে (Backlog-এর মালিক, ROI-কেন্দ্রিক)। Scrum Master নিশ্চিত করেন Scrum প্রক্রিয়া ঠিকভাবে চলছে, বাধা দূর করেন — কোনো ম্যানেজার নন, একজন servant leader (৩ নম্বর অধ্যায়ে)।</p>
+
+<h3>৩) Story Point কেন ব্যবহার করা হয়, সময় (ঘণ্টা) কেন নয়?</h3>
+<p><b>ব্যাখ্যা:</b> মানুষ আপেক্ষিক তুলনায় (এটা ওটার চেয়ে দ্বিগুণ জটিল) সময়ের নিরঙ্কুশ অনুমানের চেয়ে অনেক বেশি নির্ভুল। Story Point ব্যক্তিভেদে ভিন্ন সময়ের সমস্যা এড়িয়ে জটিলতা/অনিশ্চয়তা/effort একসাথে আপেক্ষিকভাবে পরিমাপ করে (৭ নম্বর অধ্যায়ে)।</p>
+
+<h3>৪) Velocity ঠিক কী পরিমাপ করে, এটা কীভাবে ভুলভাবে ব্যবহার হতে পারে?</h3>
+<p><b>ব্যাখ্যা:</b> Velocity একটা টিম গড়ে প্রতি Sprint-এ কত Story Point সম্পন্ন করে — শুধু ভবিষ্যৎ পরিকল্পনার একটা পরিসংখ্যানগত টুল। এটাকে performance target বানালে "velocity inflation" ঘটে (টিম বড় সংখ্যায় estimate করে), আর দুই টিমের velocity তুলনা করা অর্থহীন কারণ Point-এর স্কেল প্রতিটা টিমের নিজস্ব (৭ নম্বর অধ্যায়ে)।</p>
+
+<h3>৫) Scrum আর Kanban কখন কোনটা বেছে নেবেন?</h3>
+<p><b>ব্যাখ্যা:</b> Scrum ভালো যখন কাজ ব্যাচে পরিকল্পনাযোগ্য (নতুন ফিচার ডেভেলপমেন্ট) — নির্দিষ্ট Sprint Goal সম্ভব। Kanban ভালো যখন কাজ অপ্রত্যাশিতভাবে আসে, অগ্রাধিকার ঘন ঘন বদলায় (Support/Ops টিম) — WIP Limit-ভিত্তিক ক্রমাগত প্রবাহ বেশি বাস্তবসম্মত (৯ নম্বর অধ্যায়ে)।</p>
+
+<h3>৬) Definition of Done আর Acceptance Criteria-র পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> Acceptance Criteria একটা নির্দিষ্ট Story-র জন্য প্রযোজ্য (এই ফিচারটা কী করলে সঠিক)। Definition of Done প্রতিটা আইটেমের জন্য প্রযোজ্য একটা সার্বজনীন চেকলিস্ট (টেস্ট লেখা, রিভিউ হওয়া, ডকুমেন্টেশন) — Acceptance Criteria পূরণ হলেও DoD পূরণ না হলে আইটেম "Done" নয় (৬ ও ১১ নম্বর অধ্যায়ে)।</p>
+
+<h3>৭) WIP Limit কী, এটা কেন কার্যকর?</h3>
+<p><b>ব্যাখ্যা:</b> WIP Limit একটা Kanban বোর্ডের কলামে একসাথে সর্বোচ্চ কতগুলো কাজ থাকতে পারে তার সীমা। এটা multitasking-এর লুকানো খরচ (context-switching) কমায় — নতুন কাজ শুরুর আগে আগেরটা শেষ করতে বাধ্য করে, ফলে জিনিস দ্রুত সত্যিকারের "Done"-এ পৌঁছায় (৮ নম্বর অধ্যায়ে)।</p>
+
+<h3>৮) Water-Scrum-Fall কী?</h3>
+<p><b>ব্যাখ্যা:</b> এটা তখন ঘটে যখন requirements/design এখনও Waterfall-এর মতো শুরুতেই সম্পূর্ণ চূড়ান্ত করা হয়, শুধু implementation Sprint-এ ভাগ করা হয় — Agile-এর আসল সুবিধা (দ্রুত ফিডব্যাক, দিক পরিবর্তনের ক্ষমতা) হারিয়ে যায়, শুধু বাহ্যিক আচার-অনুষ্ঠান থেকে যায় (১৫ নম্বর অধ্যায়ে)।</p>
+
+<h3>৯) Retrospective কীভাবে কার্যকর রাখবেন, যাতে এটা দোষারোপের মিটিং না হয়?</h3>
+<p><b>ব্যাখ্যা:</b> Retrospective Prime Directive দিয়ে শুরু করা — সবাই বুঝে নেওয়া যে তখনকার জ্ঞান/পরিস্থিতিতে সবাই যথাসাধ্য করেছেন। প্রতিটা সেশন থেকে অল্প কিছু (১-৩টা), নির্দিষ্ট, পরবর্তী Sprint-এই বাস্তবায়নযোগ্য action item বের করা, শুধু অভিযোগের তালিকা নয় (১৪ নম্বর অধ্যায়ে)।</p>
+
+<h3>১০) Agile আর DevOps কীভাবে সম্পর্কিত?</h3>
+<p><b>ব্যাখ্যা:</b> Agile ঠিক করে "কী তৈরি করব" ও কীভাবে দ্রুত পরিমার্জন করব (Product দিক)। DevOps ঠিক করে কীভাবে সেটা দ্রুত, নিরাপদে production-এ পৌঁছাবে (Engineering দিক)। একটা ছাড়া আরেকটা অসম্পূর্ণ — দ্রুত প্ল্যান করেও যদি ডেলিভারি ধীর হয়, Agile-এর ফিডব্যাক লুপ ব্যর্থ হয়ে যায় (১৬ নম্বর অধ্যায়ে)।</p>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  const searchIndex = {};
+  (function buildIndex(){
+    const tmp = document.createElement('div');
+    pages.forEach(p=>{
+      tmp.innerHTML = templates[p.id] || '';
+      searchIndex[p.id] = ((p.title||'') + ' ' + tmp.textContent).toLowerCase();
+    });
+  })();
+
+  let currentQuery = '';
+
+  function clearHighlights(root){
+    root.querySelectorAll('mark.hl').forEach(m=>{ m.replaceWith(document.createTextNode(m.textContent)); });
+    root.normalize();
+  }
+
+  function highlightIn(root, q){
+    if(!q) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        const p = node.parentNode;
+        if(!node.nodeValue || !p || p.tagName==='SCRIPT' || p.tagName==='STYLE' || p.tagName==='MARK') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes=[]; let n; while((n=walker.nextNode())) nodes.push(n);
+    const ql = q.toLowerCase();
+    nodes.forEach(node=>{
+      const text = node.nodeValue, lower = text.toLowerCase();
+      if(!lower.includes(ql)) return;
+      const frag = document.createDocumentFragment();
+      let idx=0, pos;
+      while((pos = lower.indexOf(ql, idx)) !== -1){
+        if(pos>idx) frag.appendChild(document.createTextNode(text.slice(idx,pos)));
+        const mark = document.createElement('mark');
+        mark.className='hl';
+        mark.textContent = text.slice(pos, pos+ql.length);
+        frag.appendChild(mark);
+        idx = pos+ql.length;
+      }
+      if(idx<text.length) frag.appendChild(document.createTextNode(text.slice(idx)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  function applyHighlight(){
+    const active = main.querySelector('.page.active');
+    if(!active) return;
+    clearHighlights(active);
+    if(currentQuery) highlightIn(active, currentQuery);
+  }
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    applyHighlight();
+    const active = main.querySelector('.page.active');
+    const firstMark = active ? active.querySelector('mark.hl') : null;
+    if(firstMark && firstMark.scrollIntoView) firstMark.scrollIntoView({block:'center'});
+    else window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const searchInput = document.getElementById('courseSearch');
+  const searchMeta = document.getElementById('searchMeta');
+  if(searchInput){
+    searchInput.addEventListener('input', ()=>{
+      const q = searchInput.value.trim();
+      currentQuery = q;
+      const ql = q.toLowerCase();
+      let matchCount = 0, firstMatch = null;
+      pages.forEach(p=>{
+        const btn = sidebar.querySelector('.navbtn[data-target="'+p.id+'"]');
+        const matches = !ql || searchIndex[p.id].includes(ql);
+        if(matches){ matchCount++; if(!firstMatch) firstMatch = p; }
+        if(btn) btn.classList.toggle('hide', !matches);
+      });
+      if(!ql) searchMeta.textContent = '';
+      else if(matchCount===0) searchMeta.textContent = 'কোনো ফলাফল নেই';
+      else searchMeta.textContent = matchCount + 'টা অধ্যায়ে ফলাফল পাওয়া গেছে';
+
+      const active = main.querySelector('.page.active');
+      const activeId = active ? active.id.replace('page-','') : null;
+      const activeMatches = !!(ql && activeId && searchIndex[activeId] && searchIndex[activeId].includes(ql));
+      if(ql && !activeMatches && firstMatch){
+        show(firstMatch.id);
+      } else {
+        applyHighlight();
+        const mark = active ? active.querySelector('mark.hl') : null;
+        if(ql && mark && mark.scrollIntoView) mark.scrollIntoView({block:'center'});
+      }
+    });
+    searchInput.addEventListener('keydown', e=>{
+      if(e.key==='Escape'){ searchInput.value=''; searchInput.dispatchEvent(new Event('input')); searchInput.blur(); }
+    });
+  }
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>
