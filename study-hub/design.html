@@ -871,6 +871,23 @@ public class CorporateDiscount : IDiscountStrategy
     public decimal CalculateDiscount(decimal amount) => amount * 0.15m;
 }</pre>
 <p><code>DiscountCalculator</code> class, আর <code>RegularDiscount</code>/<code>PremiumDiscount</code>/<code>VipDiscount</code> — এই একটা লাইনও এডিট হলো না। শুধু একটা <b>নতুন</b> ফাইলে <b>নতুন</b> class যোগ হলো, আর caller (যেখানে DI দিয়ে সঠিক strategy resolve হয়) সেটা ব্যবহার শুরু করল। পুরনো, প্রমাণিত তিনটা class একদম অক্ষত রইল — regression-এর কোনো সুযোগই নেই।</p>
+<div class="callout mistake"><span class="tag">স্বাভাবিক প্রশ্ন — if/else তো তাহলে কোথাও একটা থাকতেই হবে?</span>
+এখানে একটা খুবই স্বাভাবিক সন্দেহ জাগা উচিত — <code>customerType</code> থেকে ঠিক কোন <code>IDiscountStrategy</code> ব্যবহার হবে, এই সিদ্ধান্তটা তো কোথাও না কোথাও নিতেই হবে। তাহলে কি if/else-টা শুধু <b>সরানো</b> হলো, মুছে ফেলা হলো না? উত্তর — হ্যাঁ, একটা mapping (customerType → strategy) থাকবেই, কিন্তু সেটা এখন একটা ছোট, বিচ্ছিন্ন resolution point-এ বাস করে, discount-এর % হিসাব করা business logic-এর সাথে মেশানো না:
+<pre><span class="c">// resolution point — শুধু "কোনটা চলবে" তা ঠিক করে, কোনো % হিসাব এখানে নেই</span>
+public static class DiscountStrategyResolver
+{
+    private static readonly Dictionary&lt;string, IDiscountStrategy&gt; _map = new()
+    {
+        ["Regular"]   = new RegularDiscount(),
+        ["Premium"]   = new PremiumDiscount(),
+        ["VIP"]       = new VipDiscount(),
+        ["Corporate"] = new CorporateDiscount()   <span class="c">// নতুন type এলে এখানে এক লাইন যোগ হয়</span>
+    };
+
+    public static IDiscountStrategy Resolve(string customerType) => _map[customerType];
+}</pre>
+নতুন customer type এলে এই resolver-টাও একবার ছোঁয়া লাগবে ঠিকই — কিন্তু সেটা একটা এক-লাইনের mapping যোগ, কোনো calculation logic এডিট না, আর এই একটামাত্র জায়গা ছাড়া বাকি পুরো কোডবেসে <code>"Corporate"</code> শব্দটাই কোথাও লেখা লাগে না। OCP প্রতিশ্রুতি দেয় না যে branching সম্পূর্ণ শূন্যে নেমে আসবে — এটা প্রতিশ্রুতি দেয় সেই branching-কে business rule থেকে আলাদা, ছোট, কম-ঝুঁকিপূর্ণ একটা জায়গায় বন্দী করার।
+</div>
 
 <h3>দুইটা ডিজাইনের ভিজ্যুয়াল তুলনা</h3>
 <div class="diagram"><pre>
@@ -1590,6 +1607,18 @@ public void PlaceOrder_SavesOrder()
 <p><span class="badge">Testability</span> <span class="badge">Swappable implementation</span> <span class="badge">Loose coupling</span></p>
 <div class="callout why"><span class="tag">কেন এটা গুরুত্বপূর্ণ</span> DI container কোনো ম্যাজিক না — এটা শুধু একটা lookup table যা abstraction-কে concrete implementation-এর সাথে ম্যাপ করে। আসল সুবিধাটা আসে DIP থেকে — <code>OrderService</code>-এর কোড শুধু <code>IOrderRepository</code> চেনে বলেই container-এর পক্ষে যেকোনো implementation "প্লাগ ইন" করা সম্ভব হচ্ছে। DIP না থাকলে DI container-এর এই ক্ষমতাটাই অর্থহীন হয়ে যেত।</div>
 
+<h4>Service Lifetime — object-টা কতক্ষণ বাঁচবে, সেটাও একটা registration decision</h4>
+<p>উপরের <code>AddScoped&lt;IOrderRepository, SqlOrderRepository&gt;()</code> কলে <code>AddScoped</code> শব্দটা নিজেই একটা গুরুত্বপূর্ণ সিদ্ধান্ত বহন করছে, যেটা এতক্ষণ চোখ এড়িয়ে গেছে — container শুধু <i>কোন</i> concrete class resolve করবে তা ঠিক করে না, <i>কতক্ষণ</i> সেই instance-টা বেঁচে থাকবে তাও ঠিক করে। ASP.NET Core-এর DI container তিনটা <span class="kw">lifetime</span> সমর্থন করে:</p>
+<table>
+<tr><th>Lifetime</th><th>Instance তৈরি হয় কখন</th><th>সাধারণ ব্যবহার</th></tr>
+<tr><td><code>AddTransient</code></td><td>প্রতিবার resolve করার সময় — সবসময় একটা নতুন instance</td><td>ছোট, stateless service যার lifetime নিয়ে ভাবার কিছু নেই</td></tr>
+<tr><td><code>AddScoped</code></td><td>একটা HTTP request-এর ভেতরে ঠিক একবার — সেই request-এর সব জায়গায় একই instance শেয়ার হয়</td><td><code>DbContext</code>-নির্ভর repository, request-ভিত্তিক unit-of-work</td></tr>
+<tr><td><code>AddSingleton</code></td><td>পুরো অ্যাপ্লিকেশনের lifetime-এ ঠিক একবার</td><td>Configuration, cache, connection pool — চ্যাপ্টার ৮-এ দেখা Singleton pattern-এরই DI-managed রূপ</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Captive dependency — ভুল lifetime মেশানোর সবচেয়ে সাধারণ বাগ</span>
+একটা <code>Singleton</code>-নিবন্ধিত service যদি constructor-এ একটা <code>Scoped</code> service (যেমন <code>DbContext</code>-নির্ভর repository) ইনজেক্ট করে, তাহলে container সেই Scoped instance-টা প্রথমবার resolve হওয়ার সময়ই একবার তৈরি করে Singleton-এর ভেতরে চিরকালের জন্য "বন্দী" (captive) করে ফেলে — এরপর প্রতিটা request সেই একই পুরনো, সম্ভবত ততক্ষণে disposed <code>DbContext</code>-এর সাথে কাজ করতে যায়, ফলে random <code>ObjectDisposedException</code> বা এক request-এর ডেটা আরেক request-এ মিশে যাওয়ার মতো bug দেখা দেয় — যা প্রোডাকশনে intermittent এবং রিপ্রোডিউস করা কঠিন। নিয়ম মনে রাখার সহজ উপায়: একটা service-এর lifetime তার সবচেয়ে "সংক্ষিপ্ত-জীবী" (shortest-lived) dependency-র চেয়ে দীর্ঘ হতে পারবে না — Singleton কখনো Scoped/Transient ইনজেক্ট করবে না; করলে ASP.NET Core-এর built-in scope validation সাধারণত এটা startup-এই ধরে ফেলে।
+</div>
+
 <h3>৭.৫ DIP বনাম DI — এই দুটো এক জিনিস না</h3>
 <p>এখানেই সবচেয়ে বেশি বিভ্রান্তি হয়। <span class="kw">Dependency Inversion Principle</span> একটা <b>design principle</b> — এটা বলে দেয় নির্ভরতার দিক কেমন হওয়া উচিত (abstraction-এর দিকে)। <span class="kw">Dependency Injection</span> একটা <b>technique</b> — dependency তৈরি করার বদলে বাইরে থেকে (constructor/method/property-এর মাধ্যমে) সরবরাহ করা। DI হলো DIP অর্জন করার একটা খুবই সাধারণ ও ব্যবহারিক উপায়, কিন্তু এই দুটো সমার্থক নয়।</p>
 <table>
@@ -1687,6 +1716,23 @@ public class EmailFormatter : IEmailFormatter
 <span class="c">// ব্যবহার — অ্যাপের যেকোনো জায়গা থেকে</span>
 var timeout = ConfigurationManager.Instance.Get("Timeout");</pre>
 <p><code>private</code> constructor বাইরের কোডকে দ্বিতীয় instance বানানো থেকে আটকায়, আর <span class="kw">Lazy&lt;T&gt;</span> নিশ্চিত করে instance তৈরি হয় প্রথমবার ব্যবহারের ঠিক আগ মুহূর্তে (lazy initialization), এবং একাধিক thread একসাথে <code>.Instance</code> কল করলেও <code>Lazy&lt;T&gt;</code>-এর ভেতরের locking নিশ্চিত করে মাত্র একটাই object তৈরি হয়।</p>
+<div class="callout behind"><span class="tag">পর্দার আড়ালে — Lazy&lt;T&gt; ছাড়া ঠিক কী ভাঙে</span>
+<code>Lazy&lt;T&gt;</code> ঠিক কোন সমস্যাটা এড়াচ্ছে তা concrete-ভাবে দেখতে, ধরুন কেউ locking ছাড়াই একটা "naive" lazy singleton লিখল:
+<pre>public class NaiveConfig
+{
+    private static NaiveConfig _instance;
+    public static NaiveConfig Instance
+    {
+        get
+        {
+            if (_instance == null)              <span class="c">// দুইটা thread একসাথে এই চেক পাস করে ফেলতে পারে</span>
+                _instance = new NaiveConfig();   <span class="c">// ...ফলে এই লাইন দুইবারই চলে, দুইটা আলাদা object তৈরি হয়</span>
+            return _instance;
+        }
+    }
+}</pre>
+যদি Thread A আর Thread B দুজনেই <code>_instance == null</code> চেক-টা প্রায় একই মুহূর্তে পাস করে ফেলে (দুজনের মাঝেই CPU context switch ঠিক সেই ফাঁকে ঘটলে), তাহলে দুজনেই নিজের একটা করে <code>NaiveConfig</code> তৈরি করে ফেলবে — "পুরো অ্যাপে একটাই instance" গ্যারান্টিটাই নীরবে ভেঙে যায়। এই race window খুবই সংকীর্ণ বলে বেশিরভাগ সময় বাগটা ধরাই পড়ে না, প্রোডাকশনে শুধু হাই-লোডের মুহূর্তে মাঝেমধ্যে দেখা দেয় — টেস্ট suite-এ প্রায় কখনোই reproduce হয় না। <code>Lazy&lt;T&gt;</code>-এর ভেতরে ডিফল্টভাবে একটা lock থাকে যা নিশ্চিত করে দ্বিতীয় thread প্রথম thread-এর তৈরি করা object-টাই ফেরত পায়, নিজে আরেকটা তৈরি করে না — এটাই "thread-safe" বলার আসল মানে, শুধু একটা বাজওয়ার্ড না।
+</div>
 <div class="callout mistake"><span class="tag">সবচেয়ে বেশি অপব্যবহৃত প্যাটার্ন</span> Singleton-কে GoF-এর মধ্যে সবচেয়ে বেশি misuse করা প্যাটার্ন বলা হয়, আর কারণটা তুচ্ছ নয়। প্রথমত, এটা একটা <b>hidden global mutable state</b> তৈরি করে — কোডের যেকোনো প্রান্ত থেকে <code>Instance</code>-এর ভেতরের data বদলে ফেলা যায়, ফলে "কে কখন কী বদলাল" ট্র্যাক করা কঠিন হয়ে পড়ে। দ্বিতীয়ত, unit test-এ Singleton একটা দুঃস্বপ্ন — যেহেতু instance পুরো process-জুড়ে শেয়ার হয়, একটা test আরেকটা test-এর জন্য state রেখে যেতে পারে, আর test-এর মাঝে সেটাকে mock/reset করার কোনো সহজ উপায় থাকে না। তৃতীয়ত, এটা কোডের সম্পূর্ণ অসংশ্লিষ্ট দুটো অংশের মধ্যে <b>hidden coupling</b> তৈরি করে — দুটো module একে অপরকে না চিনেও একই Singleton-এর মাধ্যমে পরোক্ষে সংযুক্ত হয়ে যায়, যা dependency graph-কে অস্বচ্ছ করে তোলে।</div>
 <h4>আধুনিক বিকল্প: DI Container-এর Singleton Lifetime</h4>
 <div class="callout best"><span class="tag">ব্যবহারিক পরামর্শ</span> আধুনিক ASP.NET Core-এ হাতে-বানানো static Singleton ক্লাসের বদলে DI container-এর <span class="kw">Singleton lifetime</span> ব্যবহার করুন — <code>services.AddSingleton&lt;IConfigService, ConfigService&gt;()</code>। গ্যারান্টি একই (একটাই instance, পুরো অ্যাপ জুড়ে), কিন্তু dependency ইন্টারফেসের মাধ্যমে injected হয় বলে (ঠিক DIP অধ্যায়ে দেখা প্যাটার্নেই) unit test-এ সহজে mock/fake দিয়ে বদলে দেওয়া যায়, আর প্রতিটা test আলাদা DI container/scope নিয়ে শুরু করলে state leak হওয়ার সুযোগ থাকে না। hidden global state-এর গ্যারান্টিও কমে যায়, কারণ dependency constructor-এ explicit — কোথা থেকে আসছে সেটা স্পষ্ট, ম্যাজিক static access না।</div>
@@ -1829,6 +1875,9 @@ void RenderPanel(IUiThemeFactory factory)
 </svg>
 <figcaption>একটা <code>IUiThemeFactory</code> থেকে যা-ই আসুক, তা একই থিমের পরিবার — Dark ও Light আলাদা concrete factory হওয়ায় ভুলবশত ক্রস-থিম মেশানোর সুযোগই তৈরি হয় না, কারণ client কোনো একটামাত্র factory instance ধরে সবকটা product বানায়।</figcaption>
 </figure>
+<div class="callout mistake"><span class="tag">লুকানো ট্রেড-অফ — নতুন পরিবার সহজ, নতুন product type কঠিন</span>
+Abstract Factory-তে নতুন পরিবার (ধরুন একটা <code>HighContrastThemeFactory</code>) যোগ করা সহজ — শুধু <code>IUiThemeFactory</code> implement করা একটা নতুন class। কিন্তু উল্টো দিকের প্রশ্নটা প্রায়ই ভুলে যাওয়া হয়: পরিবারে একটা <b>নতুন product type</b> যোগ করতে হলে (ধরুন সব থিমেই এখন <code>CreateScrollbar()</code>-ও লাগবে) <code>IUiThemeFactory</code> ইন্টারফেসটাই বদলাতে হয় — আর তার মানে <code>DarkThemeFactory</code>, <code>LightThemeFactory</code>-সহ ইন্টারফেসটার প্রতিটা existing implementation-এ নতুন method যোগ করতে হবে, নাহলে কম্পাইলই হবে না। অর্থাৎ Abstract Factory একদিকে (নতুন family) OCP মেনে চলে, কিন্তু অন্যদিকে (নতুন product type) সেটা ভেঙে ফেলে — existing সব factory-কেই ছুঁতে হয়। এটা কোনো bug না, প্যাটার্নটার নিজস্ব সীমাবদ্ধতা — তাই Abstract Factory তখনই বেছে নিন যখন পরিবারের সংখ্যা (নতুন theme) বদলানোর সম্ভাবনা product type-এর সংখ্যা (নতুন widget) বদলানোর চেয়ে বাস্তবে অনেক বেশি।
+</div>
 
 <h3>Builder — জটিল object ধাপে ধাপে তৈরি</h3>
 <span class="badge">Step-by-step</span><span class="badge">Optional parameters</span>
@@ -2064,6 +2113,7 @@ INotifier notifier = <span class="kw">new</span> RetryNotifierDecorator(
 }</pre>
 <p>কলিং কোড (যেমন একটা API controller) এখন শুধু <code>orderFacade.PlaceOrder(request)</code> কল করে — চারটা সার্ভিসের অস্তিত্ব, তাদের কল করার সঠিক ক্রম, বা rollback লজিক জানারও দরকার নেই।</p>
 <div class="callout best"><span class="tag">মনে রাখুন — Facade কী যোগ করে না</span> Facade-এর ভেতরের চারটা সার্ভিস এখনো সরাসরি ব্যবহারযোগ্য থাকে — Facade তাদের প্রতিস্থাপন করে না, শুধু একটা <b>সুবিধাজনক শর্টকাট</b> দেয়। যেসব জায়গায় fine-grained নিয়ন্ত্রণ দরকার (যেমন কোনো admin script শুধু inventory reserve করবে, পেমেন্ট ছাড়াই), সেখানে সরাসরি <code>InventoryService</code> ব্যবহার করা যায়। এখানেই Facade আর SOLID-এর SRP-এর সম্পর্ক — Facade নিজে একটা coordination দায়িত্ব নেয়, প্রতিটা সাবসিস্টেম নিজের একক দায়িত্বে থাকে।</div>
+<div class="callout mistake"><span class="tag">Facade যখন নীরবে God Object হয়ে যায়</span> চ্যাপ্টার ১১-এ দেখবেন Mediator pattern-এর একটা পরিচিত ঝুঁকি হলো ধীরে ধীরে একটা God Object-এ পরিণত হওয়া — Facade-এরও ঠিক একই ঝুঁকি আছে, কারণ কাঠামোগতভাবে দুটোই একটা কেন্দ্রীয় coordination point। শুরুতে <code>OrderFacade.PlaceOrder()</code> শুধু চারটা service call আর rollback সাজায় — কিন্তু সময়ের সাথে যদি validation rule, retry logic, বা কোনো ব্যবসায়িক সিদ্ধান্ত সরাসরি Facade-এর ভেতরেই লেখা হতে থাকে ("এখানেই তো সবগুলো service-এর access আছে, এখানেই লিখে ফেলি"), তাহলে <code>OrderFacade</code>-ই একসময় নিজে একটা বিশাল, সব-জানা ক্লাসে পরিণত হয় — ঠিক যে সমস্যা এড়াতে Facade আনা হয়েছিল, সেটাই ফিরে আসে। মনে রাখার নিয়ম: Facade শুধু <i>coordinate</i> করে (কাকে, কোন ক্রমে কল করা হবে) — ব্যবসায়িক সিদ্ধান্ত (কত ডিসকাউন্ট, কবে refund) প্রতিটা নিজের সাবসিস্টেমেই (SRP অনুযায়ী) থাকা উচিত।</div>
 
 <h3>Proxy — অ্যাক্সেস নিয়ন্ত্রণের তিনটি সাধারণ রূপ</h3>
 <p>Proxy একটা placeholder বা stand-in অবজেক্ট, যেটা আরেকটা অবজেক্টের অ্যাক্সেস নিয়ন্ত্রণ করে। ব্যবহারিক জগতে এটা মূলত তিনটা রূপে দেখা যায়:</p>
@@ -2759,6 +2809,26 @@ public class OrderService
 
 <h3>Premature Optimization / Premature Abstraction</h3>
 <p><span class="kw">Premature Optimization</span> এবং <span class="kw">Premature Abstraction</span> একই মূল ভুলের দুইটা রূপ: এমন flexibility বা performance-এর জন্য ডিজাইন করা যেটার এখনো কোনো প্রমাণিত দরকার নেই — অথচ তার মূল্য দিতে হচ্ছে এখনকার code clarity দিয়ে। Donald Knuth-এর বিখ্যাত উক্তি — "premature optimization is the root of all evil" — শুধু পারফরম্যান্স নিয়ে না, একই যুক্তি abstraction-এর ক্ষেত্রেও খাটে।</p>
+<pre><span class="c">// ❌ Premature — মাত্র ১০ জন ইন্টারনাল ইউজারের একটা ছোট টুল, তবু "ভবিষ্যতে scale করতে হতে পারে" ভেবে
+// আগে থেকেই একটা পুরো pluggable caching layer, তিনটা eviction strategy, আর metrics reporting বসানো হয়েছে</span>
+public interface ICacheEvictionStrategy { void Evict(ICacheStore store); }
+public class LruEvictionStrategy : ICacheEvictionStrategy { /* ... */ }
+public class LfuEvictionStrategy : ICacheEvictionStrategy { /* ... */ }
+public class TtlEvictionStrategy : ICacheEvictionStrategy { /* ... */ }
+
+public class ConfigurableCache
+{
+    public ConfigurableCache(ICacheStore store, ICacheEvictionStrategy eviction, IMetricsReporter metrics)
+    { <span class="c">/* ৪০+ লাইন wiring — তিনটা ইন্টারফেস, একটাই আসল ব্যবহারকারী, কোনোদিন দ্বিতীয় strategy আসেনি */</span> }
+}
+
+<span class="c">// ✅ যা আসলে দরকার ছিল — সরল, direct; evidence এলে (আসল load, আসল memory pressure) তখন জটিল করা যাবে</span>
+public class SimpleCache
+{
+    private readonly Dictionary&lt;string, object&gt; _store = new();
+    public void Set(string key, object value) => _store[key] = value;
+    public object? Get(string key) => _store.TryGetValue(key, out var v) ? v : null;
+}</pre>
 <div class="callout best"><span class="tag">সঠিক ক্রম</span> Kent Beck-এর নিয়মটা মনে রাখা ভালো: <b>make it work, make it right, then make it fast</b> — এবং একই যুক্তিতে <b>make it flexible</b>ও শেষে আসে। আগে সঠিক আচরণ নিশ্চিত করুন সরল কোডে, তারপর সেটাকে পরিষ্কার করুন, তারপর যদি বাস্তব evidence (প্রোফাইলার ডেটা, actual scale-এর দরকার) দেখায় যে দরকার আছে — তখনই optimize বা generalize করুন। speculation-এর ওপর ভিত্তি করে না, প্রমাণের ওপর ভিত্তি করে।</div>
 
 <h3>স্মেল রাডার — কাপলিং আর কোহিশন চোখে দেখা</h3>

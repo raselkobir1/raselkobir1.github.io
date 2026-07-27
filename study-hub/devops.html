@@ -296,6 +296,28 @@ CI pipeline যদি ঘন ঘন flaky (এলোমেলোভাবে fai
 <div class="callout behind"><span class="tag">Blue-Green-এর আসল খরচ</span>
 Blue-Green-এর rollback সবচেয়ে দ্রুত মনে হলেও এর গোপন মূল্য হলো — যেকোনো মুহূর্তে দ্বিগুণ infrastructure চালু রাখতে হয় (blue ও green দুটোই পুরোপুরি running থাকে সুইচের মুহূর্তে)। ছোট, কম-ট্রাফিক সার্ভিসে এই বাড়তি খরচ গ্রহণযোগ্য, কিন্তু বড়, ব্যয়বহুল infrastructure-ভিত্তিক সিস্টেমে এই দ্বিগুণ খরচ প্রায়ই Canary বা Rolling Update-এর দিকে ঝোঁকায়।</div>
 
+<h4>ট্রাফিক ঠিক কীভাবে ভাগ হয় — যে মেশিন এটা বাস্তবায়ন করে</h4>
+<div class="diagram"><pre>
+Blue-Green (এক ধাক্কায় সুইচ)              Canary (ধীরে ধীরে শতাংশ বাড়ানো)
+
+  Client                                    Client
+    │                                          │
+    ▼                                          ▼
+┌─────────────────────┐                ┌─────────────────────┐
+│ Load Balancer /      │                │ Load Balancer /      │
+│ Kubernetes Service /  │                │ Ingress / Service Mesh│
+│ Ingress              │                │ (weighted routing)   │
+└──────────┬───────────┘                └────┬────────────┬───┘
+    আগে: 100% ──┐                    95% ─────┘            └───── 5%
+           │    │ পরে: 100%                │                     │
+           ▼    ▼                          ▼                     ▼
+      ┌──────┐ ┌──────┐               ┌──────────┐         ┌───────────┐
+      │ Blue │ │Green │               │v1 (stable)│        │v2 (canary)│
+      │ (v1) │ │ (v2) │               └──────────┘         └───────────┘
+      └──────┘ └──────┘
+</pre></div>
+<p>বাস্তবে এই ভাগাভাগি করে কোনো জাদু নয় — একটা <span class="kw">load balancer</span>, Kubernetes <span class="kw">Service/Ingress</span>, বা <span class="kw">service mesh</span> (Istio, Linkerd)-এর <b>weighted routing</b> কনফিগ। Blue-Green-এ এই কনফিগ atomic ভাবে বদলায় — এক মুহূর্তে ১০০% ট্রাফিকের target group blue থেকে green-এ পাল্টে যায়, মাঝামাঝি কোনো অবস্থা থাকে না। Canary-তে ঠিক একই মেকানিজম, শুধু weight ধীরে ধীরে বাড়ানো হয় (৫% → ২৫% → ৫০% → ১০০%), আর প্রতিটা ধাপে Observability অধ্যায়ে আলোচিত metric (error rate, latency) দেখে সিদ্ধান্ত নেওয়া হয় পরের ধাপে যাওয়া নিরাপদ কিনা।</p>
+
 <h3>Feature Flags — Deploy থেকে Release আলাদা করার হাতিয়ার</h3>
 <p>একটা <span class="kw">feature flag</span> হলো কোডে একটা runtime-configurable if-condition — নতুন ফিচারের কোড production-এ deploy হয়ে যায়, কিন্তু একটা flag বন্ধ থাকা অবস্থায় সেটা আসলে কার্যকর হয় না।</p>
 <pre><span class="c">// C# — feature flag-এর সরল উদাহরণ (Microsoft.FeatureManagement)</span>
@@ -350,6 +372,8 @@ resource "aws_instance" "web" {
 <tr><td><span class="kw">Resource</span></td><td>একটা নির্দিষ্ট জিনিস যা তৈরি/পরিচালনা করা হবে (VM, database, DNS record)</td></tr>
 <tr><td><span class="kw">State</span></td><td>Terraform নিজে যা তৈরি করেছে তার একটা রেকর্ড (<code>terraform.tfstate</code>) — বর্তমান বাস্তব অবস্থা কী তা মনে রাখার একমাত্র উপায়</td></tr>
 </table>
+<div class="callout behind"><span class="tag">State ফাইল কেন দরকার — সরাসরি cloud query করলেই তো হয়?</span>
+স্বাভাবিক প্রশ্ন: cloud provider-এর কাছেই তো বর্তমান অবস্থার সত্য তথ্য আছে, প্রতিবার সরাসরি সেটা query করলেই তো state ফাইল ছাড়াই চলে! তিনটা কারণে এটা যথেষ্ট নয়। এক, <b>mapping</b> — cloud নিজে জানে <code>i-0abcd1234</code> নামে একটা EC2 instance আছে, কিন্তু এটা যে আপনার কোডের <code>aws_instance.web</code>-এর প্রতিনিধিত্ব করছে তা cloud-এর জানার কথা না — state ফাইলই এই দুইয়ের মধ্যে সংযোগ ধরে রাখে। দুই, <b>performance</b> — শত শত resource-বিশিষ্ট একটা বড় প্রজেক্টে প্রতিটা <code>plan</code>-এ প্রতিটা resource-এর জন্য আলাদা API call করা অনেক ধীর হতো; local state থেকে read করা মুহূর্তের মধ্যে হয়। তিন, <b>metadata যা cloud-এ নেই</b> — resource-এর মধ্যে dependency-এর ক্রম, বা কিছু provider-এ generate হওয়া মান (auto-generated password) শুধু state-এই সংরক্ষিত থাকে। তাই state ফাইল শুধু "কী আছে" তার তালিকা নয় — এটা "কোড আর বাস্তবতার মধ্যেকার সম্পর্ক" রেকর্ড করে, যা cloud API একা কখনো দিতে পারবে না।</div>
 
 <h3>Plan → Apply — Dry-Run-এর গুরুত্ব</h3>
 <div class="diagram"><pre>
@@ -407,6 +431,8 @@ web2.example.com
         state: restarted</pre>
 <div class="callout why"><span class="tag">Idempotency — বারবার চালালেও একই ফলাফল</span>
 লক্ষ করুন <code>state: present</code> — এটা "nginx ইনস্টল করো" কমান্ড নয়, বরং "nginx-এর অস্তিত্ব নিশ্চিত করো" ঘোষণা। এই playbook একবার চালান বা একশবার চালান, ফলাফল একই থাকবে — এটাই <span class="kw">idempotency</span>। এটা ঠিক Kubernetes-এর declarative reconciliation-এরই ধারণা, শুধু এবার প্রয়োগ হচ্ছে একটা running VM-এর ভেতরের অবস্থার ওপর। Idempotency ছাড়া বারবার script চালালে (যেমন একটা নির্দিষ্ট লাইন <code>echo >> file</code> দিয়ে append করা) প্রতিবার নতুন করে ক্ষতি হতে পারে।</div>
+<div class="callout behind"><span class="tag">Handler ও notify — restart কেন সরাসরি টাস্ক নয়</span>
+লক্ষ করুন <code>copy</code> টাস্কের পর সরাসরি "nginx restart করো" টাস্ক নেই — বরং <code>notify: restart nginx</code> আছে, আর আসল restart ঘটছে আলাদা একটা <code>handlers</code> ব্লকে। এটা ইচ্ছাকৃত ডিজাইন। <code>copy</code> টাস্ক নিজেই idempotent — ফাইলের কন্টেন্ট আগে থেকেই একই থাকলে এটা কিছুই বদলায় না (<code>changed: false</code>), আর কিছু না বদলালে সংশ্লিষ্ট handler কখনো trigger-ই হয় না। যদি এর বদলে সরাসরি "restart nginx" নামের একটা সাধারণ টাস্ক রাখা হতো, তাহলে প্রতিবার playbook চালানোর সাথে সাথে nginx restart হতো — এমনকি config-এ কোনো প্রকৃত পরিবর্তন না থাকলেও, প্রতিটা রুটিন রান-এই অকারণ downtime তৈরি করত। Handler তাই idempotency-এর নীতিকে restart-এর মতো side-effect-ful অপারেশনের ক্ষেত্রেও বজায় রাখে — শুধু তখনই চলে যখন সত্যিই কিছু বদলেছে, আর একাধিক টাস্ক থেকে একাধিকবার notify হলেও পুরো play-এর শেষে একবারই চলে।</div>
 
 <h3>Push (Ansible) বনাম Pull (Chef/Puppet) মডেল</h3>
 <table>
@@ -516,6 +542,8 @@ Build-এর সময় একটা secret ব্যবহার করে �
 
 <h3>Metrics — Prometheus/Grafana</h3>
 <p><span class="kw">Prometheus</span> নিয়মিত ইন্টারভ্যালে প্রতিটা service থেকে metric "স্ক্র্যাপ" করে টাইম-সিরিজ ডেটাবেসে জমা রাখে; <span class="kw">Grafana</span> সেই ডেটা visualize করে ড্যাশবোর্ড বানায়, আর নির্দিষ্ট threshold ছাড়ালে alert পাঠায়।</p>
+<div class="callout mistake"><span class="tag">Common mistake — average latency দিয়ে বিচার করা</span>
+উপরের টেবিলে "latency percentile" বলা হয়েছে, average (mean) নয় — এটা ইচ্ছাকৃত। Average একটামাত্র সংখ্যায় পুরো distribution মিশিয়ে ফেলে, ফলে বাজে অভিজ্ঞতা লুকিয়ে যায়: হাজার request-এর মধ্যে ৯৯৫টা ২০ ms-এ শেষ হলেও বাকি ৫টা ৫ সেকেন্ড লাগলে, average হয়তো তখনো "স্বাভাবিক" দেখাবে — অথচ সেই ৫ জন ব্যবহারকারীর অভিজ্ঞতা ভয়াবহ। <span class="kw">p50</span> (median) মানে ৫০% request এর চেয়ে দ্রুত শেষ হয়েছে; <span class="kw">p95</span> মানে ৯৫% request এর চেয়ে দ্রুত (বাকি সবচেয়ে ধীর ৫%-কেই আসলে টার্গেট করা হয়); <span class="kw">p99</span> সবচেয়ে ধীরতম ১%-কে আলাদা করে দেখায়। প্রোডাকশন SLO (SRE অধ্যায়ে বিস্তারিত) প্রায় সবসময় p95/p99-এর ওপর সংজ্ঞায়িত হয়, average-এর ওপর নয় — কারণ ব্যবহারকারীর অভিজ্ঞতা "গড়ে কেমন" দিয়ে নয়, "সবচেয়ে খারাপ ক্ষেত্রেও কতজনের জন্য কেমন" তা দিয়ে বিচার হওয়া উচিত।</div>
 
 <h3>Logs — Structured Logging ও Centralized Aggregation</h3>
 <p>শত শত container/instance জুড়ে ছড়িয়ে থাকা plain-text log ফাইল ম্যানুয়ালি খুঁজে দেখা অব্যবহারিক। <span class="kw">Structured logging</span> (JSON ফরম্যাটে, প্রতিটা field আলাদাভাবে searchable) আর একটা centralized aggregator (Loki, ELK stack) সব সার্ভিসের log একটা জায়গায় এনে query করার সুযোগ দেয়।</p>
@@ -553,6 +581,7 @@ SLO-কে ইচ্ছাকৃতভাবে SLA-এর চেয়ে ক�
 <p>SLO ৯৯.৯% হলে, তার মানে বাকি ০.১% হলো <span class="kw">error budget</span> — এই সময়টুকু "ব্যর্থ" হতে পারার অনুমোদিত বাজেট। এই একটা সংখ্যা একটা কঠিন প্রশ্নের উত্তর সহজ করে দেয়: "এই ঝুঁকিপূর্ণ deploy-টা কি এখন করা উচিত?"</p>
 <div class="callout behind"><span class="tag">Error Budget কীভাবে সিদ্ধান্তে ব্যবহার হয়</span>
 Budget এখনো অনেকখানি অবশিষ্ট থাকলে, টিম দ্রুত গতিতে নতুন ফিচার শিপ করতে পারে — কিছুটা ঝুঁকি নেওয়ার "সামর্থ্য" আছে। কিন্তু budget প্রায় শেষ হয়ে গেলে (সাম্প্রতিক incident-এ অনেক burn হয়ে গেছে), টিম স্বয়ংক্রিয়ভাবে ঝুঁকিপূর্ণ deploy স্থগিত রেখে শুধু reliability-সংক্রান্ত কাজে মনোযোগ দেয় — এটাই DevOps-এর সেই "গতি বনাম স্থিতিশীলতা" বিতর্ককে সংখ্যা দিয়ে সমাধান করে, ব্যক্তিগত মতামত দিয়ে নয়।</div>
+<p>Error budget কত <b>দ্রুত</b> ফুরিয়ে যাচ্ছে তা মাপার একক হলো <span class="kw">burn rate</span>। ১x burn rate মানে ঠিক যে হারে বাজেট বরাদ্দ করা হয়েছিল সেই হারেই খরচ হচ্ছে (পুরো মাসের শেষে বাজেট ঠিক শূন্যে গিয়ে ঠেকবে) — স্বাভাবিক। কিন্তু ১০x burn rate মানে বর্তমান error-এর হারে চললে পুরো মাসের বাজেট মাত্র কয়েক ঘণ্টাতেই নিঃশেষ হয়ে যাবে — এটা জরুরি সংকেত, তাৎক্ষণিক হস্তক্ষেপ দরকার। "গত ১ ঘণ্টায় বাজেটের ৫% পুড়ে গেছে"-এর মতো burn-rate-ভিত্তিক alert থ্রেশহোল্ড একটা fixed error-count থ্রেশহোল্ডের চেয়ে বেশি অর্থবহ, কারণ এটা "কতটা খারাপ" এর সাথে "কত দ্রুত খারাপ হচ্ছে" — দুটোই একসাথে বিবেচনা করে (Incident Management অধ্যায়ে alerting-এ এই ধারণাই ব্যবহৃত হবে)।</p>
 
 <h3>Toil — যে কাজ কমানোই লক্ষ্য</h3>
 <p><span class="kw">Toil</span> মানে ম্যানুয়াল, পুনরাবৃত্তিমূলক, automation-যোগ্য কাজ যা করলে দীর্ঘমেয়াদী কোনো উন্নতি হয় না (যেমন প্রতিদিন হাতে একটা log পরিষ্কার করা)। SRE practice-এ ইঞ্জিনিয়ারদের সময়ের একটা অংশ (প্রায়ই ৫০%-এর সীমা) নির্দিষ্টভাবে toil কমানোর automation-এ ব্যয় করার নিয়ম রাখা হয় — নাহলে toil ধীরে ধীরে পুরো টিমের সময় গ্রাস করে ফেলে, নতুন কিছু বানানোর সময়ই থাকে না।</p>

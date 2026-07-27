@@ -379,6 +379,30 @@ Kernel প্রতিটা file access-এ যদি স্ট্রিং ত
 <span class="c">$</span> chmod u=rwx,g=rx,o=r deploy.sh   <span class="c"># ঠিক একই ফলাফল, symbolic ফর্মে</span></pre>
 <p>দুইটার ফলাফল একদম অভিন্ন — octal দ্রুত লিখতে সুবিধাজনক (একবারে পুরো state সেট করা), symbolic form সুবিধাজনক যখন শুধু একটা ক্যাটাগরির একটা bit বদলাতে চান, বাকিগুলো অপরিবর্তিত রেখে (যেমন <code>chmod g+w file</code> — শুধু group-এ write যোগ করা, বাকি সব যেমন ছিল তেমনই থাকবে)।</p>
 
+<h3>umask — নতুন ফাইল কেন ডিফল্টভাবে rwxrwxrwx পায় না</h3>
+<p>একটা স্বাভাবিক প্রশ্ন এতক্ষণে মাথায় আসা উচিত — <code>touch newfile.txt</code> চালালে সেই ফাইলটা ঠিক কোন permission নিয়ে "জন্মায়" সেটা কে ঠিক করে? উত্তর হলো <span class="kw">umask</span> — প্রতিটা shell process-এর একটা মান, যা নতুন তৈরি হওয়া ফাইল/ডিরেক্টরির ডিফল্ট permission থেকে নির্দিষ্ট bit <b>বিয়োগ (mask out)</b> করে দেয়। Kernel ধরে নেয় নতুন ফাইলের সর্বোচ্চ সম্ভাব্য ডিফল্ট <code>666</code> (rw-rw-rw- — execute bit কখনোই ডিফল্টে থাকে না, কারণ একটা ফাইল হুট করে executable হয়ে যাওয়া উচিত না, সেটা ইচ্ছাকৃতভাবে <code>chmod +x</code> করেই করতে হয়) আর নতুন ডিরেক্টরির সর্বোচ্চ ডিফল্ট <code>777</code> (ডিরেক্টরিতে x মানে traverse, সেটা সাধারণত দরকারই হয়)। umask ভ্যালু এই সর্বোচ্চ থেকে বাদ দেওয়া bit-গুলো নির্দিষ্ট করে।</p>
+<div class="diagram"><pre>
+নতুন ফাইলের সর্বোচ্চ ডিফল্ট      666  (rw-rw-rw-)
+umask                          -  022  (----w--w-)
+────────────────────────────────────────────────
+আসল ফলাফল                       644  (rw-r--r--)
+
+নতুন ডিরেক্টরির সর্বোচ্চ ডিফল্ট   777  (rwxrwxrwx)
+umask                          -  022  (----w--w-)
+────────────────────────────────────────────────
+আসল ফলাফল                       755  (rwxr-xr-x)
+</pre></div>
+<pre><span class="c">$</span> umask
+0022
+<span class="c">$</span> touch newfile.txt &amp;&amp; ls -l newfile.txt
+-rw-r--r-- 1 rasel rasel 0 Jul 17 10:00 newfile.txt   <span class="c"># 666 - 022 = 644</span>
+<span class="c">$</span> mkdir newdir &amp;&amp; ls -ld newdir
+drwxr-xr-x 2 rasel rasel 4096 Jul 17 10:00 newdir       <span class="c"># 777 - 022 = 755</span></pre>
+<div class="callout why"><span class="tag">umask কেন "বিয়োগ", আর chmod কেন "নির্ধারণ"</span>
+umask আর chmod বিপরীত দিক থেকে কাজ করে বলেই এই দুটো গুলিয়ে ফেলা সহজ। <code>chmod 644 file</code> সরাসরি সেই permission <b>বসিয়ে দেয়</b> (set) — বর্তমান state যাই হোক না কেন। কিন্তু umask কোনো ফাইলের permission সরাসরি সেট করে না; এটা একটা "নতুন ফাইল তৈরির মুহূর্তে ঠিক কোন bit বাদ দিতে হবে"-র মাস্ক, যা প্রতিবার <code>create()</code> system call-এর সময় kernel-এর সর্বোচ্চ ডিফল্ট থেকে bitwise বিয়োগ হয়। তাই <code>umask 077</code> সেট করলে মানে দাঁড়ায় "এখন থেকে তৈরি হওয়া প্রতিটা নতুন ফাইল শুধু owner-ই পড়তে/লিখতে পারবে, group/other একদমই না" — shared home directory থাকা multi-user সার্ভারে personal script/config-এর জন্য এটা একটা common hardening অভ্যাস।
+</div>
+<p>umask সাধারণত shell startup ফাইলে (<code>/etc/profile</code>, <code>~/.bashrc</code>) সেট থাকে — বেশিরভাগ distro-তে normal user-এর ডিফল্ট <code>022</code>। শুধু বর্তমান session-এর জন্য বদলাতে <code>umask 027</code> চালালেই চলে; স্থায়ী করতে সেটা shell profile-এ যোগ করতে হবে।</p>
+
 <h3>Owner ও Group বদলানো — chown / chgrp</h3>
 <pre><span class="c">$</span> sudo chown alice deploy.sh          <span class="c"># owner বদলে alice</span>
 <span class="c">$</span> sudo chown alice:devteam deploy.sh  <span class="c"># owner ও group একসাথে বদলানো</span>
@@ -657,6 +681,18 @@ root      2210  12.1  0.3 tar -xzf backup.tar.gz
 root       900   3.4  0.5 nginx: master process
 rasel     1201   0.1  0.1 -bash</pre>
 <p><code>top</code>/<code>htop</code> ইন্টারঅ্যাক্টিভ পর্যবেক্ষণের জন্য ভালো, কিন্তু script বা log-এ রাখার জন্য <code>ps aux --sort=-%cpu</code> (বা <code>--sort=-%mem</code>) বেশি ব্যবহারযোগ্য — এটা একবার output দিয়ে বেরিয়ে আসে, কোনো interactive session আটকে রাখে না।</p>
+
+<h3>Process Priority — <code>nice</code> ও <code>renice</code></h3>
+<p>প্রতিটা runnable process সমান গুরুত্ব নিয়ে CPU-র জন্য প্রতিযোগিতা করে না — kernel-এর scheduler কাকে কতটুকু CPU সময় দেবে ঠিক করার সময় প্রতিটা process-এর একটা <span class="kw">priority</span>ও বিবেচনা করে। এই priority হাতে নিয়ন্ত্রণ করার হাতিয়ার হলো <span class="kw">nice value</span> — একটা সংখ্যা <code>-20</code> (সর্বোচ্চ priority, CPU-র সবচেয়ে বেশি দাবিদার) থেকে <code>+19</code> (সর্বনিম্ন priority — অন্যদের আগে যেতে দেয়, তাই "nice/ভদ্র") পর্যন্ত। ডিফল্ট nice value <code>0</code>।</p>
+<pre><span class="c"># নতুন প্রসেস কম priority (বেশি nice value) নিয়ে শুরু করা — CPU-ভারী background job-এর জন্য আদর্শ</span>
+$ nice -n 10 ./generate-report.sh
+
+<span class="c"># ইতিমধ্যে চলমান একটা প্রসেসের priority বদলানো</span>
+$ renice -n 15 -p 3021</pre>
+<div class="callout why"><span class="tag">সাধারণ user শুধু nice বাড়াতে পারে, কমাতে পারে না কেন</span>
+একজন সাধারণ user নিজের process-এর nice value বাড়াতে (কম priority নিতে) বাধাহীনভাবে পারে, কিন্তু কমাতে (বেশি priority দাবি করতে) পারে না root ছাড়া। কারণটা fairness-ভিত্তিক — যদি যেকোনো user নিজের প্রতিটা process-কে সর্বোচ্চ priority (<code>-20</code>) দিতে পারত, একজন user-ই পুরো সিস্টেমের CPU অন্য সবার থেকে কেড়ে নিজের কাজে ব্যবহার করে ফেলতে পারত। নিজের কাজকে ইচ্ছাকৃতভাবে কম গুরুত্বপূর্ণ ঘোষণা করা (nice বাড়ানো) কারো ক্ষতি করে না, তাই সেটা যে কেউ করতে পারে — কিন্তু নিজের কাজকে বেশি গুরুত্বপূর্ণ ঘোষণা করা (nice কমানো) অন্যদের CPU-বঞ্চিত করতে পারে, তাই এটা root-এর সিদ্ধান্তে সীমাবদ্ধ।
+</div>
+<p>একটু পরে এই চ্যাপ্টারেই <code>top</code>-এর আউটপুটে <code>PR</code> (kernel-এর হিসাব করা প্রকৃত scheduling priority) ও <code>NI</code> (আপনার সেট করা nice value) কলাম দুটো ঠিক এই একই জিনিস দেখাবে — একটা CPU-ভারী batch job (log compression, report generation) চালানোর আগে <code>nice -n 10</code> দিয়ে শুরু করাটা ভালো অভ্যাস, যাতে interactive/latency-sensitive প্রসেস (যেমন একটা ওয়েব রিকোয়েস্ট হ্যান্ডলার) CPU পেতে দেরি না করে।</p>
 
 <div class="callout best"><span class="tag">এই চ্যাপ্টারের সারাংশ</span>
 প্রতিটা process-এর একটা PID, একটা parent, আর একটা state (R/S/D/T/Z) আছে — <code>ps aux</code>-এর STAT কলাম পড়তে জানলে সিস্টেমের স্বাস্থ্য সম্পর্কে অনেক কিছু বোঝা যায় (অনেক D মানে disk সমস্যা, বাড়তে থাকা Z মানে parent-এর বাগ)। Job control (<code>&amp;</code>, <code>jobs</code>, <code>fg</code>/<code>bg</code>, <code>nohup</code>/<code>disown</code>) দিয়ে টার্মিনাল সেশনের সাথে process-এর সম্পর্ক নিয়ন্ত্রণ করা যায়, আর signal (বিশেষ করে SIGTERM বনাম SIGKILL) দিয়ে process-কে নিরাপদে বন্ধ করা যায় — সবসময় ভদ্র অনুরোধ আগে, জোরপূর্বক শেষ অস্ত্র পরে। এই "কমান্ড চালানো, তার output ধরে রাখা, দরকার হলে নিয়ন্ত্রিতভাবে বন্ধ করা" — ঠিক এই দক্ষতাগুলোই পরের চ্যাপ্টারে (৪. Bash Scripting) একসাথে জোড়া লেগে স্বয়ংক্রিয় script-এ রূপ নেবে, যেখানে প্রতিটা কমান্ডের exit code, output, আর সিগন্যাল-হ্যান্ডলিং প্রোগ্রামেটিকভাবে নিয়ন্ত্রণ করা শিখবেন।</div>
@@ -1335,6 +1371,19 @@ udp    UNCONN  0       0              0.0.0.0:68              0.0.0.0:*      use
 <div class="callout best"><span class="tag">practical ব্যবহার</span>
 "পোর্ট ৮০৮০-এ কিছু একটা আগে থেকেই চলছে" বা "আমার অ্যাপ কি আদৌ start হয়েছে" — এই প্রশ্নের উত্তর <code>ss -tulnp | grep 8080</code> দিয়ে সেকেন্ডে পাওয়া যায়। <code>Local Address</code> কলামে <code>0.0.0.0:8080</code> মানে সব ইন্টারফেস থেকে অ্যাক্সেসযোগ্য, আর <code>127.0.0.1:8080</code> মানে শুধু নিজের মেশিন থেকেই — এই পার্থক্যটা প্রায়ই "লোকালহোস্ট থেকে কাজ করে কিন্তু বাইরে থেকে করে না" জাতীয় সমস্যার আসল কারণ।</div>
 
+<h3>TIME_WAIT — সার্ভিস restart করলেই "Address already in use" কেন আসে</h3>
+<p>একটা খুব পরিচিত মুহূর্ত — কোনো সার্ভিস (dotnet app, nginx) বন্ধ করে সাথে সাথেই আবার চালু করতে গেলে <code>bind: Address already in use</code> এরর আসে, যদিও <code>ss -tulnp</code>-এ সেই পোর্টে কোনো প্রসেস শুনছে বলে দেখাচ্ছে না। এর পেছনের কারণ TCP-এর নিজস্ব একটা নিয়ম — <span class="kw">TIME_WAIT</span> state।</p>
+<div class="callout behind"><span class="tag">TIME_WAIT আসলে কী, আর কেন এড়ানো যায় না</span>
+যে পক্ষ প্রথমে একটা TCP কানেকশন বন্ধ করে (active close), তার socket সাথে সাথে পুরোপুরি মুছে যায় না — এটা কিছু সময়ের (সাধারণত ৩০-১২০ সেকেন্ড, kernel-নির্ভর) জন্য <b>TIME_WAIT</b> state-এ থেকে যায়। এই বিলম্ব ইচ্ছাকৃত — নেটওয়ার্কে দেরিতে পৌঁছানো কোনো পুরনো "delayed" প্যাকেট যদি একই IP:port কম্বিনেশনে তৈরি হওয়া নতুন কানেকশনে গিয়ে পড়ে, TIME_WAIT সেই পুরনো ডেটাকে নতুন কানেকশনের সাথে গুলিয়ে যাওয়া থেকে রক্ষা করে। তাই এটা কোনো bug না, protocol-এর ইচ্ছাকৃত সুরক্ষা। সমস্যাটা দেখা যায় যখন একটা সার্ভার প্রসেস নিজেই একটা পোর্টে listen করছিল আর সেটাকে রিস্টার্ট করা হলো — পুরনো instance-এর সকেট তখনো TIME_WAIT-এ, আর নতুন instance ঠিক একই পোর্টে bind করতে গিয়ে kernel-এর কাছে "পোর্ট এখনো ব্যবহৃত" জবাব পায়।
+</div>
+<pre><span class="c"># TIME_WAIT অবস্থায় থাকা সকেট দেখা</span>
+$ ss -tan state time-wait
+State      Recv-Q Send-Q  Local Address:Port    Peer Address:Port
+TIME-WAIT  0      0        0.0.0.0:5000          203.0.113.9:51422</pre>
+<div class="callout best"><span class="tag">সমাধান — SO_REUSEADDR, প্রোগ্রাম-লেভেলে</span>
+এই সমস্যা এড়াতে অপেক্ষা করার দরকার নেই — বেশিরভাগ modern web server/framework (Kestrel/ASP.NET Core, nginx, Node.js) ডিফল্টভাবেই তাদের listening socket-এ <code>SO_REUSEADDR</code> অপশন সেট করে রাখে, যা kernel-কে বলে "TIME_WAIT-এ থাকা পুরনো সকেট থাকলেও আমাকে এই পোর্টে bind করতে দাও" — কারণ নতুন প্রসেসটাই আসল owner, পুরনো delayed প্যাকেটের ঝুঁকি এখানে গ্রহণযোগ্য। কোনো কাস্টম/লো-লেভেল সকেট কোডে এই সমস্যা দেখা দিলে <code>SO_REUSEADDR</code> এক্সপ্লিসিটভাবে সেট করাই সমাধান — <code>kill</code> করে বা কিছুক্ষণ অপেক্ষা করে "সমাধান" করার দরকার নেই।
+</div>
+
 <h3>DNS — নাম থেকে ঠিকানা</h3>
 <p><span class="kw">DNS resolution</span>-এর কাজ আসলে একটাই — একটা hostname (যেমন <code>example.com</code>) কে একটা IP address-এ রূপান্তর করা, কারণ নেটওয়ার্ক স্তরে সব যোগাযোগ IP দিয়েই হয়, নাম দিয়ে নয়।</p>
 <p>দুটো ফাইল এই প্রক্রিয়ায় সরাসরি জড়িত:</p>
@@ -1778,6 +1827,19 @@ WantedBy=multi-user.target</pre>
 <div class="callout why"><span class="tag">After= মানে dependency নয় — শুধু ক্রম</span>
 <code>After=network.target</code> দেখে অনেকে ধরে নেন এটা একটা hard dependency — "network না থাকলে এই service চালু হবে না।" ভুল। <code>After=</code> শুধু <b>ordering</b> নির্দেশ করে: "network.target-এর কাজ শেষ হওয়ার <i>পরে</i> আমাকে শুরু করো" — কিন্তু network.target ব্যর্থ হলেও, বা একেবারে না থাকলেও, systemd এই service-টা ঠিকই চালু করার চেষ্টা করবে। আসল নির্ভরতা প্রকাশ করতে হয় আলাদা directive দিয়ে — <code>Requires=</code> (কঠোর: ওইটা fail করলে এটাও fail) বা <code>Wants=</code> (নরম: চেষ্টা করবে, ব্যর্থ হলেও থামবে না)। আরেকটা সূক্ষ্ম ফাঁদ: <code>network.target</code> শুধু বোঝায় "নেটওয়ার্ক স্ট্যাক initialize হয়েছে" — interface-এ IP পাওয়া বা DNS resolve করা যাচ্ছে তার গ্যারান্টি নয়। সত্যিকারের কানেক্টিভিটির ওপর নির্ভরশীল app-এর জন্য <code>After=network-online.target</code> ও <code>Wants=network-online.target</code> দুটোই লাগবে।</div>
 
+<h4>Type= — systemd কীভাবে বুঝবে service আসলে "রেডি" হয়েছে</h4>
+<p>উপরের unit ফাইলে <code>Type=notify</code> লেখা আছে, কিন্তু এই ডিরেক্টিভটাই আসলে গুরুত্বপূর্ণ একটা প্রশ্নের উত্তর দেয় — <code>ExecStart</code>-এ দেওয়া প্রসেসটা fork হওয়ার সাথে সাথেই systemd কি ধরে নেবে "সার্ভিস চালু হয়ে গেছে", নাকি তার নিজের initialization (config load, database connection, port bind) শেষ হওয়া পর্যন্ত অপেক্ষা করবে? <code>Type=</code> ঠিক এটাই নির্ধারণ করে।</p>
+<table>
+<tr><th>Type</th><th>systemd কখন ধরে নেয় "started"</th><th>ব্যবহার</th></tr>
+<tr><td><span class="kw">simple</span> (ডিফল্ট)</td><td><code>ExecStart</code>-এর প্রসেস <code>fork()</code> হওয়ার সাথে সাথেই — প্রসেসটা আসলে request নেওয়ার জন্য প্রস্তুত কিনা systemd যাচাই করে না</td><td>সাধারণ long-running প্রসেস, যেখানে startup প্রায় তাৎক্ষণিক</td></tr>
+<tr><td><span class="kw">notify</span></td><td>প্রসেস নিজে থেকে একটা বিশেষ <code>sd_notify(READY=1)</code> সিগন্যাল systemd-কে না পাঠানো পর্যন্ত অপেক্ষা করে — অ্যাপ্লিকেশনকে এই কল সাপোর্ট করতে হয়</td><td>ASP.NET Core-এর মতো app, যেখানে প্রসেস শুরু হওয়া আর প্রকৃত "রেডি" হওয়া (DB migration, cache warm-up শেষে) এক মুহূর্ত না</td></tr>
+<tr><td><span class="kw">forking</span></td><td><code>ExecStart</code>-এর প্রসেস নিজে fork করে একটা background daemon child তৈরি করে মূল প্রসেসটা exit করে যায় — systemd সেই exit-এর অপেক্ষা করে, তারপর child-কে main PID ধরে</td><td>পুরনো-ধাঁচের classic daemonizing প্রোগ্রাম</td></tr>
+<tr><td><span class="kw">oneshot</span></td><td>প্রসেস একবার চলে সম্পূর্ণ হয়ে exit করবে — একে "চলমান সার্ভিস" ধরা হয় না</td><td>backup/migration script — চ্যাপ্টার ১৪-এর timer-triggered job</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">ভুল ধরে নেওয়া — <code>Type=simple</code>-এ dependent service একটু দেরিতে চালু হলেও সমস্যা নেই</span>
+<code>Type=simple</code> (ডিফল্ট) ব্যবহার করলে systemd শুধু <code>fork()</code> সফল হয়েছে দেখেই সার্ভিসকে "চালু" ধরে নেয় — এর ফল হলো, <code>After=myapi.service</code> দিয়ে dependency ঘোষণা করা অন্য কোনো সার্ভিস (যেমন একটা reverse proxy) হয়তো myapi-র নিজের initialization (database connection pool তৈরি, cache warm-up) শেষ হওয়ার আগেই request পাঠানো শুরু করে দিতে পারে — ফলে startup-এর প্রথম কয়েক সেকেন্ড connection refused বা 502 error দেখা যায়। <code>Type=notify</code>-এর আসল সুবিধা এখানেই — অ্যাপ্লিকেশন নিজে (.NET-এ <code>Microsoft.Extensions.Hosting.Systemd</code> প্যাকেজের বিল্ট-ইন সাপোর্ট আছে) systemd-কে জানায় ঠিক কখন request নেওয়ার জন্য প্রস্তুত, আর systemd তখনই dependent unit-দের এগোতে দেয়।
+</div>
+
 <h3>৪. <code>systemctl</code> দিয়ে service নিয়ন্ত্রণ</h3>
 <p>ইউনিট ফাইল লেখা হলেই systemd সেটা নিজে থেকে জানে না — ফাইল save করার পর তাকে জানাতে হয়:</p>
 <pre><span class="c"># unit ফাইল নতুন বা edit করার পর — systemd-কে disk থেকে আবার পড়তে বলা</span>
@@ -1950,6 +2012,27 @@ Enter passphrase (empty for no passphrase): <span class="c"># passphrase দি�
 Your identification has been saved in /home/rasel/.ssh/id_ed25519
 Your public key has been saved in /home/rasel/.ssh/id_ed25519.pub</pre>
 <p>এই কমান্ড দুটো ফাইল তৈরি করে — <code>~/.ssh/id_ed25519</code> (প্রাইভেট, কখনো শেয়ার নয়) আর <code>~/.ssh/id_ed25519.pub</code> (পাবলিক, শেয়ার করা নিরাপদ, দেখতে <code>ssh-ed25519 AAAA...</code>-এর মতো একটা লাইন)। <code>-C</code> ফ্ল্যাগের comment শুধু পাবলিক কী ফাইলে identify করার সুবিধার জন্য — একাধিক কী থাকলে কোনটা কোন মেশিনের সেটা মনে রাখতে সাহায্য করে।</p>
+
+<h3>ssh-agent — বারবার Passphrase না চাওয়ার সমাধান</h3>
+<p>প্রাইভেট কী জেনারেট করার সময় passphrase দিলে (যেটা best practice) — প্রতিবার সেই কী দিয়ে কোথাও SSH করতে গেলেই passphrase চাওয়া হবে। দিনে বহুবার সার্ভারে ঢুকতে হলে এটা দ্রুত বিরক্তিকর হয়ে ওঠে। সমাধান <span class="kw">ssh-agent</span> — একটা ছোট background প্রসেস যা একবার unlock করা প্রাইভেট কী মেমোরিতে (ডিস্কে নয়) ধরে রাখে, session চলাকালীন।</p>
+<pre><span class="c"># agent চালু করা (অনেক desktop/terminal session-এ এটা এমনিতেই অটোমেটিক চালু থাকে)</span>
+$ eval "$(ssh-agent -s)"
+Agent pid 4021
+
+<span class="c"># কী agent-এ যোগ করা — passphrase একবারই চাওয়া হবে</span>
+$ ssh-add ~/.ssh/id_ed25519
+Enter passphrase for /home/rasel/.ssh/id_ed25519: <span class="c"># এই session-এ শেষবার</span>
+Identity added: /home/rasel/.ssh/id_ed25519
+
+<span class="c"># এখন থেকে এই টার্মিনাল session-এ যতবার SSH/scp করবেন, আর passphrase চাইবে না</span>
+$ ssh myserver
+$ scp file.txt myserver:/tmp/</pre>
+<div class="callout why"><span class="tag">এটা নিরাপত্তা compromise করছে না কেন</span>
+ssh-agent প্রাইভেট কী ডিস্কে decrypt করে রাখে না — এটা শুধু চলমান agent প্রসেসের নিজের মেমোরিতে unlock করা key ধরে রাখে। agent প্রসেস বন্ধ হয়ে গেলে (terminal/session বন্ধ, reboot) key মেমোরি থেকে হারিয়ে যায় — পরের বার আবার passphrase লাগবে। তাই এটা "passphrase বাদ দেওয়া" না, বরং "একবার প্রমাণ করে সেই প্রমাণটা চলতি session-এর জন্য মনে রাখা" — ধারণাগতভাবে chapter ২-এর <code>sudo</code>-এর timeout-এর মতোই।
+</div>
+<div class="callout mistake"><span class="tag">Agent forwarding (<code>-A</code>) — সুবিধাজনক কিন্তু ঝুঁকিপূর্ণ</span>
+<code>ssh -A user@jump-host</code> দিয়ে <span class="kw">agent forwarding</span> চালু করলে, সেই jump-host থেকে আরেকটা সার্ভারে (<code>ssh internal-server</code>) SSH করার সময় আপনার লোকাল agent-এর key ব্যবহার হয় — প্রাইভেট কী jump-host-এ কপি না করেই। সুবিধাজনক মনে হলেও, jump-host compromised হলে সেখানে root/admin অ্যাক্সেস থাকা যে কেউ আপনার forwarded agent socket ব্যবহার করে আপনার পরিচয়ে (প্রাইভেট কী কখনো কপি না করেই) যেকোনো সার্ভারে অথেন্টিকেট করতে পারে, যতক্ষণ আপনার session সেই jump-host-এ খোলা থাকে। শুধু পুরোপুরি বিশ্বাসযোগ্য jump-host-এই <code>-A</code> ব্যবহার করুন, আর কাজ শেষে সাথে সাথে disconnect করুন।
+</div>
 
 <h3>সার্ভারে পাবলিক কী বসানো — authorized_keys</h3>
 <p>সার্ভার একটা পাবলিক কী "চিনতে" পারার জন্য সেটাকে সেই ইউজারের <code>~/.ssh/authorized_keys</code> ফাইলে থাকতে হবে। <span class="kw">authorized_keys</span> আসলে খুবই সাধারণ একটা জিনিস — শুধু পাবলিক কী-এর লাইন ধরে ধরে একটা লিস্ট, যেগুলো সেই ইউজার অ্যাকাউন্টের জন্য গ্রহণযোগ্য।</p>
@@ -2323,6 +2406,9 @@ $ cat /sys/fs/cgroup/mygroup/memory.max
 <span class="c"># অর্থাৎ এই cgroup-এর প্রসেসগুলো সর্বোচ্চ 512MB মেমোরি ব্যবহার করতে পারবে</span></pre>
 <div class="callout behind"><span class="tag">Docker-এর --memory/--cpus ফ্ল্যাগ আসলে এটাই সেট করে</span>
 <code>docker run --memory=512m --cpus=1.5 myapp</code> চালালে Docker নিজে কোনো জাদু resource-limiting করে না — এটা শুধু কার্নেলের cgroup filesystem-এ ঠিক এই মানগুলো লিখে দেয় (<code>memory.max</code>, <code>cpu.max</code>)। এরপর kernel নিজেই নিশ্চিত করে সেই cgroup-এর প্রসেসগুলো সীমার বাইরে গেলে কী হবে — মেমোরির ক্ষেত্রে OOM killer সেই cgroup-এর একটা প্রসেসকে মেরে ফেলে, CPU-এর ক্ষেত্রে scheduler সেই cgroup-কে throttle করে। Docker এখানে শুধু একটা সুবিধাজনক frontend, আসল enforcement সম্পূর্ণভাবে kernel-এর।</div>
+<div class="callout behind"><span class="tag">OOM killer ঠিক কোন প্রসেসটাকে বেছে মারে</span>
+cgroup memory limit (<code>memory.max</code>) ছাড়িয়ে গেলে OOM killer সেই cgroup-এর <b>একটা</b> প্রসেসকে মেরে বাকিদের বাঁচায় — কিন্তু "কোনটা" এলোমেলোভাবে ঠিক হয় না। প্রতিটা প্রসেসের একটা <code>oom_score</code> থাকে (<code>/proc/&lt;pid&gt;/oom_score</code>-এ দেখা যায়), যা মূলত সেই প্রসেস কতটুকু মেমোরি ব্যবহার করছে তার ওপর ভিত্তি করে হিসাব হয় — সবচেয়ে বেশি মেমোরি-ভোগী প্রসেসের score সবচেয়ে বেশি, আর kernel সবচেয়ে উঁচু score-ওয়ালা প্রসেসটাকেই টার্গেট করে। ফলে একটা container-এ যদি একটা memory-leak হওয়া background worker আর তুলনামূলক হালকা একটা web server একসাথে চলে, worker-টাই সাধারণত মারা পড়ে, web server না — "যে সবচেয়ে বেশি জায়গা দখল করে আছে সে-ই আগে যায়" এই নীতিতে। কোনো নির্দিষ্ট প্রসেসকে ইচ্ছাকৃতভাবে বেশি/কম ঝুঁকিতে রাখতে <code>/proc/&lt;pid&gt;/oom_score_adj</code> (<code>-1000</code> থেকে <code>1000</code>) ম্যানুয়ালি বদলানো যায় — <code>-1000</code> মানে "এই প্রসেসকে কখনো OOM killer মারবে না" (সতর্কতার সাথে ব্যবহার করুন, কারণ এতে বাকি সবার ওপর চাপ বেড়ে যায়)।
+</div>
 
 <h3>Union/Layered Filesystem — Image কীভাবে সংরক্ষিত থাকে</h3>
 <p>একটা container image তৈরি হয় stacked, read-only <span class="kw">layer</span>-এর সমষ্টি হিসেবে — Dockerfile-এর প্রতিটা instruction (<code>RUN</code>, <code>COPY</code>) একটা নতুন layer তৈরি করে। কনটেইনার চালু হওয়ার সময় এই সব read-only layer-এর উপর একটা পাতলা, writable layer বসানো হয় (<span class="kw">copy-on-write</span>) — চলমান কনটেইনার যা কিছু বদলায় (নতুন ফাইল, edit) তা এই টপ লেয়ারেই যায়, নিচের read-only layer-গুলো অক্ষত থাকে।</p>

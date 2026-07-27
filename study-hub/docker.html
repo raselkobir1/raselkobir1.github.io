@@ -667,6 +667,8 @@ services:
 secrets:
   db_password:
     file: ./db_password.txt</pre>
+<div class="callout mistake"><span class="tag">রানটাইমেও env var secret কেন যথেষ্ট নিরাপদ নয়</span>
+<code>docker run -e DB_PASSWORD=...</code> secret ইমেজে bake হয় না ঠিকই, কিন্তু তারপরও এটা <code>docker inspect</code>-এর আউটপুটে plaintext দেখা যায়, container-এর ভেতর থেকে <code>/proc/&lt;pid&gt;/environ</code>-এ readable থাকে, আর app crash/exception log-এ পুরো environment dump করলে সেখানেও চলে যেতে পারে। Secret <b>ফাইল</b> (<code>/run/secrets/...</code>) এসবের কোথাও দেখা যায় না ও file permission দিয়ে সীমিত করা যায় — এজন্যই env var নয়, file-based secret (বা secret manager) বেশি নিরাপদ ধরা হয়।</div>
 
 <h3>Security Best Practices</h3>
 <div class="callout best"><span class="tag">Checklist</span>
@@ -696,6 +698,8 @@ secrets:
   --security-opt no-new-privileges \    <span class="c"># privilege escalation বন্ধ</span>
   --memory 512m --cpus 1.5 \
   myapi:1.0</pre>
+<div class="callout behind"><span class="tag">Linux Capability আসলে কী</span>
+প্রথাগতভাবে root user মানে "সব পারে" — কিন্তু Linux kernel root-এর ক্ষমতাকে ছোট ছোট <span class="kw">capability</span>-তে ভাগ করেছে (যেমন <code>NET_BIND_SERVICE</code> = 1024-এর নিচে port bind করা, <code>SYS_ADMIN</code> = mount/system config বদলানো, <code>CHOWN</code> = যেকোনো ফাইলের owner বদলানো)। Docker container ডিফল্টভাবে root user হলেও <b>সব</b> capability পায় না — একটা ছোট নিরাপদ default subset পায় (~১৪টা)। <code>--cap-drop ALL</code> দিয়ে সেই default subset-ও বাদ দিয়ে শূন্য থেকে শুরু করে, app-এর সত্যিই যা লাগে শুধু সেটুকু <code>--cap-add</code> দিয়ে ফিরিয়ে দেওয়া হয় — ফলে container escape হলেও attacker-এর হাতে কার্যত কোনো ক্ষমতা থাকে না।</div>
 <div class="callout best"><span class="tag">Port exposure — শুধু যা দরকার</span>
 Database/internal service-এর port <b>পুরো network-এ খুলবেন না</b>। দরকার হলে শুধু localhost-এ bind করুন: <code>-p 127.0.0.1:5432:5432</code> — তাহলে শুধু host থেকেই access। <code>-p 5432:5432</code> (মানে <code>0.0.0.0</code>) দিলে DB বাইরের সবার কাছে খুলে যায় — production-এ বিপজ্জনক।</div>
 </template>
@@ -722,6 +726,16 @@ docker tag myapi:1.0 myreg.azurecr.io/myapi:1.0
 docker push myreg.azurecr.io/myapi:1.0</pre>
 <div class="callout best"><span class="tag">Best practice</span>
 CI pipeline-এ commit SHA বা semantic version দিয়ে tag করে push করুন (<code>myapi:1.4.2</code>, <code>myapi:git-a1b2c3</code>) — কখনো শুধু <code>latest</code> নয়, যাতে ঠিক কোন build production-এ আছে তা জানা যায়।</div>
+
+<h3>Push আসলে কী পাঠায় — Layer Reuse</h3>
+<p>Push করলে পুরো image আবার আপলোড হয় না। Registry প্রতিটা layer-কে তার content hash (<span class="kw">digest</span>) দিয়ে চেনে — push শুরুর আগে Docker registry-কে জিজ্ঞেস করে কোন layer-এর digest ইতিমধ্যে ওখানে আছে; যেগুলো আগে থেকেই আছে (যেমন <code>FROM aspnet:8.0</code>-এর base layer) সেগুলো <b>skip</b> হয়ে যায়, শুধু নতুন/বদলানো layer আপলোড হয়।</p>
+<div class="callout why"><span class="tag">তাই দ্বিতীয় push দ্রুত</span>
+Code-এ ছোট পরিবর্তন করে rebuild+push করলে output-এ বেশিরভাগ layer-এর পাশে "Layer already exists" দেখবেন — মাত্র ১-২টা layer আসলে আপলোড হয়, কারণ base image ও dependency layer আগে থেকেই registry-তে জমা আছে। এজন্যই Dockerfile চ্যাপ্টারের <code>.csproj</code> আলাদা করে <code>restore</code> layer আগে রাখার কৌশল শুধু local build cache নয় — push/pull-ও দ্রুত করে।</div>
+
+<h3>একই Tag, ভিন্ন Architecture — Manifest List</h3>
+<p>Dockerfile চ্যাপ্টারে দেখা <code>docker buildx build --platform linux/amd64,linux/arm64 --push</code> একই <code>rasel/myapi:1.0</code> tag-এর নিচে amd64 ও arm64-এর জন্য দুটো <b>ভিন্ন image</b> push করে। তাহলে Mac (ARM) আর x86 Linux server দুটোতেই <code>docker pull rasel/myapi:1.0</code> করলে সঠিক architecture-টাই কীভাবে আসে?</p>
+<div class="callout behind"><span class="tag">পর্দার আড়ালে — Manifest List / Image Index</span>
+Registry tag-এর নিচে একটা image সরাসরি না রেখে একটা <b>manifest list</b> (OCI image index) রাখে — এতে প্রতিটা architecture-এর জন্য আলাদা image digest-এর একটা ম্যাপ থাকে (amd64 → digest A, arm64 → digest B)। <code>docker pull</code>-এর সময় client নিজের platform (host-এর CPU architecture) জানিয়ে দেয়, registry সেই অনুযায়ী সঠিক digest বেছে সেই একটা image-ই পাঠায়। এজন্যই একই tag ভিন্ন architecture-এর host-এ ভিন্ন আলাদা tag ছাড়াই ঠিক image টেনে আনে।</div>
 </template>
 
 <template data-page="compose">

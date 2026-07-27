@@ -309,6 +309,9 @@ AMQP method কয়েকটা উদাহরণ (client → broker):
 <div class="callout behind"><span class="tag">Default exchange</span>
 প্রতিটা RabbitMQ-তে একটা নামহীন (<code>""</code>) default direct exchange থাকে — যার সাথে প্রতিটা queue তার নিজের নামে auto-bound। তাই <code>basic.publish("", "myqueue", ...)</code> দিলে সরাসরি <code>myqueue</code>-তে যায়। শেখার সময় সহজ, কিন্তু production-এ নিজের exchange বানানোই ভালো (নিয়ন্ত্রণ থাকে)।</div>
 
+<div class="callout behind"><span class="tag">৫ম ধরন — consistent-hash exchange (plugin)</span>
+উপরের চারটাই core AMQP-তে built-in। একটা প্লাগ-ইন (<code>rabbitmq_consistent_hash_exchange</code>) আরেকটা কাজের ধরন দেয়: routing key (বা header) hash করে সেই hash-এর ভিত্তিতে queue-গুলোর মধ্যে <b>একটাকে</b> বেছে message পাঠায় — একই key সবসময় একই queue-তে যায়, কিন্তু ভিন্ন key ছড়িয়ে যায় সব queue-তে (load spread)। এটাই সেই কৌশল যা দিয়ে <b>per-key ordering</b> পাওয়া যায় partition-এর মতো (Kafka-র partition key-এর সমতুল্য) — বিস্তারিত Producer/Consumer অধ্যায়ে ordering আলোচনায়।</div>
+
 <h4>Topic exchange — wildcard routing</h4>
 <p>Routing key কয়েকটা শব্দে ভাগ, <b>.</b> দিয়ে আলাদা (যেমন <code>order.created.eu</code>)। Binding key-তে দুটো wildcard:</p>
 <ul>
@@ -511,6 +514,8 @@ Consumer message পেয়েছে কিন্তু এখনো ack/nack 
 <li><b>হালকা/দ্রুত কাজ</b> (হাজারে হাজার small message): বড় prefetch (যেমন 50–300) — round-trip কমে throughput বাড়ে।</li>
 <li>শুরুর নিরাপদ মান ~<b>20–50</b>, তারপর latency/throughput দেখে সমন্বয়।</li>
 </ul></div>
+<div class="callout behind"><span class="tag"><code>global</code> flag — prefetch কার জন্য গোনা হয়</span>
+<code>basic.qos(prefetchCount, global)</code>-এ একটা তৃতীয় parameter আছে যা প্রায়ই উপেক্ষা করা হয়। <code>global=false</code> (ডিফল্ট, এবং প্রায় সবসময় যা চাই) মানে limit-টা channel-এর <b>প্রতিটা consumer আলাদাভাবে</b> মেনে চলে — দুইটা consumer একই channel-এ থাকলেও প্রত্যেকে নিজের N-টা করে unacked message পায়। <code>global=true</code> দিলে limit পুরো <b>channel-এর সব consumer মিলিয়ে একসাথে</b> — একটা consumer বেশি নিলে বাকিরা কম পায়, যা সাধারণত অনিচ্ছাকৃত এবং debug করা কঠিন। এজন্যই কোডে সবসময় স্পষ্ট করে <code>global:false</code> লেখা হয়।</div>
 </template>
 
 <template data-page="dlx">
@@ -600,8 +605,19 @@ channel.QueueDeclare("billing", durable:true, exclusive:false, autoDelete:false,
 <tr><td><span class="kw">Disk free limit</span> (<code>disk_free_limit</code>)</td><td>disk কমে গেলে persistent publish block</td></tr>
 <tr><td>Credit-based flow control</td><td>ভেতরে দ্রুত প্রক্রিয়া দ্রুত-প্রেরণকারীকে ধীর করে</td></tr>
 </table>
+<div class="diagram"><pre>
+স্বাভাবিক অবস্থা:
+  Publisher ──publish──► Broker (memory ~২৫%) ──deliver──► Consumer      ✅ চলছে
+
+Memory watermark পার (যেমন ৪০% RAM):
+  Publisher ──publish──✖  [BLOCKED — broker সাড়া দেয় না]      Broker (memory ~৪৫%)
+                                                                     │  consumer ধীরে ধীরে drain করছে
+                                                                     ▼
+  memory watermark-এর নিচে নামলেই ─────────────────────► broker স্বয়ংক্রিয় unblock করে
+  Publisher ──publish──► Broker                          (connection.unblocked)         ✅ আবার চলছে
+</pre></div>
 <div class="callout behind"><span class="tag">connection.blocked</span>
-Publisher block হলে .NET client-এ <code>ConnectionBlocked</code> event আসে। এজন্য <b>publish ও consume আলাদা connection-এ</b> রাখা জরুরি — নাহলে publisher block হলে একই connection-এর consumer-ও আটকে যায়, আর queue কখনো খালি হয় না (deadlock-সদৃশ)।</div>
+Publisher block হলে .NET client-এ <code>ConnectionBlocked</code> event আসে। এজন্য <b>publish ও consume আলাদা connection-এ</b> রাখা জরুরি — নাহলে publisher block হলে একই connection-এর consumer-ও আটকে যায়, আর queue কখনো খালি হয় না (deadlock-সদৃশ)। ব্লক চিরস্থায়ী নয়: broker কেবল <b>memory/disk আবার watermark-এর নিচে নামলে</b> নিজে থেকেই connection unblock করে (<code>ConnectionUnblocked</code> event) এবং publish আবার স্বাভাবিক চলে — এজন্যই consumer-কে সচল রাখা (আলাদা connection-এ) এত জরুরি, নাহলে memory কখনো নামবে না।</div>
 
 <h3>Performance Tuning — throughput বাড়ানোর নিয়ম</h3>
 <table>
@@ -639,6 +655,17 @@ Classic queue-এর ডেটা <b>একটা</b> node-এ থাকে (য
 </table>
 <div class="callout best"><span class="tag">Best practice</span>
 নতুন production system-এ গুরুত্বপূর্ণ queue-এর জন্য <b>quorum queue</b> ব্যবহার করুন (বিজোড় সংখ্যক replica, যেমন 3 বা 5)। পুরনো <b>classic mirrored queue deprecated</b> — quorum তার আধুনিক প্রতিস্থাপন।</div>
+
+<h3>Network Partition ও Split-Brain</h3>
+<p>Cluster-এর node-গুলো যদি একে অপরকে network-এ <b>না দেখতে পায়</b> (কিন্তু নিজেরা নিজেরা এবং client-দের কাছে ঠিকই বেঁচে আছে) — একে বলে <span class="kw">network partition</span>। বিপদটা হলো: partition-এর দুই পাশই নিজেকে "আমিই আসল cluster" ভেবে <b>স্বাধীনভাবে</b> read/write গ্রহণ করতে থাকে — একে বলে <span class="kw">split-brain</span>। পরে network ফিরলে দুই পাশের data মেলানো (reconcile) কঠিন বা অসম্ভব।</p>
+<table>
+<tr><th>Partition handling mode</th><th>আচরণ</th></tr>
+<tr><td><code>ignore</code> (default)</td><td>কিছুই করে না — দুই পাশই চলতে থাকে; পরে reconnect হলে RabbitMQ একটা পাশের data রেখে বাকিটা phasing out করে (data loss সম্ভব)</td></tr>
+<tr><td><code>pause_minority</code></td><td>যে পাশে node সংখ্যা <b>কম</b> (minority), সেই পাশ নিজেই নিজেকে pause করে দেয় (unavailable) — majority পাশ একাই চালু থাকে, split-brain ঠেকে</td></tr>
+<tr><td><code>autoheal</code></td><td>partition ধরা পড়লে RabbitMQ একটা পাশকে "বিজয়ী" ঘোষণা করে বাকি node restart করে দেয়</td></tr>
+</table>
+<div class="callout best"><span class="tag">সুপারিশ</span>
+Production cluster-এ <code>cluster_partition_handling = pause_minority</code> সেট করুন (odd সংখ্যক node, যেমন 3 বা 5, যাতে majority/minority স্পষ্ট থাকে)। <b>Quorum queue</b> (Raft) এমনিতেই বাড়তি সুরক্ষা দেয়: Raft-এ লেখা চলতে হলে সংখ্যাগরিষ্ঠ replica-র সম্মতি লাগে, তাই minority পাশ নিজে থেকেই ঐ queue-তে কোনো write গ্রহণ করতে পারে না — partition handling policy যাই হোক, quorum queue নিজে থেকে split-brain এড়ায়।</div>
 
 <h3>Federation ও Shovel — দূরত্ব পেরোনো</h3>
 <p>Cluster একই datacenter-এর low-latency network ধরে নেয়। ভিন্ন datacenter/region-এর broker যুক্ত করতে:</p>

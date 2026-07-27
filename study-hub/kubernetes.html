@@ -405,6 +405,30 @@ spec:
 <div class="callout mistake"><span class="tag">Common mistake — Ingress object বানালেই কাজ হয়ে যাবে ভাবা</span>
 Ingress object নিজে শুধু একটা <b>নিয়মের ঘোষণা</b> — এটা বাস্তবায়ন করার জন্য cluster-এ একটা <span class="kw">Ingress Controller</span> (যেমন NGINX Ingress Controller, Traefik) আলাদাভাবে install থাকতে হবে। Ingress Controller ছাড়া Ingress object তৈরি করলে কিছুই ঘটবে না — কোনো traffic route হবে না।</div>
 
+<h3>TLS — Ingress-এ HTTPS Termination</h3>
+<p>উপরের উদাহরণে শুধু plain HTTP রুটিং দেখানো হয়েছে — বাস্তবে production traffic HTTPS-এই আসে। Ingress-এ একটা <code>tls</code> ব্লক যোগ করলে Ingress Controller-ই client-এর সাথে TLS handshake সামলায় (<span class="kw">TLS termination</span>) — সার্টিফিকেট একটা সাধারণ Kubernetes <code>Secret</code> (type <code>kubernetes.io/tls</code>) হিসেবে রাখা হয়:</p>
+<pre>apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myapi-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod   <span class="c"># সার্টিফিকেট স্বয়ংক্রিয়ভাবে renew করতে</span>
+spec:
+  tls:
+    - hosts: [api.mycompany.com]
+      secretName: myapi-tls              <span class="c"># kubernetes.io/tls টাইপের Secret — cert + private key</span>
+  rules:
+    - host: api.mycompany.com
+      http:
+        paths:
+          - path: /orders
+            pathType: Prefix
+            backend: { service: { name: order-svc, port: { number: 80 } } }</pre>
+<div class="callout why"><span class="tag">সার্টিফিকেট হাতে renew না করে <code>cert-manager</code>?</span>
+TLS certificate-এর মেয়াদ সাধারণত কয়েক মাস — হাতে renew করলে ভুলে যাওয়ার/দেরির ঝুঁকি থাকে (expired cert মানে পুরো site down)। <span class="kw">cert-manager</span> নামের cluster-এ চলা একটা controller Ingress-এর <code>tls.secretName</code> লক্ষ্য রাখে, Let's Encrypt-এর মতো একটা ACME provider থেকে স্বয়ংক্রিয়ভাবে সার্টিফিকেট নিয়ে সেই Secret-এ বসিয়ে দেয়, মেয়াদ শেষ হওয়ার আগেই নিজে থেকে renew করে — ঠিক Kubernetes-এর বাকি সবকিছুর মতোই এটাও declarative reconciliation দিয়ে চালিত।</div>
+<div class="callout behind"><span class="tag">Termination-এর পরে ট্রাফিক কীভাবে যায়</span>
+Ingress Controller client-এর সাথে HTTPS নিয়ে কথা বলে, কিন্তু ভেতরে (cluster-এর ভেতর, Service পর্যন্ত) সাধারণত সাধারণ HTTP-ই ব্যবহার করে — encryption-এর "কাজ" ওখানেই শেষ, ভেতরের নেটওয়ার্ক নিজেই বিশ্বস্ত ধরে নেওয়া হয়। এই কারণেই app নিজে দেখলে request-কে <code>http</code> মনে হয়, client আসলে <code>https</code> ব্যবহার করলেও — dotnet চ্যাপ্টারে এই সমস্যার সমাধান (<code>ForwardedHeaders</code>) বিস্তারিত দেখুন।</div>
+
 <h3>NetworkPolicy — Pod-এর মধ্যে ফায়ারওয়াল</h3>
 <div class="callout mistake"><span class="tag">ডিফল্ট আচরণ — সব Pod সবার সাথে কথা বলতে পারে</span>
 কোনো NetworkPolicy না থাকলে, cluster-এর <b>যেকোনো Pod যেকোনো Pod-এর সাথে</b> কথা বলতে পারে (namespace নির্বিশেষে)। এর মানে একটা compromised frontend Pod সরাসরি database Pod-এও পৌঁছাতে পারে। <span class="kw">NetworkPolicy</span> দিয়ে স্পষ্টভাবে বলে দিতে হয় কোন Pod কার সাথে কথা বলতে পারবে — এটাই Kubernetes-এর মাইক্রো-সেগমেন্টেশন ফায়ারওয়াল স্তর।</div>
@@ -417,6 +441,8 @@ spec:
   ingress:
     - from:
         - podSelector: { matchLabels: { app: myapi } }   <span class="c"># শুধু myapi Pod থেকে ইনকামিং allow</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake — NetworkPolicy যে শুধু "যোগ" করে না, "বাদও" দেয় তা না বোঝা</span>
+একটা গুরুত্বপূর্ণ নিয়ম: কোনো Pod যদি <b>কোনো</b> NetworkPolicy-এর <code>podSelector</code>-এ (নির্দিষ্ট direction-এ, যেমন ingress) একবার ধরা পড়ে, তাহলে সেই direction-এ <b>শুধু</b> explicitly allow করা traffic-ই ঢুকতে পারবে — বাকি সব, যা আগে ডিফল্টভাবে allow ছিল, এখন deny হয়ে যায়। উপরের উদাহরণে <code>db-allow-only-api</code> policy শুধু <code>myapi</code> থেকে ইনকামিং allow করেনি — এটা <b>একই সাথে</b> postgres Pod-এ বাকি সব ইনকামিং ট্রাফিকও বন্ধ করে দিয়েছে (monitoring agent, <code>kubectl exec</code> থেকে debug curl — সবকিছু), যদি আলাদাভাবে সেগুলোর জন্য নিয়ম যোগ না করা হয়। NetworkPolicy তাই "additive allow-list" নয় — বরং "একবার touch করলেই বাকি সব বন্ধ" — না জেনে apply করলে নিজের monitoring/debug টুলই ব্লক হয়ে যেতে পারে।</div>
 </template>
 
 <template data-page="storage">
@@ -458,6 +484,11 @@ spec:
 <h3>StorageClass — Dynamic Provisioning</h3>
 <p><span class="kw">StorageClass</span> ছাড়া admin-কে হাতে হাতে প্রতিটা PV তৈরি করতে হতো। StorageClass একটা "storage-এর টেমপ্লেট" সংজ্ঞায়িত করে (কোন provisioner, কোন disk type) — PVC তৈরি হলেই প্রয়োজনমতো স্বয়ংক্রিয়ভাবে একটা নতুন PV তৈরি হয়ে যায়।</p>
 
+<h3>Reclaim Policy — PVC মুছলে ডেটার কী হয়</h3>
+<div class="callout mistake"><span class="tag">Common mistake — PVC মুছলেই ডেটা চিরকালের জন্য গেল ভাবা (বা উল্টোটা)</span>
+একটা PVC মুছে ফেললে তার সাথে bound থাকা PV-এর কী হবে তা নির্ভর করে PV-এর <code>reclaimPolicy</code>-এর ওপর। <code>Delete</code> (dynamic provisioning-এ প্রায়ই ডিফল্ট) মানে PVC মোছার সাথে সাথেই পেছনের cloud disk-ও মুছে যায় — ডেটা ফেরানো অসম্ভব। <code>Retain</code> মানে PV আর তার ডেটা টিকে থাকে (status <code>Released</code> হয়ে যায়), কিন্তু নতুন কোনো PVC স্বয়ংক্রিয়ভাবে সেটার সাথে bind হবে না — admin-কে হাতে সেটা আবার ব্যবহারযোগ্য করতে হয়। Database-এর মতো critical data-তে <code>Retain</code> নিরাপদ, কিন্তু cloud provider-এর ডিফল্ট StorageClass প্রায়ই <code>Delete</code>-ই রাখে — deploy করার আগেই <code>kubectl get storageclass</code> দিয়ে যাচাই করে নিন।</div>
+<pre>kubectl patch pv &lt;pv-name&gt; -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}'   <span class="c"># প্রয়োজনে বদলে দেওয়া</span></pre>
+
 <h3>StatefulSet — যখন Pod-গুলো একে অপরের থেকে ভিন্ন</h3>
 <div class="callout why"><span class="tag">Deployment কেন Database-এর জন্য যথেষ্ট নয়</span>
 Deployment-এর সব Pod <b>একে অপরের সাথে বিনিময়যোগ্য (interchangeable)</b> — কোনটা কোনটা তা গুরুত্বপূর্ণ নয়, সবাই একই কাজ করে। কিন্তু একটা database cluster-এ (যেমন replicated PostgreSQL) প্রতিটা replica-র নিজস্ব, স্থায়ী পরিচয় থাকা দরকার — <code>db-0</code> primary, <code>db-1</code>/<code>db-2</code> replica — এবং প্রতিটার নিজস্ব storage (একটার ডেটা আরেকটার সাথে গুলিয়ে গেলে চলবে না)। <span class="kw">StatefulSet</span> ঠিক এই দুটো জিনিস guarantee করে।</div>
@@ -468,6 +499,20 @@ Deployment-এর সব Pod <b>একে অপরের সাথে বিন
 <tr><td>Startup order</td><td>সমান্তরালে, যেকোনো ক্রমে</td><td>ক্রমানুসারে (<code>db-0</code> আগে, তারপর <code>db-1</code>...)</td></tr>
 <tr><td>ব্যবহার</td><td>Stateless app (web API)</td><td>Database, message queue, distributed cache (Redis Cluster, Kafka, PostgreSQL)</td></tr>
 </table>
+<div class="callout behind"><span class="tag"><code>volumeClaimTemplates</code> — কীভাবে প্রতিটা Pod নিজস্ব PVC পায়</span>
+Deployment-এ একটাই PVC সব Pod শেয়ার করে (অথবা কোনোটাই না) — কিন্তু StatefulSet-এ Pod-প্রতি আলাদা PVC হাতে ৩ বার লিখতে হয় না। <code>spec.volumeClaimTemplates</code>-এ একটাই PVC template দিলে, StatefulSet controller প্রতিটা Pod (<code>db-0</code>, <code>db-1</code>...) তৈরির সময় নিজে থেকেই একটা নতুন PVC বানায়, নাম দেয় <code>&lt;volumeName&gt;-&lt;podName&gt;</code> প্যাটার্নে (যেমন <code>data-db-0</code>) — আর <code>db-0</code> Pod মুছে পুনরায় তৈরি হলেও ঠিক সেই <code>data-db-0</code> PVC-এর সাথেই আবার bind হয়, অন্য কোনো Pod-এর ডেটার সাথে মিশে যায় না।</div>
+<pre>apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: db }
+spec:
+  serviceName: db          <span class="c"># headless Service — আগের চ্যাপ্টার দেখুন</span>
+  replicas: 3
+  volumeClaimTemplates:      <span class="c"># Deployment-এ এই ফিল্ড নেই — এটাই StatefulSet-স্বতন্ত্র</span>
+    - metadata: { name: data }
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: standard-ssd
+        resources: { requests: { storage: 10Gi } }</pre>
 <div class="callout behind"><span class="tag">নেটওয়ার্কে পৌঁছানো — <code>serviceName</code> ও Headless Service</span>
 StatefulSet-এর প্রতিটা Pod (<code>db-0</code>, <code>db-1</code>...) এই স্থায়ী নাম দিয়ে network-এ আসলে পৌঁছানো যায় একটা <span class="kw">headless Service</span> (<code>clusterIP: None</code>)-এর মাধ্যমে, যা StatefulSet spec-এর <code>serviceName</code> ফিল্ডে বলে দিতে হয় — বিস্তারিত আগের (Networking) চ্যাপ্টারে দেখুন।</div>
 </template>
@@ -773,6 +818,21 @@ kubectl exec -it myapi-7d9f-x2k -- sh  <span class="c"># ভেতরে shell (
 
 <h3>Metrics — Prometheus ও Grafana (concept)</h3>
 <p><span class="kw">metrics-server</span> শুধু হালকা, বর্তমান মুহূর্তের CPU/memory (HPA-এর জন্য) দেয় — historical trend/alerting-এর জন্য নয়। Production-এ সাধারণত <span class="kw">Prometheus</span> (time-series মেট্রিক সংগ্রহ ও সংরক্ষণ) + <span class="kw">Grafana</span> (visualization dashboard) ব্যবহার হয়, application নিজে <code>/metrics</code> endpoint-এ Prometheus-format মেট্রিক expose করে (যেমন .NET-এ <code>prometheus-net</code> লাইব্রেরি দিয়ে)।</p>
+
+<h3>Distributed Tracing — একটা Request কোথায় সময় নিচ্ছে</h3>
+<p>Log আর metric দুটোই এক-একটা Pod/service-কে আলাদাভাবে দেখায় — কিন্তু একটা user request যখন Ingress → <code>order-svc</code> → <code>payment-svc</code> → database হয়ে ঘোরে, প্রশ্ন থাকে: পুরো chain-এর ঠিক কোথায় সময় বেশি লাগছে, বা কোথায় error শুরু হয়েছে? <span class="kw">Distributed tracing</span> এই প্রশ্নের উত্তর দেয় — একটা request-এর জন্য একটা একক <span class="kw">trace ID</span> তৈরি হয়, প্রতিটা service সেই ID এগিয়ে দেয় (HTTP header হিসেবে) পরের কলে, আর প্রতিটা service-এর মধ্যে কাটানো সময়কে একটা <b>span</b> হিসেবে রেকর্ড করে।</p>
+<div class="diagram"><pre>
+Request → Ingress → order-svc → payment-svc → PostgreSQL
+             │           │            │            │
+     সব span-এই একই trace-id: abc123 এগিয়ে যায়
+             │           │            │            │
+   span ২ms   span ৫ms    span ৪৫ms ◀── সবচেয়ে বেশি সময় এখানে ──▶   span ৩ms
+</pre></div>
+<p><span class="kw">OpenTelemetry</span> (OTel) হলো ভাষা/vendor-নিরপেক্ষ একটা standard — .NET app-এ <code>OpenTelemetry.Extensions.Hosting</code> প্যাকেজ দিয়ে trace instrument করা যায়, আর সেই trace data Jaeger/Tempo-এর মতো একটা backend-এ পাঠিয়ে visualize করা যায়।</p>
+<div class="callout why"><span class="tag">Log আর Metric যথেষ্ট নয় কেন</span>
+Log বলে "payment-svc-এ একটা error হয়েছিল" — কিন্তু কোন user-এর কোন request-এর জন্য, আর সেই request অন্য কোন service দিয়ে ঘুরে এসেছিল, তা আলাদা আলাদা log line জোড়া লাগিয়ে বোঝা কঠিন, বিশেষ করে ৫-১০টা microservice জুড়ে। Metric বলে "payment-svc-এর p99 latency বেড়েছে" — কিন্তু ঠিক কোন downstream call-এর জন্য তা বলে না। Trace এই দুটোর ফাঁক পূরণ করে — একটা নির্দিষ্ট slow/failed request-এর সম্পূর্ণ পথ, প্রতিটা ধাপে কতটা সময়, এক জায়গায় দেখায়।</div>
+<div class="callout behind"><span class="tag">Trace context কীভাবে service-থেকে-service ছড়ায়</span>
+প্রতিটা outgoing HTTP call-এ OpenTelemetry instrumentation স্বয়ংক্রিয়ভাবে একটা <code>traceparent</code> header যোগ করে (W3C Trace Context standard) — পরের service সেই header পড়ে বুঝে নেয় এটা কোন trace-এর অংশ, নিজের span-টা একই trace-এ যোগ করে, আবার পরের কলে header এগিয়ে দেয়। dotnet চ্যাপ্টারে দেখা <code>HttpClientFactory</code>-দিয়ে করা service-to-service কলে এই header ইনজেকশন সাধারণত instrumentation library নিজেই স্বয়ংক্রিয়ভাবে করে দেয় — আলাদা করে হাতে কোড লিখতে হয় না।</div>
 
 <h3>Events — Kubernetes নিজে কী ভাবছে তা দেখা</h3>
 <pre>kubectl get events --sort-by=.lastTimestamp   <span class="c"># সাম্প্রতিক সব cluster event, সময়ক্রম অনুযায়ী</span></pre>

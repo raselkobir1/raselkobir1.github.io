@@ -315,6 +315,12 @@ Expired-event key আসলে <b>মুছে যাওয়ার সময�
 <tr><td><code>no</code></td><td>OS-এর ইচ্ছায়</td><td>দ্রুত, কম নিরাপদ</td></tr>
 </table>
 
+<h3>Non-blocking কীভাবে হয় — fork ও Copy-on-Write</h3>
+<p>Redis single-threaded, অথচ snapshot লেখা বা AOF rewrite করার সময় main thread block হয় না — কারণ Redis <code>fork()</code> দিয়ে একটা <b>child process</b> বানায়। OS copy-on-write (COW) ব্যবহার করে বলে fork মুহূর্তে child পুরো memory কপি করে না — parent ও child একই memory page শেয়ার করে; child শুধু snapshot লিখে যায়, আর parent normal command চালিয়ে যায়। কোনো page-এ write হলে তখনই ঐ page-এর একটা নতুন কপি বানানো হয় (তাই নাম copy-on-write)।</p>
+<div class="callout behind"><span class="tag">তাহলে fork-এর সময় memory spike হয় কেন</span>
+Snapshot চলাকালীন parent process যদি অনেক key-তে write করতে থাকে, প্রতিটা বদলে যাওয়া page-এর নতুন কপি লাগে — write-heavy workload-এ RAM ব্যবহার সাময়িকভাবে প্রায় দ্বিগুণ হয়ে যেতে পারে। তাই dataset বড় হলে ও maxmemory-এর কাছাকাছি থাকলে <code>BGSAVE</code>/AOF rewrite চলাকালীন OOM ঝুঁকি থাকে — এই কারণেই troubleshooting-এ "RDB fork" latency ও memory spike-এর সাধারণ কারণ হিসেবে আসে।</div>
+<p><b>AOF rewrite (<code>BGREWRITEAOF</code>):</b> AOF log প্রতিটা write command রাখে বলে সময়ের সাথে অস্বাভাবিক বড় হয়ে যায় (যেমন একই counter ১০ লাখ বার <code>INCR</code> হলে ফাইলে ১০ লাখ লাইন, অথচ শেষ ফলাফল একটাই সংখ্যা)। তাই Redis মাঝেমধ্যে <b>rewrite</b> করে — একই fork/COW কৌশলে বর্তমান dataset থেকে সর্বনিম্ন command-সেট দিয়ে একটা নতুন, ছোট AOF ফাইল বানায়, তারপর পুরনোটার বদলে সেটা ব্যবহার শুরু করে। এটাও child process-এ হয় বলে main thread block হয় না, তবে বড় dataset-এ CPU/disk I/O চাপ সাময়িকভাবে বাড়ায়।</p>
+
 <h3>RDB বনাম AOF — কোনটা</h3>
 <table>
 <tr><th></th><th>RDB</th><th>AOF</th></tr>
@@ -378,6 +384,8 @@ XLEN orders
 XGROUP CREATE orders billing 0
 XREADGROUP GROUP billing worker1 COUNT 10 STREAMS orders ">"
 XACK orders billing 1690000000000-0      <span class="c"># process শেষে ack</span></pre>
+<div class="callout behind"><span class="tag">Consumer ack না করেই crash করলে?</span>
+<code>XREADGROUP</code> দিয়ে message পড়া মাত্র সেটা ঐ consumer-এর <b>Pending Entries List (PEL)</b>-এ যোগ হয় — অর্থাৎ delivered কিন্তু এখনো <code>XACK</code> হয়নি এমন message হিসেবে চিহ্নিত থাকে। worker crash করে ack করার আগেই থেমে গেলে message হারিয়ে যায় না, PEL-এ পড়ে থাকে। <code>XPENDING orders billing</code> দিয়ে এসব unacknowledged message দেখা যায়, আর <code>XCLAIM</code> (বা নতুন <code>XAUTOCLAIM</code>) দিয়ে অন্য একটা জীবিত consumer সেগুলো নিজের নামে claim করে আবার process করতে পারে — এভাবেই Stream consumer group "at-least-once delivery" নিশ্চিত করে।</div>
 <table>
 <tr><th></th><th>Pub/Sub</th><th>Streams</th></tr>
 <tr><td>Persist</td><td>না</td><td>হ্যাঁ</td></tr>
@@ -463,6 +471,8 @@ Pipeline শুধু network optimization — command গুলো batched, ক
 
 <h3>Cluster — horizontal sharding</h3>
 <p>Dataset একটা node-এর RAM-এ না আঁটলে <span class="kw">Redis Cluster</span> — data <b>16384 hash slot</b>-এ ভাগ হয়ে একাধিক master node-এ ছড়িয়ে থাকে (প্রতি master-এর নিজের replica)। Key-এর hash অনুযায়ী কোন slot/node তা ঠিক হয়। এতে memory ও throughput দুটোই scale করে।</p>
+<div class="callout behind"><span class="tag">কোন key কোন slot-এ যায়, কীভাবে ঠিক হয়</span>
+প্রতিটা key-এর জন্য Redis <code>CRC16(key) mod 16384</code> হিসাব করে একটা slot number (0–16383) বের করে। প্রতিটা master node শুরুতেই কিছু slot-range দায়িত্ব নেয় (যেমন node A: 0–5460, node B: 5461–10922...), তাই client নিজেই এই হিসাব করে বুঝে যায় key কোন node-এ পাঠাতে হবে (ভুল node-এ গেলে সেই node <code>MOVED</code> reply দিয়ে সঠিক node-এর দিকে নির্দেশ করে)। নতুন node যোগ/বাদ দিলে শুধু কিছু slot অন্য node-এ migrate করলেই হয় — key-দের হ্যাশ বদলায় না বলে পুরো dataset পুনর্বিন্যাস লাগে না।</div>
 <table>
 <tr><th>দরকার</th><th>সমাধান</th></tr>
 <tr><td>Read scale + redundancy</td><td>Replication</td></tr>
@@ -530,6 +540,8 @@ EVAL "if redis.call('GET',KEYS[1])==ARGV[1] then return redis.call('DEL',KEYS[1]
 <li>Token যাচাই ছাড়া <code>DEL</code> — আপনার TTL শেষ হয়ে অন্য কেউ lock নিয়েছে, আপনি ভুল করে তারটা মুছে ফেললেন। তাই release-এ Lua দিয়ে token মিলিয়ে DEL।</li>
 <li>একক Redis-এ lock "best-effort"; কড়া correctness দরকার হলে <b>Redlock</b> (একাধিক independent node) বিবেচনা করুন (তবু সীমাবদ্ধতা আছে)।</li>
 </ul></div>
+<div class="callout behind"><span class="tag">Redlock আসলে কী</span>
+একটা মাত্র Redis instance-এ lock নিলে সেই instance down/network-partition হলে lock-এর "সত্য অবস্থা" নিয়ে সংশয় থাকে। <b>Redlock</b> algorithm তাই <b>N</b>টা independent Redis master-এ (যেমন ৫টা, একে অপরের replica নয়, সম্পূর্ণ আলাদা) একসাথে lock নেওয়ার চেষ্টা করে; majority (যেমন ৫-এর মধ্যে ৩টা) থেকে একটা সময়সীমার মধ্যে lock পেলে তবেই ধরা হয় lock অর্জিত হয়েছে। এতে একটা instance down হলেও majority-তে lock টিকে থাকে বলে সিস্টেম চলতে থাকে। তবে এটা বিতর্কিত — clock drift বা GC/process pause-এর কারণে এটা কড়া correctness guarantee দেয় না বলে সমালোচনা আছে (Martin Kleppmann-এর বিখ্যাত বিশ্লেষণ); তাই সত্যিকারের strict correctness দরকার হলে fencing token বা dedicated lock service (etcd/ZooKeeper) বিবেচনা করা হয়।</div>
 
 <h3>Rate Limiting</h3>
 <p><b>Fixed window (সরল):</b> প্রতি user/window-এ একটা counter — <code>INCR</code>, প্রথমবার হলে <code>EXPIRE</code>। limit ছাড়ালে block।</p>

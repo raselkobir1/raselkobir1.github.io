@@ -325,6 +325,9 @@ JWT <b>এনক্রিপ্টেড নয়</b> — এটা শুধ�
 <div class="callout mistake"><span class="tag">বিখ্যাত দুর্বলতা — <code>alg: none</code> ও algorithm confusion</span>
 পুরনো কিছু JWT library token-এর header-এ থাকা <code>alg</code> ফিল্ড অন্ধভাবে বিশ্বাস করে ঠিক সেই algorithm দিয়েই verify করত। Attacker তখন token-এর header বদলে <code>alg: "none"</code> বসিয়ে signature সম্পূর্ণ বাদ দিয়ে পাঠাতো, বা RS256-expected জায়গায় HS256 বসিয়ে <b>public key-কেই HMAC secret হিসেবে ব্যবহার করে</b> সাইন করে ফেলত (public key তো সবাই জানে!)। আধুনিক library এটা ঠিক করেছে server-সাইডে <b>প্রত্যাশিত algorithm hard-code করে</b> — token-এর ভেতরের <code>alg</code> ফিল্ড কখনো অন্ধভাবে বিশ্বাস না করে।</div>
 
+<div class="callout behind"><span class="tag">JWKS-এ একাধিক key থাকে কেন — <code>kid</code> claim</span>
+Keycloak-এর signing key নিয়মিত rotate হয় (security best practice) — কিন্তু key বদলে গেলেই যদি পুরনো, এখনো-মেয়াদ-না-ফুরানো token verify করা বন্ধ হয়ে যায়, তাহলে সব active user সাথে সাথে logged out হয়ে যাবে। এজন্য JWKS endpoint (<code>/protocol/openid-connect/certs</code>) একসাথে একাধিক public key প্রকাশ করে — পুরনো ও নতুন, দুটোই কিছুদিন পাশাপাশি সক্রিয় থাকে। JWT header-এ একটা <code>kid</code> (Key ID) claim থাকে, যা বলে দেয় ঠিক কোন key দিয়ে এই টোকেন সাইন হয়েছে — verifier <code>kid</code> মিলিয়ে JWKS তালিকা থেকে সঠিক public key বেছে নেয়, বাকিগুলো উপেক্ষা করে। এভাবে key rotation zero-downtime-এ হয় — চলমান কোনো token বা user প্রভাবিত হয় না।</div>
+
 <h3>Access Token বনাম Refresh Token</h3>
 <table>
 <tr><th></th><th>Access Token</th><th>Refresh Token</th></tr>
@@ -377,6 +380,20 @@ Photo-printing app কখনো আপনার password দেখেই না�
 <div class="callout mistake"><span class="tag">কেন Password Grant ও Implicit Grant এখন এড়িয়ে চলা হয়</span>
 <b>Password Grant</b>-এ client app user-এর raw password দেখে ফেলে — এটাই OAuth2 যা প্রতিরোধ করতে চেয়েছিল তার বিপরীত; শুধু সেই client-কেই সম্পূর্ণ বিশ্বাস করা যায় এমন সংকীর্ণ ক্ষেত্রে (নিজেদের প্রথম-পক্ষ legacy app migration) এটা ব্যবহারযোগ্য। <b>Implicit Grant</b>-এ access token সরাসরি browser URL-এর (fragment) মধ্যে দিয়ে আসত — browser history, referrer header, বা malicious script এই token পড়ে ফেলতে পারত, আর token refresh করাও কঠিন ছিল। আজ SPA-র জন্যও <b>Authorization Code + PKCE</b>-ই মান্য সুপারিশ (OAuth 2.1 খসড়ায় Implicit ও Password grant পুরোপুরি বাদ দেওয়া হয়েছে)।</div>
 
+<h3>Device Authorization Grant — বাস্তবে কীভাবে কাজ করে</h3>
+<p>টেবিলে নাম দেখা গেলেও এই grant-টা বাকিগুলোর থেকে আলাদা — এখানে ডিভাইসেই সরাসরি browser/keyboard দিয়ে সুবিধাজনক login করার উপায় নেই (Smart TV, CLI tool), তাই flow-টা দুই ডিভাইসে ভাগ হয়ে যায়:</p>
+<div class="diagram"><pre>
+1) Device (TV/CLI)   →  Auth Server: "আমাকে একটা device code দাও"
+2) Auth Server       →  Device: device_code + user_code (যেমন "WXYZ-1234") + verification_uri
+3) Device স্ক্রিনে দেখায়:  "https://.../device এ গিয়ে কোড WXYZ-1234 লিখুন"
+4) User তার ফোন/ল্যাপটপে সেই URL খুলে login করে, কোড বসিয়ে অনুমোদন দেয়
+5) এদিকে Device ব্যাকগ্রাউন্ডে বারবার (poll করে) auth server-কে জিজ্ঞেস করতে থাকে:
+     "device_code=... — token রেডি হয়েছে?"
+6) User অনুমোদন দেওয়ার পরের poll-এ Auth Server token ফেরত দেয়
+</pre></div>
+<div class="callout why"><span class="tag">কেন এই আলাদা flow দরকার</span>
+Smart TV বা CLI tool-এ password টাইপ করা কষ্টকর (on-screen keyboard দিয়ে একটা একটা অক্ষর বাছা), আর secure browser redirect handle করারও উপায় নেই। তাই "hard-to-type" ডিভাইসে login UI না দেখিয়ে, user-এর হাতের কাছের সহজ ডিভাইস (ফোন/ল্যাপটপ)-এ login সরিয়ে দেওয়া হয় — device শুধু একটা ছোট কোড দেখায় ও চুপচাপ পেছনে polling করে অপেক্ষা করে।</div>
+
 <h3>Scope — সীমিত অনুমতির ঘোষণা</h3>
 <p><span class="kw">Scope</span> নির্দিষ্ট করে client ঠিক কতটুকু অ্যাক্সেস চাইছে (যেমন <code>read:photos</code>, <code>profile</code>, <code>email</code>) — Resource Owner সম্মতি screen-এ এই scope-গুলোই দেখেন, আর ইস্যু হওয়া token-এ সেগুলোই এনকোড থাকে। Resource Server প্রতিটা request-এ token-এর scope যাচাই করে বুঝতে পারে client কী করার অনুমতি পেয়েছে।</p>
 
@@ -413,6 +430,8 @@ ID Token নিয়ে API call authenticate করার চেষ্টা �
 <tr><td><code>nonce</code></td><td>Client-এর পাঠানো একটা random value, ID token-এ ফেরত আসে — replay attack প্রতিরোধ করে</td></tr>
 <tr><td><code>email</code>, <code>name</code>, <code>preferred_username</code></td><td>Profile তথ্য (scope অনুযায়ী অন্তর্ভুক্ত হয়)</td></tr>
 </table>
+<div class="callout why"><span class="tag"><code>nonce</code> ঠিক কোন আক্রমণ ঠেকায়</span>
+ধরুন attacker কোনোভাবে একটা পুরনো, এখনো signature-বৈধ ID token হাতে পেয়ে যায় (যেমন network log বা browser history থেকে), আর সেটা victim-এর browser-এ replay করে "login সফল হয়েছে" দেখাতে চায়। <code>nonce</code> ছাড়া client শুধু signature ও <code>exp</code> যাচাই করে সেই টোকেন গ্রহণ করে নিতে পারে, যদিও এই authentication event টা আসলে এখন ঘটছেই না। এজন্য client প্রতিটা authorization request-এ একটা নতুন, random <code>nonce</code> পাঠায় ও নিজের কাছে (session-এ) সংরক্ষণ করে রাখে; ফেরত আসা ID token-এর <code>nonce</code> claim তার সাথে না মিললে token প্রত্যাখ্যান করে। ফলে প্রতিটা login attempt-এর ID token শুধু <b>সেই নির্দিষ্ট</b> request-এর জবাবেই বৈধ ধরা হয় — আগের কোনো token replay করে চালানো যায় না।</div>
 
 <h3><code>scope=openid</code> — যেখানে OAuth2, OIDC হয়ে ওঠে</h3>
 <p>একই Authorization Code flow ব্যবহার করেই, request-এ <code>scope=openid</code> যোগ করলে auth server বুঝে নেয় এটা একটা OIDC request — access token-এর পাশাপাশি একটা <b>ID token</b>-ও ইস্যু করে।</p>
@@ -614,6 +633,14 @@ RBAC ভালো কাজ করে যখন অনুমতি মোটা�
 <tr><td><span class="kw">Policy</span></td><td>একটা নিয়ম — role-based, user-based, time-based, বা এমনকি custom JavaScript/Rule-based policy</td></tr>
 <tr><td><span class="kw">Permission</span></td><td>Resource/scope-কে এক বা একাধিক policy-র সাথে যুক্ত করে — "কোন policy(গুলো) এই resource-এ প্রযোজ্য"</td></tr>
 </table>
+<div class="diagram"><pre>
+1) User request  →  Application (PEP): GET /invoices/42
+2) PEP  →  Keycloak (PDP): "user X কি resource 'invoice-42'-এ 'view' scope পাবে?"
+                            (access token + resource/scope পাঠিয়ে)
+3) Keycloak প্রযোজ্য policy(গুলো) মূল্যায়ন করে (role-based, time-based, custom...)
+4) Keycloak  →  PEP: permit/deny (RPT — Requesting Party Token আকারে)
+5) PEP সিদ্ধান্ত অনুযায়ী request আগে বাড়ায়, বা 403 ফেরত দেয়
+</pre></div>
 <div class="callout behind"><span class="tag">এটা কীভাবে ব্যবহার হয় — PEP ও PDP</span>
 Application (Resource Server) একটা <span class="kw">Policy Enforcement Point (PEP)</span> হিসেবে কাজ করে — প্রতিটা sensitive action-এর আগে Keycloak-কে (যেটা এখানে <span class="kw">Policy Decision Point, PDP</span>) জিজ্ঞেস করে "এই user কি এই resource-এ এই scope-এ অ্যাক্সেস পাবে?" Keycloak তার সংরক্ষিত policy/permission মূল্যায়ন করে হ্যাঁ/না জবাব দেয় (একটা বিশেষ <b>RPT — Requesting Party Token</b> আকারে)। এভাবে authorization logic কোডে ছড়িয়ে না থেকে কেন্দ্রীয়ভাবে Keycloak-এ পরিচালিত হয় — non-developer (product/security team)-ও Admin Console থেকে নিয়ম বদলাতে পারে, deploy ছাড়াই।</div>
 <div class="callout best"><span class="tag">কখন এই জটিলতার দরকার আছে</span>

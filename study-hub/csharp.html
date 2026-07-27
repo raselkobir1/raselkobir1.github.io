@@ -2175,6 +2175,42 @@ if (jobQueue.TryDequeue(out string job))
 }</pre>
 <div class="callout mistake"><span class="tag">Common mistake — একটামাত্র বড় lock, বা lock অনেকক্ষণ ধরে রাখা</span> পুরো method বা পুরো collection-এর চারপাশে একটাই coarse-grained lock বসিয়ে দেওয়া, অথবা lock-এর ভেতরে ভারী/ধীর কাজ (I/O, ভারী computation) রেখে দেওয়া — দুটোই lock contention বাড়িয়ে দেয়। ফলে অনেক thread ব্যবহার করেও performance single-threaded কোডের চেয়ে সামান্য ভালো, বা কখনো কখনো খারাপও হতে পারে (context-switching overhead যোগ হয়ে)।</div>
 <div class="callout best"><span class="tag">Best practice — critical section ছোট রাখা, granularity মিলিয়ে নেওয়া</span> lock-এর ভেতরে শুধু ততটুকু কোড রাখুন যতটুকু সত্যিই shared state touch করে; ভারী গণনা lock-এর বাইরে করুন। সেই সাথে lock-এর granularity প্রকৃত contention-এর সাথে মিলিয়ে নিন — যেমন একটা dictionary-র প্রতিটা key-র জন্য আলাদা lock (বা <span class="kw">ConcurrentDictionary</span>) ব্যবহার করলে পুরো dictionary-র জন্য একটা global lock রাখার চেয়ে অনেক বেশি প্রকৃত parallelism পাওয়া যায়।</div>
+
+<h3>১২.৮ Deadlock — একাধিক lock-এর মধ্যে চক্রাকার অপেক্ষা</h3>
+<p>Lock contention-এ thread-রা শুধু ধীরে ধীরে একে একে critical section-এ ঢোকে — কাজ শেষ পর্যন্ত এগোয়, শুধু ধীরে। কিন্তু এর চেয়েও খারাপ একটা পরিস্থিতি আছে, যেখানে কাজ আদৌ এগোয়ই না — একে বলে <span class="kw">Deadlock</span>। এটা তখন ঘটে যখন দুই (বা তার বেশি) thread একাধিক lock নেয়, কিন্তু প্রতিটা thread ভিন্ন ভিন্ন ক্রমে সেগুলো নেওয়ার চেষ্টা করে।</p>
+<pre>object lockA = new object();
+object lockB = new object();
+
+<span class="c">// Thread 1</span>
+lock (lockA)
+{
+    Thread.Sleep(50);
+    lock (lockB)   <span class="c">// lockB-এর জন্য অপেক্ষা করছে, যেটা Thread 2 ধরে বসে আছে</span>
+    {
+        <span class="c">// ...</span>
+    }
+}
+
+<span class="c">// Thread 2 (একই সময়ে, উল্টো ক্রমে)</span>
+lock (lockB)
+{
+    Thread.Sleep(50);
+    lock (lockA)   <span class="c">// lockA-এর জন্য অপেক্ষা করছে, যেটা Thread 1 ধরে বসে আছে</span>
+    {
+        <span class="c">// ...</span>
+    }
+}</pre>
+<div class="diagram"><pre>
+Thread 1: lockA ধরে আছে ──▶ lockB-এর জন্য অপেক্ষা করছে
+                                     ▲
+                                     │   চক্রাকার অপেক্ষা (circular wait) —
+                                     │   কেউই আর সামনে এগোতে পারবে না
+                                     ▼
+Thread 2: lockB ধরে আছে ──▶ lockA-এর জন্য অপেক্ষা করছে
+</pre></div>
+<p>Thread 1 <code>lockA</code> ধরে রেখে <code>lockB</code> চাইছে, ঠিক একই সময়ে Thread 2 <code>lockB</code> ধরে রেখে <code>lockA</code> চাইছে। দুজনেই একে অপরের ধরে রাখা lock ছাড়ার অপেক্ষায় চিরকালের জন্য থমকে থাকে — কোনো exception ছোঁড়া হয় না, প্রোগ্রাম শুধু নীরবে hang করে যায়।</p>
+<div class="callout mistake"><span class="tag">Common mistake — একাধিক lock ভিন্ন ভিন্ন ক্রমে নেওয়া</span> কোডবেসের ভিন্ন ভিন্ন জায়গায় একাধিক lock নেওয়া হলে, কিন্তু প্রতিটা জায়গায় সেগুলো নেওয়ার ক্রম আলাদা হলে circular wait তৈরি হওয়ার ঝুঁকি থাকে। এই bug ধরাও কঠিন, কারণ এটা সবসময় ঘটে না — শুধু নির্দিষ্ট timing-এ দুই thread একসাথে বিপরীত ক্রমে lock চাইলেই ঘটে, তাই প্রায়ই টেস্টে ধরা পড়ে না, শুধু প্রোডাকশনে মাঝেমধ্যে ঘটা random hang হিসেবে দেখা দেয়।</div>
+<div class="callout best"><span class="tag">Best practice — সবসময় একই, সুনির্দিষ্ট ক্রমে lock নাও</span> কোডের যেকোনো জায়গায় একাধিক lock একসাথে নিতে হলে সবসময় একই পূর্বনির্ধারিত ক্রমে নাও (যেমন সবসময় lockA-এর পর lockB, কখনো উল্টো নয়) — এতে circular wait তৈরি হওয়ার সুযোগই থাকে না। আরও ভালো সমাধান হলো ডিজাইন এমনভাবে করা যাতে একসাথে একাধিক lock নেওয়ার দরকারই না পড়ে।</div>
 </template>
 <template data-page="performance">
 <h2 class="title">১৪. Performance — Span, Memory, Native AOT</h2>
@@ -2682,6 +2718,36 @@ public class OrderService
 </table>
 <div class="callout best"><span class="tag">Best practice</span> সাধারণ static configuration-এর জন্য <span class="kw">IOptions&lt;T&gt;</span>-ই যথেষ্ট। শুধু তখনই <span class="kw">IOptionsSnapshot&lt;T&gt;</span> ব্যবহার করো যখন সত্যিই runtime-এ config পরিবর্তনের প্রয়োজন আছে — কারণ Singleton সার্ভিসে <span class="kw">IOptionsSnapshot&lt;T&gt;</span> ইনজেক্ট করলে captive dependency সমস্যা হতে পারে (Scoped সার্ভিস Singleton-এর ভেতরে আটকে যাওয়া), ঠিক যেমনটা DI চ্যাপ্টারে discuss করা হয়েছিল।</div>
 
+<h3>১৭.৩.১ IOptionsMonitor&lt;T&gt; — Singleton-এর ভেতরেও নিরাপদ live reload</h3>
+<p>উপরের callout একটা প্রশ্ন খোলা রাখলো — যদি ঠিক একটা Singleton service বা background worker-এর ভেতরেই runtime config change ধরতে হয়, কিন্তু <span class="kw">IOptionsSnapshot&lt;T&gt;</span> Scoped বলে সরাসরি Singleton-এ inject করলে captive dependency-এর ঝুঁকি আছে, তাহলে উপায় কী? এখানেই কাজে লাগে <span class="kw">IOptionsMonitor&lt;T&gt;</span> — এটা নিজেই Singleton হিসেবে register হয় (তাই যেকোনো Singleton-এর constructor-এ নিরাপদে inject করা যায়, কোনো captive dependency তৈরি হয় না), অথচ এর <code>.CurrentValue</code> প্রপার্টি প্রতিবার পড়ার সময় সবসময় সর্বশেষ config মান দেয়। এছাড়া এটা <code>.OnChange(...)</code> দিয়ে একটা callback subscribe করারও সুযোগ দেয়, যা config বদলানোর মুহূর্তেই ট্রিগার হয়।</p>
+<pre>public class PricingWorker
+{
+    private readonly IOptionsMonitor&lt;MyOptions&gt; _monitor;
+
+    public PricingWorker(IOptionsMonitor&lt;MyOptions&gt; monitor)
+    {
+        _monitor = monitor;
+        _monitor.OnChange(updated =&gt;
+            Console.WriteLine($"Config বদলে গেছে, নতুন ApiUrl: {updated.ApiUrl}"));
+    }
+
+    public void DoWork()
+    {
+        var current = _monitor.CurrentValue; <span class="c">// সবসময় সর্বশেষ মান, Singleton হয়েও</span>
+        Console.WriteLine(current.ApiUrl);
+    }
+}
+
+builder.Services.AddSingleton&lt;PricingWorker&gt;(); <span class="c">// এখানে IOptionsMonitor injection সম্পূর্ণ নিরাপদ</span></pre>
+<table>
+<tr><th></th><th>IOptions&lt;T&gt;</th><th>IOptionsSnapshot&lt;T&gt;</th><th>IOptionsMonitor&lt;T&gt;</th></tr>
+<tr><td>নিজের lifetime</td><td>Singleton</td><td>Scoped</td><td>Singleton</td></tr>
+<tr><td>Singleton-এ inject নিরাপদ?</td><td>হ্যাঁ</td><td>না — captive dependency</td><td>হ্যাঁ</td></tr>
+<tr><td>Runtime reload</td><td>না</td><td>হ্যাঁ, প্রতি scope-এ</td><td>হ্যাঁ, তাৎক্ষণিক (<code>.CurrentValue</code>)</td></tr>
+<tr><td>Change callback</td><td>নেই</td><td>নেই</td><td><code>.OnChange(...)</code> আছে</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — কোনটা কখন</span> Scoped/web-request নির্ভর সার্ভিসে সাধারণত <span class="kw">IOptionsSnapshot&lt;T&gt;</span> যথেষ্ট এবং সহজ। কিন্তু Singleton service বা background worker-এ যদি runtime config change দরকার হয়, তাহলে <span class="kw">IOptionsSnapshot&lt;T&gt;</span> নয় — সবসময় <span class="kw">IOptionsMonitor&lt;T&gt;</span> ব্যবহার করো, এটাই captive dependency ছাড়াই এই দুই প্রয়োজন একসাথে মেটায়।</div>
+
 <h3>১৭.৪ Logging — ILogger&lt;T&gt; ও Log Levels</h3>
 <p>.NET-এর built-in logging system <span class="kw">ILogger&lt;T&gt;</span> ইন্টারফেসের মাধ্যমে যেকোনো ক্লাসে constructor injection দিয়ে ঢুকে যায়। generic parameter <code>T</code> সাধারণত ক্লাসটা নিজেই হয় — এটা log-এর "category" নির্ধারণ করে, যাতে পরে filter করে বোঝা যায় কোন ক্লাস থেকে কোন log এসেছে।</p>
 <pre>public class OrderService
@@ -2958,6 +3024,7 @@ app.MapPost("/orders", async (CreateOrderDto dto, IOrderService svc) =&gt;
 
 <h3>১৭.১ DbContext এবং DbSet</h3>
 <p><span class="kw">DbContext</span> হলো EF Core-এর কেন্দ্রীয় ক্লাস — এটাকে বলা যায় একই সাথে <b>Unit of Work</b> এবং <b>Repository</b> প্যাটার্নের বিল্ট-ইন বাস্তবায়ন। এটি ডাটাবেজের সাথে কানেকশন ম্যানেজ করে, entity-গুলোর পরিবর্তন ট্র্যাক করে, এবং <code>SaveChanges()</code> কল হলে সবগুলো পরিবর্তন একসাথে একটা transaction-এ ডাটাবেজে পাঠায়। প্রতিটি <code>DbSet&lt;T&gt;</code> প্রপার্টি একটা টেবিলকে queryable কালেকশন হিসেবে উপস্থাপন করে।</p>
+<div class="callout behind"><span class="tag">Unit of Work মানে আসলে কী</span> <b>Unit of Work</b> pattern-এর মূল ধারণা হলো — একাধিক আলাদা পরিবর্তন (একটা entity insert, আরেকটা update, তৃতীয়টা delete) সাথে সাথে ডাটাবেজে না পাঠিয়ে একটা একক "logical transaction"-এর ভেতরে জমা রাখা, এবং শেষে একবারে সবকিছু commit করা — যাতে হয় সব পরিবর্তন সফল হয়, নয়তো কোনোটাই না (all-or-nothing)। <code>DbContext</code> ঠিক এটাই করে: <code>Add</code>/<code>Remove</code>/property পরিবর্তন — কোনোটাই সাথে সাথে ডাটাবেজে যায় না, সবকিছু in-memory change tracker-এ জমা থাকে, আর <code>SaveChanges()</code> কল হলে তবেই সবগুলো একসাথে, একটা transaction-এ ডাটাবেজে পাঠানো হয়। এর সুবিধা — মাঝপথে কোনো একটা পরিবর্তন ব্যর্থ হলে বাকি সব পরিবর্তনও rollback হয়ে যায়, ডাটাবেজ কখনো "আধা-সম্পন্ন" অবস্থায় থাকে না।</div>
 <pre>public class ShopDbContext : DbContext
 {
     public ShopDbContext(DbContextOptions&lt;ShopDbContext&gt; options)

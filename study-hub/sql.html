@@ -368,6 +368,28 @@ SELF  JOIN  → একটা table নিজের সাথে join (employee �
 <li>LEFT JOIN-এর পর ডান table-এর column-এ <code>WHERE b.x = 5</code> দেওয়া → এটা কার্যত INNER JOIN বানিয়ে ফেলে (NULL row বাদ পড়ে)। শর্ত <code>ON</code>-এ দিন বা <code>b.x = 5 OR b.x IS NULL</code>।</li>
 </ul></div>
 
+<h3>Join ভেতরে কীভাবে execute হয় — join algorithm</h3>
+<p>লেখায় "join" একটাই শব্দ, কিন্তু ভেতরে engine তিনটার একটা <b>algorithm</b> বেছে আসলে row মেলায় — কোনটা বাছবে নির্ভর করে table-এর আকার, index, ও join condition-এর ওপর।</p>
+<div class="diagram"><pre>
+Nested Loop Join                 Hash Join                        Merge Join
+----------------                 ---------                       -----------
+প্রতিটা outer row-এর জন্য          ছোট side দিয়ে in-memory           দুই side আগে থেকেই
+inner table-এ খোঁজো              hash table বানাও, তারপর           join key দিয়ে sorted —
+(inner-এ index থাকলে দ্রুত)       বড় side স্ক্যান করে hash lookup     দুই pointer একসাথে
+                                                                   এগিয়ে মেলাও (merge)
+
+ভালো: outer ছোট +                ভালো: দুই side বড়, unsorted,      ভালো: দুই side-ই আগে
+      inner-এ ভালো index               equality join (=)              sorted/index আছে
+</pre></div>
+<table>
+<tr><th>Algorithm</th><th>কখন engine বাছে</th><th>ধারণা</th></tr>
+<tr><td><span class="kw">Nested Loop</span></td><td>এক side ছোট + অন্য side-এর join column-এ index আছে</td><td>outer-এর প্রতিটা row-এর জন্য inner-এ index seek — inner-এ index না থাকলে প্রতিবার full scan (ভয়ানক ধীর)</td></tr>
+<tr><td><span class="kw">Hash Join</span></td><td>দুই side বড়, unsorted, equality (<code>=</code>) join</td><td>ছোট side দিয়ে memory-তে hash table, বড় side একবার স্ক্যান করে lookup — মোটামুটি O(n+m)</td></tr>
+<tr><td><span class="kw">Merge Join</span></td><td>দুই side আগে থেকেই join key-এ sorted (বা sorted index আছে)</td><td>দুই sorted list-কে একসাথে এগিয়ে merge — hash table ছাড়াই O(n+m)</td></tr>
+</table>
+<div class="callout behind"><span class="tag">"Nested Loop" নামে ধীর মনে হলেও প্রায়ই সেরা</span>
+নামে "প্রতিটা row-এর জন্য loop" শুনলে ধীর মনে হয় — inner table-এ index না থাকলে সত্যিই তাই (প্রতি outer row-এ পুরো inner scan)। কিন্তু inner-এ ভালো index থাকলে ও outer ছোট হলে (যেমন <code>WHERE customer_id = 5</code>-এর পর মাত্র কয়েকটা order join করা) Nested Loop সবচেয়ে সস্তা — বড় table পুরোটা না ছুঁয়েই কাজ শেষ। উল্টো, outer বড় হয়ে গেলে optimizer ভুল করে Nested Loop বেছে নিতে পারে — এজন্যই অধ্যায় ১৮-এর optimization table-এ "বড় row-এর ওপর nested loop"-কে সমস্যা হিসেবে দেখানো হয়েছে; সমাধান তখন index/statistics ঠিক করে engine-কে Hash/Merge-এর দিকে ঠেলা।</div>
+
 <h3>LATERAL / APPLY — row-এর জন্য subquery</h3>
 <p>প্রতিটা বাইরের row-এর জন্য একটা subquery চালিয়ে (row-এর column ব্যবহার করে) — যেমন "প্রতি customer-এর সর্বশেষ ৩টা order"।</p>
 <pre><span class="c">-- PostgreSQL: LATERAL</span>
@@ -407,6 +429,13 @@ SELF  JOIN  → একটা table নিজের সাথে join (employee �
 </table>
 <div class="callout why"><span class="tag">WHERE বনাম HAVING</span>
 <b>WHERE</b> individual row filter করে (grouping-এর <b>আগে</b>), তাই aggregate ব্যবহার করা যায় না। <b>HAVING</b> group-এর ওপর filter করে (grouping-এর <b>পরে</b>), তাই <code>HAVING SUM(amount) &gt; 10000</code> চলে। যেটুকু WHERE-এ করা যায় তা WHERE-এই করুন (আগে filter হলে দ্রুত)।</div>
+<div class="callout mistake"><span class="tag">"column must appear in GROUP BY" error</span>
+<code>SELECT</code>-এ যে column aggregate function-এর ভেতরে নেই, সেটা অবশ্যই <code>GROUP BY</code>-তে থাকতে হবে — নাহলে PostgreSQL/SQL Server error দেয়, কারণ প্রতিটা group একাধিক row-এর সমষ্টি, আর সেই column-এর একাধিক ভিন্ন মান থাকলে engine জানে না কোনটা দেখাবে।
+<pre style="margin:8px 0"><span class="c">-- ❌ error: প্রতি status-group-এ customer_id একাধিক হতে পারে</span>
+<span class="k">SELECT</span> status, customer_id, <span class="k">COUNT</span>(*) <span class="k">FROM</span> orders <span class="k">GROUP BY</span> status;
+<span class="c">-- ✅ হয় GROUP BY-তে যোগ করুন, নয়তো aggregate করুন</span>
+<span class="k">SELECT</span> status, customer_id, <span class="k">COUNT</span>(*) <span class="k">FROM</span> orders <span class="k">GROUP BY</span> status, customer_id;</pre>
+MySQL এই নিয়ম শিথিলভাবে মানে (চুপচাপ যেকোনো একটা মান দেখিয়ে দেয়) — কিন্তু PostgreSQL ও SQL Server দুটোই কড়াকড়ি এই নিয়ম enforce করে, তাই portable SQL লিখতে এই নিয়মটা মনে রাখা জরুরি।</div>
 
 <h3>Set Operators</h3>
 <table>
@@ -455,6 +484,8 @@ Duplicate সম্ভব না জানলে বা duplicate-এ সমস�
 
 <span class="k">SELECT</span> * <span class="k">FROM</span> customers c
 <span class="k">WHERE NOT EXISTS</span> (<span class="k">SELECT</span> 1 <span class="k">FROM</span> orders o <span class="k">WHERE</span> o.customer_id = c.id);  <span class="c">-- order নেই</span></pre>
+<div class="callout behind"><span class="tag">Correlated subquery কীভাবে চলে — row-per-row</span>
+Conceptually engine বাইরের প্রতিটা row-এর জন্য <b>আলাদাভাবে</b> ভেতরের subquery চালায় (বাইরের row-এর মান ভেতরে বসিয়ে) — ১০,০০০ outer row মানে ধারণাগতভাবে ১০,০০০ বার subquery execution। ছোট/indexed subquery-তে optimizer প্রায়ই এটাকে ভেতরে-ভেতরে join-এ rewrite করে ফেলে (তাই বাস্তবে ততটা ধীর নাও হতে পারে), কিন্তু জটিল/বড় subquery-তে rewrite না হলে সত্যিই row-per-row চলে এবং outer row বাড়ার সাথে সাথে ধীর হয়ে যায়। এজন্যই একই কাজ <b>window function বা JOIN</b> দিয়ে করলে (table একবার scan) প্রায়ই দ্রুততর — অধ্যায় ১৬-এর "department গড়ের চেয়ে বেশি salary" উদাহরণে এই দুই পদ্ধতির পাশাপাশি তুলনা দেখুন।</div>
 <div class="callout why"><span class="tag">EXISTS বনাম IN</span>
 বড় subquery-তে <code>EXISTS</code> সাধারণত <code>IN</code>-এর চেয়ে ভালো — প্রথম মিল পেলেই থামে। আর <code>NOT IN</code> বিপজ্জনক: subquery-তে একটা NULL থাকলে <code>NOT IN</code> কোনো row-ই দেয় না (three-valued logic)! নিরাপদে <code>NOT EXISTS</code> ব্যবহার করুন।</div>
 
@@ -557,6 +588,19 @@ Duplicate সম্ভব না জানলে বা duplicate-এ সমস�
 <div class="callout best"><span class="tag">Best practice</span>
 Constraint database-এই enforce করুন, শুধু application কোডে ভরসা করবেন না — একাধিক service/manual query থেকেও data ঢোকে; database হলো integrity-র শেষ প্রহরী। FK-তে <code>ON DELETE CASCADE</code>/<code>SET NULL</code> ভেবে বেছে নিন।</div>
 
+<h4>FOREIGN KEY-এর referential action — ON DELETE / ON UPDATE</h4>
+<p>Parent row মুছে ফেলা বা তার key বদলালে child row-এর কী হবে তা <code>ON DELETE</code>/<code>ON UPDATE</code> দিয়ে ঠিক করতে হয়:</p>
+<table>
+<tr><th>Action</th><th>কী ঘটে</th></tr>
+<tr><td><code>CASCADE</code></td><td>parent মুছলে/বদলালে সংশ্লিষ্ট child row-ও মুছে যায়/বদলে যায় (order মুছলে তার order_items-ও মুছবে)</td></tr>
+<tr><td><code>SET NULL</code></td><td>child-এর FK column NULL হয়ে যায় (column অবশ্যই NULL-able হতে হবে)</td></tr>
+<tr><td><code>SET DEFAULT</code></td><td>child-এর FK column তার <code>DEFAULT</code> মানে ফিরে যায়</td></tr>
+<tr><td><code>RESTRICT</code></td><td>child row থাকা অবস্থায় parent মোছা/বদলানো <b>আটকে দেয়</b> (error)</td></tr>
+<tr><td><code>NO ACTION</code> (default)</td><td>না লিখলে এটাই ধরা হয় — কার্যত <code>RESTRICT</code>-এর মতোই (constraint check-এর সময়ে সামান্য পার্থক্য)</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">"DELETE আটকে যাচ্ছে কেন?"</span>
+কিছু না লিখলে default <code>NO ACTION</code> — তাই child row থাকা অবস্থায় parent <code>DELETE</code> করলে foreign key violation error আসবে। এটা bug নয়, এটাই database ভুলে data হারানো থেকে বাঁচাচ্ছে। ইচ্ছাকৃতভাবে সাথে সাথে child মুছতে চাইলে সুনির্দিষ্টভাবে <code>ON DELETE CASCADE</code> লিখতে হবে; নাহলে আগে child row মুছুন/আপডেট করুন, বা রেখে দিতে চাইলে <code>SET NULL</code>।</div>
+
 <h3>Normalization — table design-এর ভিত্তি</h3>
 <p><span class="kw">Normalization</span> = redundancy কমাতে ও data anomaly এড়াতে table-কে নিয়ম মেনে ভাগ করা। মূল তিন স্তর:</p>
 <table>
@@ -618,6 +662,19 @@ Normalization redundancy কমায় কিন্তু বেশি JOIN �
 
 <h3>Locks, Deadlock, Optimistic vs Pessimistic</h3>
 <p>Concurrent write-এর সময় engine <span class="kw">lock</span> নেয়। দুটো transaction পরস্পরের lock-এর জন্য অপেক্ষা করলে <span class="kw">deadlock</span> — engine একটাকে victim বানিয়ে rollback করে।</p>
+<div class="diagram"><pre>
+Transaction A                            Transaction B
+--------------                           --------------
+UPDATE accounts WHERE id=1;              UPDATE accounts WHERE id=2;
+  → id=1 এর lock নিলো                       → id=2 এর lock নিলো
+
+UPDATE accounts WHERE id=2;              UPDATE accounts WHERE id=1;
+  → id=2 এর lock চায়... B ধরে আছে           → id=1 এর lock চায়... A ধরে আছে
+        │                                        │
+        └──────── দুজনেই একে অপরের অপেক্ষায় (deadlock) ────────┘
+                engine একজনকে "victim" বেছে ROLLBACK করে,
+                অন্যজন এগিয়ে যায়
+</pre></div>
 <table>
 <tr><th></th><th>Pessimistic</th><th>Optimistic</th></tr>
 <tr><td>ধারণা</td><td>আগেই lock নাও (<code>SELECT ... FOR UPDATE</code>)</td><td>lock নয় — version/timestamp দিয়ে commit-এ conflict চেক</td></tr>

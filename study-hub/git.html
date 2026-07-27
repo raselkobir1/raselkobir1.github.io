@@ -330,6 +330,8 @@ feature          ●──●──●             feature      ●──●─�
 <tr><td>ফলাফল</td><td>শুধু <code>main</code> pointer এগিয়ে যায় — নতুন commit তৈরি হয় না</td><td>একটা নতুন <b>merge commit</b> তৈরি হয়, যার দুইটা parent থাকে</td></tr>
 <tr><td>History</td><td>সরল, সোজা লাইন</td><td>branch হয়েছিল তা history-তে দৃশ্যমান থাকে</td></tr>
 </table>
+<div class="callout behind"><span class="tag">"Three-way" মানে ঠিক কী</span>
+নাম থেকেই বোঝা যায় — merge-এ Git তিনটা snapshot তুলনা করে, দুইটা নয়: (১) <b>merge base</b> — দুই branch যেখান থেকে আলাদা হয়েছিল, তাদের সর্বশেষ কমন পূর্বপুরুষ commit, (২) বর্তমান branch-এর tip, (৩) অন্য branch-এর tip। Git প্রতিটা ফাইলের ক্ষেত্রে merge base-এর সাথে দুই দিকের পরিবর্তন আলাদাভাবে মেলায় — এক দিক বদলালে, অন্য দিক অপরিবর্তিত থাকলে, সেই পরিবর্তনটাই নেওয়া হয় স্বয়ংক্রিয়ভাবে। Conflict তখনই হয় যখন <b>দুই দিকই</b> merge base-এর তুলনায় ঠিক একই লাইনে ভিন্ন পরিবর্তন করেছে। <code>git merge-base main feature</code> দিয়ে ঠিক কোন commit-টা merge base হিসেবে ব্যবহৃত হচ্ছে তা দেখা যায়।</div>
 <pre>git switch main
 git merge feature              <span class="c"># সম্ভব হলে fast-forward, নাহলে three-way merge</span>
 git merge --no-ff feature      <span class="c"># fast-forward সম্ভব হলেও জোর করে merge commit বানানো (branch history স্পষ্ট রাখতে)</span></pre>
@@ -394,7 +396,11 @@ drop   j0k1l2 Debug console.log          <span class="c"># commit-টাই ব�
 <table>
 <tr><th>Command</th><th>কেন ব্যবহার করবেন</th><th>ব্যবহারের প্রভাব</th></tr>
 <tr><td><code>git cherry-pick &lt;hash&gt;</code></td><td>অন্য একটা branch-এর সম্পূর্ণ merge না করেই তার থেকে <b>শুধু একটা নির্দিষ্ট commit</b> নিজের branch-এ আনতে (যেমন hotfix)</td><td>সেই commit-এর পরিবর্তন বর্তমান branch-এ একটা <b>নতুন commit</b> (নতুন hash) হিসেবে যোগ হয়</td></tr>
+<tr><td><code>git cherry-pick --continue</code></td><td>Conflict সমাধান করার পর cherry-pick এগিয়ে নিতে</td><td>resolved ফাইল commit হয়ে যায় (একাধিক hash একসাথে দিলে পরেরটার pick চালিয়ে যায়)</td></tr>
+<tr><td><code>git cherry-pick --abort</code></td><td>Conflict জটিল মনে হলে cherry-pick শুরুর আগের অবস্থায় ফিরতে</td><td>working directory cherry-pick শুরুর আগের অবস্থায় সম্পূর্ণ ফেরত যায়</td></tr>
 </table>
+<div class="callout mistake"><span class="tag">Cherry-pick-ও conflict দিতে পারে</span>
+Cherry-pick করা commit যদি এমন লাইন বদলায় যা বর্তমান branch-এ ইতিমধ্যে অন্যভাবে বদলে গেছে, তাহলে ঠিক merge/rebase-এর মতোই conflict marker (<code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>) বসে যায় — এটা কোনো ব্যতিক্রম নয়। সমাধান একই ধারা: হাতে edit করে marker সরান, <code>git add</code>, তারপর <code>git cherry-pick --continue</code>।</div>
 <div class="callout why"><span class="tag">সাধারণ ব্যবহার</span>
 Production-এ জরুরি bugfix লাগলে কিন্তু পুরো feature branch এখনো ready নয় — bugfix commit-টা আলাদাভাবে cherry-pick করে সরাসরি <code>main</code>/release branch-এ পাঠানো যায়, বাকি অসম্পূর্ণ কাজ ছাড়াই।</div>
 
@@ -418,6 +424,19 @@ Production-এ জরুরি bugfix লাগলে কিন্তু পু�
 <tr><td><code>git remote add origin &lt;url&gt;</code></td><td>নতুন local repo-কে প্রথমবার একটা remote-এর সাথে যুক্ত করতে</td><td><code>origin</code> নামে একটা remote সংরক্ষিত হয় local config-এ</td></tr>
 <tr><td><code>git remote remove origin</code></td><td>ভুল remote যুক্ত হলে বা remote বদলাতে চাইলে</td><td>সংযোগ মুছে যায়; local history/branch অক্ষত থাকে</td></tr>
 </table>
+
+<h3>Remote URL — HTTPS বনাম SSH</h3>
+<p>GitHub/GitLab-এ repo-র "Clone" বাটনে দুই ধরনের URL পাওয়া যায় — <code>https://github.com/user/repo.git</code> আর <code>git@github.com:user/repo.git</code>। এই দুইটা শুধু ঠিকানার ফরম্যাট নয়, প্রতিটা push/pull-এ Git আপনাকে কীভাবে <b>চেনে</b> তার দুইটা সম্পূর্ণ আলাদা পদ্ধতি।</p>
+<table>
+<tr><th></th><th><span class="kw">HTTPS</span></th><th><span class="kw">SSH</span></th></tr>
+<tr><td>পরিচয় প্রমাণ</td><td>প্রতিবার (বা credential-cache থাকলে মাঝে মাঝে) username + <b>Personal Access Token (PAT)</b></td><td>একবার সেটআপ করা <b>SSH key pair</b> — private key local মেশিনে, public key GitHub/GitLab-এ যোগ করা</td></tr>
+<tr><td>Setup</td><td>কোনো setup ছাড়াই কাজ করে — শুধু URL clone করলেই চলে</td><td>প্রথমে <code>ssh-keygen</code> দিয়ে key বানিয়ে public key GitHub-এ যোগ করতে হয়</td></tr>
+<tr><td>Network</td><td>সাধারণ port 443 (HTTP-এর মতো) — কড়া firewall/proxy-তেও সাধারণত কাজ করে</td><td>port 22 লাগে — অনেক corporate firewall এই port ব্লক করে রাখে</td></tr>
+</table>
+<div class="callout behind"><span class="tag">SSH key আসলে কীভাবে চেনায়</span>
+SSH key pair-এ দুইটা ফাইল — <b>private key</b> (কখনো শেয়ার করবেন না, শুধু নিজের মেশিনে থাকে) আর <b>public key</b> (GitHub-এ পেস্ট করা, গোপন নয়)। push/pull করার সময় GitHub একটা "চ্যালেঞ্জ" পাঠায়, আপনার মেশিন সেটা private key দিয়ে sign করে ফেরত পাঠায় — GitHub শুধু তার কাছে থাকা public key দিয়ে যাচাই করে সেটা ঠিক কিনা। এভাবে private key নেটওয়ার্কে কখনো transmit না হয়েই পরিচয় প্রমাণ হয়ে যায়, তাই প্রতিবার password/token লিখতে হয় না।</div>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+HTTPS URL ব্যবহার করে push করতে গিয়ে GitHub account-এর সাধারণ password দেওয়া — GitHub 2021 থেকে git অপারেশনে সাধারণ password আর গ্রহণ করে না, password-এর জায়গায় আলাদাভাবে generate করা <b>Personal Access Token</b> লাগে। যারা বারবার token লিখতে চান না, তারা সাধারণত SSH-এ সুইচ করেন।</div>
 
 <h3>Fetch বনাম Pull</h3>
 <div class="callout why"><span class="tag">সবচেয়ে গুরুত্বপূর্ণ পার্থক্য</span>
@@ -467,7 +486,10 @@ Git অসম্পূর্ণ (uncommitted) পরিবর্তন নিয
 <tr><td><code>git stash pop</code></td><td>সর্বশেষ stash ফেরত এনে কাজ চালিয়ে যেতে</td><td>stash-এর পরিবর্তন working directory-তে ফেরত আসে, আর stash তালিকা থেকে মুছে যায় (conflict হলে stash থেকেই যায়)</td></tr>
 <tr><td><code>git stash apply</code></td><td>Stash ফেরত আনতে চান কিন্তু তালিকা থেকে এখনই মুছতে চান না (একাধিক branch-এ প্রয়োগ করতে চাইলে)</td><td>পরিবর্তন ফেরত আসে, কিন্তু stash তালিকায় থেকে যায়</td></tr>
 <tr><td><code>git stash drop</code></td><td>একটা নির্দিষ্ট stash আর দরকার নেই বুঝলে</td><td>সেই stash entry স্থায়ীভাবে মুছে যায়</td></tr>
+<tr><td><code>git stash pop stash@{2}</code></td><td>সর্বশেষটা নয়, তালিকার একটা নির্দিষ্ট পুরনো stash entry ফেরত আনতে</td><td><code>stash@{N}</code> না দিলে ডিফল্ট সবসময় সবচেয়ে সাম্প্রতিক (<code>stash@{0}</code>) — <code>git stash list</code>-এ দেখানো ইনডেক্স দিয়ে যেকোনো পুরনোটাও টার্গেট করা যায়</td></tr>
 </table>
+<div class="callout mistake"><span class="tag">Stash branch-নির্দিষ্ট নয়</span>
+Stash কোনো branch-এর সাথে বাঁধা নেই — যে branch-এ stash করেছেন তার বাইরে অন্য যেকোনো branch-এ গিয়েও <code>pop</code>/<code>apply</code> করা যায়। এটা সুবিধাজনক (feature branch-এ কাজ অর্ধেক রেখে <code>main</code>-এ গিয়ে urgent fix করে আবার feature-এ ফিরে stash ফেরত আনা), কিন্তু ভুল branch-এ ভুলবশত apply করলে অপ্রাসঙ্গিক পরিবর্তন বা conflict ঢুকে যেতে পারে — <code>pop</code>/<code>apply</code> করার আগে <code>git branch</code>/<code>git status</code> দিয়ে নিশ্চিত হয়ে নিন ঠিক branch-এ আছেন।</div>
 
 <h3>Tags — কোনো commit-কে স্থায়ী নাম দেওয়া</h3>
 <table>

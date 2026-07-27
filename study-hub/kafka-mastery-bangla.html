@@ -1231,6 +1231,9 @@ RF=3 হলে ১টা broker down হলেও minISR=2 পূর্ণ থ�
 <div class="callout best"><span class="tag">Best practice</span>
 Accounting/financial data-তে <code>unclean.leader.election.enable=false</code> রাখুন — availability-র চেয়ে durability গুরুত্বপূর্ণ। data হারানোর চেয়ে কিছুক্ষণ unavailable থাকা ভালো।</div>
 
+<div class="callout behind"><span class="tag">Leader Epoch — কেন leader-epoch-checkpoint ফাইল দরকার</span>
+Storage ট্যাবে segment directory-তে <code>leader-epoch-checkpoint</code> ফাইলটা দেখেছেন — এখানে তার কারণ। পুরনো Kafka-তে leader বদলালে follower নিজের log leader-এর high watermark পর্যন্ত blindly truncate করত — কিন্তু কিছু বিরল crash-sequence-এ (leader পরপর দ্রুত বদলালে) এই truncation ভুল জায়গায় হয়ে replica-দের মধ্যে <b>silent log divergence</b> (এমনকি data loss) ঘটাতে পারত। সমাধান: <span class="kw">Leader Epoch</span> — প্রতিবার নতুন leader নির্বাচিত হলে একটা monotonically increasing সংখ্যা বাড়ে, আর leader প্রতিটা offset range ঠিক কোন epoch-এ লেখা হয়েছে তা track করে (এটাই checkpoint ফাইলে থাকে)। Follower rejoin করার সময় blindly truncate না করে leader-কে জিজ্ঞেস করে "আমার শেষ epoch-এ তোমার log ঠিক কোথায় শেষ হয়েছে" (<code>OffsetsForLeaderEpoch</code> API) — ঠিক সেই নিরাপদ point-এ truncate করে। ফলে leader change-এর পরও replica-দের মধ্যে log consistency নিশ্চিত থাকে।</div>
+
 <h3>Replication Lag</h3>
 <p>Follower কতটা পিছিয়ে (offset difference বা time)। Lag বাড়লে follower ISR থেকে পড়ে যায় → availability ঝুঁকি। কারণ: slow disk, network, বা overloaded broker। Monitor করুন <code>UnderReplicatedPartitions</code> metric।</p>
 
@@ -1242,6 +1245,8 @@ Accounting/financial data-তে <code>unclean.leader.election.enable=false</cod
 <li>Broker ফিরে এলে follower হিসেবে rejoin করে, পিছিয়ে থাকা data catch-up করে ISR-এ ফেরে।</li>
 <li>ঐচ্ছিকভাবে <code>preferred leader election</code>-এ leader ভারসাম্য ফেরানো হয়।</li>
 </ol>
+<div class="callout why"><span class="tag">Preferred Leader Election — কেন দরকার</span>
+লক্ষ্য করুন ধাপ ৪-এ broker ফিরে এলেও সে আবার leader হয়ে যায় <b>না</b> — শুধু follower হিসেবে rejoin করে, নতুন leader-ই থেকে যায়। বারবার এমন failover হতে থাকলে কিছু broker সময়ের সাথে বেশি leader জমিয়ে ফেলে, বাকিরা কম — এই অসমতাই <b>leader imbalance</b> (কিছু broker-এ load বেশি, কিছুতে কম)। প্রতিটা partition তৈরির সময় replica list-এর প্রথম broker-কে <span class="kw">preferred leader</span> ধরা হয়; broker সুস্থভাবে ফিরে এলে <code>preferred leader election</code> (auto — <code>auto.leader.rebalance.enable=true</code>, অথবা <code>kafka-leader-election</code> CLI দিয়ে manual) leadership আবার সেই preferred broker-এ ফিরিয়ে দেয়, যাতে load সব broker-এ সমান থাকে।</div>
 </template>
 
 <template data-page="performance">
@@ -1384,6 +1389,8 @@ Consume-Transform-Produce (Exactly-Once within Kafka):
       producer.sendOffsetsToTransaction(offsets, groupId)  ← offset ও output একসাথে
     producer.commitTransaction()   // সব atomic — নয়তো abort
 </pre></div>
+<div class="callout behind"><span class="tag">commitTransaction() abort হলে output topic-এ কী থাকে?</span>
+স্বাভাবিক ধারণা হলো abort হলে লেখা message-গুলো "মুছে" যায় — বাস্তবে তা হয় <b>না</b>, Kafka log append-only, কিছুই মাঝপথে মুছে না। <code>commitTransaction()</code>/<code>abortTransaction()</code> শেষে broker প্রতিটা involved partition-এ একটা ছোট <span class="kw">control record</span> (COMMIT বা ABORT marker) লেখে। Transaction-এর ভেতরের data record আগে থেকেই log-এ physically বসে থাকে — marker শুধু বলে সেগুলো valid নাকি বাতিল। <code>isolation.level=read_committed</code> consumer এই marker না দেখা পর্যন্ত সেই transaction-এর record buffer করে রাখে, ABORT marker পেলে সেগুলো skip করে, COMMIT marker পেলে deliver করে — এজন্যই read_committed-এ সামান্য বাড়তি latency লাগে (marker-এর অপেক্ষা)। Default <code>read_uncommitted</code> consumer marker-ই বোঝে না — commit/abort নির্বিশেষে সব data record সাথে সাথে দেখে, তাই financial pipeline-এ read_committed ছাড়া exactly-once ভাঙে।</div>
 <div class="callout mistake"><span class="tag">গুরুত্বপূর্ণ সীমাবদ্ধতা</span>
 Kafka-র exactly-once শুধু <b>Kafka-থেকে-Kafka</b> (Kafka Streams) ক্ষেত্রে পুরোপুরি কাজ করে। যদি output একটা <b>external system</b> (যেমন PostgreSQL) হয়, তাহলে Kafka transaction একা যথেষ্ট নয় — external side-এ idempotency (unique key) বা Inbox/Outbox pattern লাগবে। এটাই আপনার accounting integration-এর মূল বিষয়।</div>
 
@@ -1542,6 +1549,16 @@ Retention &lt; consumer এর সম্ভাব্য downtime হলে data 
 <div class="callout why"><span class="tag">কেন কোডের বদলে Connect?</span>
 Scaling, offset management, retry, fault tolerance, schema handling — সব Connect framework সামলায় (distributed worker mode)। নিজে producer/consumer লিখলে এগুলো বারবার নিজে করতে হয়। তবে custom business logic দরকার হলে নিজের consumer-ই ভালো।</div>
 
+<h3>MirrorMaker 2 — Cross-cluster Replication ও DR</h3>
+<p>Failure ট্যাবে "Zone/Cluster outage"-এর সমাধানে <span class="kw">MirrorMaker 2</span>-র নাম এসেছিল — এখানে দেখুন এটা আসলে কী। MirrorMaker 2 নিজেও একটা Kafka Connect-based tool: এটা এক cluster-এর topic (data + configs + ACL + consumer offset) ক্রমাগত পড়ে অন্য cluster-এ produce করে — অর্থাৎ cross-cluster replication।</p>
+<table>
+<tr><th>মডেল</th><th>কীভাবে</th><th>ব্যবহার</th></tr>
+<tr><td><span class="kw">Active-Passive</span></td><td>Primary cluster-এ সব traffic; DR cluster শুধু replica হিসেবে বসে থাকে</td><td>সাধারণ disaster recovery</td></tr>
+<tr><td><span class="kw">Active-Active</span></td><td>দুই cluster-ই traffic নেয়, একে অপরকে mirror করে</td><td>geo-distributed low-latency access</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Offset Translation — সবচেয়ে ভুল বোঝা অংশ</span>
+সাধারণ ধারণা: DR cluster-এ failover করলে consumer সেখানে গিয়ে ঠিক আগের মতোই offset থেকে পড়া শুরু করবে। বাস্তবে <b>না</b> — target cluster-এ প্রতিটা partition আলাদাভাবে, আলাদা offset-এ replicate হয় (source-এর offset 5000 মানে target-এ ঠিক 5000 নয়)। MirrorMaker 2 এই mapping একটা <code>__consumer_offsets</code>-সদৃশ internal topic-এ রাখে আর <code>RemoteClusterUtils</code>/checkpoint দিয়ে translate করতে হয়। এটা না জেনে সরাসরি একই offset দিয়ে target cluster-এ consume শুরু করলে হয় data miss হয়, নয়তো বিশাল duplicate reprocess হয়।</div>
+
 <h3>Debezium ও CDC (Change Data Capture)</h3>
 <p><span class="kw">CDC</span> মানে database-এর প্রতিটা row change (insert/update/delete) ধরে event বানানো। <span class="kw">Debezium</span> একটা জনপ্রিয় source connector যা PostgreSQL-এর <span class="kw">WAL (Write-Ahead Log)</span> পড়ে প্রতিটা DB change-কে Kafka topic-এ পাঠায় — <b>polling ছাড়াই, near real-time</b>।</p>
 <div class="diagram"><pre>
@@ -1568,6 +1585,8 @@ Schema Registry ছাড়া JSON string পাঠানো, তারপর 
 <h3>Kafka Streams</h3>
 <p><span class="kw">Kafka Streams</span> একটা Java library — Kafka-থেকে-Kafka stream processing-এর জন্য (filter, join, aggregate, windowing)। এটা আলাদা cluster লাগে না, আপনার app-এর ভেতরেই চলে। stateful operation-এর জন্য <span class="kw">state store</span> (RocksDB) + changelog topic ব্যবহার করে, আর exactly-once (EOS) সমর্থন করে।</p>
 <p>উদাহরণ: প্রতি account-এর running balance real-time হিসাব করা, বা fraud detection window। <b>নোট:</b> এটা JVM-কেন্দ্রিক; .NET-এ সরাসরি নেই — .NET-এ সাধারণত নিজের consumer + DB দিয়ে aggregation করা হয়।</p>
+<div class="callout why"><span class="tag">changelog topic কেন লাগে</span>
+State store (RocksDB) app instance-এর নিজের local disk-এ থাকে — সেই disk হারালে (crash, pod reschedule নতুন node-এ) running balance/window state-ও হারিয়ে যেত। তাই Streams state store-এ প্রতিটা change একই সাথে একটা internal <span class="kw">changelog topic</span>-এও লেখে — এটা অনেকটা database-এর WAL-এর মতো। Instance crash করে নতুন জায়গায় উঠলে খালি RocksDB নিয়ে শুরু না করে changelog topic থেকে replay করে আগের state পুনর্গঠন করে নেয়। এজন্যই Streams-এর "local" state আসলে হারায় না — এটা durable, শুধু recovery-তে সময় লাগে (topic যত বড়, replay তত দীর্ঘ)।</div>
 
 <h3>ksqlDB</h3>
 <p><span class="kw">ksqlDB</span> দিয়ে SQL-এর মতো ভাষায় stream processing করা যায় — <code>CREATE STREAM ... SELECT ... FROM ... WHERE ...</code>। Kafka Streams-এর উপরে বসা একটা layer, দ্রুত prototyping-এর জন্য ভালো।</p>

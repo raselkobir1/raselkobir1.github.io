@@ -232,6 +232,21 @@ Observable (RxJS, পরের অধ্যায়ে) একটা <b>stream<
 
 <h3>Signal-এর সাথে Zoneless Angular-এর সম্পর্ক</h3>
 <p>Signal-ভিত্তিক reactivity Angular-কে ধীরে ধীরে Zone.js-এর ওপর নির্ভরতা কমাতে সাহায্য করছে — যেহেতু Angular এখন ঠিক জানে কোন signal বদলালে কোন অংশ আপডেট করতে হবে, তাই পুরো অ্যাপ জুড়ে "কিছু একটা ঘটেছে হয়তো, তাই পুরো tree চেক করি" (Zone.js-এর পদ্ধতি) করার দরকার কমে যায় — এই বিষয়টা Change Detection অধ্যায়ে বিস্তারিত আলোচিত হবে।</p>
+
+<h3>input() ও output() — Signal-ভিত্তিক Component I/O</h3>
+<pre>@Component({ standalone: true, selector: 'app-user-profile', template: `
+  &lt;p&gt;{{ userId() }} — {{ role() }}&lt;/p&gt;
+`})
+export class UserProfileComponent {
+  userId = input.required&lt;number&gt;();   <span class="c">// পুরনো @Input()-এর signal-ভিত্তিক বিকল্প — পড়তে userId() কল করতে হয়</span>
+  role = input&lt;string&gt;('viewer');      <span class="c">// ঐচ্ছিক input, default মান সহ</span>
+  selected = output&lt;number&gt;();         <span class="c">// @Output()/EventEmitter-এর signal-era বিকল্প</span>
+
+  select() { this.selected.emit(this.userId()); }
+}
+<span class="c">&lt;!-- ব্যবহার অপরিবর্তিত: &lt;app-user-profile [userId]="5" (selected)="onSelect($event)" /&gt; --&gt;</span></pre>
+<div class="callout why"><span class="tag">input()/output() কেন — @Input()/@Output()-এর সীমাবদ্ধতা যা এটা সমাধান করে</span>
+পুরনো <code>@Input()</code> একটা প্লেইন class property — এটা পড়লে Angular-এর reactivity system কিছু বুঝতে পারে না, তাই এর ওপর নির্ভরশীল কোনো হিসাব ঠিকভাবে re-run হচ্ছে কিনা নিশ্চিত করতে getter/setter বা <code>ngOnChanges</code>-এর মতো বাড়তি কৌশল লাগত। <code>input()</code> সরাসরি একটা signal রিটার্ন করে — <code>userId()</code> পড়া মাত্রই সেটা অন্য যেকোনো signal-এর মতো automatic dependency tracking-এ ধরা পড়ে, তাই <code>computed(() =&gt; ... this.userId())</code> input বদলালে ঠিকভাবে recompute হয়। <code>input.required()</code> কম্পাইল-টাইমে নিশ্চিত করে parent অবশ্যই সেই input পাস করেছে। HttpClient অধ্যায়ে <code>httpResource()</code>-এর উদাহরণে এই <code>input.required()</code>-ই ব্যবহৃত হয়েছিল।</div>
 </template>
 
 <template data-page="di">
@@ -274,6 +289,24 @@ export class UserProfileComponent {
 export class ProductPageComponent {}</pre>
 <div class="callout mistake"><span class="tag">Common mistake — Component-level Provider দিয়ে অনিচ্ছাকৃতভাবে State বিভক্ত করা</span>
 যদি একটা service <code>providedIn: 'root'</code> দিয়ে singleton হিসেবে চাওয়া হয় (যেমন একটা shopping cart যা পুরো অ্যাপে একই থাকা উচিত), কিন্তু কোনো component-এর <code>providers</code> array-তে সেই একই service আবার তালিকাভুক্ত করা হয়, তাহলে সেই component-এর জন্য একটা সম্পূর্ণ <b>নতুন, আলাদা</b> instance তৈরি হয়ে যায় — root-এর singleton থেকে বিচ্ছিন্ন। ফলাফল: cart-এ item যোগ করলেও অন্য component-এ সেই আপডেট দেখা যায় না, কারণ তারা আলাদা instance দেখছে।</div>
+
+<h3>InjectionToken — যখন Dependency কোনো Class নয়</h3>
+<pre><span class="c">// app.config.ts — একটা primitive value (string) DI দিয়ে সরবরাহ করা</span>
+export const API_BASE_URL = new InjectionToken&lt;string&gt;('API_BASE_URL');
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    { provide: API_BASE_URL, useValue: 'https://api.example.com' },
+  ],
+};
+
+<span class="c">// service-এ ব্যবহার — class না হওয়া সত্ত্বেও ঠিক service-এর মতোই inject() দিয়ে পাওয়া যায়</span>
+@Injectable({ providedIn: 'root' })
+export class OrderService {
+  private baseUrl = inject(API_BASE_URL);
+}</pre>
+<div class="callout why"><span class="tag">InjectionToken কেন লাগে — DI শুধু Class-এর জন্য নয়</span>
+এতক্ষণ যা inject করা হয়েছে (<code>UserService</code>, <code>HttpClient</code>) সবই class — Angular class-এর নামটাই ব্যবহার করে injector-কে বলে দেয় "আমার এটা লাগবে"। কিন্তু একটা string (API URL), boolean (feature flag), বা প্লেইন object (config) — এদের কোনো class নেই, তাই <code>inject(string)</code> লেখাটাই অর্থহীন (TypeScript-এ একাধিক জায়গায় <code>string</code> টাইপ থাকতে পারে, injector বুঝবে না ঠিক কোন value চাওয়া হচ্ছে)। <code>InjectionToken</code> একটা unique, টাইপ-সেফ "পরিচয়পত্র" তৈরি করে দেয় যা provider ঘোষণা আর <code>inject()</code> কল — দুই জায়গাতেই একইভাবে রেফার করা যায়। Environment-ভিত্তিক config বা third-party লাইব্রেরির configuration সরবরাহ করার এটাই স্ট্যান্ডার্ড প্যাটার্ন।</div>
 </template>
 
 <template data-page="rxjs">
@@ -344,6 +377,20 @@ export class SearchComponent {
 <tr><td><span class="kw">switchMap</span></td><td>নতুন value এলে আগের inner Observable বাতিল করে নতুনটায় সুইচ (সার্চ, ইত্যাদি)</td></tr>
 <tr><td><span class="kw">combineLatest</span></td><td>একাধিক Observable-এর সর্বশেষ value একসাথে মিলিয়ে একটা নতুন value তৈরি</td></tr>
 </table>
+
+<h3>Subject ও BehaviorSubject — নিজে থেকে Value Emit করা</h3>
+<pre>import { Subject, BehaviorSubject } from 'rxjs';
+
+const clicks$ = new Subject&lt;void&gt;();     <span class="c">// initial value নেই — subscribe করার আগে ঘটা emission মিস হয়ে যায়</span>
+clicks$.subscribe(() =&gt; console.log('clicked'));
+clicks$.next();                           <span class="c">// ম্যানুয়ালি emit — HttpClient-এর "cold" Observable-এর মতো নয়, নিজে থেকেই ঘটে</span>
+
+const status$ = new BehaviorSubject&lt;'idle' | 'loading'&gt;('idle');   <span class="c">// initial value বাধ্যতামূলক</span>
+console.log(status$.value);               <span class="c">// যেকোনো সময় সরাসরি বর্তমান মান পড়া যায়</span>
+status$.subscribe(s =&gt; console.log('status:', s));   <span class="c">// সাথে সাথেই বর্তমান মান ('idle') পাবে</span>
+status$.next('loading');</pre>
+<div class="callout why"><span class="tag">Subject কেন — HttpClient-এর Observable থেকে মৌলিক পার্থক্য</span>
+<code>HttpClient</code>-এর Observable "cold" — প্রতিটা <code>subscribe()</code> নিজের একটা সম্পূর্ণ আলাদা execution শুরু করে (নিজস্ব HTTP request)। <code>Subject</code> এর উল্টো — এটা "multicast": <code>.next()</code> কল হলে সেই মুহূর্তে সক্রিয় সব subscriber একসাথে একই মান পায়, আর নতুন subscriber আগের মিস হওয়া মানগুলো ফিরে পায় না। <code>BehaviorSubject</code> এরই একটা variant যেটা সবসময় "সর্বশেষ মান" মনে রাখে, তাই নতুন subscriber সাথে সাথেই সেই সর্বশেষ মান পায় — খালি হাতে বসে থাকতে হয় না। এই কারণে state-holding service-এ (NgRx-এর আগে হাতে-বানানো store-এ) <code>BehaviorSubject</code> এত জনপ্রিয় ছিল — Interview অধ্যায়ে Signal-এর সাথে তুলনায় এই <code>BehaviorSubject</code>-ই উদাহরণ হিসেবে ব্যবহৃত হয়েছে।</div>
 </template>
 
 <template data-page="directives">
@@ -567,6 +614,28 @@ export const authGuard: CanActivateFn = (route, state) =&gt; {
 };</pre>
 <div class="callout why"><span class="tag">Functional Guard কেন Class-based Guard-কে প্রতিস্থাপন করছে</span>
 পুরনো ধরনে guard একটা <code>@Injectable</code> class ছিল যা <code>CanActivate</code> interface implement করত — একটা ছোট check-এর জন্যও পুরো class boilerplate লিখতে হতো। Functional guard শুধু একটা প্লেইন function, <code>inject()</code> দিয়ে dependency নেয় — Angular-এর বাকি অংশ (interceptor, resolver) যেভাবে functional API-এর দিকে এগোচ্ছে তার সাথেই সামঞ্জস্যপূর্ণ।</div>
+
+<h3>Resolver — Route Activate হওয়ার আগেই Data Ready রাখা</h3>
+<pre><span class="c">// product.resolver.ts — Angular 15+ functional resolver</span>
+export const productResolver: ResolveFn&lt;Product&gt; = (route) =&gt; {
+  const productService = inject(ProductService);
+  return productService.getById(route.paramMap.get('id')!);   <span class="c">// Observable/Promise রিটার্ন করলে Router নিজেই অপেক্ষা করে</span>
+};
+
+<span class="c">// app.routes.ts</span>
+{
+  path: 'products/:id',
+  component: ProductDetailComponent,
+  resolve: { product: productResolver },   <span class="c">// component activate হওয়ার আগেই এই data resolve হবে</span>
+}
+
+<span class="c">// component-এ — data ইতিমধ্যে-লোড অবস্থায় পাওয়া যায়, ম্যানুয়াল fetch লাগে না</span>
+export class ProductDetailComponent {
+  private route = inject(ActivatedRoute);
+  product = toSignal(this.route.data.pipe(map(d =&gt; d['product'])));
+}</pre>
+<div class="callout why"><span class="tag">Resolver বনাম Guard — একই জায়গায় বসে, কাজ আলাদা</span>
+Guard আর Resolver দুটোই route activate হওয়ার আগে চলে, দুটোতেই <code>inject()</code> দিয়ে dependency নেওয়া যায় — কিন্তু উদ্দেশ্য ভিন্ন। Guard সিদ্ধান্ত নেয় <b>route-এ ঢোকা যাবে কিনা</b> (true/false/redirect) — অথোরাইজেশনের প্রশ্ন। Resolver route activate হওয়ার আগেই <b>data নিয়ে আসে</b>, যাতে component প্রথমবার render হওয়ার সময়ই data হাতে থাকে — component নিজে <code>ngOnInit</code>-এ loading spinner দেখিয়ে fetch করার বদলে। দুটো একসাথেও ব্যবহার করা যায়: <code>canActivate</code> দিয়ে আগে অথোরাইজেশন চেক, তারপর <code>resolve</code> দিয়ে data fetch।</div>
 </template>
 
 <template data-page="statemgmt">

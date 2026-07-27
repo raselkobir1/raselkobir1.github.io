@@ -333,6 +333,32 @@ function StopwatchWithRef() {
 <div class="callout why"><span class="tag">useState বনাম useRef — কখন কোনটা</span>
 <code>useRef</code>-এর মান বদলালে component re-render <b>হয় না</b>, আর <code>.current</code> সরাসরি mutate করা যায় — এজন্য এটা DOM node reference, timer ID, বা "যা আমার UI-তে দেখানো লাগবে না কিন্তু render জুড়ে টিকে থাকতে হবে" এমন মানের জন্য উপযুক্ত। যা কিছু UI-তে প্রতিফলিত হওয়া দরকার তার জন্য <code>useState</code> — যা শুধু "মনে রাখা" দরকার তার জন্য <code>useRef</code>।</div>
 
+<h3>useReducer — একাধিক Sub-value বা জটিল State Transition গোছানোর হুক</h3>
+<p>যখন একটা component-এর state শুধু একটা সংখ্যা/স্ট্রিং নয়, বরং একাধিক sub-value একসাথে, নির্দিষ্ট নিয়মে বদলায় (যেমন একটা cart-এ item add/remove/clear, বা একটা multi-step form-এ ধাপ + error + data), তখন প্রতিটার জন্য আলাদা <code>useState</code> রাখলে "কোন state কোন action-এ কীভাবে বদলাবে" এই যুক্তি component-এর ভেতরে ছড়িয়ে-ছিটিয়ে পড়ে। <code>useReducer</code> এই পুরো update logic-টাকে একটা জায়গায় — একটা <b>pure reducer function</b> — জড়ো করে।</p>
+<pre><span class="c">// reducer — (পুরনো state, action) থেকে নতুন state — ঠিক Redux-এর reducer-এর মতোই (State Management অধ্যায়ে দেখুন), কিন্তু কোনো লাইব্রেরি ছাড়াই, React-এই built-in</span>
+function cartReducer(state, action) {
+  switch (action.type) {
+    case "add":    return { ...state, items: [...state.items, action.item] };
+    case "remove": return { ...state, items: state.items.filter(i =&gt; i.id !== action.id) };
+    case "clear":  return { ...state, items: [] };
+    default: return state;
+  }
+}
+
+function Cart() {
+  const [state, dispatch] = useReducer(cartReducer, { items: [] });
+
+  return (
+    &lt;&gt;
+      &lt;button onClick={() =&gt; dispatch({ type: "add", item: { id: 1, name: "Book" } })}&gt;Add&lt;/button&gt;
+      &lt;button onClick={() =&gt; dispatch({ type: "clear" })}&gt;Clear&lt;/button&gt;
+      &lt;p&gt;{state.items.length} items&lt;/p&gt;
+    &lt;/&gt;
+  );
+}</pre>
+<div class="callout why"><span class="tag">useState বনাম useReducer — কখন কোনটা</span>
+একটা স্বাধীন মান (boolean toggle, একটা input-এর value) হলে <code>useState</code>-ই সহজ ও যথেষ্ট। কিন্তু যখন একাধিক sub-value একসাথে, নির্দিষ্ট নিয়মে বদলায় (একই action-এ একইসাথে <code>items</code> ও সম্পর্কিত অন্য ফিল্ড আপডেট হওয়া উচিত), <code>useReducer</code> সেই নিয়মটাকে একটা switch-এ কেন্দ্রীভূত করে — component JSX-এ শুধু <code>dispatch({ type: "add", ... })</code> কল করে, "state ঠিক কীভাবে বদলাবে" তার বিস্তারিত জানার দরকার পড়ে না। এটাই মূলত Redux-এর reducer প্যাটার্ন, শুধু কোনো external store/library ছাড়াই, একটা component-এর নিজস্ব state-এর জন্য।</div>
+
 <h3>Custom Hooks — যুক্তি পুনর্ব্যবহারের সঠিক উপায়</h3>
 <pre><span class="c">// useLocalStorage.js — একটা পুনর্ব্যবহারযোগ্য custom hook</span>
 function useLocalStorage(key, initialValue) {
@@ -704,6 +730,31 @@ function App() {
 </table>
 <div class="callout mistake"><span class="tag">Common mistake — Premature Optimization</span>
 ছোট, খুব কম re-render হওয়া component-এও <code>React.memo</code>/<code>useMemo</code> বসিয়ে দেওয়া কোডকে জটিল করে, dependency array ভুল করার ঝুঁকি বাড়ায়, আর প্রায়ই কোনো পরিমাপযোগ্য লাভ দেয় না। "measure first, optimize the proven bottleneck" — এই নীতিই সবচেয়ে বেশি সময় বাঁচায়।</div>
+
+<h3>useTransition — Concurrent Rendering হাতে-কলমে ব্যবহার করা</h3>
+<p>Foundations অধ্যায়ে বলা হয়েছিল Fiber architecture একটা কম-priority render মাঝপথে থামিয়ে বেশি-priority কাজ (যেমন keystroke) আগে সারতে পারে — <code>useTransition</code> এই ক্ষমতাটাই ডেভেলপারের হাতে তুলে দেয়। একটা বড় list filter/sort করার মতো ভারী update-কে "non-urgent" চিহ্নিত করে দিলে, React সেটাকে ইনপুট টাইপিং-এর responsiveness বজায় রেখে ব্যাকগ্রাউন্ডে সম্পন্ন করে।</p>
+<pre>function ProductSearch({ allProducts }) {
+  const [query, setQuery] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const [filtered, setFiltered] = useState(allProducts);
+
+  function handleChange(e) {
+    setQuery(e.target.value);              <span class="c">// urgent — input-এ সাথে সাথে টাইপ করা অক্ষর দেখানো</span>
+    startTransition(() =&gt; {
+      setFiltered(allProducts.filter(p =&gt; p.name.includes(e.target.value)));  <span class="c">// non-urgent — দেরি হলেও চলবে</span>
+    });
+  }
+
+  return (
+    &lt;&gt;
+      &lt;input value={query} onChange={handleChange} /&gt;
+      {isPending && &lt;span&gt;আপডেট হচ্ছে…&lt;/span&gt;}
+      &lt;ProductList products={filtered} /&gt;
+    &lt;/&gt;
+  );
+}</pre>
+<div class="callout why"><span class="tag">কেন এটা debounce-এর চেয়ে ভালো</span>
+Debounce করলে filter-এর কাজ একটা নির্দিষ্ট সময় (যেমন ৩০০ms) পরে শুরু হয় — টাইপ করা থামলে তবেই। <code>startTransition</code>-এ filter সাথে সাথেই শুরু হয়, কিন্তু React সেটাকে interruptible রাখে — কোনো নতুন urgent update (আরেকটা keystroke) এলে, চলমান non-urgent render বাতিল করে নতুন করে শুরু করে। ফলে ইনপুট কখনো লক (block) হয় না, অথচ ব্যবহারকারীকে থামার জন্য অপেক্ষাও করতে হয় না — <code>isPending</code> দিয়ে চাইলে একটা হালকা loading ইঙ্গিতও দেখানো যায়।</div>
 </template>
 
 <template data-page="servercomp">
@@ -737,6 +788,24 @@ function AddToCartButton({ productId }) {
 }</pre>
 <div class="callout why"><span class="tag">কেন RSC গুরুত্বপূর্ণ — Zero-Bundle-Size Component</span>
 একটা markdown parser, date formatter, বা heavy data-processing লাইব্রেরি Server Component-এ ব্যবহার করলে সেই লাইব্রেরির কোড client bundle-এ <b>একদমই যায় না</b> — শুধু ফলাফল HTML হিসেবে পাঠানো হয়। traditional client-rendered React-এ পুরো লাইব্রেরিটাই bundle-এ যুক্ত হতো, ব্যবহারকারীর ব্রাউজারে ডাউনলোড হতো। এটা বিশেষ করে content-heavy সাইটে (blog, e-commerce catalog) বিশাল bundle-size সাশ্রয় করে।</div>
+
+<h3>Hydration — Server-এ তৈরি HTML যেভাবে Interactive হয়ে ওঠে</h3>
+<p>উপরের টেবিলে "Client Component সার্ভারে (initial HTML) + ক্লায়েন্টে (hydration)" — এই <span class="kw">hydration</span> শব্দটার পেছনের প্রক্রিয়া বোঝা জরুরি। সার্ভার প্রথমে পুরো পেজের real HTML পাঠায় (তাই ব্যবহারকারী সাথে সাথেই content দেখতে পান, এমনকি JS লোড হওয়ার আগেই) — কিন্তু সেই HTML তখনো "মৃত" (dead), কোনো <code>onClick</code> কাজ করে না। ব্রাউজারে React JS লোড হওয়ার পর React একই component tree আবার render করে, ফলাফলটাকে existing DOM-এর সাথে মিলিয়ে দেখে (নতুন DOM node তৈরি না করেই), আর প্রতিটা element-এর সাথে event listener জুড়ে দেয় — এই "পুরনো markup-কে জীবন্ত করে তোলার" ধাপটাই hydration।</p>
+<div class="diagram"><pre>
+সার্ভার:  Component render ──▶ HTML string ──▶ ব্রাউজারে পাঠানো
+                                                    │
+ব্রাউজার: HTML সাথে সাথে paint (দেখা যায়, কিন্তু ক্লিক কাজ করে না)
+                                                    │
+             React JS bundle ডাউনলোড ও রান হয়
+                                                    │
+       hydrate() ── একই component tree client-এ render,
+                     existing DOM node পুনর্ব্যবহার (নতুন করে না বানিয়ে),
+                     event listener সংযুক্ত
+                                                    │
+                                     পেজ পুরোপুরি interactive
+</pre></div>
+<div class="callout mistake"><span class="tag">Hydration Mismatch — একটা সাধারণ Runtime Error</span>
+সার্ভারে render হওয়া HTML আর ক্লায়েন্টে React প্রথমবার যা render করে তা একই হতে হবে — নইলে React একটা <code>"Text content does not match server-rendered HTML"</code>-জাতীয় warning/error দেয়। এটা সাধারণত ঘটে যখন render-এর ভেতরে এমন কিছু ব্যবহার করা হয় যা সার্ভার আর ক্লায়েন্টে ভিন্ন ফলাফল দেয় — যেমন <code>new Date().toLocaleTimeString()</code>, <code>Math.random()</code>, বা সরাসরি <code>typeof window !== "undefined"</code> দিয়ে condition। সমাধান — এই ধরনের ডেটা render-এ সরাসরি না বসিয়ে, mount হওয়ার পরে (<code>useEffect</code>-এ, শুধু client-এ) সেট করা, যাতে প্রথম render দুই জায়গাতেই এক থাকে।</div>
 
 <h3>Composition Pattern — Server Component-এর ভেতরে Client Component "Slot" হিসেবে</h3>
 <div class="callout best"><span class="tag">Best practice — Client Component-কে Leaf/ছোট রাখা</span>
