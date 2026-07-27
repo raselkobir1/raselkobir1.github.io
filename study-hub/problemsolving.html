@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Problem Solving ও DSA — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#d946ef; --accent2:#38bdf8;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --pink:#f472b6;
+    --code-bg:#0b0f14; --kw:#f0abfc;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(217,70,239,.22),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#2a0620}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--accent2)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--accent2)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#f0abfc}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  .search-wrap{padding:0 10px 14px}
+  .search-box{
+    width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    border-radius:9px; padding:9px 12px; font-size:13.5px; font-family:inherit;
+    outline:none; transition:border-color .15s;
+  }
+  .search-box:focus{border-color:var(--accent)}
+  .search-box::placeholder{color:var(--muted)}
+  .search-meta{font-size:11.5px; color:var(--muted); padding:6px 2px 0; min-height:14px}
+  .navbtn.hide{display:none}
+  mark.hl{background:#fde047; color:#1a1a1a; padding:0 1px; border-radius:3px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🧮 Problem Solving ও DSA</h1>
+      <p>Beginner → Advanced • বাংলায় (keyword ইংরেজিতে)</p>
+      <div class="search-wrap">
+        <input type="text" id="courseSearch" class="search-box" placeholder="🔍 এই কোর্সে সার্চ করুন..." autocomplete="off">
+        <div class="search-meta" id="searchMeta"></div>
+      </div>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",   icon:"🧭", title:"Foundation — Problem Solving Framework"},
+  {id:"complexity",   icon:"📈", title:"Complexity Analysis — Big-O"},
+  {id:"arrays",       icon:"🔢", title:"Arrays ও Strings — বেসিক প্যাটার্ন"},
+  {id:"twopointer",   icon:"👉", title:"Two Pointers ও Sliding Window"},
+  {id:"hashing",      icon:"🗂️", title:"Hashing"},
+  {id:"recursion",    icon:"🔁", title:"Recursion ও Backtracking"},
+  {id:"sorting",      icon:"🔀", title:"Sorting ও Binary Search"},
+  {id:"linkedlist",   icon:"🔗", title:"Linked List"},
+  {id:"stackqueue",   icon:"📚", title:"Stack ও Queue"},
+  {id:"trees",        icon:"🌳", title:"Trees — Binary Tree, BST"},
+  {id:"heap",         icon:"⛰️", title:"Heap ও Priority Queue"},
+  {id:"graphs",       icon:"🕸️", title:"Graphs — BFS, DFS"},
+  {id:"graphadv",     icon:"🗺️", title:"Graph Advanced — Shortest Path, Union-Find"},
+  {id:"dp1",          icon:"🧩", title:"Dynamic Programming — Foundation"},
+  {id:"dp2",          icon:"🧱", title:"Dynamic Programming — Advanced"},
+  {id:"greedy",       icon:"💰", title:"Greedy Algorithms"},
+  {id:"patterns",     icon:"🎯", title:"Pattern Recognition ও Interview Strategy"},
+  {id:"interview",    icon:"🏆", title:"Interview প্রশ্নোত্তর"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Foundation — Problem Solving Framework</h2>
+<p class="lead">Problem Solving/DSA শেখার সবচেয়ে সাধারণ ভুল হলো শত শত সমস্যার সমাধান মুখস্থ করার চেষ্টা করা। এই কোর্স ভিন্ন পথে হাঁটে — প্রতিটা প্যাটার্ন <b>কেন</b> কাজ করে তা বোঝা, যাতে না-দেখা সমস্যাতেও সঠিক টেকনিক চিনতে পারা যায়।</p>
+
+<h3>একটা কাঠামোবদ্ধ পদ্ধতি — চারটা ধাপ</h3>
+<div class="diagram"><pre>
+১. Understand   — সমস্যাটা নিজের ভাষায় বলুন, input/output/constraint স্পষ্ট করুন
+২. Plan          — ছোট উদাহরণে হাতে সমাধান করুন, একটা approach বেছে নিন (brute force আগে)
+৩. Implement     — কোড লিখুন, brute force দিয়ে শুরু করে পরে optimize করুন
+৪. Review        — edge case যাচাই করুন (empty input, একটা element, duplicate, negative number)
+</pre></div>
+<div class="callout mistake"><span class="tag">Common mistake — সরাসরি কোড লেখা শুরু করা</span>
+সমস্যা পড়েই সাথে সাথে কোড লেখা শুরু করলে প্রায়ই মাঝপথে আটকে যেতে হয়, কারণ সমস্যার প্রকৃতি (constraint, edge case) পুরোপুরি বোঝা হয়নি। অভিজ্ঞ প্রবলেম-সলভাররা প্রথমে ছোট একটা উদাহরণ হাতে-কলমে সমাধান করেন — এই ধাপেই প্রায়ই সঠিক প্যাটার্ন (two pointer, DP, ইত্যাদি) নিজে থেকে দৃশ্যমান হয়ে ওঠে।</div>
+
+<h3>Constraint দেখেই Approach অনুমান করা</h3>
+<table>
+<tr><th>Input Size (n)</th><th>প্রত্যাশিত Time Complexity</th><th>ইঙ্গিত</th></tr>
+<tr><td>n ≤ 20</td><td>O(2ⁿ) বা O(n!)</td><td>Brute force / Backtracking সম্ভবত গ্রহণযোগ্য</td></tr>
+<tr><td>n ≤ 1,000</td><td>O(n²)</td><td>Nested loop, সাধারণ DP গ্রহণযোগ্য</td></tr>
+<tr><td>n ≤ 100,000</td><td>O(n log n)</td><td>Sorting, Binary Search, Heap-ভিত্তিক সমাধান প্রয়োজন</td></tr>
+<tr><td>n ≤ 10,000,000</td><td>O(n)</td><td>Single-pass, Two Pointer, Hashing প্রয়োজন</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন Constraint প্রথমে দেখা উচিত</span>
+একটা সমস্যায় <code>n ≤ 10⁵</code> দেখলে সাথে সাথে বোঝা যায় O(n²) সমাধান (১ সেকেন্ডে সাধারণত ১০⁸ অপারেশন সম্ভব) টাইম লিমিট পার হয়ে যাবে — তাই একটা O(n log n) বা O(n) সমাধান খুঁজতে হবে, শুরু থেকেই। এটাই কেন অভিজ্ঞ প্রবলেম-সলভাররা কোড লেখার আগে constraint বিশ্লেষণ করে সময় বাঁচান, ভুল approach-এ সময় নষ্ট না করে।</div>
+
+<h3>Brute Force থেকে Optimal — একটা প্রত্যাশিত যাত্রা</h3>
+<div class="callout best"><span class="tag">Best practice — সবসময় প্রথমে একটা কাজ-করা সমাধান</span>
+ইন্টারভিউ বা প্র্যাকটিসে সবসময় প্রথমে একটা brute force সমাধান (এমনকি O(n²) বা O(n³) হলেও) মুখে বলুন বা লিখুন — এটা প্রমাণ করে আপনি সমস্যাটা বোঝেন, আর প্রায়ই brute force-এর মধ্যেই optimization-এর ইঙ্গিত লুকিয়ে থাকে (যেমন একটা nested loop-এর ভেতরের লুপ আসলে একটা lookup, যা hashing দিয়ে O(1)-এ নামানো যায়)। কখনো শূন্য থেকে সরাসরি "optimal" সমাধান খোঁজার চেষ্টা করবেন না।</div>
+</template>
+
+<template data-page="complexity">
+<h2 class="title">২. Complexity Analysis — Big-O</h2>
+<p class="lead"><span class="kw">Big-O notation</span> একটা অ্যালগরিদম input বড় হওয়ার সাথে সাথে কতটা ধীর হবে তার একটা upper-bound বর্ণনা — নির্দিষ্ট সেকেন্ড নয়, বরং growth rate।</p>
+
+<h3>সাধারণ Complexity-র ক্রম</h3>
+<div class="diagram"><pre>
+O(1) &lt; O(log n) &lt; O(n) &lt; O(n log n) &lt; O(n²) &lt; O(2ⁿ) &lt; O(n!)
+দ্রুততর ──────────────────────────────────────────────▶ ধীরতর
+</pre></div>
+<table>
+<tr><th>Complexity</th><th>নাম</th><th>উদাহরণ</th></tr>
+<tr><td>O(1)</td><td>Constant</td><td>Array-এর index দিয়ে access, HashMap lookup</td></tr>
+<tr><td>O(log n)</td><td>Logarithmic</td><td>Binary Search — প্রতি ধাপে সমস্যার আকার অর্ধেক হয়</td></tr>
+<tr><td>O(n)</td><td>Linear</td><td>Array একবার পুরোটা loop করা</td></tr>
+<tr><td>O(n log n)</td><td>Linearithmic</td><td>Merge Sort, Quick Sort (গড়ে)</td></tr>
+<tr><td>O(n²)</td><td>Quadratic</td><td>Nested loop — প্রতিটা element-এর সাথে প্রতিটা element তুলনা</td></tr>
+<tr><td>O(2ⁿ)</td><td>Exponential</td><td>Subset generation, naive recursive Fibonacci</td></tr>
+</table>
+
+<h3>Time বনাম Space Complexity</h3>
+<p><span class="kw">Time Complexity</span> কত অপারেশন লাগবে তা বর্ণনা করে, <span class="kw">Space Complexity</span> কত অতিরিক্ত মেমরি (input বাদে) লাগবে। প্রায়ই এই দুটোর মধ্যে একটা trade-off থাকে — একটা HashMap ব্যবহার করে O(n) time পাওয়া যায়, কিন্তু O(n) অতিরিক্ত space খরচ হয়।</p>
+
+<h3>Amortized Complexity</h3>
+<div class="callout behind"><span class="tag">Dynamic Array-এর Amortized O(1) Append</span>
+একটা <code>List&lt;T&gt;</code>-এ নতুন element যোগ করা মাঝে মাঝে O(n) লাগে (যখন ভেতরের array পূর্ণ হয়ে যায়, নতুন বড় array-তে সব কপি করতে হয়) — কিন্তু এটা ঘটে খুব কম বার (প্রতিবার আকার দ্বিগুণ করা হয়)। বহু insertion-এর গড় খরচ হিসাব করলে (amortized analysis), প্রতিটা append গড়ে O(1) — এই কারণেই <code>List&lt;T&gt;.Add()</code>-কে "amortized O(1)" বলা হয়, প্রতিটা একক কল O(1) না হলেও।</div>
+
+<h3>কেন Coding Interview-এ Complexity গুরুত্বপূর্ণ</h3>
+<div class="callout mistake"><span class="tag">Common mistake — সঠিক উত্তর দিয়েই থেমে যাওয়া, Complexity না বলা</span>
+একটা সমাধান সঠিক আউটপুট দিলেও, ইন্টারভিউয়ার সবসময় জিজ্ঞেস করবেন "এর Time/Space Complexity কী?" — এই প্রশ্নের উত্তর দিতে না পারা মানে সমাধানটা সত্যিই বোঝা হয়নি বলে ধরা হয়। প্রতিটা সমাধান লেখার পরপরই নিজে থেকেই এর complexity বলার অভ্যাস করা উচিত, জিজ্ঞাসা করার অপেক্ষায় না থেকে।</div>
+</template>
+
+<template data-page="arrays">
+<h2 class="title">৩. Arrays ও Strings — বেসিক প্যাটার্ন</h2>
+<p class="lead">Array ও String প্রায় প্রতিটা প্রবলেম-সলভিং প্রশ্নের ভিত্তি — কিছু পুনরাবৃত্ত টেকনিক আছে যা বারবার বিভিন্ন সমস্যায় ব্যবহৃত হয়।</p>
+
+<h3>Prefix Sum — Range Query দ্রুত করা</h3>
+<div class="diagram"><pre>
+Array:       [3, 1, 4, 1, 5, 9, 2]
+Prefix Sum:  [3, 4, 8, 9, 14, 23, 25]   ← prefix[i] = arr[0..i]-এর যোগফল
+
+Range Sum(l, r) = prefix[r] - prefix[l-1]     ← O(1)-এ যেকোনো subarray-র যোগফল
+</pre></div>
+<div class="callout why"><span class="tag">Prefix Sum কেন — বারবার Sum Query-কে O(1)-এ নামানো</span>
+যদি একই array-তে বারবার বিভিন্ন range-এর যোগফল জিজ্ঞাসা করা হয়, প্রতিবার সেই range loop করলে O(n) প্রতি query, মোট O(n·q)। প্রথমে একবার O(n) খরচ করে prefix sum array বানালে, প্রতিটা query O(1)-এ উত্তর দেওয়া যায় — মোট খরচ O(n + q), যা q বড় হলে বিশাল পার্থক্য তৈরি করে।</div>
+
+<h3>Frequency Count — একটা সাধারণ প্যাটার্ন</h3>
+<pre>bool IsAnagram(string s, string t) {
+    if (s.Length != t.Length) return false;
+    var count = new int[26];
+    foreach (var c in s) count[c - 'a']++;
+    foreach (var c in t) count[c - 'a']--;
+    return count.All(x =&gt; x == 0);
+}</pre>
+<p>দুটো স্ট্রিং anagram কিনা যাচাই করতে প্রতিটা অক্ষরের frequency গুনে তুলনা করলেই যথেষ্ট — sort করে তুলনা করার O(n log n) সমাধানের চেয়ে এই O(n) সমাধান দ্রুততর।</p>
+
+<h3>In-Place Array Manipulation</h3>
+<div class="callout best"><span class="tag">Best practice — Extra Space ছাড়াই Array বদলানো</span>
+"Remove duplicates from sorted array" বা "Move zeroes to end"-এর মতো সমস্যায় প্রায়ই একটা নতুন array না বানিয়ে, একটা "write pointer" ব্যবহার করে ইন-প্লেস সমাধান সম্ভব — যেমন একটা <code>writeIndex</code> রেখে valid element-গুলো সামনের দিকে ঠেলে দেওয়া। এটা O(1) extra space-এ সমাধান দেয়, যা বহু ইন্টারভিউতে স্পষ্টভাবে চাওয়া হয় (৪ নম্বর অধ্যায়ে Two Pointer টেকনিকে আরও বিস্তারিত)।</div>
+</template>
+
+<template data-page="twopointer">
+<h2 class="title">৪. Two Pointers ও Sliding Window</h2>
+<p class="lead">এই দুই টেকনিক nested loop-এর O(n²) সমাধানকে প্রায়ই O(n)-এ নামিয়ে আনে — সবচেয়ে বেশি ব্যবহৃত, সবচেয়ে বেশি মূল্যবান প্যাটার্নগুলোর একটা।</p>
+
+<h3>Two Pointers — বিপরীত প্রান্ত থেকে</h3>
+<div class="diagram"><pre>
+Sorted Array:  [1, 3, 4, 6, 8, 11]   target = 10
+                │                 │
+              left               right
+       arr[left]+arr[right] = 1+11 = 12 &gt; 10  → right কমাও
+                   │              │
+       arr[left]+arr[right] = 1+8 = 9 &lt; 10   → left বাড়াও
+                      │           │
+       arr[left]+arr[right] = 3+8 = 11 &gt; 10  → right কমাও
+                      │        │
+       arr[left]+arr[right] = 3+6 = 9 &lt; 10   → left বাড়াও (উত্তর নেই এই উদাহরণে)
+</pre></div>
+<pre>bool TwoSumSorted(int[] arr, int target) {
+    int left = 0, right = arr.Length - 1;
+    while (left &lt; right) {
+        int sum = arr[left] + arr[right];
+        if (sum == target) return true;
+        else if (sum &lt; target) left++;
+        else right--;
+    }
+    return false;
+}</pre>
+<div class="callout why"><span class="tag">কেন এটা কাজ করে — Sorted Order-এর সুবিধা নেওয়া</span>
+Array sorted বলেই আমরা নিশ্চিতভাবে জানি: <code>sum</code> target-এর চেয়ে বড় হলে, right pointer কমালে sum নিশ্চিতভাবেই কমবে (কখনো বাড়বে না) — তাই right কমানো নিরাপদ। একইভাবে sum ছোট হলে left বাড়ানো নিরাপদ। প্রতিটা ধাপে অন্তত একটা সম্ভাব্য জোড়া বাদ পড়ে, তাই সর্বোচ্চ n ধাপে সব জোড়া কার্যকরভাবে বিবেচিত হয় — O(n²) সব জোড়া পরীক্ষা করার বদলে O(n)।</div>
+
+<h3>Sliding Window — Fixed Size</h3>
+<p>৩ নম্বর অধ্যায়ে দেখা "max sum subarray of size k" সমস্যা সমাধান করা যায় একটা window সরিয়ে সরিয়ে — প্রতিবার নতুন সম্পূর্ণ যোগফল না গুনে, শুধু window-এর একটা প্রান্ত যোগ ও অন্য প্রান্ত বিয়োগ করে।</p>
+<pre>int MaxSumSubarray(int[] arr, int k) {
+    int windowSum = 0;
+    for (int i = 0; i &lt; k; i++) windowSum += arr[i];
+    int maxSum = windowSum;
+    for (int i = k; i &lt; arr.Length; i++) {
+        windowSum += arr[i] - arr[i - k];   <span class="c">// নতুন element যোগ, পুরনোটা বিয়োগ</span>
+        maxSum = Math.Max(maxSum, windowSum);
+    }
+    return maxSum;
+}</pre>
+
+<h3>Sliding Window — Variable Size</h3>
+<div class="callout behind"><span class="tag">Variable Window — Expand ও Shrink দুই দিক</span>
+"Longest substring without repeating characters"-এর মতো সমস্যায় window-এর আকার আগে থেকে জানা যায় না — একটা <code>right</code> pointer window বড় করতে থাকে যতক্ষণ শর্ত সন্তুষ্ট থাকে, শর্ত ভাঙলে একটা <code>left</code> pointer window ছোট করে শর্ত আবার পূরণ না হওয়া পর্যন্ত। প্রতিটা element সর্বোচ্চ দুইবার visit হয় (একবার <code>right</code> দিয়ে, একবার <code>left</code> দিয়ে) — তাই মোট complexity O(n), দেখতে nested loop-এর মতো লাগলেও।</div>
+</template>
+
+<template data-page="hashing">
+<h2 class="title">৫. Hashing</h2>
+<p class="lead">HashMap/HashSet প্রায় প্রতিটা O(n²) থেকে O(n)-এ নামিয়ে আনা সমাধানের চাবিকাঠি — "আমি কি আগে এটা দেখেছি?" প্রশ্নের উত্তর O(1)-এ দেয়।</p>
+
+<h3>ক্লাসিক উদাহরণ — Two Sum</h3>
+<pre>int[] TwoSum(int[] nums, int target) {
+    var seen = new Dictionary&lt;int, int&gt;();  <span class="c">// মান → index</span>
+    for (int i = 0; i &lt; nums.Length; i++) {
+        int complement = target - nums[i];
+        if (seen.ContainsKey(complement))
+            return new int[] { seen[complement], i };
+        seen[nums[i]] = i;
+    }
+    return Array.Empty&lt;int&gt;();
+}</pre>
+<div class="callout why"><span class="tag">কেন এটা O(n²)-কে O(n)-এ নামায়</span>
+Brute force-এ প্রতিটা element-এর জন্য বাকি সব element চেক করতে হয় (nested loop, O(n²))। HashMap-এ প্রতিটা element দেখার সাথে সাথে "এর complement (target - nums[i]) কি আগেই দেখা হয়েছে?" এই প্রশ্নের উত্তর O(1)-এ পাওয়া যায় — তাই পুরো array একবার loop করলেই (O(n)) যথেষ্ট, প্রতিটা element-এর জন্য বাকি array আবার scan করতে হয় না।</div>
+
+<h3>HashSet দিয়ে Duplicate/Membership যাচাই</h3>
+<table>
+<tr><th>ব্যবহার</th><th>উদাহরণ</th></tr>
+<tr><td>Duplicate খুঁজে বের করা</td><td>একটা array-তে কোনো element দুইবার আছে কিনা — HashSet-এ যোগ করার সময় already-present চেক</td></tr>
+<tr><td>Visited ট্র্যাক করা</td><td>Graph traversal-এ (১২ নম্বর অধ্যায়ে), recursion-এ cycle detection</td></tr>
+<tr><td>Frequency Counting</td><td>Anagram check, majority element (Dictionary&lt;char/int, int&gt;)</td></tr>
+</table>
+
+<h3>Hash Collision — সংক্ষিপ্ত ধারণা</h3>
+<div class="callout behind"><span class="tag">কেন গড়ে O(1), সবসময় নয়</span>
+একটা HashMap আদর্শভাবে O(1) lookup দেয়, কারণ একটা hash function প্রতিটা key-কে একটা array index-এ ম্যাপ করে। কিন্তু দুটো ভিন্ন key একই index-এ ম্যাপ হলে (collision), সেই bucket-এ একটা linked list/tree তৈরি হয় — বহু collision হলে worst-case O(n)-এ নেমে যেতে পারে। বাস্তবে ভালো hash function ও যথেষ্ট bucket সংখ্যা এই ঝুঁকি ব্যবহারিকভাবে নগণ্য করে রাখে, তাই "average case O(1)" ধরে নেওয়া যুক্তিসঙ্গত।</div>
+</template>
+
+<template data-page="recursion">
+<h2 class="title">৬. Recursion ও Backtracking</h2>
+<p class="lead">যে সমস্যা নিজের ছোট সংস্করণের মাধ্যমে সংজ্ঞায়িত করা যায়, তার জন্য <span class="kw">Recursion</span> স্বাভাবিক সমাধান — আর <span class="kw">Backtracking</span> হলো recursion ব্যবহার করে সব সম্ভাব্য সমাধান পদ্ধতিগতভাবে খোঁজার একটা কৌশল।</p>
+
+<h3>Recursion-এর দুইটা অপরিহার্য অংশ</h3>
+<table>
+<tr><th>অংশ</th><th>ব্যাখ্যা</th></tr>
+<tr><td>Base Case</td><td>যখন recursion থেমে যায় — এটা ছাড়া অসীম recursion (Stack Overflow)</td></tr>
+<tr><td>Recursive Case</td><td>সমস্যাকে একটা ছোট উপ-সমস্যায় ভেঙে, সেই উপ-সমস্যার সমাধান ব্যবহার করে বর্তমান সমাধান তৈরি</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — Base Case ভুলে যাওয়া বা ভুল জায়গায় রাখা</span>
+Base Case ছাড়া বা ভুল condition-এ base case রাখলে recursion কখনো থামে না — Call Stack ক্রমাগত বাড়তে থাকে যতক্ষণ না <code>StackOverflowException</code> হয়। প্রতিটা recursive ফাংশন লেখার সময় প্রথমেই base case নিশ্চিত করা উচিত, তারপর recursive case।</div>
+
+<h3>Backtracking — Choose, Explore, Unchoose</h3>
+<div class="diagram"><pre>
+void Backtrack(state) {
+    if (state সম্পূর্ণ/লক্ষ্যে পৌঁছেছে) { result-এ যোগ করো; return; }
+    for প্রতিটা সম্ভাব্য choice {
+        choice প্রয়োগ করো (Choose)
+        Backtrack(নতুন state)         ← Explore
+        choice ফিরিয়ে নাও (Unchoose)  ← মূল state-এ ফিরে আসা, পরের choice চেষ্টা করার জন্য
+    }
+}
+</pre></div>
+<pre><span class="c">// Subsets — একটা array-এর সব সাবসেট জেনারেট করা</span>
+void Backtrack(int[] nums, int start, List&lt;int&gt; current, List&lt;List&lt;int&gt;&gt; result) {
+    result.Add(new List&lt;int&gt;(current));   <span class="c">// প্রতিটা অবস্থাই একটা বৈধ সাবসেট</span>
+    for (int i = start; i &lt; nums.Length; i++) {
+        current.Add(nums[i]);                    <span class="c">// Choose</span>
+        Backtrack(nums, i + 1, current, result); <span class="c">// Explore</span>
+        current.RemoveAt(current.Count - 1);     <span class="c">// Unchoose</span>
+    }
+}</pre>
+<div class="callout why"><span class="tag">"Unchoose" ধাপ কেন অপরিহার্য</span>
+Unchoose ছাড়া, একটা choice প্রয়োগ করার পর সেই পরিবর্তন <code>current</code> লিস্টে থেকে যাবে যখন আমরা sibling branch (একই স্তরের অন্য choice)探索 করতে যাব — ভুল state নিয়ে explore করা হবে। Unchoose ধাপ নিশ্চিত করে প্রতিটা recursive কল শেষে state ঠিক আগের অবস্থায় ফিরে আসে, যাতে পরের sibling branch একটা পরিষ্কার, সঠিক state থেকে শুরু করে — এটাই backtracking-এর মূল কৌশল, শুধু recursion নয়।</div>
+</template>
+
+<template data-page="sorting">
+<h2 class="title">৭. Sorting ও Binary Search</h2>
+<p class="lead">Sorting নিজেই একটা সমস্যা সমাধান করে না, কিন্তু sorted ডেটার ওপর বহু দ্রুত অ্যালগরিদম (Binary Search, Two Pointer) সম্ভব হয় — তাই sorting প্রায়ই একটা প্রথম ধাপ।</p>
+
+<h3>Sorting অ্যালগরিদম তুলনা</h3>
+<table>
+<tr><th>অ্যালগরিদম</th><th>Average Time</th><th>বিশেষত্ব</th></tr>
+<tr><td>Merge Sort</td><td>O(n log n)</td><td>Stable, worst-case-ও O(n log n), কিন্তু O(n) extra space লাগে</td></tr>
+<tr><td>Quick Sort</td><td>O(n log n)</td><td>In-place (O(log n) space), কিন্তু worst-case O(n²) (খারাপ pivot বাছাইয়ে)</td></tr>
+<tr><td>Built-in (<code>Array.Sort</code>)</td><td>O(n log n)</td><td>বাস্তবে সবসময় এটাই ব্যবহার করা উচিত — highly optimized</td></tr>
+</table>
+
+<h3>Binary Search — টেমপ্লেট</h3>
+<pre>int BinarySearch(int[] arr, int target) {
+    int lo = 0, hi = arr.Length - 1;
+    while (lo &lt;= hi) {
+        int mid = lo + (hi - lo) / 2;   <span class="c">// overflow এড়াতে (lo+hi)/2 নয়</span>
+        if (arr[mid] == target) return mid;
+        else if (arr[mid] &lt; target) lo = mid + 1;
+        else hi = mid - 1;
+    }
+    return -1;   <span class="c">// পাওয়া যায়নি</span>
+}</pre>
+<div class="callout mistake"><span class="tag">Common mistake — Integer Overflow ও Off-by-One</span>
+<code>mid = (lo + hi) / 2</code> লিখলে, যদি <code>lo</code> ও <code>hi</code> দুটোই <code>int</code>-এর সর্বোচ্চ মানের কাছাকাছি হয়, তাদের যোগফল overflow করতে পারে — <code>mid = lo + (hi - lo) / 2</code> লিখলে এই ঝুঁকি থাকে না, একই ফলাফল দেয়। এছাড়া <code>lo &lt;= hi</code>-এর বদলে <code>lo &lt; hi</code> লিখলে শেষ element মিস হয়ে যেতে পারে — লুপ condition ও pointer update-এর সামঞ্জস্য বারবার হাতে-কলমে ছোট উদাহরণে যাচাই করা উচিত।</div>
+
+<h3>Binary Search on Answer — একটা উন্নত প্যাটার্ন</h3>
+<div class="callout behind"><span class="tag">Sorted Array ছাড়াও Binary Search প্রযোজ্য</span>
+Binary Search শুধু "sorted array-তে একটা মান খোঁজা"-তেই সীমাবদ্ধ নয় — যেকোনো <b>monotonic</b> ফাংশনের ওপর প্রযোজ্য (যেমন "৫ দিনে বই পড়া শেষ করতে সর্বনিম্ন কত পৃষ্ঠা/ঘণ্টা লাগবে" — উত্তর যত বাড়ে, "সম্ভব কিনা" ফাংশন monotonically true-তে যায়)। এই টেকনিককে "Binary Search on Answer" বলা হয় — সম্ভাব্য উত্তরের রেঞ্জে binary search চালিয়ে সবচেয়ে ছোট/বড় বৈধ উত্তর খোঁজা, মূল array-তে নয়।</div>
+</template>
+
+<template data-page="linkedlist">
+<h2 class="title">৮. Linked List</h2>
+<p class="lead">Array-এর বিপরীতে, Linked List-এ elements মেমরিতে ধারাবাহিকভাবে থাকে না — প্রতিটা node পরের node-এর reference ধরে রাখে। এটা insertion/deletion-কে O(1) করে (index জানা থাকলে), কিন্তু random access হারায় (O(n))।</p>
+
+<h3>Reverse a Linked List — ক্লাসিক সমস্যা</h3>
+<pre>ListNode Reverse(ListNode head) {
+    ListNode prev = null;
+    while (head != null) {
+        ListNode next = head.Next;   <span class="c">// পরের node হারিয়ে যাওয়ার আগে সংরক্ষণ</span>
+        head.Next = prev;            <span class="c">// লিংক উল্টে দেওয়া</span>
+        prev = head;
+        head = next;
+    }
+    return prev;   <span class="c">// prev-ই নতুন head</span>
+}</pre>
+
+<h3>Fast/Slow Pointer (Floyd's Algorithm) — Cycle Detection</h3>
+<div class="diagram"><pre>
+slow pointer প্রতি ধাপে ১টা node এগোয়
+fast pointer প্রতি ধাপে ২টা node এগোয়
+
+যদি একটা cycle থাকে, fast pointer শেষমেশ slow pointer-কে ধরে ফেলবেই
+(দুটো দৌড়বিদ একটা গোলাকার ট্র্যাকে ভিন্ন গতিতে দৌড়ালে দ্রুতটা একসময় ধীরটাকে overtake করে)
+</pre></div>
+<pre>bool HasCycle(ListNode head) {
+    ListNode slow = head, fast = head;
+    while (fast != null &amp;&amp; fast.Next != null) {
+        slow = slow.Next;
+        fast = fast.Next.Next;
+        if (slow == fast) return true;   <span class="c">// দেখা হয়ে গেলে cycle আছে</span>
+    }
+    return false;   <span class="c">// fast শেষে পৌঁছে গেলে cycle নেই</span>
+}</pre>
+<div class="callout why"><span class="tag">কেন এটা O(1) Space-এ কাজ করে</span>
+একটা সরল সমাধান একটা HashSet-এ প্রতিটা visited node রেখে দ্বিতীয়বার দেখা কোনো node খুঁজতে পারে — কিন্তু এতে O(n) extra space লাগে। Floyd's Algorithm মাত্র দুইটা pointer ব্যবহার করে O(1) space-এ একই ফলাফল দেয় — এটাই দেখায় কেন একই সমস্যার একাধিক সমাধান থাকতে পারে, ভিন্ন ভিন্ন time/space trade-off নিয়ে।</div>
+</template>
+
+<template data-page="stackqueue">
+<h2 class="title">৯. Stack ও Queue</h2>
+<p class="lead"><span class="kw">Stack</span> (LIFO — Last In First Out) ও <span class="kw">Queue</span> (FIFO — First In First Out) দুটো মৌলিক ডেটা স্ট্রাকচার, প্রতিটার নিজস্ব সমস্যার শ্রেণি আছে যেখানে এরা স্বাভাবিক ফিট।</p>
+
+<h3>Valid Parentheses — Stack-এর ক্লাসিক ব্যবহার</h3>
+<pre>bool IsValid(string s) {
+    var stack = new Stack&lt;char&gt;();
+    var pairs = new Dictionary&lt;char, char&gt; { [')'] = '(', [']'] = '[', ['}'] = '{' };
+    foreach (var c in s) {
+        if (c == '(' || c == '[' || c == '{') stack.Push(c);
+        else if (pairs.ContainsKey(c)) {
+            if (stack.Count == 0 || stack.Pop() != pairs[c]) return false;
+        }
+    }
+    return stack.Count == 0;   <span class="c">// সব bracket জোড়া মিলে গেলে stack খালি থাকবে</span>
+}</pre>
+<div class="callout why"><span class="tag">কেন Stack — সবচেয়ে সাম্প্রতিক Open Bracket সবার আগে বন্ধ হবে</span>
+Bracket matching-এ সবসময় সবচেয়ে <b>সাম্প্রতিক</b> খোলা bracket-টাই সবার আগে বন্ধ হওয়া উচিত (nested structure) — এটাই ঠিক Stack-এর LIFO আচরণ। যখনই একটা closing bracket আসে, স্ট্যাকের top-এ থাকা opening bracket-এর সাথে মিলছে কিনা চেক করাই যথেষ্ট, পুরো history দেখার দরকার নেই।</div>
+
+<h3>Monotonic Stack — একটা উন্নত প্যাটার্ন</h3>
+<div class="callout behind"><span class="tag">"Next Greater Element" সমস্যায় Monotonic Stack</span>
+একটা <span class="kw">Monotonic Stack</span> সবসময় ক্রমবর্ধমান বা ক্রমহ্রাসমান ক্রম বজায় রাখে — নতুন element ঢোকানোর সময়, স্ট্যাকের top-এর যেসব element এই নতুন element-এর চেয়ে ছোট, তাদের pop করে ফেলে দেওয়া হয় (কারণ তাদের "next greater element" এই নতুন element-ই)। এই টেকনিক "Next Greater Element", "Daily Temperatures"-এর মতো সমস্যা O(n²) থেকে O(n)-এ নামিয়ে আনে, কারণ প্রতিটা element সর্বোচ্চ একবার push ও একবার pop হয়।</div>
+
+<h3>Queue — BFS-এর ভিত্তি</h3>
+<p>Queue-এর FIFO আচরণ ঠিক Graph/Tree-এর <span class="kw">Breadth-First Search (BFS)</span>-এর জন্য প্রয়োজনীয় — "level অনুযায়ী" (level-order) processing নিশ্চিত করে, যা ১০ ও ১২ নম্বর অধ্যায়ে বিস্তারিত।</p>
+</template>
+
+<template data-page="trees">
+<h2 class="title">১০. Trees — Binary Tree, BST</h2>
+<p class="lead">একটা <span class="kw">Tree</span> একটা hierarchical ডেটা স্ট্রাকচার — প্রতিটা node-এর সর্বোচ্চ কিছু সংখ্যক child থাকে, একটা root থেকে শুরু হয়ে কোনো cycle থাকে না।</p>
+
+<h3>Tree Traversal — চার ধরনের ক্রম</h3>
+<div class="diagram"><pre>
+        5
+       / \
+      3   8
+     / \
+    1   4
+
+Inorder (Left, Root, Right):    1, 3, 4, 5, 8   ← BST-তে sorted order দেয়
+Preorder (Root, Left, Right):   5, 3, 1, 4, 8   ← Tree কপি/serialize করতে ব্যবহৃত
+Postorder (Left, Right, Root):  1, 4, 3, 8, 5   ← Tree delete/dependency resolve করতে
+Level-order (BFS):              5, 3, 8, 1, 4   ← Queue ব্যবহার করে, স্তরে স্তরে
+</pre></div>
+<pre>void Inorder(TreeNode node, List&lt;int&gt; result) {
+    if (node == null) return;
+    Inorder(node.Left, result);
+    result.Add(node.Val);
+    Inorder(node.Right, result);
+}</pre>
+
+<h3>Binary Search Tree (BST) — Ordering Property</h3>
+<p>একটা <span class="kw">BST</span>-তে প্রতিটা node-এর জন্য: বাম subtree-এর সব মান ছোট, ডান subtree-এর সব মান বড়। এই invariant-এর কারণে search/insert/delete গড়ে O(log n)-এ হয় (একটা balanced tree-তে)।</p>
+<pre>bool Search(TreeNode node, int target) {
+    if (node == null) return false;
+    if (node.Val == target) return true;
+    return target &lt; node.Val ? Search(node.Left, target) : Search(node.Right, target);
+}</pre>
+<div class="callout mistake"><span class="tag">Common mistake — BST Height Balanced ধরে নেওয়া</span>
+একটা BST-তে যদি element sorted order-এ insert করা হয় (১, ২, ৩, ৪...), tree একটা linked list-এর মতো হয়ে যায় — height O(n), search-ও O(n), O(log n) নয়। এই সমস্যা সমাধানে Self-Balancing Tree (AVL, Red-Black Tree) ব্যবহার হয়, যা প্রতিটা insertion/deletion-এর পর নিজেই rebalance করে — C#-এর <code>SortedSet&lt;T&gt;</code>/<code>SortedDictionary&lt;K,V&gt;</code> ভেতরে একটা Red-Black Tree ব্যবহার করে, এই গ্যারান্টি স্বয়ংক্রিয়ভাবে দেয়।</div>
+
+<h3>Lowest Common Ancestor (LCA) — একটা সাধারণ প্রশ্ন</h3>
+<div class="callout why"><span class="tag">BST-তে LCA কেন সহজ — Ordering Property ব্যবহার করে</span>
+একটা সাধারণ Binary Tree-তে LCA খুঁজতে recursion দিয়ে উভয় node-এর path ট্র্যাক করতে হয়। কিন্তু BST-তে, যদি দুটো target node-ই বর্তমান node-এর চেয়ে ছোট হয়, LCA বাম subtree-এ; দুটোই বড় হলে ডান subtree-এ; একটা ছোট একটা বড় হলে (বা একটা সমান) — বর্তমান node-ই LCA। এই ordering property BST-তে LCA-কে O(h) (height) সমাধানে পরিণত করে, সাধারণ tree-এর তুলনায় সরল।</div>
+</template>
+
+<template data-page="heap">
+<h2 class="title">১১. Heap ও Priority Queue</h2>
+<p class="lead">যখন বারবার "সবচেয়ে ছোট/বড় element কী" জানতে হয়, আর নতুন element যোগও হতে থাকে — একটা <span class="kw">Heap</span> এই দুই অপারেশনই O(log n)-এ দেয়, যেখানে sorting বারবার করলে O(n log n) লাগতো।</p>
+
+<h3>Min-Heap বনাম Max-Heap</h3>
+<table>
+<tr><th></th><th>Min-Heap</th><th>Max-Heap</th></tr>
+<tr><td>Root-এ কী থাকে</td><td>সবচেয়ে ছোট element</td><td>সবচেয়ে বড় element</td></tr>
+<tr><td>ব্যবহার</td><td>Kth largest, Dijkstra (১৩ নম্বর অধ্যায়ে)</td><td>Kth smallest, Task scheduling</td></tr>
+</table>
+
+<h3>Kth Largest Element — Min-Heap দিয়ে</h3>
+<pre>int FindKthLargest(int[] nums, int k) {
+    var minHeap = new PriorityQueue&lt;int, int&gt;();
+    foreach (var num in nums) {
+        minHeap.Enqueue(num, num);
+        if (minHeap.Count &gt; k) minHeap.Dequeue();   <span class="c">// সবচেয়ে ছোটটা ফেলে দেওয়া</span>
+    }
+    return minHeap.Peek();   <span class="c">// k-সাইজের heap-এর root-ই kth largest</span>
+}</pre>
+<div class="callout why"><span class="tag">কেন Min-Heap দিয়ে "Kth Largest" — Counter-intuitive কিন্তু কার্যকর</span>
+"Kth largest" খুঁজতে max-heap স্বাভাবিক মনে হয়, কিন্তু heap-এর আকার <code>k</code>-তে সীমিত রেখে min-heap ব্যবহার করলে আরও কার্যকর: heap-এ সবসময় "এ পর্যন্ত দেখা সবচেয়ে বড় k-টা element" থাকে, আর root (সবচেয়ে ছোট এর মধ্যে) সেই k-টার মধ্যে সবচেয়ে ছোট — যা ঠিক kth largest। এভাবে সম্পূর্ণ n-element sort না করেই (O(n log n)), মাত্র O(n log k) সময়ে উত্তর মেলে — k ছোট হলে উল্লেখযোগ্য দ্রুততর।</div>
+
+<h3>Heap-এর অভ্যন্তরীণ গঠন</h3>
+<div class="callout behind"><span class="tag">Array দিয়েই Heap বাস্তবায়ন — কোনো Pointer লাগে না</span>
+একটা Binary Heap সাধারণত একটা array দিয়েই বাস্তবায়িত হয় — index <code>i</code>-এর child থাকে index <code>2i+1</code> ও <code>2i+2</code>-এ, parent থাকে <code>(i-1)/2</code>-এ। এই গাণিতিক সম্পর্ক থাকায় কোনো explicit pointer/node structure লাগে না, পুরো tree একটা সাধারণ array-তে compact আকারে রাখা যায় — এটাই কেন Heap মেমরি-দক্ষ ও ক্যাশ-ফ্রেন্ডলি।</div>
+</template>
+
+<template data-page="graphs">
+<h2 class="title">১২. Graphs — BFS, DFS</h2>
+<p class="lead">একটা <span class="kw">Graph</span> node (vertex) ও তাদের মধ্যেকার সংযোগ (edge) নিয়ে গঠিত — Tree-এর একটা সাধারণীকরণ, যেখানে cycle থাকতে পারে, একাধিক parent থাকতে পারে।</p>
+
+<h3>Graph Representation</h3>
+<table>
+<tr><th>পদ্ধতি</th><th>ব্যাখ্যা</th><th>উপযুক্ত কখন</th></tr>
+<tr><td><span class="kw">Adjacency List</span></td><td>প্রতিটা node-এর জন্য একটা list, যাতে তার প্রতিবেশী node-এর নাম</td><td>Sparse graph (কম edge) — বেশিরভাগ বাস্তব ক্ষেত্রে</td></tr>
+<tr><td><span class="kw">Adjacency Matrix</span></td><td>একটা n×n 2D array, <code>matrix[i][j] = 1</code> মানে i-j-এর মধ্যে edge</td><td>Dense graph, বা দুটো node-এর মধ্যে edge আছে কিনা O(1)-এ জানতে হলে</td></tr>
+</table>
+
+<h3>BFS — Level by Level</h3>
+<pre>void BFS(Dictionary&lt;int, List&lt;int&gt;&gt; graph, int start) {
+    var visited = new HashSet&lt;int&gt; { start };
+    var queue = new Queue&lt;int&gt;();
+    queue.Enqueue(start);
+    while (queue.Count &gt; 0) {
+        int node = queue.Dequeue();
+        Console.WriteLine(node);
+        foreach (var neighbor in graph[node]) {
+            if (visited.Add(neighbor))   <span class="c">// আগে দেখা হয়নি হলেই true, ও সাথে সাথে যোগ করে</span>
+                queue.Enqueue(neighbor);
+        }
+    }
+}</pre>
+<div class="callout why"><span class="tag">BFS কখন ব্যবহার করবেন — Shortest Path (Unweighted)</span>
+BFS সবসময় "level অনুযায়ী" নোড ভ্রমণ করে — start থেকে distance ১-এর সব node, তারপর distance ২-এর সব node, ইত্যাদি। এই কারণে একটা unweighted graph-এ shortest path খুঁজতে BFS-ই স্বাভাবিক পছন্দ — যে node-টা প্রথম বার visited হবে, সেটাই start থেকে সবচেয়ে কম hop-এ পৌঁছানো, গ্যারান্টিড।</div>
+
+<h3>DFS — যতদূর সম্ভব এগিয়ে যাওয়া</h3>
+<pre>void DFS(Dictionary&lt;int, List&lt;int&gt;&gt; graph, int node, HashSet&lt;int&gt; visited) {
+    if (!visited.Add(node)) return;   <span class="c">// আগেই visited হলে ফিরে যাওয়া</span>
+    Console.WriteLine(node);
+    foreach (var neighbor in graph[node])
+        DFS(graph, neighbor, visited);
+}</pre>
+<div class="callout mistake"><span class="tag">Common mistake — Visited Set ছাড়া Graph Traversal</span>
+Tree-তে কোনো cycle নেই বলে recursion নিরাপদ, কিন্তু Graph-এ cycle থাকতে পারে — visited set ছাড়া DFS/BFS একই node বারবার visit করতে থাকবে, অসীম লুপে আটকে যাবে (Tree traversal কোড থেকে Graph কোডে কপি করার সময় এই ভুল সবচেয়ে বেশি হয়)। প্রতিটা Graph traversal-এ visited tracking অপরিহার্য।</div>
+</template>
+
+<template data-page="graphadv">
+<h2 class="title">১৩. Graph Advanced — Shortest Path, Union-Find</h2>
+<p class="lead">Weighted graph, connectivity, ও dependency-ordering সমস্যার জন্য আরও তিনটা গুরুত্বপূর্ণ অ্যালগরিদম।</p>
+
+<h3>Dijkstra's Algorithm — Weighted Shortest Path</h3>
+<pre>Dictionary&lt;int, int&gt; Dijkstra(Dictionary&lt;int, List&lt;(int to, int weight)&gt;&gt; graph, int start) {
+    var dist = new Dictionary&lt;int, int&gt; { [start] = 0 };
+    var pq = new PriorityQueue&lt;int, int&gt;();
+    pq.Enqueue(start, 0);
+    while (pq.Count &gt; 0) {
+        int node = pq.Dequeue();
+        foreach (var (to, weight) in graph[node]) {
+            int newDist = dist[node] + weight;
+            if (!dist.ContainsKey(to) || newDist &lt; dist[to]) {
+                dist[to] = newDist;
+                pq.Enqueue(to, newDist);
+            }
+        }
+    }
+    return dist;
+}</pre>
+<div class="callout behind"><span class="tag">BFS-এর সাধারণীকরণ — Priority Queue দিয়ে "Distance" অনুযায়ী</span>
+BFS প্রতিটা edge-কে সমান ওজন (১) ধরে নিয়ে Queue ব্যবহার করে "সবচেয়ে কাছেরটা আগে" প্রসেস করে। Dijkstra একই ধারণা প্রসারিত করে, কিন্তু Queue-এর বদলে Priority Queue ব্যবহার করে — যাতে ভিন্ন ভিন্ন edge weight থাকলেও সবসময় "এখন পর্যন্ত সবচেয়ে কম দূরত্বের" node-টাই আগে প্রসেস হয়। এই কারণেই সব edge weight ১ হলে Dijkstra ঠিক BFS-এর মতোই আচরণ করে।</div>
+
+<h3>Union-Find (Disjoint Set) — Connectivity</h3>
+<pre>class UnionFind {
+    int[] parent, rank;
+    public UnionFind(int n) {
+        parent = new int[n];
+        rank = new int[n];
+        for (int i = 0; i &lt; n; i++) parent[i] = i;
+    }
+    public int Find(int x) {
+        if (parent[x] != x) parent[x] = Find(parent[x]);   <span class="c">// Path Compression</span>
+        return parent[x];
+    }
+    public void Union(int x, int y) {
+        int rx = Find(x), ry = Find(y);
+        if (rx == ry) return;
+        if (rank[rx] &lt; rank[ry]) (rx, ry) = (ry, rx);   <span class="c">// Union by Rank</span>
+        parent[ry] = rx;
+        if (rank[rx] == rank[ry]) rank[rx]++;
+    }
+}</pre>
+<div class="callout why"><span class="tag">Path Compression ও Union by Rank কেন — প্রায় O(1) Amortized</span>
+এই দুটো optimization ছাড়া, বারবার Union করলে গাছ (tree) অনেক লম্বা/অগভীর হয়ে যেতে পারে, Find-এ O(n) লাগতে পারে। Path Compression প্রতিটা Find-এর সময় path-এর সব node সরাসরি root-এর সাথে যুক্ত করে দেয় (পরের বার সরাসরি এক লাফে root)। Union by Rank সবসময় ছোট tree-কে বড় tree-এর নিচে যুক্ত করে (উল্টোটা নয়) — একসাথে এই দুই কৌশল Find/Union-কে প্রায় O(1) (আনুষ্ঠানিকভাবে O(α(n)), inverse Ackermann function, ব্যবহারিকভাবে constant) করে তোলে।</div>
+
+<h3>Topological Sort — Dependency Ordering</h3>
+<div class="callout why"><span class="tag">কখন প্রয়োজন — "কোনটা আগে করতে হবে" প্রশ্নে</span>
+"Course Schedule" (একটা কোর্স নেওয়ার আগে prerequisite কোর্স শেষ করতে হবে)-এর মতো সমস্যায় <span class="kw">Topological Sort</span> (Kahn's Algorithm — in-degree ০ হওয়া node দিয়ে শুরু করে ধীরে ধীরে বাকি সব process করা) একটা বৈধ ক্রম দেয়, যেখানে প্রতিটা dependency তার নির্ভরশীল কাজের আগে আসে। এই ক্রম বের করা সম্ভব শুধুমাত্র graph-এ কোনো cycle না থাকলে — cycle থাকলে (A নির্ভর B-তে, B নির্ভর A-তে) কোনো বৈধ ক্রমই সম্ভব না, যা Topological Sort নিজেই সনাক্ত করে ফেলে (সব node process করতে না পারলে cycle আছে)।</div>
+</template>
+
+<template data-page="dp1">
+<h2 class="title">১৪. Dynamic Programming — Foundation</h2>
+<p class="lead"><span class="kw">Dynamic Programming (DP)</span> প্রায়ই সবচেয়ে ভীতিকর মনে হয়, কিন্তু এটা আসলে একটা সরল ধারণা — একই উপ-সমস্যা বারবার সমাধান না করে, একবার সমাধান করে সংরক্ষণ (cache) করে রাখা।</p>
+
+<h3>দুইটা পূর্বশর্ত</h3>
+<table>
+<tr><th>শর্ত</th><th>ব্যাখ্যা</th></tr>
+<tr><td><span class="kw">Overlapping Subproblems</span></td><td>একই উপ-সমস্যা বারবার সমাধান করতে হচ্ছে (নাহলে caching-এর কোনো লাভ নেই)</td></tr>
+<tr><td><span class="kw">Optimal Substructure</span></td><td>মূল সমস্যার optimal সমাধান উপ-সমস্যাগুলোর optimal সমাধান দিয়ে তৈরি করা যায়</td></tr>
+</table>
+
+<h3>Fibonacci — Naive Recursion থেকে Memoization</h3>
+<div class="diagram"><pre>
+Naive Recursion — একই মান বারবার গণনা:
+              fib(5)
+            /        \
+        fib(4)        fib(3)
+        /    \        /    \
+    fib(3)  fib(2)  fib(2)  fib(1)   ← fib(3) ও fib(2) দুইবার করে গণনা হচ্ছে!
+    /   \
+ fib(2) fib(1)
+</pre></div>
+<pre><span class="c">// Memoization (Top-Down) — একবার গণনা করে সংরক্ষণ</span>
+Dictionary&lt;int, long&gt; memo = new();
+long Fib(int n) {
+    if (n &lt;= 1) return n;
+    if (memo.TryGetValue(n, out var cached)) return cached;
+    return memo[n] = Fib(n - 1) + Fib(n - 2);
+}</pre>
+<div class="callout why"><span class="tag">কেন এটা O(2ⁿ) থেকে O(n)-এ নামে</span>
+Naive recursion-এ <code>fib(n)</code> গণনা করতে <code>fib(n-1)</code> ও <code>fib(n-2)</code> আলাদাভাবে recursion চালায়, যা আবার তাদের নিজস্ব sub-call চালায় — একই <code>fib(k)</code> exponentially বহুবার গণনা হয়। Memoization প্রতিটা <code>fib(k)</code> প্রথমবার গণনা করেই একটা dictionary-তে রেখে দেয় — পরের বার একই <code>k</code> এলে সরাসরি dictionary থেকে পড়ে নেয়, আবার গণনা করে না। এতে প্রতিটা অনন্য উপ-সমস্যা মাত্র একবার গণনা হয়, মোট O(n)।</div>
+
+<h3>Tabulation (Bottom-Up) — Climbing Stairs উদাহরণ</h3>
+<pre>int ClimbStairs(int n) {   <span class="c">// প্রতি ধাপে ১ বা ২ সিঁড়ি ওঠা যায়, n সিঁড়িতে কত উপায়ে পৌঁছানো যায়</span>
+    if (n &lt;= 2) return n;
+    int prev2 = 1, prev1 = 2;
+    for (int i = 3; i &lt;= n; i++) {
+        int curr = prev1 + prev2;   <span class="c">// এই সিঁড়িতে পৌঁছানোর উপায় = আগের ২টা ধাপের যোগফল</span>
+        prev2 = prev1;
+        prev1 = curr;
+    }
+    return prev1;
+}</pre>
+<div class="callout behind"><span class="tag">Memoization বনাম Tabulation</span>
+Memoization (Top-Down) recursion দিয়ে শুরু করে, প্রয়োজন অনুযায়ী উপ-সমস্যা সমাধান করে ক্যাশ করে — লেখা সহজ, স্বাভাবিক চিন্তাভাবনার কাছাকাছি। Tabulation (Bottom-Up) ছোট উপ-সমস্যা থেকে শুরু করে ধাপে ধাপে বড় সমস্যার দিকে এগোয়, একটা array/table পূরণ করে — সাধারণত দ্রুততর (recursion overhead নেই) ও প্রায়ই কম space লাগে (উদাহরণে পুরো array না রেখে শুধু শেষ দুইটা মান রাখা হয়েছে)।</div>
+</template>
+
+<template data-page="dp2">
+<h2 class="title">১৫. Dynamic Programming — Advanced</h2>
+<p class="lead">২-মাত্রিক (2D) DP আরও জটিল সমস্যার সমাধান দেয় — যেখানে state শুধু একটা সংখ্যা নয়, একাধিক প্যারামিটারের সমন্বয়ে গঠিত।</p>
+
+<h3>0/1 Knapsack — ক্লাসিক 2D DP</h3>
+<p>একটা ব্যাগের ধারণক্ষমতা সীমিত — কোন কোন আইটেম নেওয়া উচিত যাতে মোট মূল্য সর্বোচ্চ হয়, ওজন সীমা পার না করে?</p>
+<pre>int Knapsack(int[] weights, int[] values, int capacity) {
+    int n = weights.Length;
+    var dp = new int[n + 1, capacity + 1];
+    for (int i = 1; i &lt;= n; i++) {
+        for (int w = 0; w &lt;= capacity; w++) {
+            dp[i, w] = dp[i - 1, w];   <span class="c">// এই আইটেম না নিলে</span>
+            if (weights[i - 1] &lt;= w)
+                dp[i, w] = Math.Max(dp[i, w], dp[i - 1, w - weights[i - 1]] + values[i - 1]);   <span class="c">// নিলে</span>
+        }
+    }
+    return dp[n, capacity];
+}</pre>
+<div class="callout why"><span class="tag">State কীভাবে সংজ্ঞায়িত হলো — dp[i, w]-এর অর্থ</span>
+<code>dp[i, w]</code> মানে "প্রথম <code>i</code>-টা আইটেমের মধ্যে বেছে, সর্বোচ্চ <code>w</code> ওজন ব্যবহার করে সর্বোচ্চ কত মূল্য পাওয়া সম্ভব"। প্রতিটা আইটেমের জন্য দুইটা সিদ্ধান্ত (নেওয়া বা না নেওয়া) বিবেচনা করে সর্বোত্তমটা বেছে নেওয়া হয় — এটাই Optimal Substructure: বড় সমস্যার উত্তর ছোট উপ-সমস্যার উত্তর থেকে সরাসরি গণনা করা যায়।</div>
+
+<h3>Longest Common Subsequence (LCS)</h3>
+<pre>int LCS(string a, string b) {
+    int m = a.Length, n = b.Length;
+    var dp = new int[m + 1, n + 1];
+    for (int i = 1; i &lt;= m; i++) {
+        for (int j = 1; j &lt;= n; j++) {
+            dp[i, j] = a[i - 1] == b[j - 1]
+                ? dp[i - 1, j - 1] + 1
+                : Math.Max(dp[i - 1, j], dp[i, j - 1]);
+        }
+    }
+    return dp[m, n];
+}</pre>
+<div class="callout best"><span class="tag">Best practice — DP সমস্যায় State সংজ্ঞায়িত করেই শুরু করুন</span>
+কোনো DP সমস্যা সমাধানের আগে প্রথমে স্পষ্টভাবে বলুন <code>dp[i]</code> বা <code>dp[i][j]</code> ঠিক কী প্রতিনিধিত্ব করে (যেমন "প্রথম i ও j অক্ষর পর্যন্ত LCS-এর দৈর্ঘ্য")। একবার state-এর সংজ্ঞা স্পষ্ট হলে, transition (একটা state থেকে আরেকটাতে কীভাবে যাওয়া যায়) খুঁজে বের করা অনেক সহজ হয়ে যায় — বেশিরভাগ DP সমস্যায় আটকে যাওয়ার আসল কারণ state ভুলভাবে বা অস্পষ্টভাবে সংজ্ঞায়িত করা।</div>
+
+<h3>Space Optimization</h3>
+<div class="callout behind"><span class="tag">2D DP-কে 1D-তে নামানো</span>
+লক্ষ্য করুন <code>dp[i, w]</code> শুধু আগের row (<code>dp[i-1, ...]</code>)-এর ওপর নির্ভর করে, তার আগের কোনো row-এর ওপর নয়। তাই পুরো 2D table না রেখে, মাত্র একটা 1D array রেখে (right-to-left iterate করে, যাতে current row-এর মান আগে ব্যবহার না হয়ে যায়) একই ফলাফল O(capacity) space-এ পাওয়া সম্ভব, O(n × capacity)-এর বদলে — অনেক বাস্তব ইন্টারভিউতে এই optimization স্পষ্টভাবে চাওয়া হয়।</div>
+</template>
+
+<template data-page="greedy">
+<h2 class="title">১৬. Greedy Algorithms</h2>
+<p class="lead">একটা <span class="kw">Greedy</span> অ্যালগরিদম প্রতিটা ধাপে "এই মুহূর্তে সবচেয়ে ভালো" সিদ্ধান্ত নেয়, ভবিষ্যতের প্রভাব বিবেচনা না করেই — কখনো এটা optimal সমাধান দেয়, কখনো দেয় না।</p>
+
+<h3>Activity Selection — Greedy যেখানে সঠিকভাবে কাজ করে</h3>
+<p>একাধিক কাজ (প্রতিটার একটা শুরু ও শেষ সময়) থেকে সর্বোচ্চ কতগুলো non-overlapping কাজ বেছে নেওয়া সম্ভব? সমাধান: <b>শেষ হওয়ার সময় অনুযায়ী sort করে</b>, যতগুলো সম্ভব greedily বেছে নেওয়া।</p>
+<div class="callout why"><span class="tag">কেন "সবচেয়ে আগে শেষ হওয়া" কাজ বেছে নেওয়া Optimal — Exchange Argument</span>
+ধরা যাক optimal সমাধানে প্রথম কাজটা সবচেয়ে আগে শেষ হওয়া কাজ নয়। তাহলে সেই কাজটাকে সবচেয়ে আগে শেষ হওয়া কাজ দিয়ে প্রতিস্থাপন করলে, বাকি সময় অন্তত ততটাই (বা বেশি) থাকবে ভবিষ্যতের কাজের জন্য — তাই সমাধানের গুণমান কখনো খারাপ হবে না। এই যুক্তি (exchange argument) প্রমাণ করে "সবচেয়ে আগে শেষ হওয়া কাজ বেছে নেওয়া" কখনো ভুল সিদ্ধান্ত হতে পারে না — এটাই কেন এই greedy পদ্ধতি সত্যিই optimal।</div>
+
+<h3>Coin Change — Greedy যেখানে ব্যর্থ হয়</h3>
+<div class="diagram"><pre>
+Coins available: {1, 3, 4}    Target: 6
+
+Greedy (সবচেয়ে বড় coin আগে): 4 + 1 + 1 = ৩টা coin
+Optimal:                      3 + 3     = ২টা coin   ← Greedy ব্যর্থ!
+</pre></div>
+<div class="callout mistake"><span class="tag">Common misconception — Greedy সবসময় কাজ করে</span>
+বহু শিক্ষার্থী ধরে নেন Coin Change-এ সবসময় সবচেয়ে বড় coin আগে বেছে নিলেই optimal সমাধান মেলে — এটা শুধুমাত্র নির্দিষ্ট coin system-এ (যেমন US coins: 1,5,10,25) সত্য, সব coin system-এ নয়। উপরের উদাহরণে {1,3,4} coin system-এ greedy ভুল উত্তর দেয়। যখন নিশ্চিত না যে exchange argument প্রযোজ্য, Dynamic Programming (১৪-১৫ নম্বর অধ্যায়ে) দিয়ে সব সম্ভাবনা বিবেচনা করাই নিরাপদ — Coin Change-এর সাধারণ সমাধান আসলে একটা DP সমস্যা, Greedy নয়।</div>
+
+<h3>কখন Greedy বিশ্বাস করবেন</h3>
+<div class="callout best"><span class="tag">Best practice — Greedy প্রমাণ করুন, অনুমান করবেন না</span>
+একটা greedy approach কাজ করছে মনে হলেই বিশ্বাস করা বিপজ্জনক — হয় একটা গাণিতিক প্রমাণ (exchange argument, বা matroid theory-এর মতো কাঠামো) খুঁজুন, নয়তো একাধিক counter-example দিয়ে যাচাই করুন। ইন্টারভিউতে "এটা কি সবসময় কাজ করবে?" প্রশ্নের উত্তরে শুধু "হ্যাঁ মনে হচ্ছে" না বলে, কেন কাজ করে তার যুক্তি ব্যাখ্যা করতে পারা গুরুত্বপূর্ণ।</div>
+</template>
+
+<template data-page="patterns">
+<h2 class="title">১৭. Pattern Recognition ও Interview Strategy</h2>
+<p class="lead">এই কোর্সের প্রতিটা টেকনিক এখন পরিচিত — শেষ ধাপে দেখা যাক একটা না-দেখা সমস্যায় কীভাবে সঠিক প্যাটার্ন দ্রুত চিনতে হয়, আর ইন্টারভিউতে কীভাবে যোগাযোগ করতে হয়।</p>
+
+<h3>Keyword থেকে Pattern অনুমান — একটা দ্রুত রেফারেন্স</h3>
+<table>
+<tr><th>সমস্যায় যা দেখলে</th><th>সম্ভাব্য প্যাটার্ন</th></tr>
+<tr><td>"Sorted array", "find pair/triplet"</td><td>Two Pointers (৪ নম্বর অধ্যায়)</td></tr>
+<tr><td>"Subarray/substring of size k", "contiguous"</td><td>Sliding Window (৪ নম্বর অধ্যায়)</td></tr>
+<tr><td>"Have I seen this before?", "count frequency"</td><td>Hashing (৫ নম্বর অধ্যায়)</td></tr>
+<tr><td>"All combinations/permutations/subsets"</td><td>Backtracking (৬ নম্বর অধ্যায়)</td></tr>
+<tr><td>"Shortest path", "minimum steps", "levels"</td><td>BFS (১২ নম্বর অধ্যায়)</td></tr>
+<tr><td>"Maximum/minimum ways", "can we reach", "optimal value"</td><td>Dynamic Programming (১৪-১৫ নম্বর অধ্যায়)</td></tr>
+<tr><td>"Kth largest/smallest", "top k"</td><td>Heap (১১ নম্বর অধ্যায়)</td></tr>
+<tr><td>"Connected components", "groups"</td><td>Union-Find বা DFS/BFS (১২-১৩ নম্বর অধ্যায়)</td></tr>
+</table>
+
+<h3>ইন্টারভিউতে যোগাযোগ — Talk-Through-Code পদ্ধতি</h3>
+<div class="callout best"><span class="tag">Best practice — চিন্তাভাবনা জোরে বলা, নীরবে কোড না লেখা</span>
+একজন ইন্টারভিউয়ার শুধু সঠিক উত্তর দেখতে চান না — তিনি দেখতে চান আপনি কীভাবে চিন্তা করেন। Constraint বিশ্লেষণ, brute force চিন্তা, optimization-এর যুক্তি — প্রতিটা ধাপ জোরে বলুন, এমনকি ভুল পথে গেলেও। নীরবে ১০ মিনিট কোড লিখে হঠাৎ "এই আমার উত্তর" বলার চেয়ে, ক্রমাগত চিন্তাভাবনা শেয়ার করা ইন্টারভিউয়ারকে আপনার সমস্যা সমাধানের দক্ষতা মূল্যায়ন করতে সাহায্য করে, এমনকি সমাধান সম্পূর্ণ না হলেও।</div>
+
+<h3>Practice-এর সঠিক পদ্ধতি</h3>
+<div class="callout why"><span class="tag">কেন প্যাটার্ন-ভিত্তিক Practice — শত শত সমস্যা মুখস্থ করার বিকল্প</span>
+এক হাজার সমস্যা সমাধান মুখস্থ করার বদলে, প্রতিটা মূল প্যাটার্ন (Two Pointer, Sliding Window, DP, Graph) থেকে ৫-১০টা প্রতিনিধিত্বমূলক সমস্যা গভীরভাবে বোঝা অনেক বেশি কার্যকর। যখন একটা না-দেখা সমস্যা আসে, লক্ষ্য থাকা উচিত "আমি কি এটা আগে দেখেছি" নয়, বরং "এটা কোন পরিচিত প্যাটার্নের সাথে মিলে যায়" — এই কোর্সের প্রতিটা অধ্যায় ঠিক এই দক্ষতা তৈরির জন্য ডিজাইন করা।</div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৮. Interview প্রশ্নোত্তর</h2>
+<p class="lead">Problem Solving/DSA ইন্টারভিউতে বারবার আসা প্রশ্ন — প্রতিটার উত্তরে শুধু "কী" নয়, "কেন" বোঝানো হয়েছে।</p>
+
+<h3>১) Time Complexity আর Space Complexity-র পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> Time Complexity বলে input বড় হলে অপারেশনের সংখ্যা কীভাবে বাড়ে। Space Complexity বলে input ছাড়া অতিরিক্ত কত মেমরি লাগে। প্রায়ই এই দুইয়ের মধ্যে trade-off থাকে — HashMap ব্যবহার করে time কমানো যায় কিন্তু space বাড়ে (২ নম্বর অধ্যায়ে)।</p>
+
+<h3>২) Two Pointer টেকনিক কখন ব্যবহার করবেন?</h3>
+<p><b>ব্যাখ্যা:</b> যখন array/string sorted (বা sorted করা যায়), আর একটা জোড়া/ট্রিপলেট খুঁজতে হয় যা একটা শর্ত পূরণ করে — sorted order-এর সুবিধা নিয়ে প্রতিটা ধাপে অন্তত একটা সম্ভাবনা বাদ দেওয়া যায়, O(n²) থেকে O(n)-এ নামিয়ে (৪ নম্বর অধ্যায়ে)।</p>
+
+<h3>৩) Memoization আর Tabulation-এর পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> Memoization (Top-Down) recursion দিয়ে শুরু করে, প্রয়োজন অনুযায়ী সমাধান ক্যাশ করে। Tabulation (Bottom-Up) ছোট উপ-সমস্যা থেকে শুরু করে ধাপে ধাপে বড়র দিকে এগোয়, একটা table পূরণ করে — সাধারণত দ্রুততর, কম space লাগে (১৪ নম্বর অধ্যায়ে)।</p>
+
+<h3>৪) BFS আর DFS কখন কোনটা ব্যবহার করবেন?</h3>
+<p><b>ব্যাখ্যা:</b> BFS ব্যবহার করুন যখন shortest path (unweighted graph-এ) বা "level অনুযায়ী" কিছু দরকার — Queue ব্যবহার করে। DFS ব্যবহার করুন যখন সব সম্ভাব্য path/connectivity/cycle detection দরকার — Stack বা recursion ব্যবহার করে (১২ নম্বর অধ্যায়ে)।</p>
+
+<h3>৫) Greedy আর Dynamic Programming-এর মধ্যে পার্থক্য কী?</h3>
+<p><b>ব্যাখ্যা:</b> Greedy প্রতিটা ধাপে "এই মুহূর্তে সবচেয়ে ভালো" সিদ্ধান্ত নেয়, কখনো ফিরে দেখে না — শুধু তখনই সঠিক যখন প্রমাণ করা যায় (exchange argument) স্থানীয় optimal সিদ্ধান্তগুলো সবসময় global optimal-এ নিয়ে যায়। DP সব সম্ভাব্য উপ-সমস্যা বিবেচনা করে, তাই greedy যেখানে ব্যর্থ হয় (Coin Change {1,3,4}) সেখানেও সঠিক উত্তর দেয় (১৬ নম্বর অধ্যায়ে)।</p>
+
+<h3>৬) Union-Find (Disjoint Set)-এর ব্যবহার কী?</h3>
+<p><b>ব্যাখ্যা:</b> দ্রুত জানতে হলে দুইটা element একই group/component-এ আছে কিনা, বা দুইটা group একসাথে মেলাতে হলে — Union-Find এই দুই অপারেশনই প্রায় O(1) (path compression + union by rank সহ) সময়ে করে। Kruskal's MST, connectivity check, cycle detection-এ ব্যবহৃত (১৩ নম্বর অধ্যায়ে)।</p>
+
+<h3>৭) 0/1 Knapsack-এ "0/1" মানে কী?</h3>
+<p><b>ব্যাখ্যা:</b> প্রতিটা আইটেম হয় সম্পূর্ণ নেওয়া যায় (1) নয় একদমই না নেওয়া (0) — আংশিক নেওয়া যায় না (Fractional Knapsack থেকে আলাদা, যেখানে আংশিক নেওয়া যায় ও Greedy দিয়ে সমাধান করা যায়)। এই সীমাবদ্ধতাই কেন 0/1 Knapsack Greedy দিয়ে সমাধান করা যায় না, DP প্রয়োজন হয় (১৫ নম্বর অধ্যায়ে)।</p>
+
+<h3>৮) কীভাবে বুঝবেন একটা সমস্যা DP দিয়ে সমাধান করা যাবে?</h3>
+<p><b>ব্যাখ্যা:</b> দুইটা লক্ষণ খুঁজুন — Overlapping Subproblems (একই উপ-সমস্যা বারবার আসছে) ও Optimal Substructure (মূল সমস্যার সমাধান উপ-সমস্যার সমাধান দিয়ে তৈরি করা যায়)। এছাড়া "maximum/minimum ways", "কতভাবে সম্ভব", "optimal value" ধরনের শব্দ প্রায়ই DP-র ইঙ্গিত দেয় (১৪ নম্বর অধ্যায়ে)।</p>
+
+<h3>৯) একটা Linked List-এ Cycle আছে কিনা কীভাবে O(1) space-এ যাচাই করবেন?</h3>
+<p><b>ব্যাখ্যা:</b> Floyd's Cycle Detection (Fast/Slow Pointer) — slow pointer প্রতি ধাপে ১টা node, fast pointer ২টা node এগোয়। Cycle থাকলে fast পরিশেষে slow-কে ধরে ফেলবে (দুইটা একই node-এ মিলবে); cycle না থাকলে fast আগেই <code>null</code>-এ পৌঁছাবে (৮ নম্বর অধ্যায়ে)।</p>
+
+<h3>১০) একটা সমস্যা দেখেই কীভাবে বুঝবেন কোন প্যাটার্ন ব্যবহার করবেন?</h3>
+<p><b>ব্যাখ্যা:</b> প্রথমে constraint দেখুন (n-এর আকার প্রত্যাশিত complexity বলে দেয়), তারপর সমস্যার ভাষায় কীওয়ার্ড খুঁজুন ("sorted", "contiguous subarray", "shortest path", "kth largest") — এগুলো নির্দিষ্ট প্যাটার্নের দিকে ইঙ্গিত করে। কোনো পরিচিত প্যাটার্ন না মিললে, brute force দিয়ে শুরু করে ধাপে ধাপে optimize করুন (১ ও ১৭ নম্বর অধ্যায়ে)।</p>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  const searchIndex = {};
+  (function buildIndex(){
+    const tmp = document.createElement('div');
+    pages.forEach(p=>{
+      tmp.innerHTML = templates[p.id] || '';
+      searchIndex[p.id] = ((p.title||'') + ' ' + tmp.textContent).toLowerCase();
+    });
+  })();
+
+  let currentQuery = '';
+
+  function clearHighlights(root){
+    root.querySelectorAll('mark.hl').forEach(m=>{ m.replaceWith(document.createTextNode(m.textContent)); });
+    root.normalize();
+  }
+
+  function highlightIn(root, q){
+    if(!q) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        const p = node.parentNode;
+        if(!node.nodeValue || !p || p.tagName==='SCRIPT' || p.tagName==='STYLE' || p.tagName==='MARK') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes=[]; let n; while((n=walker.nextNode())) nodes.push(n);
+    const ql = q.toLowerCase();
+    nodes.forEach(node=>{
+      const text = node.nodeValue, lower = text.toLowerCase();
+      if(!lower.includes(ql)) return;
+      const frag = document.createDocumentFragment();
+      let idx=0, pos;
+      while((pos = lower.indexOf(ql, idx)) !== -1){
+        if(pos>idx) frag.appendChild(document.createTextNode(text.slice(idx,pos)));
+        const mark = document.createElement('mark');
+        mark.className='hl';
+        mark.textContent = text.slice(pos, pos+ql.length);
+        frag.appendChild(mark);
+        idx = pos+ql.length;
+      }
+      if(idx<text.length) frag.appendChild(document.createTextNode(text.slice(idx)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  function applyHighlight(){
+    const active = main.querySelector('.page.active');
+    if(!active) return;
+    clearHighlights(active);
+    if(currentQuery) highlightIn(active, currentQuery);
+  }
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    applyHighlight();
+    const active = main.querySelector('.page.active');
+    const firstMark = active ? active.querySelector('mark.hl') : null;
+    if(firstMark && firstMark.scrollIntoView) firstMark.scrollIntoView({block:'center'});
+    else window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const searchInput = document.getElementById('courseSearch');
+  const searchMeta = document.getElementById('searchMeta');
+  if(searchInput){
+    searchInput.addEventListener('input', ()=>{
+      const q = searchInput.value.trim();
+      currentQuery = q;
+      const ql = q.toLowerCase();
+      let matchCount = 0, firstMatch = null;
+      pages.forEach(p=>{
+        const btn = sidebar.querySelector('.navbtn[data-target="'+p.id+'"]');
+        const matches = !ql || searchIndex[p.id].includes(ql);
+        if(matches){ matchCount++; if(!firstMatch) firstMatch = p; }
+        if(btn) btn.classList.toggle('hide', !matches);
+      });
+      if(!ql) searchMeta.textContent = '';
+      else if(matchCount===0) searchMeta.textContent = 'কোনো ফলাফল নেই';
+      else searchMeta.textContent = matchCount + 'টা অধ্যায়ে ফলাফল পাওয়া গেছে';
+
+      const active = main.querySelector('.page.active');
+      const activeId = active ? active.id.replace('page-','') : null;
+      const activeMatches = !!(ql && activeId && searchIndex[activeId] && searchIndex[activeId].includes(ql));
+      if(ql && !activeMatches && firstMatch){
+        show(firstMatch.id);
+      } else {
+        applyHighlight();
+        const mark = active ? active.querySelector('mark.hl') : null;
+        if(ql && mark && mark.scrollIntoView) mark.scrollIntoView({block:'center'});
+      }
+    });
+    searchInput.addEventListener('keydown', e=>{
+      if(e.key==='Escape'){ searchInput.value=''; searchInput.dispatchEvent(new Event('input')); searchInput.blur(); }
+    });
+  }
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+</body>
+</html>
