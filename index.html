@@ -518,6 +518,8 @@
     #experience, #education { padding-left: 24px; padding-right: 24px; }
   }
 </style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1117">
 </head>
 <body>
 
@@ -838,6 +840,13 @@
   document.querySelectorAll('.skill-group').forEach((g, i) => {
     g.style.transitionDelay = (i * 0.07) + 's';
   });
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>

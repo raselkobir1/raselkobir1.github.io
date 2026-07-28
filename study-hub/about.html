@@ -146,6 +146,8 @@
     .edu b{ font-size:12px }
   }
 </style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1117">
 </head>
 <body>
 <div class="wrap">
@@ -256,5 +258,12 @@
 
   <footer>Rasel Kabir · Backend-Focused Full-Stack Developer</footer>
 </div>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
 </body>
 </html>

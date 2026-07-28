@@ -1,0 +1,1819 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Azure — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#0078d4; --accent2:#50e6ff;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --pink:#f472b6;
+    --code-bg:#0b0f14; --kw:#50e6ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent2)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(0,120,212,.28),transparent); color:var(--accent2); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#03151f}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent2); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent2); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--accent2)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--accent2)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#50e6ff}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  .search-wrap{padding:0 10px 14px}
+  .search-box{
+    width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    border-radius:9px; padding:9px 12px; font-size:13.5px; font-family:inherit;
+    outline:none; transition:border-color .15s;
+  }
+  .search-box:focus{border-color:var(--accent2)}
+  .search-box::placeholder{color:var(--muted)}
+  .search-meta{font-size:11.5px; color:var(--muted); padding:6px 2px 0; min-height:14px}
+  .navbtn.hide{display:none}
+  mark.hl{background:#fde047; color:#1a1a1a; padding:0 1px; border-radius:3px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1117">
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🔷 Azure</h1>
+      <p>Beginner → Advanced • বাংলায় (keyword ইংরেজিতে)</p>
+      <div class="search-wrap">
+        <input type="text" id="courseSearch" class="search-box" placeholder="🔍 এই কোর্সে সার্চ করুন..." autocomplete="off">
+        <div class="search-meta" id="searchMeta"></div>
+      </div>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation", icon:"☁️", title:"Cloud Computing ও Azure Foundation"},
+  {id:"entraid",    icon:"🔑", title:"Microsoft Entra ID ও RBAC"},
+  {id:"vm",         icon:"🖥️", title:"Virtual Machines"},
+  {id:"vnet",       icon:"🌐", title:"Virtual Network ও Networking"},
+  {id:"blob",       icon:"🪣", title:"Blob Storage"},
+  {id:"storage",    icon:"💾", title:"Managed Disks, Files ও Storage Options"},
+  {id:"sql",        icon:"🗄️", title:"Azure SQL Database"},
+  {id:"cosmosdb",   icon:"⚡", title:"Cosmos DB — NoSQL Database"},
+  {id:"lbscale",    icon:"⚖️", title:"Load Balancing ও Scale Sets"},
+  {id:"dns",        icon:"🧭", title:"Azure DNS ও Traffic Manager"},
+  {id:"cdn",        icon:"🚀", title:"Azure CDN ও Front Door"},
+  {id:"functions",  icon:"🌀", title:"Azure Functions ও Serverless"},
+  {id:"apim",       icon:"🔌", title:"API Management"},
+  {id:"messaging",  icon:"📬", title:"Service Bus, Event Grid ও Event Hub"},
+  {id:"containers", icon:"🐳", title:"AKS, Container Instances ও Containers"},
+  {id:"iac",        icon:"📜", title:"ARM, Bicep ও IaC"},
+  {id:"monitor",    icon:"📊", title:"Azure Monitor ও Observability"},
+  {id:"security",   icon:"🛡️", title:"Security — Key Vault, Defender, WAF ও DDoS Protection"},
+  {id:"cost",       icon:"💰", title:"Cost Management ও Well-Architected Framework"},
+  {id:"interview",  icon:"🏆", title:"Interview প্রশ্নোত্তর"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Cloud Computing ও Azure Foundation</h2>
+<p class="lead">Azure শেখার আগে জেনে নেওয়া দরকার cloud computing-এর মূল ধারণাগুলো Azure-এ ঠিক কীভাবে বাস্তবায়িত হয়েছে — কারণ concept সবখানে এক হলেও প্রতিটা cloud provider-এর নিজস্ব vocabulary ও hierarchy আছে।</p>
+
+<h3>Cloud Computing মডেল — সংক্ষিপ্ত রিক্যাপ</h3>
+<p>Cloud computing-এর মূল প্রতিশ্রুতি হলো <b>CapEx থেকে OpEx-এ</b> সরে যাওয়া — নিজে সার্ভার কিনে ডেটা সেন্টারে বসানোর বিশাল আগাম বিনিয়োগের বদলে, প্রয়োজন অনুযায়ী ব্যবহার করে মাসিক বিলে টাকা দেওয়া। এর সাথে যুক্ত <span class="kw">elasticity</span> — চাহিদা বাড়লে resource স্বয়ংক্রিয়ভাবে বাড়ানো, কমলে কমিয়ে ফেলা, যাতে অলস (idle) resource-এর জন্য টাকা না যায়। এই দুটো ধারণা প্রায় সব cloud provider-এর মার্কেটিং-এর কেন্দ্রে থাকে, এবং Azure-ও ব্যতিক্রম না। যেহেতু এই সিরিজের অনেক পাঠক ইতিমধ্যে AWS কোর্স শেষ করেছেন, এখানে এই বেসিক concept নিয়ে বেশি সময় না দিয়ে সরাসরি Azure-এর নিজস্ব কাঠামোতে ঢুকে যাচ্ছি।</p>
+
+<h3>Azure Global Infrastructure — Region, Availability Zone, Region Pair</h3>
+<p><span class="kw">Region</span> হলো পৃথিবীর একটা নির্দিষ্ট ভৌগোলিক এলাকা যেখানে Microsoft-এর একগুচ্ছ ডেটা সেন্টার আছে (যেমন <code>East US</code>, <code>Southeast Asia</code>)। প্রতিটা region-এর ভেতরে থাকতে পারে একাধিক <span class="kw">Availability Zone (AZ)</span> — প্রতিটা AZ আলাদা পাওয়ার, কুলিং ও নেটওয়ার্কিং-যুক্ত একটা বা একাধিক ফিজিক্যাল ডেটা সেন্টার, যাতে একটা zone-এ বিদ্যুৎ বা হার্ডওয়্যার ব্যর্থতা হলেও অন্য zone প্রভাবিত না হয়।</p>
+<p>Azure-এর একটা নিজস্ব ধারণা হলো <span class="kw">Region Pair</span> — Microsoft প্রতিটা region-কে একই ভৌগোলিক এলাকার (সাধারণত একই মহাদেশ, কিন্তু ভিন্ন ফল্ট লাইন/বিদ্যুৎ গ্রিডে) একটা নির্দিষ্ট দ্বিতীয় region-এর সাথে পূর্ব থেকেই জোড়া বেঁধে রাখে (যেমন <code>East US</code> ↔ <code>West US</code>)। এই pairing নিজে থেকেই কিছু গ্যারান্টি বহন করে — বড় region-ওয়াইড দুর্যোগের সময় Microsoft একই সাথে দুইটা paired region-এ প্ল্যানড মেইনটেন্যান্স চালায় না (যাতে দুটোই একসাথে ডাউন না থাকে), এবং কিছু geo-redundant storage সার্ভিস (যেমন GRS) স্বয়ংক্রিয়ভাবে ডেটা paired region-এ রেপ্লিকেট করে।</p>
+<div class="callout why"><span class="tag">কেন Region Pair AWS-এ ঠিক এইভাবে নেই</span> AWS-এ disaster recovery region পুরোপুরি আপনার নিজের সিদ্ধান্ত — আপনি যেকোনো দুইটা region বেছে DR ডিজাইন করেন, কিন্তু provider-লেভেলে কোনো পূর্ব-নির্ধারিত pairing গ্যারান্টি নেই। Azure-এ Microsoft নিজেই এই সিদ্ধান্ত আংশিকভাবে নিয়ে রেখেছে — প্রতিটা region-এর একটা ডিফল্ট partner region আছে, এবং এই pairing অনেক geo-replication ফিচারের ভিত্তি। এটা সুবিধা (কম সিদ্ধান্ত নিতে হয়) এবং সীমাবদ্ধতা (আপনি সবসময় নিজের ইচ্ছামতো pair বেছে নিতে পারেন না) — দুটোই।</div>
+
+<h3>Resource Hierarchy — Management Group → Subscription → Resource Group → Resource</h3>
+<p>Azure-এর সবকিছু একটা চার-স্তরের hierarchy-তে সাজানো থাকে। এই hierarchy শুধু organization-এর জন্য না — এটাই RBAC ও Policy প্রয়োগের ভিত্তি, কারণ যেকোনো স্তরে assign করা role বা policy নিচের সব স্তরে <b>inherit</b> হয়।</p>
+<div class="diagram"><pre>
+        Management Group  (একাধিক subscription-এর উপর centralized policy/RBAC)
+              │
+              ▼
+         Subscription      (billing boundary + quota boundary)
+              │
+              ▼
+        Resource Group     (লাইফসাইকেল/লজিক্যাল কনটেইনার)
+              │
+              ▼
+           Resource         (VM, Storage Account, VNet ...)
+</pre></div>
+<p>প্রতিটা স্তরের নিজস্ব উদ্দেশ্য আছে, এবং এগুলো গুলিয়ে ফেললে ভুল আর্কিটেকচার হয়:</p>
+<ul>
+<li><b>Subscription</b> হলো <span class="kw">billing boundary</span> — একটা subscription-এর ভেতরের সব খরচ একটাই ইনভয়েসে আসে, এবং কিছু hard quota (যেমন per-region vCPU limit) subscription-ভিত্তিক। এজন্য অনেক প্রতিষ্ঠান প্রোডাকশন আর ডেভেলপমেন্টের জন্য আলাদা subscription ব্যবহার করে — শুধু নিরাপত্তার জন্য না, বরং খরচ আলাদাভাবে ট্র্যাক করার জন্যও।</li>
+<li><b>Resource Group</b> একটা লজিক্যাল কনটেইনার যার ভেতরের রিসোর্সগুলোর একটা common লাইফসাইকেল থাকার কথা — অর্থাৎ এরা একসাথে তৈরি হয়, একসাথে ডিলিট হয়। এটা geographic কনটেইনার না (এক resource group-এ ভিন্ন region-এর রিসোর্স রাখা যায়), এটা organizational কনটেইনার।</li>
+<li><b>Management Group</b> তখনই দরকার হয় যখন একটা organization-এর একাধিক subscription আছে এবং সবগুলোর উপর একই RBAC বা Policy একবারে প্রয়োগ করতে চান — যেমন "সব subscription-এ নির্দিষ্ট region-এর বাইরে resource তৈরি বন্ধ" নিয়ম একটাই Management Group-এ বসিয়ে দিলে সব subscription-এ কার্যকর হয়ে যায়।</li>
+</ul>
+<div class="callout mistake"><span class="tag">Common mistake — Resource Group ডিলিট করার আগে না ভাবা</span> Resource Group ডিলিট করলে তার ভেতরের <b>সব</b> রিসোর্স ক্যাসকেড হয়ে ডিলিট হয়ে যায় — কোনো নিশ্চিতকরণ প্রম্পট প্রতিটা রিসোর্সের জন্য আলাদাভাবে আসে না। প্রোডাকশনে ভুলবশত একটা টেস্ট Resource Group ডিলিট করতে গিয়ে আসল ডেটাবেস উড়িয়ে দেওয়ার ঘটনা বিরল না। এই কারণে গুরুত্বপূর্ণ resource group-এ <code>CanNotDelete</code> বা <code>ReadOnly</code> ধরনের <span class="kw">Resource Lock</span> বসিয়ে রাখা উচিত।</div>
+
+<h3>Azure Resource Manager (ARM) — একটাই নিয়ন্ত্রণ-পথ</h3>
+<p>আপনি Portal থেকে ক্লিক করেন, বা Azure CLI-তে কমান্ড লেখেন, বা PowerShell ব্যবহার করেন, বা একটা ARM Template/Bicep ফাইল ডিপ্লয় করেন — সবকিছুই শেষমেশ একই <span class="kw">Azure Resource Manager (ARM)</span> REST API-তে গিয়ে পড়ে। এর মানে হলো, RBAC ও Policy যেভাবেই ইন্টারঅ্যাক্ট করেন না কেন, একইভাবে প্রয়োগ হয় — কোনো "backdoor" পথ নেই যেটা RBAC এড়িয়ে যেতে পারে।</p>
+<div class="diagram"><pre>
+   Portal    Azure CLI    PowerShell    ARM/Bicep Template    SDK
+     │           │             │                │              │
+     └───────────┴──────┬──────┴────────────────┴──────────────┘
+                         ▼
+              Azure Resource Manager (ARM)
+                  REST API — একই entry point
+                         │
+          ┌──────────────┼──────────────┐
+          ▼              ▼              ▼
+      RBAC চেক      Policy চেক     Resource Provider
+     (কে করতে      (state         (আসল রিসোর্স
+      পারবে?)       বৈধ?)          তৈরি/পরিবর্তন)
+</pre></div>
+<div class="callout why"><span class="tag">কেন এই একক এন্ট্রি পয়েন্ট গুরুত্বপূর্ণ</span> যেহেতু সব রিকোয়েস্ট ARM-এর মধ্য দিয়ে যায়, তাই RBAC ও Policy কেন্দ্রীয়ভাবে একবার সংজ্ঞায়িত করলেই তা Portal, CLI, Template — সবখানে সমানভাবে কার্যকর হয়। এটা declarative infrastructure-as-code (ARM Template/Bicep/Terraform) নির্ভরযোগ্য হওয়ার মূল কারণ — টুল যাই হোক, ফলাফল predictable, কারণ নিয়ন্ত্রণ layer একটাই।</div>
+
+<h3>অ্যাক্সেসের পথ</h3>
+<p>Azure ব্যবহারের জন্য প্রধানত চারটা ইন্টারফেস আছে: <b>Azure Portal</b> (ব্রাউজার-ভিত্তিক GUI, শেখা ও এক্সপ্লোর করার জন্য ভালো), <b>Azure CLI</b> (ক্রস-প্ল্যাটফর্ম কমান্ড-লাইন, স্ক্রিপ্টিং/CI-CD-তে জনপ্রিয়), <b>Azure PowerShell</b> (PowerShell cmdlet-ভিত্তিক, Windows-কেন্দ্রিক টিমে বেশি ব্যবহৃত), এবং <b>Azure Cloud Shell</b> (ব্রাউজার থেকেই একটা free, pre-configured shell — Bash বা PowerShell — যেখানে CLI আগে থেকেই ইনস্টল করা থাকে, নিজের মেশিনে কিছু সেটআপ না করেই)।</p>
+<pre>
+<span class="c">// Azure CLI দিয়ে একটা Resource Group তৈরি</span>
+az group create --name rg-demo --location eastus
+
+<span class="c">// সেই Resource Group-এর ভেতরে একটা Storage Account তৈরি</span>
+az storage account create \
+  --name stdemoaccount123 \
+  --resource-group rg-demo \
+  --location eastus \
+  --sku Standard_LRS
+</pre>
+
+<h3>Azure Free Account</h3>
+<p>নতুন ব্যবহারকারীদের জন্য Azure একটা Free Account অফার করে — কিছু নির্দিষ্ট ডলার ক্রেডিট ৩০ দিনের জন্য, প্লাস কিছু সার্ভিসের সীমিত ব্যবহার সবসময় ফ্রি (যেমন নির্দিষ্ট saইজের একটা Linux/Windows VM প্রতি মাসে ৭৫০ ঘণ্টা পর্যন্ত)। শেখার সময় বাজেট নিয়ন্ত্রণে রাখতে <span class="kw">Budget Alert</span> ও <span class="kw">Cost Management</span> সেট করে রাখা উচিত, কারণ ফ্রি ক্রেডিট শেষ হয়ে গেলে বা ফ্রি টিয়ারের বাইরে গেলে স্বয়ংক্রিয়ভাবে বিলিং শুরু হয়ে যায়।</p>
+
+<h3>Shared Responsibility Model</h3>
+<p>নিরাপত্তা ও ব্যবস্থাপনার দায়িত্ব Microsoft ও গ্রাহকের মধ্যে কীভাবে ভাগ হয় তা নির্ভর করে আপনি কোন সার্ভিস মডেল ব্যবহার করছেন তার উপর — <b>IaaS</b> (যেমন VM), <b>PaaS</b> (যেমন App Service, Azure SQL Database), বা <b>SaaS</b> (যেমন Microsoft 365)। যত উপরের স্তরে যান, গ্রাহকের দায়িত্ব তত কমে।</p>
+<div class="diagram"><pre>
+              On-Premises   IaaS        PaaS        SaaS
+Application      You         You         You       Microsoft
+Data              You         You         You         You
+Runtime           You         You      Microsoft   Microsoft
+Middleware        You         You      Microsoft   Microsoft
+OS                You         You      Microsoft   Microsoft
+Virtualization    You      Microsoft   Microsoft   Microsoft
+Servers           You      Microsoft   Microsoft   Microsoft
+Networking        You      Microsoft   Microsoft   Microsoft
+Physical Datacenter You    Microsoft   Microsoft   Microsoft
+</pre></div>
+<div class="callout behind"><span class="tag">Data ও Identity — সবসময় আপনার দায়িত্ব</span> লক্ষ্য করুন, সার্ভিস মডেল যাই হোক না কেন, <b>Data</b> এবং <b>Identity/Access Management</b> কখনোই সম্পূর্ণভাবে Microsoft-এর দায়িত্বে চলে যায় না — এমনকি SaaS-এও না। "cloud নিরাপদ করবে" ভেবে ভুল করা যাবে না — কে কোন ডেটা অ্যাক্সেস করতে পারবে সেটা নিয়ন্ত্রণ করা সবসময় গ্রাহকের কাজ।</div>
+
+<h3>Azure Well-Architected Framework</h3>
+<p>Azure একটা কাঠামোগত গাইডলাইন দেয় ভালো আর্কিটেকচার ডিজাইনের জন্য, যাকে বলে <span class="kw">Well-Architected Framework</span>, যা পাঁচটা pillar-এ বিভক্ত:</p>
+<ul>
+<li><b>Reliability</b> — সিস্টেম ব্যর্থতার পরও চালু থাকতে ও রিকভার করতে পারা।</li>
+<li><b>Security</b> — ডেটা ও সিস্টেমকে হুমকি থেকে রক্ষা করা।</li>
+<li><b>Cost Optimization</b> — সর্বোচ্চ মূল্য সর্বনিম্ন খরচে পাওয়া।</li>
+<li><b>Operational Excellence</b> — ডিপ্লয়মেন্ট, মনিটরিং ও অপারেশন প্রক্রিয়া দক্ষ রাখা।</li>
+<li><b>Performance Efficiency</b> — চাহিদার সাথে সামঞ্জস্য রেখে কার্যকরভাবে resource ব্যবহার করা।</li>
+</ul>
+<p>লক্ষণীয়, Azure-এর মূল framework-এ ঠিক পাঁচটা pillar আছে — AWS-এর ছয়-pillar Well-Architected Framework-এ (যেখানে আলাদা একটা Sustainability pillar আছে) থেকে সংখ্যায় এটা ভিন্ন। কনসেপ্টগত ওভারল্যাপ অনেক, কিন্তু গঠন হুবহু এক না।</p>
+</template>
+
+<template data-page="entraid">
+<h2 class="title">২. Microsoft Entra ID ও RBAC</h2>
+<p class="lead">Identity হলো cloud security-এর ভিত্তি — কে কে, এবং সে কী করতে পারবে, এই দুই প্রশ্নের উত্তর ছাড়া কোনো অ্যাক্সেস নিয়ন্ত্রণ সম্ভব না।</p>
+
+<h3>Microsoft Entra ID কী</h3>
+<p><span class="kw">Microsoft Entra ID</span> (আগের নাম <code>Azure Active Directory</code> বা Azure AD — নাম বদলালেও প্রযুক্তি একই) হলো Microsoft-এর cloud-native identity ও access management সার্ভিস। এটা traditional on-premises <code>Active Directory Domain Services (AD DS)</code> থেকে গঠনগতভাবে সম্পূর্ণ আলাদা — এই পার্থক্যটা বোঝা জরুরি কারণ নাম একই রকম শোনালেও এরা দুই ভিন্ন জগতের প্রযুক্তি।</p>
+<table>
+<tr><th>বৈশিষ্ট্য</th><th>Traditional AD DS (on-premises)</th><th>Microsoft Entra ID (cloud)</th></tr>
+<tr><td>প্রোটোকল</td><td>LDAP, Kerberos, NTLM</td><td>REST API, OAuth 2.0, OIDC, SAML</td></tr>
+<tr><td>গঠন</td><td>Organizational Unit (OU), Group Policy</td><td>Flat directory, Group, Conditional Access</td></tr>
+<tr><td>মূল ব্যবহার</td><td>Domain-joined Windows মেশিন, on-prem রিসোর্স</td><td>Cloud/SaaS অ্যাপ, API, মোবাইল/ওয়েব সাইন-ইন</td></tr>
+<tr><td>নেটওয়ার্ক নির্ভরতা</td><td>ভৌগোলিকভাবে একই নেটওয়ার্কের কাছাকাছি হওয়া দরকার</td><td>ইন্টারনেট থেকে যেকোনো জায়গা থেকে অ্যাক্সেসযোগ্য</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন এই পার্থক্য শুধু "নতুন সংস্করণ" না</span> AD DS ডিজাইন হয়েছিল ১৯৯০-এর দশকে, corporate নেটওয়ার্কের ভেতরে থাকা মেশিনদের জন্য — এর প্রোটোকল (LDAP/Kerberos) ধরে নেয় ক্লায়েন্ট ও সার্ভার একই ট্রাস্টেড নেটওয়ার্কে আছে। Entra ID ডিজাইন হয়েছে ইন্টারনেট-নেটিভ যুগে — এখানে প্রতিটা সাইন-ইন request একটা untrusted নেটওয়ার্ক (পাবলিক ইন্টারনেট) থেকে আসে ধরে নিয়েই টোকেন-ভিত্তিক (JWT) প্রমাণীকরণ করা হয়। এই কারণেই দুটো একই কোম্পানির প্রোডাক্ট হলেও কোডবেস ও আর্কিটেকচার সম্পূর্ণ ভিন্ন।</div>
+
+<h3>Tenant, User, Group, Service Principal, Managed Identity</h3>
+<p>একটা <span class="kw">Tenant</span> হলো একটা প্রতিষ্ঠানের জন্য নিবেদিত, বিচ্ছিন্ন Entra ID directory instance — সব User, Group, Application registration এই tenant-এর ভেতরে থাকে। একই Azure subscription একটামাত্র tenant-এর সাথে যুক্ত থাকে (যদিও এক tenant একাধিক subscription চালাতে পারে)।</p>
+<p>একটা অ্যাপ্লিকেশনকে যখন Azure রিসোর্সের সাথে ইন্টারঅ্যাক্ট করতে হয় (যেমন একটা স্ক্রিপ্ট যেটা Storage Account থেকে ফাইল পড়ে), তখন সেই অ্যাপ্লিকেশনেরও একটা identity দরকার — মানুষ ইউজারের মতো লগইন করানো যায় না। এই identity-কে বলে <span class="kw">Service Principal</span> — এটা মূলত একটা application registration-এর জন্য directory-তে তৈরি করা identity, যার নিজস্ব credential (client secret বা certificate) থাকে।</p>
+<p>সমস্যা হলো, Service Principal-এর credential ম্যানুয়ালি তৈরি, রোটেট ও সংরক্ষণ করতে হয় — আর কোথাও না কোথাও এই secret কোডে বা কনফিগ ফাইলে embed করার প্রলোভন থাকে, যা একটা বড় নিরাপত্তা ঝুঁকি। এই সমস্যা সমাধানের জন্য এসেছে <span class="kw">Managed Identity</span> — Azure নিজে থেকেই একটা resource-এর (যেমন একটা VM বা App Service) জন্য Entra ID-তে একটা identity তৈরি করে ও তার credential সম্পূর্ণভাবে নিজে ব্যবস্থাপনা করে, কখনো কোনো secret আপনাকে দেখতে বা সংরক্ষণ করতে হয় না।</p>
+<table>
+<tr><th>ধরন</th><th>বর্ণনা</th><th>লাইফসাইকেল</th></tr>
+<tr><td>System-assigned Managed Identity</td><td>একটা নির্দিষ্ট resource-এর সাথে সরাসরি বাঁধা, স্বয়ংক্রিয়ভাবে তৈরি হয়</td><td>resource ডিলিট হলে identity-ও ডিলিট হয়ে যায়</td></tr>
+<tr><td>User-assigned Managed Identity</td><td>স্বাধীনভাবে তৈরি একটা identity, একাধিক resource-এ সংযুক্ত করা যায়</td><td>resource ডিলিট হলেও identity টিকে থাকে, আলাদাভাবে ম্যানেজ হয়</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — credential embed করবেন না</span> কোনো কোডে, কনফিগ ফাইলে, বা environment variable-এ সরাসরি secret/password/connection string embed করা কখনো উচিত না। যেখানেই Azure resource-এর মধ্যে (VM → Storage, Function → Key Vault, ইত্যাদি) যোগাযোগ দরকার, সেখানে Managed Identity ব্যবহার করুন। এটা conceptually AWS-এর <b>IAM Role</b>-এর (EC2 Instance Profile) সমতুল্য ধারণা — credential-বিহীন identity — কিন্তু implementation ভিন্ন, কারণ Managed Identity Entra ID-এর token-ভিত্তিক মডেলের উপর দাঁড়িয়ে আছে।</div>
+
+<h3>RBAC — তিনটা উপাদান</h3>
+<p>Azure-এর <span class="kw">Role-Based Access Control (RBAC)</span> তিনটা জিনিসের সমন্বয়ে একটা <span class="kw">Role Assignment</span> তৈরি করে:</p>
+<div class="diagram"><pre>
+   Security Principal  +  Role Definition  +  Scope   =  Role Assignment
+   (কে — User/Group/       (কী করতে         (কোথায় —
+    Service Principal/       পারবে —          Management Group/
+    Managed Identity)        permission-এর     Subscription/
+                              তালিকা)           Resource Group/Resource)
+</pre></div>
+<p>উদাহরণ: যদি একটা User-কে <code>Contributor</code> role দিয়ে একটা নির্দিষ্ট Resource Group-এর scope-এ assign করা হয়, তাহলে সে ঠিক সেই Resource Group-এর ভেতরের রিসোর্স তৈরি/পরিবর্তন করতে পারবে — এর বাইরে কিছু না।</p>
+
+<h3>Scope Inheritance — উপর থেকে নিচে</h3>
+<p>RBAC-এর সবচেয়ে গুরুত্বপূর্ণ আচরণ হলো — যেকোনো স্তরে দেওয়া role assignment তার নিচের সব স্তরে স্বয়ংক্রিয়ভাবে <span class="kw">inherit</span> হয়। যদি Management Group-এর scope-এ কাউকে <code>Reader</code> role দেওয়া হয়, সে সেই Management Group-এর অধীনস্থ প্রতিটা Subscription, প্রতিটা Resource Group, প্রতিটা Resource-এ Reader অ্যাক্সেস পেয়ে যাবে — আলাদা করে প্রতিটা subscription-এ আবার assign করার দরকার নেই।</p>
+<div class="diagram"><pre>
+Management Group "Contoso-Prod"  ← Role: Reader assign করা হলো এখানে
+   │
+   ├── Subscription A  ─────────────► Reader (inherited)
+   │      └── RG-web  ──────────────► Reader (inherited)
+   │             └── VM-01  ────────► Reader (inherited)
+   │
+   └── Subscription B  ─────────────► Reader (inherited)
+          └── RG-db  ───────────────► Reader (inherited)
+</pre></div>
+<div class="callout mistake"><span class="tag">Common mistake — উঁচু স্তরে বেশি ক্ষমতা দিয়ে ফেলা</span> একজন ডেভেলপারকে দ্রুত অ্যাক্সেস দেওয়ার তাড়াহুড়ায় Subscription-লেভেলে <code>Owner</code> দিয়ে দেওয়া একটা খুবই সাধারণ ভুল — এতে সে subscription-এর সব resource group-এর সব resource-এ পূর্ণ নিয়ন্ত্রণ পেয়ে যায়, যদিও তার দরকার ছিল শুধু একটা নির্দিষ্ট resource group। সবসময় <span class="kw">least privilege</span> মেনে সবচেয়ে নিচের প্রয়োজনীয় scope-এ role assign করুন।</div>
+
+<h3>Built-in Role vs Custom Role</h3>
+<table>
+<tr><th>Role</th><th>কী করতে পারে</th></tr>
+<tr><td>Owner</td><td>সব রিসোর্সে পূর্ণ অ্যাক্সেস, এবং অন্যদের role assign করার ক্ষমতাও আছে</td></tr>
+<tr><td>Contributor</td><td>সব রিসোর্স তৈরি/পরিবর্তন/ডিলিট করতে পারে, কিন্তু অন্যকে role assign করতে পারে না</td></tr>
+<tr><td>Reader</td><td>সব রিসোর্স দেখতে পারে, কিন্তু কোনো পরিবর্তন করতে পারে না</td></tr>
+<tr><td>User Access Administrator</td><td>রিসোর্স পরিবর্তন করতে পারে না, কিন্তু অন্যদের অ্যাক্সেস (role assignment) ব্যবস্থাপনা করতে পারে</td></tr>
+</table>
+<p>এই built-in role গুলো বেশিরভাগ পরিস্থিতির জন্য যথেষ্ট। যখন এগুলোর কোনোটাই ঠিক মিলে না — যেমন "শুধু VM restart করতে পারবে, কিন্তু ডিলিট করতে পারবে না" — তখন <span class="kw">Custom Role</span> তৈরি করা যায়, যেখানে নির্দিষ্ট <code>Actions</code> ও <code>NotActions</code> তালিকা দিয়ে সূক্ষ্মভাবে permission সংজ্ঞায়িত করা হয়।</p>
+
+<h3>Azure Policy — RBAC থেকে ভিন্ন স্তরের টুল</h3>
+<p>RBAC ও Policy প্রায়ই গুলিয়ে ফেলা হয়, কিন্তু এরা সম্পূর্ণ ভিন্ন প্রশ্নের উত্তর দেয়:</p>
+<div class="grid2">
+<div class="box"><b>RBAC</b> — "এই identity কী <u>করতে</u> পারবে?" (Action-ভিত্তিক অনুমতি)</div>
+<div class="box"><b>Azure Policy</b> — "এই resource-এর <u>অবস্থা</u> কেমন হতে হবে?" (State/compliance-ভিত্তিক নিয়ম)</div>
+</div>
+<p>একজন ইউজারের হয়তো RBAC অনুযায়ী নতুন Storage Account তৈরি করার পূর্ণ অনুমতি (Contributor) আছে, কিন্তু Policy বলতে পারে "সব Storage Account-এ HTTPS-only এনফোর্সড থাকতে হবে" — এই দুইটা একসাথে কাজ করে, একটা আরেকটার বিকল্প না।</p>
+<pre>
+{
+  "if": {
+    "allOf": [
+      {
+        "field": "type",
+        "equals": "Microsoft.Storage/storageAccounts"
+      },
+      {
+        "field": "Microsoft.Storage/storageAccounts/supportsHttpsTrafficOnly",
+        "notEquals": "true"
+      }
+    ]
+  },
+  "then": {
+    "effect": "deny"
+  }
+}
+</pre>
+<p>এই policy definition-এ <code>effect: "deny"</code> মানে — HTTPS-only চালু না থাকলে সেই Storage Account তৈরিই হতে দেওয়া হবে না। যদি <code>effect: "audit"</code> ব্যবহার করা হতো, তাহলে non-compliant resource তৈরি হতে দেওয়া হতো, শুধু compliance রিপোর্টে flag করা হতো।</p>
+<div class="callout why"><span class="tag">কেন Deny আর Audit দুইটাই দরকার</span> নতুন নিয়ম চালু করার সময় সরাসরি <code>Deny</code> বসিয়ে দিলে বিদ্যমান pipeline হঠাৎ ভেঙে যেতে পারে। এজন্য প্রথমে <code>Audit</code> দিয়ে বোঝা হয় কতগুলো resource আসলে non-compliant, তারপর ধীরে ধীরে ঠিক করে শেষে <code>Deny</code>-তে upgrade করা হয় — এটা Azure Policy রোলআউটের একটা প্রমাণিত প্র্যাকটিস।</div>
+
+<h3>Conditional Access</h3>
+<p><span class="kw">Conditional Access</span> হলো "if-then" নিয়মের একটা ইঞ্জিন যা সাইন-ইন সময়ে নির্দিষ্ট শর্ত পরীক্ষা করে অতিরিক্ত নিরাপত্তা বাধ্যতামূলক করে — যেমন "যদি ইউজার অফিসের বাইরের নেটওয়ার্ক থেকে বা অপরিচিত ডিভাইস থেকে সাইন-ইন করে, তাহলে MFA বাধ্যতামূলক" অথবা "যদি sign-in risk score উচ্চ হয় (Entra ID-এর নিজস্ব risk-detection অনুযায়ী), তাহলে পাসওয়ার্ড পরিবর্তন বাধ্যতামূলক"।</p>
+
+<h3>Privileged Identity Management (PIM)</h3>
+<p><span class="kw">PIM</span> একটা <span class="kw">just-in-time (JIT)</span> অ্যাক্সেস মডেল বাস্তবায়ন করে — একজন ইউজার সবসময় Owner/Contributor role নিয়ে বসে না থেকে, প্রয়োজনের সময় নির্দিষ্ট সময়ের জন্য (যেমন ২ ঘণ্টা) সেই role <span class="kw">activate</span> করে, প্রায়ই একটা approval workflow বা MFA-এর মধ্য দিয়ে। সময় শেষ হলে role স্বয়ংক্রিয়ভাবে নিষ্ক্রিয় হয়ে যায়।</p>
+<div class="callout best"><span class="tag">Best practice — Standing Access-এর বদলে PIM</span> সবসময় সক্রিয় থাকা (standing) privileged অ্যাক্সেস একটা বড় আক্রমণ-পৃষ্ঠ তৈরি করে — যদি সেই ইউজারের অ্যাকাউন্ট কোনোভাবে compromise হয়, আক্রমণকারী সাথে সাথেই পূর্ণ privileged অ্যাক্সেস পেয়ে যায়। PIM দিয়ে privileged role-কে ডিফল্টভাবে নিষ্ক্রিয় (eligible কিন্তু active না) রাখলে, compromise হওয়া অ্যাকাউন্টেরও activation ছাড়া কোনো ক্ষমতা থাকে না — এটা attack window বহুলাংশে কমিয়ে দেয়।</div>
+
+<h3>Azure AD B2C / Microsoft Entra External ID</h3>
+<p>এতক্ষণ যা আলোচনা হলো তা মূলত <b>কর্মচারী/অভ্যন্তরীণ</b> identity-এর জন্য একটা tenant। কিন্তু যখন একটা অ্যাপ্লিকেশনের গ্রাহকদের (customer-facing) জন্য সাইন-আপ/সাইন-ইন দরকার — যেমন একটা ই-কমার্স সাইটের লক্ষ লক্ষ ব্যবহারকারী — তখন প্রতিষ্ঠানের অভ্যন্তরীণ tenant ব্যবহার করা উচিত না, কারণ ভিন্ন স্কেল, ভিন্ন সাইন-ইন অভিজ্ঞতা (social login, custom branding), ও ভিন্ন সিকিউরিটি বিবেচনা প্রয়োজন। এই জন্যই আলাদা <span class="kw">Azure AD B2C</span> (এখন <code>Microsoft Entra External ID</code> নামে বিবর্তিত) tenant টাইপ ব্যবহার করা হয় — এটা সম্পূর্ণ আলাদাভাবে ব্যবস্থাপিত, যাতে গ্রাহক-identity ও কর্মচারী-identity কখনো মিশে না যায়।</p>
+</template>
+
+<template data-page="vm">
+<h2 class="title">৩. Virtual Machines</h2>
+<p class="lead">Virtual Machine হলো Azure-এর IaaS স্তরের ভিত্তি — নিজের OS, নিজের কনফিগারেশন নিয়ন্ত্রণ করার সবচেয়ে নমনীয় (কিন্তু সবচেয়ে বেশি রক্ষণাবেক্ষণ-নির্ভর) উপায়।</p>
+
+<h3>VM Size নামকরণ পদ্ধতি</h3>
+<p>Azure VM-এর সাইজ নাম প্রথম দেখায় দুর্বোধ্য মনে হতে পারে, কিন্তু এটা একটা নির্দিষ্ট প্যাটার্ন মেনে চলে যা একবার বুঝে গেলে যেকোনো সাইজ পড়া সহজ হয়ে যায়।</p>
+<div class="diagram"><pre>
+        Standard_D2s_v5
+        │       │ │  │
+        │       │ │  └── Version — v5 = পঞ্চম জেনারেশন হার্ডওয়্যার
+        │       │ └───── Additional capability — 's' = Premium Storage সাপোর্ট
+        │       └─────── vCPU সংখ্যা — 2 vCPU
+        └─────────────── Series/Family — D = general purpose
+</pre></div>
+<p>Family লেটার নির্দেশ করে ব্যবহারের ধরন — যেমন <code>D</code>-সিরিজ general purpose, <code>E</code>-সিরিজ memory-optimized, <code>F</code>-সিরিজ compute-optimized, <code>N</code>-সিরিজ GPU-যুক্ত। Additional capability লেটার (<code>s</code>) থাকলে বোঝায় সেই VM Premium SSD ব্যবহার করতে পারবে; না থাকলে শুধু Standard storage সাপোর্ট করে।</p>
+
+<h3>VM Power State — Stopped vs Stopped (Deallocated)</h3>
+<p>এটা Azure-এর সবচেয়ে ভুল-বোঝাবুঝির জায়গাগুলোর একটা। VM-এর দুইটা ভিন্ন "বন্ধ" অবস্থা আছে, এবং বিলিং-এর দিক থেকে এদের পার্থক্য বিশাল:</p>
+<table>
+<tr><th>অবস্থা</th><th>মানে</th><th>Compute বিল</th><th>Public IP</th></tr>
+<tr><td>Stopped</td><td>OS-এর ভেতর থেকে shutdown করা হয়েছে (guest OS shutdown), কিন্তু Azure hardware allocation এখনো ধরে রেখেছে</td><td>এখনো চলে</td><td>থেকে যায়</td></tr>
+<tr><td>Stopped (Deallocated)</td><td>Azure Portal/CLI থেকে সরাসরি "Stop" করা হয়েছে — underlying hardware সম্পূর্ণ ছেড়ে দেওয়া হয়েছে</td><td>বন্ধ (শুধু disk-এর বিল থাকে)</td><td>ছেড়ে দেওয়া হতে পারে (dynamic হলে)</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — OS থেকে shutdown করে বিল বন্ধ ভাবা</span> অনেকে Windows/Linux-এর ভেতর থেকে <code>shutdown</code> কমান্ড চালিয়ে ভাবেন compute বিল বন্ধ হয়ে গেছে — কিন্তু তা হয় না, কারণ Azure তখনো সেই VM-এর জন্য হার্ডওয়্যার বরাদ্দ ধরে রাখে (যাতে আপনি তাৎক্ষণিকভাবে আবার বুট করতে পারেন)। compute বিল সত্যিকার অর্থে বন্ধ করতে VM-কে অবশ্যই Azure Portal/CLI থেকে Stop করতে হবে, যা VM-কে <b>Deallocated</b> অবস্থায় নিয়ে যায়। AWS-এর EC2-তে "stop" করলেই সাধারণত compute বিল বন্ধ হয়ে যায় — এই সূক্ষ্ম পার্থক্যটা না জানলে Azure বিলে অপ্রত্যাশিত চার্জ দেখে অবাক হতে হয়।</div>
+
+<h3>Availability Set vs Availability Zone</h3>
+<p>Azure-এ high availability-এর জন্য দুইটা ভিন্ন স্তরের সমাধান আছে, এবং এরা ভিন্ন ধরনের ব্যর্থতা থেকে রক্ষা করে:</p>
+<table>
+<tr><th>বৈশিষ্ট্য</th><th>Availability Set</th><th>Availability Zone</th></tr>
+<tr><td>স্কোপ</td><td>একই datacenter-এর ভেতরে</td><td>একই region-এর ভিন্ন, ফিজিক্যালি বিচ্ছিন্ন datacenter</td></tr>
+<tr><td>রক্ষা করে</td><td>হার্ডওয়্যার র‍্যাক/সার্ভার ব্যর্থতা, প্ল্যানড মেইনটেন্যান্স</td><td>সম্পূর্ণ datacenter-লেভেল দুর্যোগ (আগুন, বন্যা, বিদ্যুৎ বিভ্রাট)</td></tr>
+<tr><td>মেকানিজম</td><td>Fault Domain (হার্ডওয়্যার গ্রুপিং) + Update Domain (মেইনটেন্যান্স গ্রুপিং)</td><td>Zone 1 / 2 / 3 — আলাদা পাওয়ার, কুলিং, নেটওয়ার্ক</td></tr>
+<tr><td>ল্যাটেন্সি</td><td>খুবই কম (একই ডেটা সেন্টার)</td><td>সামান্য বেশি (আলাদা ডেটা সেন্টার, কিন্তু নিম্ন-ল্যাটেন্সি লিংকে যুক্ত)</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন দুইটা ভিন্ন স্তরের সমাধান দরকার</span> Availability Set আপনাকে "সব VM একসাথে maintenance-এর জন্য রিবুট হয়ে যাওয়া" বা "একটা র‍্যাকের পাওয়ার সাপ্লাই ব্যর্থ হয়ে সব VM একসাথে বন্ধ হয়ে যাওয়া" থেকে রক্ষা করে — কিন্তু পুরো ডেটা সেন্টার ধ্বংস হয়ে গেলে Availability Set-এর সব VM-ই হারিয়ে যাবে, কারণ এরা একই ফিজিক্যাল বিল্ডিং-এ। Availability Zone সেই ঝুঁকি কভার করে সম্পূর্ণ ভিন্ন বিল্ডিং-এ replica রেখে। প্রোডাকশন workload-এ যেখানে region-এর মধ্যে সর্বোচ্চ resiliency দরকার, সেখানে Availability Zone অগ্রাধিকার পায়; যেখানে শুধু একই datacenter-এর মধ্যে হার্ডওয়্যার-লেভেল redundancy যথেষ্ট, সেখানে Availability Set ব্যবহার করা যায়।</div>
+
+<h3>Managed Disk এবং NSG — সংক্ষিপ্ত মেনশন</h3>
+<p>প্রতিটা VM-এর OS ও ডেটা <span class="kw">Managed Disk</span>-এ সংরক্ষিত থাকে — Azure নিজে storage account ব্যবস্থাপনা করে, আপনাকে শুধু সাইজ ও পারফরম্যান্স টিয়ার (Standard HDD, Standard SSD, Premium SSD, Ultra Disk) বেছে নিতে হয়। এর বিস্তারিত পরের চ্যাপ্টারে আলোচনা হবে। একইভাবে, VM-এর নেটওয়ার্ক ট্রাফিক নিয়ন্ত্রণ করে <span class="kw">Network Security Group (NSG)</span> — এর বিস্তারিত তুলনা (বিশেষ করে AWS Security Group-এর সাথে পার্থক্য) পরের VNet চ্যাপ্টারে বিস্তারিতভাবে আলোচনা হবে।</p>
+
+<h3>Azure Bastion</h3>
+<p>ঐতিহ্যগতভাবে একটা VM-এ RDP/SSH করতে হলে VM-এর একটা public IP লাগত, অথবা একটা নিজস্ব "jump box"/bastion host চালাতে হতো যার নিজেরই একটা public IP ও open port থাকত — যা নিজেই একটা আক্রমণ-পৃষ্ঠ। <span class="kw">Azure Bastion</span> এই সমস্যা সমাধান করে — এটা একটা fully-managed PaaS সার্ভিস যা Azure Portal-এর ব্রাউজার থেকেই সরাসরি RDP/SSH সেশন খুলে দেয়, VM-এ কোনো public IP বা open port 22/3389 ছাড়াই, TLS-এর মাধ্যমে।</p>
+<div class="callout why"><span class="tag">কেন এটা নিজে bastion host চালানোর চেয়ে নিরাপদ</span> নিজে একটা bastion VM চালালে সেটা নিজেই patch করতে হয়, নিজেই harden করতে হয়, এবং তার public IP/port নিজেই একটা টার্গেট হয়ে যায়। Azure Bastion Microsoft-এর ব্যবস্থাপিত সার্ভিস — এটা কখনো public internet-এ port 22/3389 এক্সপোজ করে না, ট্রাফিক Azure-এর নিজস্ব backbone দিয়ে যায়। এই ধারণা conceptually AWS-এর <b>Systems Manager Session Manager</b>-এর সমতুল্য — উভয়ই "কোনো ইনবাউন্ড পোর্ট খোলা ছাড়াই সিকিউর অ্যাক্সেস" সমাধান করে।</div>
+
+<h3>Custom Script Extension ও cloud-init</h3>
+<p>VM বুট হওয়ার সময় স্বয়ংক্রিয়ভাবে সফটওয়্যার ইনস্টল বা কনফিগারেশন চালানোর জন্য দুইটা প্রধান পদ্ধতি আছে — Windows-এ <span class="kw">Custom Script Extension</span>, আর Linux-এ প্রায়ই <span class="kw">cloud-init</span> ব্যবহার করা হয়।</p>
+<pre>
+#cloud-config
+package_upgrade: true
+packages:
+  - nginx
+runcmd:
+  - systemctl enable nginx
+  - systemctl start nginx
+<span class="c"># VM প্রথমবার বুট হওয়ার সময় স্বয়ংক্রিয়ভাবে nginx ইনস্টল ও চালু হয়ে যাবে</span>
+</pre>
+<div class="callout best"><span class="tag">Best practice — Golden Image + Minimal Bootstrap</span> প্রতিবার বুটে ভারী ইনস্টলেশন চালানোর বদলে, ভালো প্র্যাকটিস হলো আগে থেকেই সব সফটওয়্যার ইনস্টল করা একটা কাস্টম VM Image (Azure Image Builder দিয়ে তৈরি) ব্যবহার করা, আর cloud-init/Custom Script Extension শুধু runtime configuration (environment variable, secret fetch) এর জন্য ব্যবহার করা। এতে বুট টাইম দ্রুত হয় ও নির্ভরযোগ্যতা বাড়ে।</div>
+
+<h3>VM Scale Sets — সংক্ষিপ্ত মেনশন</h3>
+<p>একাধিক identical VM instance স্বয়ংক্রিয়ভাবে scale up/down করার জন্য Azure-এর সমাধান হলো <span class="kw">Virtual Machine Scale Sets (VMSS)</span> — এর বিস্তারিত আলোচনা হবে ৯ নম্বর অধ্যায়ে।</p>
+
+<h3>Pricing মডেল</h3>
+<table>
+<tr><th>মডেল</th><th>বর্ণনা</th><th>উপযুক্ত ব্যবহার</th></tr>
+<tr><td>Pay-As-You-Go</td><td>কোনো কমিটমেন্ট ছাড়া, ব্যবহার অনুযায়ী বিল</td><td>অনিশ্চিত/ছোট workload, টেস্টিং</td></tr>
+<tr><td>Reserved Instances</td><td>১ বা ৩ বছরের জন্য আগাম কমিটমেন্ট, ৭২% পর্যন্ত ছাড়</td><td>predictable, দীর্ঘমেয়াদী প্রোডাকশন workload</td></tr>
+<tr><td>Spot VMs</td><td>Azure-এর অব্যবহৃত ক্যাপাসিটি অনেক কম দামে, কিন্তু ক্যাপাসিটি দরকার পড়লে একটা <span class="kw">eviction policy</span> অনুযায়ী (deallocate বা delete) হঠাৎ সরিয়ে দেওয়া হতে পারে</td><td>fault-tolerant batch job, stateless workload</td></tr>
+<tr><td>Azure Hybrid Benefit</td><td>নিজের বিদ্যমান on-premises Windows Server/SQL Server লাইসেন্স (Software Assurance-সহ) cloud-এ নিয়ে এসে বড় ছাড় পাওয়া</td><td>যেসব প্রতিষ্ঠানের আগে থেকেই on-prem লাইসেন্স আছে</td></tr>
+</table>
+<div class="callout behind"><span class="tag">কেন Azure Hybrid Benefit AWS-এ ঠিক এই নামে নেই</span> Azure Hybrid Benefit বিদ্যমান Microsoft licensing agreement (Software Assurance) থেকে সরাসরি সুবিধা নেয় — যেহেতু Windows Server ও SQL Server নিজেই Microsoft-এর প্রোডাক্ট, তাই Microsoft নিজস্ব cloud-এ সেই লাইসেন্স "নিয়ে আসার" একটা পথ দিতে পারে। AWS যেহেতু নিজে Windows/SQL Server বানায় না, সেখানে একই নামে সমতুল্য প্রোগ্রাম নেই — যদিও AWS-এও "License Mobility" এর কিছু ধরনের সুবিধা আছে, সেটা এই একই গভীরতায় Microsoft licensing-এর সাথে integrated না।</div>
+
+<h3>Boot Diagnostics</h3>
+<p><span class="kw">Boot Diagnostics</span> চালু থাকলে VM বুট প্রক্রিয়ার স্ক্রিনশট ও সিরিয়াল লগ Azure Storage-এ সংরক্ষিত হয় — VM বুট না হলে বা RDP/SSH-এ কানেক্ট করা না গেলে এই লগ দেখেই সমস্যা নির্ণয় করা যায়, যেহেতু তখন VM-এর ভেতরে ঢোকার আর কোনো উপায় থাকে না।</p>
+</template>
+
+<template data-page="vnet">
+<h2 class="title">৪. Virtual Network ও Networking</h2>
+<p class="lead">Azure-এর যেকোনো সিরিয়াস ডিপ্লয়মেন্টের নেটওয়ার্কিং লেয়ার সঠিকভাবে বোঝা মানেই অর্ধেক সিকিউরিটি ও পারফরম্যান্স সমস্যা এড়ানো।</p>
+
+<h3>VNet, Subnet, CIDR</h3>
+<p><span class="kw">Virtual Network (VNet)</span> হলো Azure-এর ভেতরে আপনার নিজের আইসোলেটেড, প্রাইভেট নেটওয়ার্ক স্পেস, যা একটা CIDR ব্লক (যেমন <code>10.0.0.0/16</code>) দিয়ে সংজ্ঞায়িত। এই VNet-কে ছোট ছোট <span class="kw">Subnet</span>-এ ভাগ করা হয় (যেমন <code>10.0.1.0/24</code>) — সাধারণত লেয়ার অনুযায়ী (web, app, data)। CIDR concept সার্বজনীন এবং AWS/অন্য যেকোনো নেটওয়ার্কিং-এর সাথে একই, তাই এখানে বিস্তারিত না বলে সরাসরি Azure-নির্দিষ্ট ফিচারে যাচ্ছি।</p>
+
+<h3>Network Security Group (NSG) — Allow এবং Deny দুটোই</h3>
+<p>NSG হলো subnet বা individual Network Interface (NIC)-এর স্তরে বসানো একটা virtual firewall। এটা <span class="kw">stateful</span> — মানে ইনবাউন্ড rule দিয়ে কোনো কানেকশন অনুমোদিত হলে তার রিটার্ন ট্রাফিক স্বয়ংক্রিয়ভাবে অনুমোদিত হয়ে যায়, আলাদা আউটবাউন্ড rule লিখতে হয় না। কিন্তু NSG-এর একটা গুরুত্বপূর্ণ বৈশিষ্ট্য হলো, এটা <b>Allow ও Deny — দুই ধরনের rule-ই সমর্থন করে</b>, এবং প্রতিটা rule-এর একটা <span class="kw">priority number</span> থাকে (১০০ থেকে ৪০৯৬) — সবচেয়ে কম সংখ্যার rule আগে evaluate হয় এবং জিতে যায়।</p>
+<table>
+<tr><th>বৈশিষ্ট্য</th><th>AWS Security Group</th><th>AWS NACL</th><th>Azure NSG</th></tr>
+<tr><td>Stateful?</td><td>হ্যাঁ</td><td>না (stateless)</td><td>হ্যাঁ</td></tr>
+<tr><td>Allow rule</td><td>হ্যাঁ</td><td>হ্যাঁ</td><td>হ্যাঁ</td></tr>
+<tr><td>Deny rule</td><td>না (সমর্থন করে না)</td><td>হ্যাঁ</td><td>হ্যাঁ</td></tr>
+<tr><td>প্রয়োগের স্তর</td><td>শুধু instance/NIC</td><td>শুধু subnet</td><td>subnet এবং NIC — দুই স্তরেই</td></tr>
+</table>
+<div class="callout behind"><span class="tag">NSG আসলে SG + NACL-এর একটা hybrid</span> AWS-এ Security Group (stateful, allow-only, instance-level) ও NACL (stateless, allow+deny, subnet-level) দুইটা আলাদা টুল হিসেবে কাজ করে বলে আপনাকে দুইটা ভিন্ন মানসিক মডেল রাখতে হয়। Azure NSG এই দুইটার বৈশিষ্ট্য একসাথে নিয়ে একটাই টুলে একত্র করেছে — stateful থেকেছে (NACL-এর মতো stateless না), কিন্তু Deny rule-ও যোগ করেছে (traditional SG-তে যা ছিল না), এবং একইসাথে subnet ও NIC দুই স্তরেই প্রয়োগ করার সুবিধা দিয়েছে। এই কারণে Azure-এ আলাদা "NACL"-সদৃশ কিছু নেই — NSG একাই দুটোর কাজ করে।</div>
+<div class="callout why"><span class="tag">কেন Priority Number-এর ক্রম গুরুত্বপূর্ণ</span> একই NSG-তে যদি priority ১০০-তে একটা Allow rule এবং priority ২০০-তে একটা Deny rule একই ট্রাফিকের জন্য প্রযোজ্য হয়, priority ১০০-এর Allow rule আগে evaluate হয়ে জিতে যাবে — Deny rule কখনো evaluate হবে না। এই কারণে rule লেখার সময় priority number নিয়ে সতর্ক থাকা জরুরি, বিশেষ করে যখন একটা broad Deny rule দিয়ে বাকি সব ট্রাফিক ব্লক করে রাখতে চান কিন্তু নির্দিষ্ট কিছু ব্যতিক্রম Allow করতে চান — ব্যতিক্রম rule-গুলোকে অবশ্যই ছোট (আগে evaluate হওয়া) priority number দিতে হবে।</div>
+
+<h3>Application Security Group (ASG)</h3>
+<p>বড় ইনফ্রাস্ট্রাকচারে NSG rule IP address দিয়ে লিখলে (যেমন "10.0.1.5 থেকে 10.0.2.10-এ পোর্ট 443 allow") সার্ভার যোগ/বাদ হওয়ার সাথে সাথে rule আপডেট করতে হয়, যা রক্ষণাবেক্ষণ দুঃসহ করে তোলে। <span class="kw">Application Security Group (ASG)</span> এই সমস্যা সমাধান করে — VM-এর NIC-কে একটা লজিক্যাল গ্রুপে (যেমন <code>WebServers</code>, <code>DbServers</code>) যুক্ত করা যায়, এবং NSG rule IP-এর বদলে সরাসরি এই গ্রুপের নাম রেফারেন্স করে লেখা যায় ("WebServers থেকে DbServers-এ পোর্ট 1433 allow")। নতুন VM যোগ হলে শুধু তাকে সঠিক ASG-তে যুক্ত করলেই হয়, NSG rule পরিবর্তনের দরকার হয় না।</p>
+
+<h3>Public IP vs Private IP</h3>
+<p>Azure-এ প্রতিটা resource-এর একটা <span class="kw">Private IP</span> থাকতে পারে VNet-এর ভেতরের যোগাযোগের জন্য, আর ঐচ্ছিকভাবে একটা <span class="kw">Public IP</span> ইন্টারনেট থেকে সরাসরি অ্যাক্সেসের জন্য। Production ডিজাইনে সাধারণত যতটা সম্ভব কম resource-এ সরাসরি public IP রাখার নীতি অনুসরণ করা হয় — সামনে Load Balancer/Application Gateway/Firewall বসিয়ে একক entry point তৈরি করা হয়।</p>
+
+<h3>Route Table / User Defined Route (UDR)</h3>
+<p>প্রতিটা subnet-এ একটা <span class="kw">System Route</span> ডিফল্টভাবে থাকে (যেমন VNet-এর ভেতরে সরাসরি রাউটিং, ইন্টারনেটে সরাসরি রাউটিং)। কিন্তু অনেক সময় ডিফল্ট রাউটিং যথেষ্ট না — যেমন আপনি চান সব আউটবাউন্ড ট্রাফিক প্রথমে একটা কেন্দ্রীয় <span class="kw">Network Virtual Appliance (NVA)</span> (একটা firewall বা inspection ডিভাইস) দিয়ে পাস করুক, তারপর ইন্টারনেটে যাক। এই জন্য <span class="kw">User Defined Route (UDR)</span> দিয়ে কাস্টম রাউট সংজ্ঞায়িত করা হয়, যা system route-কে override করে।</p>
+<div class="diagram"><pre>
+                     ┌────────────────┐
+   Spoke VNet A ────►│                │
+   (App Tier)        │   Hub VNet     │────► Internet
+                      │  (NVA/Firewall)│
+   Spoke VNet B ────►│                │
+   (Data Tier)        └────────────────┘
+
+   UDR প্রতিটা spoke subnet-এ বসানো — সব বহির্গামী ট্রাফিক
+   বাধ্যতামূলকভাবে Hub-এর NVA দিয়ে যেতে হবে, সরাসরি ইন্টারনেটে না
+</pre></div>
+<p>এই প্যাটার্নই <span class="kw">hub-spoke architecture</span>-এর ভিত্তি — কেন্দ্রীয় hub VNet-এ শেয়ার্ড সার্ভিস (firewall, VPN Gateway) রেখে একাধিক spoke VNet তার সাথে peer করা।</p>
+
+<h3>NAT Gateway ও VNet Peering</h3>
+<p><span class="kw">NAT Gateway</span> একটা subnet-এর সব outbound ট্রাফিকের জন্য একটা স্থিতিশীল, predictable public IP দেয় — যাতে বাইরের সার্ভিস আপনার ট্রাফিক allowlist করতে পারে নির্দিষ্ট IP দিয়ে, VM-লেভেলে আলাদা public IP ছাড়াই। <span class="kw">VNet Peering</span> দুইটা VNet-কে (এমনকি ভিন্ন region-এও) সরাসরি সংযুক্ত করে, যাতে তাদের মধ্যে ট্রাফিক Azure-এর ব্যাকবোন নেটওয়ার্ক দিয়ে প্রবাহিত হয়, পাবলিক ইন্টারনেট দিয়ে না — কম ল্যাটেন্সি, বেশি নিরাপত্তা।</p>
+
+<h3>Azure Firewall vs NSG</h3>
+<p>NSG একটা basic, stateless-rule-সদৃশ packet filter (IP/port/protocol ভিত্তিক), কিন্তু এটা কোনো centralized logging, threat intelligence, বা application-layer (FQDN/URL-ভিত্তিক) filtering দেয় না। <span class="kw">Azure Firewall</span> একটা fully-managed, stateful firewall-as-a-service যা এই ফাঁক পূরণ করে — এটা একটা কেন্দ্রীয় জায়গা থেকে সব VNet-এর জন্য পলিসি প্রয়োগ করতে পারে, Microsoft-এর নিজস্ব threat intelligence feed দিয়ে পরিচিত ম্যালিশাস IP ব্লক করতে পারে, এবং FQDN-ভিত্তিক নিয়ম লিখতে দেয় (যেমন "শুধু <code>*.windowsupdate.com</code>-এ আউটবাউন্ড অনুমোদিত")।</p>
+<table>
+<tr><th>বৈশিষ্ট্য</th><th>NSG</th><th>Azure Firewall</th></tr>
+<tr><td>স্তর</td><td>Subnet/NIC — distributed</td><td>Hub-এ কেন্দ্রীভূত, সাধারণত VNet/region-ওয়াইড</td></tr>
+<tr><td>Filtering</td><td>IP, Port, Protocol</td><td>IP/Port + FQDN + Application-layer</td></tr>
+<tr><td>Threat Intelligence</td><td>নেই</td><td>Microsoft-এর threat feed দিয়ে স্বয়ংক্রিয় ব্লক</td></tr>
+<tr><td>Logging</td><td>Flow Log (আলাদা করে চালু করতে হয়)</td><td>বিল্ট-ইন কেন্দ্রীয় লগিং ও রিপোর্টিং</td></tr>
+<tr><td>খরচ</td><td>ফ্রি</td><td>ঘণ্টাভিত্তিক + ডেটা প্রসেসিং চার্জ</td></tr>
+</table>
+
+<h3>VPN Gateway vs ExpressRoute</h3>
+<p>on-premises ডেটা সেন্টারকে Azure VNet-এর সাথে যুক্ত করার দুইটা প্রধান পথ আছে। <span class="kw">VPN Gateway</span> পাবলিক ইন্টারনেটের উপর দিয়ে একটা IPsec-এনক্রিপ্টেড টানেল তৈরি করে — দ্রুত সেটআপ করা যায়, তুলনামূলক সস্তা, কিন্তু ল্যাটেন্সি ও bandwidth পাবলিক ইন্টারনেটের উপর নির্ভরশীল। <span class="kw">ExpressRoute</span> একটা dedicated, প্রাইভেট কানেকশন — কোনো পাবলিক ইন্টারনেট ব্যবহার হয় না, তাই অনেক বেশি নির্ভরযোগ্য ব্যান্ডউইথ ও কম, predictable ল্যাটেন্সি পাওয়া যায়, কিন্তু সেটআপ করতে সময় বেশি লাগে (ISP পার্টনারের মাধ্যমে) এবং খরচও বেশি।</p>
+<p>এটা ঠিক AWS-এর <b>Site-to-Site VPN</b> (ইন্টারনেট-ভিত্তিক, দ্রুত সেটআপ) বনাম <b>Direct Connect</b> (dedicated প্রাইভেট লিংক)-এর সমতুল্য ধারণা — নাম ভিন্ন, ট্রেড-অফ একই।</p>
+
+<h3>Private Endpoint vs Service Endpoint</h3>
+<p>দুইটাই একটা সাধারণ সমস্যা সমাধানের চেষ্টা করে — PaaS resource-কে (যেমন Storage Account, Azure SQL Database) VNet-এর ভেতরের ট্রাফিক দিয়ে অ্যাক্সেস করা, ইন্টারনেট দিয়ে না — কিন্তু দুইটার পদ্ধতি ভিন্ন এবং নিরাপত্তার মাত্রাও ভিন্ন।</p>
+<div class="diagram"><pre>
+Service Endpoint:
+  VNet Subnet ──(অপ্টিমাইজড রুট, কিন্তু PaaS resource এখনো public IP-তে)──► Storage Account (public IP)
+
+Private Endpoint:
+  VNet Subnet ──► [Private IP: 10.0.1.5] ──(VNet-এর ভেতরেই)──► Storage Account
+                   (এটা এখন VNet-এর একটা সদস্য, সম্পূর্ণ প্রাইভেট)
+</pre></div>
+<p><span class="kw">Service Endpoint</span> শুধু রাউটিং অপ্টিমাইজ করে (Azure ব্যাকবোন দিয়ে যায়, ইন্টারনেট দিয়ে না) এবং subnet-ভিত্তিক অ্যাক্সেস নিয়ন্ত্রণ যোগ করে, কিন্তু টার্গেট PaaS resource-এর নিজস্ব public IP এখনো বজায় থাকে। <span class="kw">Private Endpoint</span> সম্পূর্ণ ভিন্ন — এটা টার্গেট resource-এর জন্য আপনার VNet-এর ভেতরে একটা প্রকৃত প্রাইভেট IP তৈরি করে দেয়, যাতে সেই resource কার্যত VNet-এরই একটা সদস্যের মতো আচরণ করে, এবং প্রায়ই public endpoint সম্পূর্ণভাবে বন্ধ করে দেওয়া যায়।</p>
+<div class="callout why"><span class="tag">কেন Private Endpoint বেশি নিরাপদ</span> Service Endpoint ব্যবহার করলেও টার্গেট resource-এর public IP এখনো ইন্টারনেট থেকে (যদি firewall rule allow করে) পৌঁছানো সম্ভব — নিরাপত্তা নির্ভর করে সঠিক firewall rule বজায় রাখার উপর। Private Endpoint-এ resource-এর কোনো public endpoint নাও থাকতে পারে, ফলে DNS exfiltration বা misconfigured firewall rule-এর কারণে ডেটা leak হওয়ার ঝুঁকি অনেক কমে যায় — আক্রমণের পৃষ্ঠতলই কাঠামোগতভাবে ছোট হয়ে যায়, শুধু নিয়ম-নির্ভর না থেকে।</div>
+<div class="callout best"><span class="tag">Best practice — Production-এ সবসময় Private Endpoint</span> নতুন প্রোডাকশন আর্কিটেকচারে যেখানেই সম্ভব Private Endpoint ব্যবহার করা উচিত এবং সেই সাথে Storage/SQL-এর "Public network access" সম্পূর্ণ বন্ধ (Disabled) করে দেওয়া উচিত। Service Endpoint এখনো ব্যবহৃত হয় legacy সেটআপে বা যেখানে খরচ/জটিলতা কম রাখার প্রয়োজন, কিন্তু নতুন ডিজাইনে এটা দ্বিতীয় পছন্দ।</div>
+
+<h3>NSG Flow Logs</h3>
+<p><span class="kw">NSG Flow Logs</span> প্রতিটা NSG rule-এর মাধ্যমে যাওয়া IP ট্রাফিকের মেটাডেটা (source/destination IP, port, protocol, allow/deny সিদ্ধান্ত, বাইট কাউন্ট) ক্যাপচার করে JSON ফরম্যাটে Storage Account-এ সংরক্ষণ করে — এটা AWS-এর VPC Flow Logs-এর সমতুল্য ধারণা। ট্রাবলশুটিং ("কেন এই কানেকশন ব্লক হচ্ছে") এবং সিকিউরিটি অ্যানালাইসিস ("কোন IP থেকে অস্বাভাবিক ট্রাফিক আসছে") উভয়ের জন্যই এটা অপরিহার্য।</p>
+<div class="callout behind"><span class="tag">কেন এটা payload ক্যাপচার করে না</span> Flow Log ইচ্ছাকৃতভাবে শুধু মেটাডেটা রাখে, প্যাকেটের ভেতরের প্রকৃত ডেটা (payload) না — কারণ payload ক্যাপচার করলে বিশাল স্টোরেজ খরচ হতো এবং সংবেদনশীল ডেটা (যেমন পাসওয়ার্ড, ব্যক্তিগত তথ্য) অনিচ্ছাকৃতভাবে সংরক্ষিত হয়ে একটা নতুন কমপ্লায়েন্স ও নিরাপত্তা ঝুঁকি তৈরি করত। মেটাডেটা-ভিত্তিক লগিং ট্রাফিক প্যাটার্ন বিশ্লেষণের জন্য যথেষ্ট এবং সেই সাথে হালকা, স্কেলযোগ্য থাকে।</div>
+
+<h3>Network Watcher — নেটওয়ার্ক ডায়াগনস্টিকসের ছাতা</h3>
+<p>NSG Flow Logs আসলে <span class="kw">Network Watcher</span> নামের একটা বড় ডায়াগনস্টিক প্ল্যাটফর্মের একটা ফিচার মাত্র — প্রতিটা region-এ এটা স্বয়ংক্রিয়ভাবে সক্রিয় থাকে এবং নেটওয়ার্ক-সম্পর্কিত সমস্যা ডিবাগ করার একগুচ্ছ টুল দেয়।</p>
+<table>
+<tr><th>টুল</th><th>কী করে</th></tr>
+<tr><td>IP Flow Verify</td><td>একটা নির্দিষ্ট source/destination/port-এর ট্রাফিক allow না deny হচ্ছে তা তাৎক্ষণিক পরীক্ষা করে বলে দেয়, ঠিক কোন NSG rule দায়ী তা-ও দেখায়</td></tr>
+<tr><td>Connection Troubleshoot</td><td>দুইটা resource-এর মধ্যে end-to-end কানেক্টিভিটি টেস্ট করে, ঠিক কোথায় (NSG/route/DNS) সমস্যা হচ্ছে তা চিহ্নিত করে</td></tr>
+<tr><td>Packet Capture</td><td>একটা VM-এ নির্দিষ্ট সময়ের জন্য দূর থেকে packet capture চালু করে, VM-এ সরাসরি tcpdump ইনস্টল করার দরকার হয় না</td></tr>
+<tr><td>NSG Flow Logs</td><td>উপরে আলোচিত IP ট্রাফিক মেটাডেটা লগিং</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন এটা আলাদা করে জানা দরকার</span>
+নতুনরা প্রায়ই "কেন আমার VM-এ কানেক্ট করা যাচ্ছে না" এই প্রশ্নের উত্তর খুঁজতে ম্যানুয়ালি প্রতিটা NSG rule, route table এন্ট্রি হাতে-কলমে চেক করেন — যেখানে IP Flow Verify বা Connection Troubleshoot সরাসরি একটা নির্দিষ্ট উত্তর দিয়ে দেয় ("port 443-এ blocked, কারণ NSG rule priority 200")। Network Watcher-এর টুলগুলো জানা থাকলে নেটওয়ার্ক ডিবাগিং-এর সময় বহুলাংশে কমে যায়, ম্যানুয়াল অনুসন্ধানের বদলে।</div>
+</template>
+
+<template data-page="blob">
+<h2 class="title">৫. Blob Storage</h2>
+<p class="lead">Azure-এ যেকোনো unstructured data — ছবি, ভিডিও, লগ ফাইল, ব্যাকআপ, VM disk — রাখার মূল সার্ভিস হলো Blob Storage। কিন্তু এখানে ঢোকার আগে Azure-এর storage hierarchy বুঝে নেওয়া জরুরি, কারণ এটা S3-এর চেয়ে গঠনগতভাবে আলাদা।</p>
+
+<h3>Storage Account — সবকিছুর মূল পাত্র</h3>
+<p>AWS-এ S3-তে সরাসরি একটা <code>bucket</code> তৈরি করলেই কাজ শুরু হয়ে যায় — bucket নিজেই top-level entity। Azure-এ এটা তিন স্তরে ভাগ করা: প্রথমে একটা <span class="kw">Storage Account</span> তৈরি করতে হয়, যেটার নাম গ্লোবালি ইউনিক হতে হবে (কারণ এটাই DNS endpoint-এর অংশ হয়ে যায়, যেমন <code>mystorageacct.blob.core.windows.net</code>), এবং এটা একটা নির্দিষ্ট region-এ বসে। এই Storage Account-এর ভেতরে একাধিক <span class="kw">Container</span> তৈরি হয় (S3-এর bucket-এর সমতুল্য), আর প্রতিটা Container-এর ভেতরে থাকে আসল <span class="kw">Blob</span> ফাইলগুলো।</p>
+
+<div class="diagram"><pre>
+Storage Account (mystorageacct)          &lt;- globally unique নাম, নির্দিষ্ট region
+   │
+   ├── Container: images
+   │      ├── Blob: profile1.jpg
+   │      └── Blob: logo.png
+   │
+   ├── Container: logs
+   │      └── Blob: app-2026-07.log   (Append Blob)
+   │
+   └── Container: vm-disks
+          └── Blob: osdisk.vhd        (Page Blob)
+</pre></div>
+
+<div class="callout why"><span class="tag">কেন — এক্সট্রা স্তর কেন দরকার</span> Storage Account শুধু একটা namespace না — এটাই সেই ইউনিট যেখানে redundancy option (LRS/GRS ইত্যাদি), access tier default, encryption key, network rule (firewall/VNet) এবং performance tier (Standard/Premium) সেট করা হয়। একই account-এর নিচে থাকা সব container সেই সেটিংস শেয়ার করে, তাই একটা অ্যাপ্লিকেশনের জন্য একাধিক লজিক্যাল গ্রুপিং দরকার হলে সাধারণত একাধিক Storage Account ব্যবহার করা হয়, শুধু একাধিক container না।</div>
+
+<h3>তিন ধরনের Blob — S3-তে যা নেই</h3>
+<p>S3-তে সব অবজেক্টই সমান — শুধু একটা immutable byte stream, পুরোটা replace করা ছাড়া আপডেট করার উপায় নেই। Azure Blob Storage-এ তিনটা আলাদা blob type আছে, প্রতিটার নিজস্ব write pattern:</p>
+
+<table>
+<tr><th>Blob Type</th><th>Write আচরণ</th><th>Use Case</th></tr>
+<tr><td>Block Blob</td><td>ফাইল ছোট ছোট ব্লকে ভাগ হয়ে আপলোড হয়, তারপর commit হয়ে একটা ফাইল হিসেবে দাঁড়ায়। আংশিক আপডেটে পুরো ব্লক-লিস্ট আবার commit করতে হয়।</td><td>সাধারণ ফাইল — ছবি, ভিডিও, ডকুমেন্ট, ব্যাকআপ। ৯৯% ব্যবহারের ক্ষেত্র এটাই।</td></tr>
+<tr><td>Append Blob</td><td>শুধু ফাইলের <b>শেষে</b> ব্লক যোগ করা যায় (append-only), মাঝের কোনো অংশ পরিবর্তন বা ওভাররাইট করা যায় না।</td><td>Log file — একাধিক সার্ভার instance একই লগ ফাইলে concurrent-ভাবে নতুন লাইন যোগ করতে পারে, race condition ছাড়াই।</td></tr>
+<tr><td>Page Blob</td><td>৫১২-বাইট "page" এককে random read/write সম্ভব — মাঝখানের যেকোনো অংশ সরাসরি overwrite করা যায়, একদম disk sector-এর মতো।</td><td>VM disk-এর ভিত্তি — একটা <code>.vhd</code> ফাইল আসলে একটা Page Blob। ৮ TiB পর্যন্ত size সাপোর্ট করে।</td></tr>
+</table>
+
+<div class="callout behind"><span class="tag">গভীরে — Page Blob-ই কেন VM disk</span> VM-এর disk-এ OS যখন একটা ফাইলের মাঝখানের কোনো ব্লক পরিবর্তন করে, পুরো disk image আবার আপলোড করা অসম্ভব — GB-এর পর GB ডেটা। Page Blob এই সমস্যাটাই সমাধান করে random-access sparse write সাপোর্ট করে, তাই Azure Managed Disk-এর ভেতরে আসলে একটা Page Blob-ই কাজ করছে।</div>
+
+<h3>Access Tier — খরচ বনাম access-frequency</h3>
+<p>একই Block Blob-এর জন্য চারটা tier বেছে নেওয়া যায়, storage cost ও retrieval cost-এর মধ্যে ট্রেড-অফ করে:</p>
+
+<table>
+<tr><th>Tier</th><th>Storage Cost</th><th>Access/Retrieval Cost</th><th>Early-deletion Penalty</th><th>উপযুক্ত</th></tr>
+<tr><td>Hot</td><td>বেশি</td><td>সবচেয়ে কম</td><td>নেই</td><td>ঘন ঘন অ্যাক্সেস হওয়া ডেটা</td></tr>
+<tr><td>Cool</td><td>কম</td><td>বেশি</td><td>৩০ দিনের আগে delete/move করলে penalty</td><td>মাসে কয়েকবার অ্যাক্সেস হওয়া ডেটা</td></tr>
+<tr><td>Cold</td><td>আরও কম</td><td>আরও বেশি</td><td>৯০ দিন</td><td>কালেভদ্রে অ্যাক্সেস হওয়া ডেটা</td></tr>
+<tr><td>Archive</td><td>সবচেয়ে কম</td><td>সবচেয়ে বেশি + rehydration লাগে (ঘণ্টার হিসেবে)</td><td>১৮০ দিন</td><td>Compliance archive, দীর্ঘমেয়াদি ব্যাকআপ</td></tr>
+</table>
+
+<div class="callout mistake"><span class="tag">Common mistake — Archive সরাসরি read করা যায় না</span> Archive tier-এর একটা blob সরাসরি download করা যায় না — প্রথমে "rehydrate" (Hot/Cool-এ ফিরিয়ে আনা) করতে হয়, যেটাতে standard priority-তে সাধারণত কয়েক ঘণ্টা লাগে। জরুরি রিপোর্টের জন্য Archive থেকে তাৎক্ষণিক ডেটা আশা করা একটা খুবই সাধারণ ভুল।</div>
+
+<h3>Lifecycle Management — স্বয়ংক্রিয় Tiering</h3>
+<p>ম্যানুয়ালি tier বদলানোর বদলে একটা policy লিখে দেওয়া যায় যা নিয়মিত চলে:</p>
+
+<pre>{
+  <span class="c">// ৩০ দিন না ছুঁলে Cool-এ, ৯০ দিনে Archive-এ, ৩৬৫ দিনে delete</span>
+  "rules": [
+    {
+      "name": "archiveOldLogs",
+      "enabled": true,
+      "type": "Lifecycle",
+      "definition": {
+        "filters": { "blobTypes": ["blockBlob"], "prefixMatch": ["logs/"] },
+        "actions": {
+          "baseBlob": {
+            "tierToCool":    { "daysAfterLastAccessTimeGreaterThan": 30 },
+            "tierToArchive": { "daysAfterLastAccessTimeGreaterThan": 90 },
+            "delete":        { "daysAfterLastAccessTimeGreaterThan": 365 }
+          }
+        }
+      }
+    }
+  ]
+}</pre>
+
+<h3>Redundancy — কেন এত অপশন</h3>
+<p>S3 নিজে থেকেই একাধিক Availability Zone-এ ডেটা রাখে — ব্যবহারকারীর কোনো পছন্দ নেই। Azure এখানে সচেতনভাবে ব্যবহারকারীর হাতে নিয়ন্ত্রণ ছেড়ে দিয়েছে, যাতে durability ও cost-এর মধ্যে নিজের ট্রেড-অফ বেছে নেওয়া যায়:</p>
+
+<table>
+<tr><th>Option</th><th>পুরো নাম</th><th>কীভাবে কাজ করে</th><th>Secondary সরাসরি read?</th></tr>
+<tr><td>LRS</td><td>Locally Redundant Storage</td><td>একই datacenter-এর মধ্যে ৩টা কপি রাখে</td><td>প্রযোজ্য না</td></tr>
+<tr><td>ZRS</td><td>Zone Redundant Storage</td><td>একই region-এর ভিন্ন ভিন্ন Availability Zone-জুড়ে ৩টা কপি</td><td>প্রযোজ্য না (এক region-এই)</td></tr>
+<tr><td>GRS</td><td>Geo Redundant Storage</td><td>LRS + secondary (দূরবর্তী) region-এ asynchronous কপি</td><td>না — ফেইলওভার না হলে পড়া যায় না</td></tr>
+<tr><td>RA-GRS</td><td>Read-Access GRS</td><td>GRS-এর মতোই, কিন্তু secondary region থেকে read-only অ্যাক্সেস দেওয়া হয়</td><td>হ্যাঁ, সবসময়</td></tr>
+<tr><td>GZRS</td><td>Geo-Zone Redundant Storage</td><td>ZRS (primary region-এ multi-zone) + secondary region-এ কপি</td><td>ঐচ্ছিকভাবে (RA-GZRS হলে হ্যাঁ)</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">কেন — GRS-এ secondary সরাসরি পড়া যায় না</span> GRS-এর replication asynchronous, তাই secondary region সবসময় সামান্য পিছিয়ে থাকতে পারে (Recovery Point Objective কয়েক মিনিট)। ডিফল্টভাবে সেটা read-locked রাখা হয় যাতে অ্যাপ্লিকেশন ভুলবশত stale ডেটা না পড়ে ফেলে; RA-GRS explicitly এই ঝুঁকিটা মেনে নিয়ে read অ্যাক্সেস খুলে দেয়, তাই সেটা একটা সচেতন সিদ্ধান্ত হওয়া উচিত, ডিফল্ট নয়।</div>
+
+<h3>SAS Token — নিয়ন্ত্রিত সাময়িক অ্যাক্সেস</h3>
+<p>S3-এর presigned URL-এর ধারণার সাথে সাদৃশ্য থাকলেও Azure-এর <span class="kw">SAS (Shared Access Signature)</span> Token অনেক বেশি গ্রানুলার। তিন স্তরের SAS আছে:</p>
+<ul>
+<li><b>Account SAS</b> — পুরো Storage Account-এর একাধিক service (Blob, Queue, Table, File) জুড়ে permission দেয়, সবচেয়ে বেশি scope।</li>
+<li><b>Service SAS</b> — একটা নির্দিষ্ট container/blob-এর জন্য, নির্দিষ্ট permission (read/write/delete/list) সহ।</li>
+<li><b>User Delegation SAS</b> — Azure AD identity দিয়ে সাইন করা হয় (storage account key দিয়ে নয়), তাই key leak হওয়ার ঝুঁকি নেই — সবচেয়ে নিরাপদ ও recommended।</li>
+</ul>
+<p>প্রতিটা SAS-এ expiry time, allowed IP range, এবং allowed protocol (শুধু HTTPS) সেট করা যায়।</p>
+
+<div class="callout best"><span class="tag">Best practice — User Delegation SAS ব্যবহার করুন</span> Account/Service SAS storage account key দিয়ে সাইন হয় — সেই key leak হলে key revoke না করা পর্যন্ত সব পুরনো SAS token বাতিল করার উপায় নেই। User Delegation SAS Azure AD token-ভিত্তিক হওয়ায় নির্দিষ্ট সময়ে expire হয় ও granular RBAC-এর সাথে যুক্ত থাকে।</div>
+
+<h3>Encryption ও Immutable Storage</h3>
+<p>Blob Storage-এর সব ডেটা ডিফল্টভাবে rest-এ এনক্রিপ্টেড — হয় Microsoft-managed key দিয়ে, অথবা নিজের Azure Key Vault-এ রাখা Customer-managed key দিয়ে (যেটা rotate/revoke করার নিয়ন্ত্রণ পুরোপুরি নিজের হাতে থাকে)। এছাড়া <span class="kw">Blob Versioning</span> চালু করলে প্রতিটা overwrite/delete-এ আগের version রক্ষা পায়, আর <span class="kw">Immutable Storage (WORM — Write Once Read Many)</span> policy দিয়ে একটা নির্দিষ্ট সময়ের জন্য blob-কে সম্পূর্ণ delete/modify-প্রতিরোধী করে রাখা যায় — legal hold ও compliance (যেমন financial record retention) দরকার হলে এটা জরুরি।</p>
+
+<h3>Static Website Hosting</h3>
+<p>একটা Storage Account-এ <code>$web</code> নামের বিশেষ container চালু করে সরাসরি static HTML/CSS/JS হোস্ট করা যায় — কোনো VM বা App Service ছাড়াই, index document ও custom 404 page সেট করার সুবিধাসহ। ছোট প্রজেক্ট বা marketing landing page-এর জন্য এটা সবচেয়ে সস্তা হোস্টিং পদ্ধতি।</p>
+</template>
+
+<template data-page="storage">
+<h2 class="title">৬. Managed Disks, Files ও Storage Options</h2>
+<p class="lead">Blob Storage ছাড়াও Azure-এ VM-এর ডিস্ক এবং শেয়ার্ড ফাইল সিস্টেমের জন্য আলাদা storage primitive আছে — এদের পার্থক্য বোঝা architecture ডিজাইনের জন্য জরুরি।</p>
+
+<h3>Managed Disk — কেন নামের আগে "Managed"</h3>
+<p>Azure-এর শুরুর দিকে VM-এর disk আসলে নিজের একটা Storage Account-এর ভেতরে একটা Page Blob হিসেবেই রাখতে হতো — একে <b>unmanaged disk</b> বলা হতো। সমস্যা ছিল: একটা Storage Account-এর একটা IOPS/throughput সীমা আছে, আর সেই account-এর নিচে অনেকগুলো VM disk রাখলে সবাই মিলে সেই সীমা ভাগ করত (noisy neighbor সমস্যা নিজের VM-এর মধ্যেই), সাথে ব্যাকআপ/scaling-এর জন্য নিজেকেই account ম্যানেজ করতে হতো।</p>
+<p><span class="kw">Managed Disk</span> চালু হওয়ার পর Azure নিজেই আন্ডারলাইং storage account (এবং তার সব ডিটেইল) পুরোপুরি আড়াল করে দেয় — ব্যবহারকারী শুধু disk size ও performance tier বেছে নেয়, বাকিটা Azure সামলায়। এখন প্রায় সব নতুন deployment-এ Managed Disk ব্যবহার হয়; unmanaged disk legacy।</p>
+
+<table>
+<tr><th>Disk Type</th><th>IOPS (আনুমানিক)</th><th>Throughput</th><th>Latency</th><th>Use Case</th></tr>
+<tr><td>Standard HDD</td><td>কম (~৫০০)</td><td>কম</td><td>বেশি (কয়েক ms)</td><td>Backup, infrequent-access, dev/test</td></tr>
+<tr><td>Standard SSD</td><td>মাঝারি (~৬,০০০)</td><td>মাঝারি</td><td>মাঝারি</td><td>Web server, low-IOPS app, dev/test</td></tr>
+<tr><td>Premium SSD</td><td>বেশি (~২০,০০০)</td><td>বেশি</td><td>কম (sub-ms)</td><td>Production database, latency-sensitive workload</td></tr>
+<tr><td>Ultra Disk</td><td>সবচেয়ে বেশি (~১,৬০,০০০+)</td><td>সবচেয়ে বেশি, dynamically adjustable</td><td>সাব-মিলিসেকেন্ড, সবচেয়ে কম</td><td>SAP HANA, বড় transactional DB, IOPS-critical workload</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">কেন Ultra Disk-এ IOPS/throughput আলাদা করে সেট করা যায়</span> অন্য টায়ারে disk size অনুযায়ী IOPS বাঁধা থাকে (বড় disk = বেশি IOPS)। Ultra Disk এই দুটোকে decouple করে — চাইলে ছোট disk-এও অনেক বেশি IOPS বরাদ্দ করা যায়, এবং downtime ছাড়াই on-the-fly পরিবর্তন করা যায়। এটা এমন workload-এর জন্য দরকার যেখানে storage capacity কম লাগে কিন্তু IOPS demand অনেক বেশি (উদাহরণ: in-memory DB-এর log disk)।</div>
+
+<h3>Incremental Snapshot</h3>
+<p>একটা Managed Disk-এর <span class="kw">Snapshot</span> নিলে প্রথমবার পুরো ডেটার একটা কপি তৈরি হয়। কিন্তু তার পরের প্রতিটা snapshot <b>incremental</b> — শুধু আগের snapshot-এর পর যে ব্লকগুলো পরিবর্তিত হয়েছে সেগুলোই সংরক্ষণ করা হয়। এতে দ্বিতীয় snapshot থেকে প্রতিটা snapshot অনেক দ্রুত সম্পন্ন হয় এবং storage cost অনেক কম হয়, যদিও প্রতিটা snapshot restore করার সময় একটা সম্পূর্ণ, স্বাধীন disk হিসেবেই ব্যবহারযোগ্য থাকে (Azure ভেতরে ভেতরে chain ম্যানেজ করে)।</p>
+
+<div class="callout best"><span class="tag">Best practice — নিয়মিত incremental snapshot + Azure Backup</span> প্রোডাকশন disk-এর জন্য ম্যানুয়াল snapshot-এর বদলে Azure Backup vault ব্যবহার করে schedule অনুযায়ী incremental snapshot নেওয়া উচিত — এতে retention policy, application-consistent backup, এবং cross-region restore স্বয়ংক্রিয়ভাবে ম্যানেজড হয়।</div>
+
+<h3>Azure Files — শেয়ার্ড ফাইল সিস্টেম</h3>
+<p>একটা Managed Disk একই সময়ে শুধু একটা VM-এ attach করা যায় (block-level device) — এটা fundamentally একাধিক client concurrently mount করার জন্য ডিজাইন করা না। যখন একাধিক VM বা App Service instance-এর একই ফাইল সিস্টেমে concurrent read/write দরকার হয়, তখন দরকার <span class="kw">Azure Files</span> — একটা fully managed file share যা <b>SMB</b> এবং <b>NFS</b> প্রোটোকল সাপোর্ট করে এবং একাধিক ক্লায়েন্ট একই সাথে mount করতে পারে (ঠিক AWS-এর EFS-এর মতো যুক্তি — network file system বনাম block device)।</p>
+
+<div class="diagram"><pre>
+        ┌────────────┐        ┌────────────┐
+        │   VM - 1   │        │   VM - 2   │
+        └─────┬──────┘        └─────┬──────┘
+              │  SMB/NFS mount       │  SMB/NFS mount
+              └──────────┬───────────┘
+                         ▼
+                Azure Files Share
+             (একই ফাইল উভয়ে দেখে/লেখে)
+</pre></div>
+
+<h3>Azure NetApp Files</h3>
+<p>যেসব enterprise workload-এ অতি-উচ্চ IOPS ও অতি-নিম্ন latency সহ file storage দরকার (যেমন SAP, high-performance computing, বড় media rendering farm), সেখানে <span class="kw">Azure NetApp Files</span> ব্যবহার হয় — এটা NetApp-এর ডেডিকেটেড হার্ডওয়্যারের উপর চলা একটা প্রিমিয়াম, enterprise-grade managed file service, Azure Files-এর চেয়ে অনেক বেশি performance headroom দেয়, কিন্তু cost-ও বেশি।</p>
+
+<h3>সব মিলিয়ে তুলনা</h3>
+<table>
+<tr><th>বৈশিষ্ট্য</th><th>Blob Storage</th><th>Managed Disk</th><th>Azure Files</th></tr>
+<tr><td>Access pattern</td><td>HTTP/REST API-এর মাধ্যমে অবজেক্ট</td><td>Block-level, OS ফাইল সিস্টেমের মাধ্যমে</td><td>Network file share (SMB/NFS)</td></tr>
+<tr><td>Attach পদ্ধতি</td><td>SDK/REST call, কোনো "mount" নেই</td><td>একটা VM-এ সরাসরি attach</td><td>একাধিক VM/client একসাথে mount</td></tr>
+<tr><td>Concurrent access</td><td>হ্যাঁ (একাধিক client পড়তে/লিখতে পারে অবজেক্ট লেভেলে)</td><td>না — একবারে একটা VM</td><td>হ্যাঁ — একাধিক client concurrent</td></tr>
+<tr><td>Scalability</td><td>কার্যত unlimited, account-level quota</td><td>নির্দিষ্ট size (max 64 TiB pref.)</td><td>বড়, কিন্তু disk-এর চেয়ে latency বেশি</td></tr>
+<tr><td>Typical use case</td><td>Object storage, static asset, backup, data lake</td><td>VM-এর OS/data disk, database</td><td>Shared config, lift-and-shift legacy app, CMS media</td></tr>
+</table>
+</template>
+
+<template data-page="sql">
+<h2 class="title">৭. Azure SQL Database</h2>
+<p class="lead">রিলেশনাল ডেটাবেসের জন্য Azure একাধিক deployment মডেল দেয়, যেখানে প্রতিটা মডেল কন্ট্রোল ও ম্যানেজমেন্ট-ওভারহেডের মধ্যে ভিন্ন একটা পয়েন্টে দাঁড়িয়ে আছে।</p>
+
+<h3>Deployment Spectrum — কন্ট্রোল বনাম ম্যানেজমেন্ট ওভারহেড</h3>
+<div class="diagram"><pre>
+IaaS                                                            PaaS
+ │                                                                │
+ ▼                                                                ▼
+SQL Server on VM  ──────▶  Azure SQL              ──────▶  Azure SQL Database
+(পূর্ণ নিয়ন্ত্রণ,           Managed Instance          (Single / Elastic Pool)
+ নিজে patch/backup          (প্রায় পূর্ণ SQL Server     (সর্বোচ্চ abstraction,
+ করতে হয়)                   compatibility, কিন্তু       patch/backup/HA সব
+                             patch/HA Azure করে)        স্বয়ংক্রিয়)
+</pre></div>
+
+<table>
+<tr><th>Option</th><th>Model</th><th>Compatibility</th><th>ম্যানেজমেন্ট দায়িত্ব</th></tr>
+<tr><td>SQL Server on VM</td><td>IaaS</td><td>১০০% — cross-database query, SQL Agent, linked server সব কাজ করে</td><td>OS patching, SQL patching, backup, HA — সবই ব্যবহারকারীর</td></tr>
+<tr><td>SQL Managed Instance</td><td>PaaS (কিন্তু VNet-injected)</td><td>~৯৯.৯% — cross-database query, SQL Agent সাপোর্ট করে</td><td>Patch/backup/HA Azure করে; instance-level কনফিগারেশন এখনও কিছুটা ব্যবহারকারীর</td></tr>
+<tr><td>SQL Database (Single/Elastic Pool)</td><td>PaaS</td><td>Database-level ফিচার শুধু — cross-database query, SQL Agent নেই</td><td>প্রায় সবকিছু Azure-এর — শুধু schema/query ডিজাইন ব্যবহারকারীর</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">কেন Managed Instance আলাদা করে দরকার</span> অনেক legacy অ্যাপ্লিকেশন cross-database query, SQL Agent job, বা linked server-এর উপর নির্ভরশীল — এগুলো plain Azure SQL Database সাপোর্ট করে না, কারণ প্রতিটা database সেখানে isolated। Managed Instance একটা পুরো SQL Server "instance"-এর অনুকরণ করে (একাধিক database + cross-database ফিচার একসাথে) কিন্তু তারপরও patch/backup/HA পুরোপুরি Azure-ম্যানেজড রাখে — lift-and-shift migration-এর জন্য এটাই sweet spot।</div>
+
+<h3>DTU বনাম vCore Purchasing Model</h3>
+<p>Azure SQL Database-এ রিসোর্স কেনার দুটো ভিন্ন মডেল আছে:</p>
+<table>
+<tr><th>বৈশিষ্ট্য</th><th>DTU (Database Transaction Unit)</th><th>vCore</th></tr>
+<tr><td>ইউনিট</td><td>Compute + Storage + IO একসাথে বান্ডল করা একটা single normalized সংখ্যা</td><td>CPU core, memory, storage, IO প্রতিটা আলাদাভাবে বেছে নেওয়া যায়</td></tr>
+<tr><td>স্বচ্ছতা</td><td>কম — ঠিক কতটা CPU/memory পাচ্ছেন তা অস্পষ্ট</td><td>বেশি — সরাসরি hardware generation ও core সংখ্যা নির্দিষ্ট করা যায়</td></tr>
+<tr><td>Independent scaling</td><td>না — compute বাড়াতে হলে পুরো tier-ই বদলাতে হয়</td><td>হ্যাঁ — শুধু compute বা শুধু storage আলাদাভাবে scale করা যায়</td></tr>
+<tr><td>Reserved capacity/AHB discount</td><td>প্রযোজ্য না</td><td>Azure Hybrid Benefit ও Reserved Instance discount পাওয়া যায় (existing SQL license থাকলে সাশ্রয়ী)</td></tr>
+<tr><td>কখন ব্যবহার</td><td>সাধারণ, ছোট, predictable workload — সহজ simple pricing</td><td>প্রোডাকশন workload, existing license থাকলে, granular control দরকার হলে</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">কেন vCore-এ independent scaling সম্ভব</span> vCore মডেলে compute ও storage সম্পূর্ণ আলাদা resource হিসেবে provision হয় — storage বাড়ালে compute-এর দাম বদলায় না, আর compute tier বদলালে ডেটা সরাতে হয় না। DTU মডেলে যেহেতু তিনটা জিনিস একটা single bundled সংখ্যায় মেশানো, compute দরকার হলেও পুরো bundle-সহ tier আপগ্রেড করতে হয়, এমনকি storage দরকার না থাকলেও।</div>
+
+<h3>Elastic Pool — একাধিক Database-এর মধ্যে রিসোর্স শেয়ারিং</h3>
+<p>ধরুন একটা multi-tenant SaaS অ্যাপ্লিকেশনে প্রতিটা customer-এর জন্য আলাদা database আছে — কিন্তু প্রতিটা database-এর peak usage সময় ভিন্ন ভিন্ন (কেউ সকালে বেশি ব্যবহার করে, কেউ রাতে)। যদি প্রতিটা database আলাদাভাবে provision করা হয়, প্রতিটাকেই তার নিজের সর্বোচ্চ peak-এর জন্য প্রভিশন করতে হবে — এবং বেশিরভাগ সময় সেই ক্যাপাসিটি অব্যবহৃত পড়ে থাকবে।</p>
+<p><span class="kw">Elastic Pool</span> একটা shared resource pool তৈরি করে যেখানে একাধিক database একসাথে থাকে এবং প্রয়োজন অনুযায়ী কম্পিউট নিজেদের মধ্যে ভাগ করে নেয় — একটা database-এর কম ব্যবহারের সময় সেই ক্যাপাসিটি অন্য database ব্যবহার করতে পারে।</p>
+
+<div class="callout best"><span class="tag">Best practice — multi-tenant SaaS-এ Elastic Pool</span> প্রতিটা customer-এর জন্য আলাদা database (isolation-এর জন্য) কিন্তু সবগুলো একটা Elastic Pool-এ রাখলে per-tenant isolation ও cost efficiency দুটোই একসাথে পাওয়া যায় — প্রতিটাকে আলাদা provision করার চেয়ে এটা উল্লেখযোগ্য পরিমাণ সাশ্রয়ী হয়।</div>
+
+<h3>Active Geo-Replication বনাম Auto-failover Group</h3>
+<p><span class="kw">Active Geo-Replication</span>-এ একটা primary database-এর জন্য সর্বোচ্চ ৪টা readable secondary অন্য region-এ তৈরি করা যায়, কিন্তু failover ম্যানুয়াল ও প্রতিটা database-ভিত্তিক আলাদা করে করতে হয়। <span class="kw">Auto-failover Group</span> এর উপরে একটা লেয়ার যোগ করে — একাধিক database-এর জন্য একটা single listener endpoint (একটা DNS নাম) দেয় যা automatically সঠিক region-এ point করে, এবং region আউটেজ হলে automatic failover ঘটায় অ্যাপ্লিকেশন কোড পরিবর্তন ছাড়াই।</p>
+
+<div class="callout behind"><span class="tag">RDS-এর যুক্তির প্রতিফলন</span> AWS RDS-এ Read Replica (ম্যানুয়াল, readable, async) বনাম Multi-AZ (automatic failover, সাধারণত readable না) — এই একই যুক্তি এখানেও প্রযোজ্য: Geo-Replication হলো readable কিন্তু ম্যানুয়াল-failover মডেল, আর Auto-failover Group হলো automatic-failover মডেল যা transparent endpoint দেয়।</div>
+
+<h3>Zone Redundant Configuration ও Backup</h3>
+<p><span class="kw">Zone Redundant Configuration</span> চালু করলে Azure SQL Database-এর replica একই region-এর ভিন্ন ভিন্ন Availability Zone-এ ছড়িয়ে থাকে, ফলে একটা পুরো datacenter আউটেজেও database available থাকে — এটা region-level নয়, zone-level protection। এছাড়া প্রতিটা Azure SQL Database-এর জন্য <span class="kw">Automated Backup</span> ডিফল্টভাবেই চালু থাকে (full + differential + transaction log backup, কনফিগারযোগ্য retention পর্যন্ত ৩৫ দিন, Long-Term Retention চালু করলে বছরের পর বছর), এবং <span class="kw">Point-in-Time Restore</span> দিয়ে retention window-এর ভেতরে যেকোনো মুহূর্তের অবস্থায় একটা নতুন database হিসেবে restore করা যায় — ভুলবশত DELETE/DROP হয়ে যাওয়া ডেটা উদ্ধারের প্রধান উপায়।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — Point-in-Time Restore-কে "undo" ভাবা</span> Restore করলে একটা সম্পূর্ণ <b>নতুন</b> database তৈরি হয় — এটা আসল database-এর ভেতরে গিয়ে সরাসরি ডেটা ফিরিয়ে দেয় না। Restore-এর পর নতুন database থেকে প্রয়োজনীয় ডেটা কপি করে আনতে হবে, অথবা অ্যাপ্লিকেশনের connection string বদলাতে হবে — এই ধাপটা অনেকে মিস করে ফেলে।</div>
+</template>
+
+<template data-page="cosmosdb">
+<h2 class="title">৮. Cosmos DB — NoSQL Database</h2>
+<p class="lead">Cosmos DB Azure-এর globally-distributed, multi-model NoSQL ডেটাবেস — এবং এর সবচেয়ে গুরুত্বপূর্ণ, সবচেয়ে বেশি ভুল বোঝা যায় এমন ফিচার হলো এর পাঁচ-স্তরের consistency model।</p>
+
+<h3>Multi-Model — একই ইঞ্জিন, একাধিক API</h3>
+<p>Cosmos DB-এর ভেতরের ইঞ্জিন (ATOM-Record-Sequence ভিত্তিক) একটাই, কিন্তু সেটাকে একাধিক API-এর মাধ্যমে অ্যাক্সেস করা যায়:</p>
+<table>
+<tr><th>API</th><th>ডেটা মডেল</th><th>ব্যবহার</th></tr>
+<tr><td>Core (SQL) API</td><td>JSON document, SQL-এর মতো query syntax</td><td>Cosmos DB-এর নেটিভ, সবচেয়ে বেশি ফিচার-সম্পন্ন API</td></tr>
+<tr><td>API for MongoDB</td><td>BSON document</td><td>বিদ্যমান MongoDB ড্রাইভার/অ্যাপ্লিকেশন প্রায় কোনো কোড পরিবর্তন ছাড়াই মাইগ্রেট করা</td></tr>
+<tr><td>Cassandra API</td><td>Wide-column</td><td>বিদ্যমান Cassandra অ্যাপ্লিকেশন migrate করা</td></tr>
+<tr><td>Gremlin API</td><td>Graph (node/edge)</td><td>সম্পর্ক-ভিত্তিক query — সোশ্যাল নেটওয়ার্ক, recommendation engine</td></tr>
+<tr><td>Table API</td><td>Key-value</td><td>Azure Table Storage থেকে migrate করে বেশি throughput/global distribution পাওয়া</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">কেন multi-model migration-এর জন্য সুবিধাজনক</span> একটা টিমের যদি ইতিমধ্যে MongoDB-তে লেখা একটা অ্যাপ্লিকেশন থাকে, তারা driver connection string বদলেই Cosmos DB-এর MongoDB API-তে সুইচ করতে পারে — নিচের ইঞ্জিন Cosmos DB হলেও উপরের অ্যাপ্লিকেশন কোড প্রায় অপরিবর্তিত থাকে। এতে vendor lock-in-এর ভয় কমে এবং migration cost অনেক কমে যায়।</div>
+
+<h3>Partition Key ডিজাইন — সংক্ষিপ্ত পুনরালোচনা</h3>
+<p>DynamoDB-এর মতোই Cosmos DB-তেও প্রতিটা item একটা <span class="kw">Partition Key</span>-এর হ্যাশ অনুযায়ী নির্দিষ্ট একটা logical partition-এ রাখা হয়। একই সমস্যাগুলো এখানেও প্রযোজ্য — কম cardinality-র key (যেমন <code>status</code>, মাত্র দুই-তিনটা মান) বেছে নিলে সব ডেটা কয়েকটা partition-এ কেন্দ্রীভূত হয়ে যাবে এবং সেই <b>hot partition</b>-এর throughput সীমা ছাড়িয়ে যাওয়ার ঝুঁকি থাকবে। তাই high-cardinality, evenly-distributed key (যেমন <code>userId</code> বা <code>tenantId</code>) বেছে নেওয়া উচিত।</p>
+
+<h3>Request Unit (RU) — একীভূত ক্যাপাসিটি মুদ্রা</h3>
+<p>Cosmos DB-তে CPU, memory, IOPS — এসব আলাদা আলাদা করে প্রভিশন করতে হয় না। বরং সবকিছু একটা একক, normalized সংখ্যায় abstract করা হয়েছে যাকে বলে <span class="kw">Request Unit (RU)</span>। একটা ১ KB সাইজের item point-read (key দিয়ে সরাসরি lookup) করতে বেসলাইন হিসেবে প্রায় <b>১ RU</b> লাগে — write, query, বা বড় item-এর জন্য এর চেয়ে বেশি RU খরচ হয়।</p>
+
+<div class="callout behind"><span class="tag">গভীরে — RU আসলে কী মাপে</span> RU হলো CPU, memory ও IOPS-এর একটা যৌগিক (composite) নরমালাইজড ইউনিট — item-এর size, indexing-এর জটিলতা, query-এর filter/sort জটিলতা সব মিলিয়ে RU খরচ নির্ধারিত হয়। এর সুবিধা হলো, ডেভেলপারকে ভাবতে হয় না ঠিক কতটা CPU বা IOPS লাগবে — শুধু জানতে হয় operation প্রতি RU খরচ কত, আর সে অনুযায়ী capacity প্ল্যান করতে হয়।</div>
+
+<h3>Throughput Mode — Provisioned বনাম Serverless বনাম Autoscale</h3>
+<table>
+<tr><th>Mode</th><th>কীভাবে কাজ করে</th><th>উপযুক্ত</th></tr>
+<tr><td>Standard (Manual) Provisioned</td><td>একটা নির্দিষ্ট RU/s আগে থেকে বরাদ্দ করা থাকে, স্থির খরচ</td><td>Predictable, steady traffic</td></tr>
+<tr><td>Autoscale</td><td>একটা সর্বোচ্চ সীমার মধ্যে RU/s চাহিদা অনুযায়ী স্বয়ংক্রিয়ভাবে ওঠানামা করে (সাধারণত ১০%-১০০% রেঞ্জে)</td><td>Variable/spiky traffic, কিন্তু ধারনার একটা upper bound আছে</td></tr>
+<tr><td>Serverless</td><td>আগে থেকে কোনো RU provision করতে হয় না — শুধু ব্যবহৃত RU-এর জন্য বিল হয়</td><td>অনিয়মিত, low-to-moderate traffic, dev/test, নতুন প্রজেক্ট</td></tr>
+</table>
+
+<h3>Consistency Level — পাঁচটা স্তর</h3>
+<p>এটাই Cosmos DB-এর সবচেয়ে গুরুত্বপূর্ণ এবং সবচেয়ে বেশি পরীক্ষায়/ইন্টারভিউতে জিজ্ঞাসিত বিষয়। CAP theorem বলে consistency ও availability/latency-এর মধ্যে একটা ট্রেড-অফ আছে — কিন্তু বেশিরভাগ ডেটাবেস এটাকে শুধু একটা বাইনারি চয়েস (strong বা eventual) হিসেবে দেখায়। Cosmos DB এই ট্রেড-অফটাকে একটা <b>continuous spectrum</b> হিসেবে দেখায় এবং পাঁচটা সুনির্দিষ্ট স্তর অফার করে, যেখানে DynamoDB-তে মাত্র দুটো (Eventually Consistent ও Strongly Consistent) আছে।</p>
+
+<div class="diagram"><pre>
+কড়া/ধীর/কম-availability                       ঢিলা/দ্রুত/বেশি-availability
+◄──────────────────────────────────────────────────────────────►
+   Strong    Bounded Staleness    Session    Consistent Prefix    Eventual
+</pre></div>
+
+<table>
+<tr><th>স্তর</th><th>গ্যারান্টি</th><th>বাস্তব উদাহরণ</th></tr>
+<tr><td>Strong</td><td>সবসময় সর্বশেষ committed write-ই দেখা যাবে, কোনো stale read নেই — কিন্তু এর জন্য বেশি latency ও কম availability মেনে নিতে হয় (majority quorum-এর অপেক্ষা)</td><td>ব্যাংকিং লেনদেনের ব্যালেন্স — লেনদেনের সাথে সাথেই সঠিক ব্যালেন্স দেখাতে হবে</td></tr>
+<tr><td>Bounded Staleness</td><td>read সবসময় write-এর পেছনে থাকতে পারে, কিন্তু একটা নির্দিষ্ট সময় (যেমন ৫ সেকেন্ড) বা নির্দিষ্ট সংখ্যক version-এর (যেমন ১০০০ আপডেট) বেশি পিছিয়ে যাবে না — একটা guaranteed উইন্ডো</td><td>Leaderboard/স্কোরবোর্ড — সামান্য দেরি মেনে নেওয়া যায়, কিন্তু সীমাহীন দেরি নয়</td></tr>
+<tr><td>Session (ডিফল্ট)</td><td>একই client (একই session token) নিজের করা write নিজে সবসময় পড়তে পারবে — "read-your-own-writes" গ্যারান্টি। অন্য client-এর জন্য eventual-এর মতো আচরণ করতে পারে।</td><td>ব্যবহারকারী নিজের প্রোফাইল আপডেট করার পর সাথে সাথে নিজের আপডেট দেখতে চায়, কিন্তু অন্যরা একটু দেরিতে দেখলেও সমস্যা নেই — সোশ্যাল মিডিয়া পোস্ট, ই-কমার্স কার্ট</td></tr>
+<tr><td>Consistent Prefix</td><td>write-এর আসল ক্রম কখনো উল্টে যাবে না (যদি A তারপর B লেখা হয়, কেউ কখনো B আগে, A পরে দেখবে না), কিন্তু কতটা দেরি হবে তার কোনো নিশ্চয়তা নেই</td><td>চ্যাট মেসেজ থ্রেড — মেসেজের ক্রম ঠিক থাকা জরুরি, কিন্তু সামান্য delay মেনে নেওয়া যায়</td></tr>
+<tr><td>Eventual</td><td>সবচেয়ে ঢিলা — কোনো ক্রম বা সময়ের গ্যারান্টি নেই, কিন্তু সবচেয়ে কম latency ও সবচেয়ে বেশি availability/throughput</td><td>পোস্টের "লাইক" সংখ্যা গণনা — সামান্য দেরিতে আপডেট হলেও কোনো ব্যবসায়িক ক্ষতি নেই</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">কেন DynamoDB-এর দুটোর বদলে Cosmos DB-তে পাঁচটা স্তর</span> CAP theorem-এর ট্রেড-অফ বাস্তবে একটা বাইনারি সুইচ নয় — বেশিরভাগ real-world অ্যাপ্লিকেশনের প্রয়োজন Strong ও Eventual-এর মাঝামাঝি কোথাও। Cosmos DB এই middle-ground-কে স্পষ্টভাবে সংজ্ঞায়িত তিনটা অতিরিক্ত স্তরে ভাগ করে দিয়েছে (Bounded Staleness, Session, Consistent Prefix), যাতে ডেভেলপার নিজের অ্যাপ্লিকেশনের ঠিক প্রয়োজন অনুযায়ী latency/availability এবং সঠিকতার মধ্যে নিখুঁত ব্যালেন্স বেছে নিতে পারে, বাইনারি চয়েসে আটকে না থেকে।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Session-কে "দুর্বল consistency" ভাবা</span> Session consistency ডিফল্ট এবং সবচেয়ে বেশি ব্যবহৃত হওয়ার একটা কারণ আছে — বেশিরভাগ ব্যবহারকারী-কেন্দ্রিক অ্যাপ্লিকেশনে "নিজের করা পরিবর্তন নিজে সাথে সাথে দেখা"-ই যথেষ্ট, এবং এটা Strong-এর তুলনায় অনেক কম latency ও বেশি throughput দেয়। একে দুর্বল মনে করে সবসময় Strong বেছে নেওয়া অনেক ক্ষেত্রে অপ্রয়োজনীয় latency ও cost যোগ করে।</div>
+
+<h3>Global Distribution</h3>
+<p>Azure Portal-এ এক ক্লিকে একটা Cosmos DB অ্যাকাউন্টকে যেকোনো সংখ্যক Azure region-এ replicate করা যায় — কোনো কাস্টম replication পাইপলাইন লেখা লাগে না। ডিফল্টভাবে একটা region-ই write গ্রহণ করে (single-region write), কিন্তু <span class="kw">Multi-region Write</span> চালু করলে একাধিক region একই সময়ে write গ্রহণ করতে পারে, প্রতিটা region-এর ব্যবহারকারীর জন্য কাছাকাছি region-এ লেখা-পড়া করে সর্বনিম্ন latency নিশ্চিত করে। কনফ্লিক্ট হলে Cosmos DB নিজস্ব conflict-resolution policy (last-writer-wins বা custom resolver) দিয়ে তা সমাধান করে।</p>
+
+<div class="callout best"><span class="tag">Best practice — global অ্যাপ্লিকেশনে region priority ঠিক রাখা</span> Multi-region অ্যাকাউন্টে failover priority list ঠিকভাবে সাজিয়ে রাখা উচিত, যাতে একটা region আউটেজ হলে Cosmos DB পূর্বনির্ধারিত ক্রম অনুযায়ী পরবর্তী region-এ স্বয়ংক্রিয়ভাবে failover করে, এবং SDK-তে <code>ApplicationRegion</code> সেট করে ক্লায়েন্টকে সবসময় সবচেয়ে কাছের region-এ রুট করা উচিত।</div>
+</template>
+
+<template data-page="lbscale">
+<h2 class="title">৯. Load Balancing ও Scale Sets</h2>
+<p class="lead">একটা VM কখনোই একা "যথেষ্ট" না — ট্রাফিক বাড়লে বা কোনো instance আচমকা ক্র্যাশ করলে সিস্টেম যেন নিজে থেকেই সামলে নিতে পারে। AWS-এ এই দায়িত্ব মূলত দুই স্তরে ভাগ করা (NLB/ALB + CloudFront), কিন্তু Azure এটাকে তিন স্তরে ভাগ করেছে — প্রতিটা স্তর একদম আলাদা সমস্যার সমাধান করে।</p>
+
+<h3>তিন স্তরের Load Balancing স্পেকট্রাম</h3>
+<p>Azure-এ ট্রাফিক ডিস্ট্রিবিউট করার তিনটা প্রধান সার্ভিস আছে, আর এদের মধ্যে সবচেয়ে বড় বিভ্রান্তি হয় "কোনটা কখন" নিয়ে। মূল পার্থক্যটা তৈরি হয় দুইটা axis দিয়ে — <b>OSI layer</b> (৪ না ৭) আর <b>scope</b> (একটা region না পুরো পৃথিবী)।</p>
+<table>
+<tr><th>বিষয়</th><th><span class="kw">Load Balancer</span></th><th><span class="kw">Application Gateway</span></th><th>Front Door</th></tr>
+<tr><td>OSI Layer</td><td>Layer 4 (TCP/UDP)</td><td>Layer 7 (HTTP/HTTPS)</td><td>Layer 7 (HTTP/HTTPS)</td></tr>
+<tr><td>Scope</td><td>Regional</td><td>Regional</td><td>Global (anycast edge)</td></tr>
+<tr><td>Routing ভিত্তি</td><td>IP + port, কোনো HTTP parsing নেই</td><td>URL path, host header, query string</td><td>URL path/host + global anycast routing</td></tr>
+<tr><td>WAF</td><td>নেই</td><td>আছে (built-in add-on)</td><td>আছে (built-in)</td></tr>
+<tr><td>Performance</td><td>extreme — সবচেয়ে কম latency, সবচেয়ে বেশি throughput</td><td>মাঝারি overhead (HTTP parse করে)</td><td>global — নিকটতম POP থেকেই সার্ভ</td></tr>
+<tr><td>সাধারণ use case</td><td>internal backend LB, gaming/IoT, extreme low-latency TCP</td><td>path-based microservice routing, single-region web app + WAF</td><td>multi-region global app + CDN + WAF একসাথে</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন একটা প্রোডাক্টে সব মিলিয়ে দেওয়া হলো না</span>
+Layer 4-তে HTTP বোঝার কোনো দরকারই নেই — শুধু packet ফরওয়ার্ড করলেই চলে, তাই <span class="kw">Load Balancer</span> (AWS-এর NLB-এর সমতুল্য) parsing স্কিপ করে extreme throughput পায়। কিন্তু path-based routing বা WAF করতে হলে packet-এর ভেতরে HTTP request বুঝতেই হবে, সেখানে <span class="kw">Application Gateway</span> (AWS-এর ALB-এর সমতুল্য) লাগে। আবার একটা region-এর ভেতরে ভালো কাজ করা জিনিস, পুরো পৃথিবীতে anycast edge দিয়ে ট্রাফিক নেওয়ার জন্য যথেষ্ট না — সেই কাজটা করে Front Door, যেটার বিস্তারিত পরের চ্যাপ্টারে। তিনটা আলাদা প্রোডাক্ট রাখার কারণ হলো "সব কাজের জন্য একই টুল" আসলে কোনো কাজেই optimal হয় না।</div>
+
+<h3>Backend Pool ও Health Probe</h3>
+<p>Load Balancer বা Application Gateway সরাসরি কোনো VM-কে "চেনে" না — ট্রাফিক পাঠানো হয় একটা <span class="kw">Backend Pool</span>-এর কাছে, যেটা VM/VMSS instance-এর একটা লিস্ট রাখে এবং নিয়মিত <span class="kw">Health Probe</span> দিয়ে তাদের অবস্থা যাচাই করে।</p>
+<div class="diagram"><pre>
+Client → Frontend IP → LB Rule → Backend Pool
+                                      │
+                    ┌─────────────────┼─────────────────┐
+                    ▼                 ▼                 ▼
+              VM Instance A     VM Instance B     VM Instance C
+              (healthy)         (healthy)         (UNHEALTHY)
+                    ▲                 ▲
+                    └── Health Probe (interval, unhealthy threshold) ──┘
+                          Instance C ট্রাফিক থেকে বাদ পড়ে
+</pre></div>
+<p>Probe একটা নির্দিষ্ট <code>interval</code>-এ (যেমন ১৫ সেকেন্ডে একবার) প্রতিটা instance-এ request পাঠায় (TCP handshake বা HTTP GET)। পরপর কয়েকবার (<code>unhealthy threshold</code>) fail করলে সেই instance পুল থেকে সাময়িকভাবে বাদ পড়ে যায় — VM টার্মিনেট হয় না, শুধু নতুন ট্রাফিক পাওয়া বন্ধ হয়ে যায়।</p>
+<div class="callout mistake"><span class="tag">Common mistake — probe path অ্যাপ্লিকেশনের বাস্তব অবস্থা প্রতিফলিত না করা</span>
+Health probe-এর path যদি এমন কিছু হয় যা DB কল করে বা ভারী authentication চায়, তাহলে DB সামান্য স্লো হলেই পুরো fleet "unhealthy" দেখাবে এবং সব ট্রাফিক বন্ধ হয়ে যাবে। আলাদা lightweight <code>/health</code> endpoint বানানো উচিত যা শুধু "process বেঁচে আছে কিনা" যাচাই করে, downstream dependency-র উপর নির্ভর করে না।</div>
+
+<h3>Load Balancer SKU — Basic vs Standard</h3>
+<table>
+<tr><th>বিষয়</th><th>Basic SKU</th><th>Standard SKU</th></tr>
+<tr><td>Zone redundancy</td><td>নেই</td><td>আছে — একটা zone ডাউন হলেও LB নিজেই চালু থাকে</td></tr>
+<tr><td>SLA</td><td>নেই</td><td>৯৯.৯৯% guaranteed</td></tr>
+<tr><td>Backend pool size</td><td>সীমিত (৩০০ instance)</td><td>বড় (১০০০ instance পর্যন্ত)</td></tr>
+<tr><td>Security default</td><td>ডিফল্টে outbound খোলা</td><td>ডিফল্টে সব inbound বন্ধ — explicit NSG লাগে</td></tr>
+<tr><td>বর্তমান অবস্থা</td><td>Microsoft কর্তৃক retire হচ্ছে</td><td>নতুন সব ডিপ্লয়মেন্টে বাধ্যতামূলক default</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — নতুন কাজে সবসময় Standard SKU</span>
+Basic SKU এখন কার্যত deprecated পথে — Microsoft এটাকে পর্যায়ক্রমে retire করছে, আর zone redundancy ও SLA ছাড়া production workload চালানো ঝুঁকিপূর্ণ। নতুন যেকোনো architecture-এ শুরু থেকেই Standard SKU বেছে নেওয়া উচিত, পরে migrate করা অনেক বেশি ঝক্কির।</div>
+
+<h3>Application Gateway — Listener ও URL Path-based Routing</h3>
+<p>Application Gateway-এর <span class="kw">Listener</span> একটা নির্দিষ্ট port/protocol-এ শোনে (যেমন 443-এ HTTPS), আর তার ভেতরে <span class="kw">Routing Rule</span> path বা host অনুযায়ী আলাদা আলাদা Backend Pool-এ ট্রাফিক পাঠায়।</p>
+<pre>Listener: https-listener (port 443, host: shop.example.com)
+
+Rule 1: path  /api/*        → backend-pool-api
+Rule 2: path  /images/*     → backend-pool-static
+Rule 3: path  /*  (default) → backend-pool-frontend
+
+<span class="c">// WAF policy একই Application Gateway-তে attach করা থাকে</span>
+<span class="c">// প্রতিটা rule-এর আগেই request WAF-এর মধ্য দিয়ে যায়</span></pre>
+<p>এই path-based routing-এর কারণেই একটাই Application Gateway দিয়ে একাধিক microservice সার্ভ করা সম্ভব — প্রতিটার জন্য আলাদা load balancer লাগে না।</p>
+
+<h3>VM Scale Sets (VMSS) — Model বনাম Instance</h3>
+<p><span class="kw">VM Scale Set</span> একগুচ্ছ identical VM ম্যানেজ করে, যেন সবসময় নির্দিষ্ট সংখ্যক healthy instance চলমান থাকে। প্রতিটা instance ঠিক কেমন হবে (image, VM size, extension, custom script) তা আসে একটা <span class="kw">Model</span> থেকে — এটা একরকম ব্লুপ্রিন্ট, যেখান থেকে বাস্তব <span class="kw">Instance</span>-গুলো তৈরি হয়।</p>
+<div class="callout behind"><span class="tag">গভীরে — Model বদলালে চলমান Instance আপনা-আপনি বদলায় না</span>
+Model আপডেট করলে (যেমন নতুন image version) সেটা শুধু ভবিষ্যতে তৈরি হওয়া নতুন instance-এ প্রযোজ্য হয় — আগে থেকে চলমান instance-গুলো পুরনো configuration-এই থেকে যায়, যতক্ষণ না আপনি explicitly <code>Upgrade</code> চালান বা rolling upgrade policy সেট করেন। এই কারণে অনেকে ভাবে model বদলালেই সব instance আপডেট হয়ে গেছে, কিন্তু বাস্তবে upgrade mode (Manual/Automatic/Rolling) না বুঝলে drift তৈরি হয়ে যায়।</div>
+
+<h3>Autoscale Rule — Metric-based ও Schedule-based</h3>
+<table>
+<tr><th>Rule ধরন</th><th>কীভাবে কাজ করে</th><th>কখন ব্যবহার</th></tr>
+<tr><td>Metric-based</td><td>CPU/Memory/Queue length-এর মতো metric থ্রেশহোল্ড পার হলে scale out/in করে (AWS-এর Target Tracking/Step Scaling-এর সমতুল্য যুক্তি)</td><td>অনির্দিষ্ট, ওঠানামা করা ট্রাফিক</td></tr>
+<tr><td>Schedule-based</td><td>নির্দিষ্ট সময়ে instance count সরাসরি সেট করে দেয়, কোনো metric দেখে না</td><td>predictable প্যাটার্ন — অফিস আওয়ার, sale event, রাতের low-traffic window</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — দুটো একসাথে ব্যবহার করুন</span>
+Metric-based rule বেস হিসেবে রেখে, জানা peak সময়ের জন্য Schedule-based rule দিয়ে আগে থেকেই minimum capacity বাড়িয়ে রাখা কার্যকর — যাতে reactive scaling-এর অপেক্ষা না করে নতুন instance বুট হয়ে যাওয়ার সময়টুকু আগে থেকেই কভার হয়ে যায়।</div>
+
+<h3>Scale-in Policy — কোন Instance আগে সরানো হবে</h3>
+<table>
+<tr><th>Policy</th><th>আচরণ</th></tr>
+<tr><td>Default (Balanced)</td><td>Availability Zone/fault domain জুড়ে balance বজায় রেখে instance বেছে নেয়</td></tr>
+<tr><td>OldestVM</td><td>সবচেয়ে পুরনো instance আগে সরায়</td></tr>
+<tr><td>NewestVM</td><td>সবচেয়ে নতুন instance আগে সরায় — সদ্য তৈরি হওয়া, এখনও warm-up না হওয়া instance বাদ দিতে কাজে লাগে</td></tr>
+</table>
+
+<h3>Application Gateway + VMSS একসাথে — সম্পূর্ণ চিত্র</h3>
+<div class="diagram"><pre>
+                     ┌─────────────────────────┐
+  Internet ────────► │  Application Gateway     │  ← WAF policy attach থাকে
+                     │  (Listener + Rule + Probe)│
+                     └────────────┬─────────────┘
+                                  │ path-based routing + health probe
+                                  ▼
+                     ┌─────────────────────────┐
+                     │      Backend Pool        │
+                     └────────────┬─────────────┘
+              ┌────────────────────┼────────────────────┐
+              ▼                    ▼                    ▼
+        VM (zone 1)          VM (zone 2)          VM (zone 3)
+              ▲                    ▲                    ▲
+              └────────────────────┴────────────────────┘
+                          VM Scale Set
+                 (Autoscale rule অনুযায়ী instance যোগ/বাদ করে,
+                  নতুন instance নিজে থেকেই Backend Pool-এ যুক্ত হয়)
+</pre></div>
+<div class="callout why"><span class="tag">কেন নতুন instance তাৎক্ষণিকভাবে ট্রাফিক পায় না</span>
+VMSS নতুন instance তৈরি করে Backend Pool-এ যোগ করে দিলেও, Application Gateway সেই instance-কে তখনই ট্রাফিক পাঠায় না — প্রথমে health probe pass করতে হয়। তাই scale-out-এর সময় সামান্য ল্যাগ থাকা স্বাভাবিক — এটা bug না, half-booted instance ট্রাফিক না পাওয়ার জন্যই এই safety mechanism।</div>
+</template>
+
+<template data-page="dns">
+<h2 class="title">১০. Azure DNS ও Traffic Manager</h2>
+<p class="lead">DNS এখানেও ইন্টারনেটের ফোনবুক, কিন্তু Azure-এ একটা আলাদা সার্ভিস আছে যেটা DNS-কে শুধু "নাম থেকে IP" ছাড়িয়ে বুদ্ধিমান রাউটিং-এর হাতিয়ার বানিয়ে দেয় — Traffic Manager।</p>
+
+<h3>Azure DNS Zone — Public ও Private (সংক্ষিপ্ত রিক্যাপ)</h3>
+<p><span class="kw">Azure DNS Zone</span> একটা ডোমেইনের record হোস্ট করার জায়গা। <span class="kw">Public Zone</span> ইন্টারনেটে সবার কাছে resolve হয় (যেমন পাবলিক ওয়েবসাইট বা API-এর জন্য), আর <span class="kw">Private Zone</span> শুধু নির্দিষ্ট VNet-এর ভেতর থেকেই resolve হয় — internal service discovery-র জন্য (যেমন <code>db.internal.company.com</code>), যাতে internal hostname বাইরে ফাঁস না হয়।</p>
+
+<h3>Record Type — সংক্ষিপ্ত টেবিল</h3>
+<table>
+<tr><th>Record</th><th>কী resolve করে</th><th>মূল ব্যবহার</th></tr>
+<tr><td>A</td><td>hostname → IPv4 address</td><td>সরাসরি সার্ভারের IP</td></tr>
+<tr><td>CNAME</td><td>hostname → আরেকটা hostname</td><td>subdomain-কে অন্য সার্ভিসে পয়েন্ট করা</td></tr>
+<tr><td>Alias record</td><td>hostname → Azure resource (Public IP, Traffic Manager profile, Front Door endpoint)</td><td>zone apex-এ Azure resource পয়েন্ট করা</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন zone apex-এ CNAME চলে না, Alias লাগে</span>
+DNS প্রোটোকলের নিয়মেই <b>zone apex</b>-এ (যেমন খালি <code>example.com</code>, কোনো subdomain ছাড়া) CNAME রাখা যায় না — apex-এ SOA/NS record থাকতে হয়, আর CNAME অন্য কোনো record টাইপের সাথে coexist করতে পারে না। ঠিক Route 53-এর মতোই একই সমস্যা এখানেও আছে, আর সমাধানও একই ধাঁচের — Azure DNS-এর <span class="kw">Alias record</span> DNS লেভেলে A record-এর মতো আচরণ করে (তাই apex-এ বসতে পারে), কিন্তু ভেতরে টার্গেট resource-এর IP বদলালেও নিজে থেকেই আপডেট থাকে।</div>
+
+<h3>Traffic Manager — এটা আসলে কী স্তরে কাজ করে</h3>
+<p>এখানেই সবচেয়ে গুরুত্বপূর্ণ ধারণাটা আসে। <span class="kw">Traffic Manager</span> একটা <b>DNS-level</b> রাউটিং সার্ভিস — মানে এটা কোনো ট্রাফিক প্রক্সি করে না, প্যাকেট দেখে না, সরাসরি ডেটা ফরওয়ার্ডও করে না। এটা শুধু DNS query-র জবাবে <b>ভিন্ন ভিন্ন client-কে ভিন্ন ভিন্ন endpoint-এর IP address ফেরত দেয়</b> — তারপর client নিজেই সরাসরি সেই IP-তে connect করে, Traffic Manager-এর সাথে সেই connection-এর আর কোনো সম্পর্ক থাকে না।</p>
+<div class="diagram"><pre>
+Client  ──DNS query──►  Traffic Manager (DNS-level decision)
+   ▲                            │
+   │                    routing method অনুযায়ী
+   │                    সিদ্ধান্ত নেয় কোন endpoint-এর
+   │                    IP ফেরত দেবে
+   │                            ▼
+   └─────IP address ফেরত─── (যেমন 20.51.x.x — Region A-এর origin)
+
+Client এখন সরাসরি 20.51.x.x-এ connect করে
+Traffic Manager-এর ভূমিকা এখানেই শেষ — সে আর প্যাকেট দেখে না
+</pre></div>
+<div class="callout why"><span class="tag">কেন এটা "শুধু DNS" হওয়াটাই একটা সীমাবদ্ধতা</span>
+Traffic Manager কখনো HTTP request বা TLS handshake দেখতেই পায় না — তার কাজ শেষ হয়ে যায় DNS resolution-এর মুহূর্তেই। তাই এটা SSL terminate করতে পারে না, header দেখে route করতে পারে না, caching করতে পারে না। এই সীমাবদ্ধতা bug না — এটাই DNS-based routing-এর মৌলিক প্রকৃতি, আর এই কারণেই Azure-এ আলাদা একটা HTTP-level প্রোডাক্ট (Front Door) লাগে, যেটা পরের চ্যাপ্টারে বিস্তারিত আলোচনা হবে।</div>
+
+<h3>Routing Method — তুলনা</h3>
+<table>
+<tr><th>Method</th><th>আচরণ</th><th>বাস্তব উদাহরণ</th></tr>
+<tr><td>Priority</td><td>Primary endpoint healthy থাকলে সবসময় সেখানেই পাঠায়, না হলে পরবর্তী priority-তে</td><td>Active-passive disaster recovery</td></tr>
+<tr><td>Weighted</td><td>শতাংশ অনুপাতে একাধিক endpoint-এ ট্রাফিক ভাগ করে</td><td>Canary/blue-green deployment</td></tr>
+<tr><td>Performance</td><td>client যেখান থেকে query করছে, তার কাছে network latency-র হিসেবে সবচেয়ে কাছের endpoint বেছে নেয়</td><td>multi-region deployment, response time optimize করা</td></tr>
+<tr><td>Geographic</td><td>client-এর ভৌগোলিক অবস্থান (দেশ/অঞ্চল) অনুযায়ী নির্দিষ্ট endpoint-এ পাঠায়</td><td>data residency compliance, দেশভিত্তিক কনটেন্ট</td></tr>
+<tr><td>MultiValue</td><td>একাধিক healthy IP একসাথে ফেরত দেয়, client নিজে বেছে নেয়</td><td>সাধারণ round-robin + health-aware ফলব্যাক</td></tr>
+<tr><td>Subnet</td><td>client-এর IP range অনুযায়ী নির্দিষ্ট endpoint ম্যাপ করে</td><td>corporate network-ভিত্তিক split routing, A/B টেস্টিং</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — Traffic Manager-কে load balancer ভেবে ভুল প্রত্যাশা রাখা</span>
+অনেকে ভাবে Traffic Manager Application Gateway বা Front Door-এর মতোই ট্রাফিক প্রক্সি করবে, তাই WAF বা SSL offload-এর প্রত্যাশা করে বসে — কিন্তু Traffic Manager কখনোই প্যাকেটের ভেতরে ঢোকে না। এটা শুধু DNS resolution-এর মুহূর্তে সিদ্ধান্ত নেয়, তারপর client একাই বাকি কাজ করে। এই ভুল প্রত্যাশাই সবচেয়ে সাধারণ Azure networking বিভ্রান্তির একটা।</div>
+
+<h3>Endpoint Monitoring — Health Check কীভাবে কাজ করে</h3>
+<p>Traffic Manager নিয়মিত interval-এ প্রতিটা endpoint-এ (HTTP/HTTPS/TCP) probe পাঠিয়ে যাচাই করে সেটা সাড়া দিচ্ছে কিনা। পরপর কয়েকবার fail করলে endpoint-কে <b>Degraded</b> মার্ক করে DNS answer থেকে বাদ দেওয়া হয় — এই মনিটরিং না থাকলে Priority routing-এর মতো method একদমই অচল হয়ে যেত, কারণ Traffic Manager-এর জানারই কোনো উপায় থাকত না কোন endpoint আসলে ডাউন।</p>
+<div class="callout best"><span class="tag">Best practice — DNS TTL কম রাখুন failover দ্রুত করতে</span>
+Traffic Manager নিজে instant failover ঘটাতে পারে না যদি resolver-রা পুরনো IP অনেকক্ষণ ধরে cache করে রাখে — কারণ decision তো DNS resolution-এর সময়ই নেওয়া হয়, এরপর client পুরনো cached IP-তেই লেগে থাকে। তাই DNS TTL কম (যেমন ৩০-৬০ সেকেন্ড) রাখলে failover-এর সময় client-রা দ্রুত নতুন IP পায়, নাহলে outage-এর পরেও অনেকক্ষণ পুরনো, ডাউন হয়ে যাওয়া endpoint-এই ট্রাফিক আটকে থাকে।</div>
+</template>
+
+<template data-page="cdn">
+<h2 class="title">১১. Azure CDN ও Front Door</h2>
+<p class="lead">Origin সার্ভার পৃথিবীর এক কোণে বসে থাকলেও কনটেন্ট ইউজারের কাছাকাছি নিয়ে আসা — কিন্তু Azure-এ Front Door শুধু একটা CDN না, এটা একটা global HTTP load balancer, CDN আর WAF-কে একসাথে মিলিয়ে দেওয়া একটা প্রোডাক্ট।</p>
+
+<h3>Azure CDN — Edge Caching-এর মৌলিক ধারণা</h3>
+<p><span class="kw">Azure CDN</span> বিশ্বজুড়ে ছড়িয়ে থাকা <span class="kw">Edge Location (POP)</span>-এ static কনটেন্টের কপি রেখে দেয়, যাতে ইউজারের request origin পর্যন্ত না গিয়ে সবচেয়ে কাছের edge থেকেই সার্ভ হয়ে যায়। Azure-এ CDN কয়েকটা provider tier-এ পাওয়া যায় — Microsoft-এর নিজস্ব CDN, এবং partner হিসেবে Akamai ও Verizon-এর network, প্রতিটার নিজস্ব edge coverage ও feature set আলাদা। তবে আধুনিক architecture-এ এই standalone CDN-এর বদলে বেশিরভাগ ক্ষেত্রেই এখন Front Door বেছে নেওয়া হয়, কারণ সেটা একই সাথে অনেক বেশি কাজ করে।</p>
+
+<h3>Front Door — কেন এটা শুধু CDN-এর চেয়ে বেশি</h3>
+<p><span class="kw">Azure Front Door</span> একটা single প্রোডাক্টে <b>global HTTP(S) Load Balancer + CDN + WAF</b> একসাথে মিলিয়ে দিয়েছে। এটা edge caching করে (CDN-এর কাজ), একাধিক region-এর origin-এর মধ্যে health-aware রাউটিং করে (global load balancer-এর কাজ), আর একই সাথে WAF rule দিয়ে আক্রমণ ফিল্টার করে।</p>
+<div class="callout behind"><span class="tag">গভীরে — AWS যা দুই প্রোডাক্টে ভাগ করেছে, Azure এখানে এক প্রোডাক্টে দিয়েছে</span>
+AWS-এ এই কাজটা দুটো আলাদা সার্ভিসে ভাগ করা — CloudFront (caching + edge delivery) আর Global Accelerator (anycast IP দিয়ে global TCP/UDP routing, non-cacheable ট্রাফিকের জন্য)। Azure Front Door এই দুটো দায়িত্বকেই একটা প্রোডাক্টে মিলিয়ে দিয়েছে — cacheable static content আর dynamic API রাউটিং, দুটোই একই Front Door profile-এর ভেতর থেকে হ্যান্ডল হয়। এই ডিজাইন পার্থক্যটা মূলত architectural philosophy-র — AWS প্রতিটা concern আলাদা প্রোডাক্টে রেখে composability দেয়, Azure একটা integrated প্রোডাক্টে দিয়ে operational simplicity দেয়। কোনোটাই "ভুল" না, দুটোই ভিন্ন trade-off।</div>
+
+<h3>Front Door কীভাবে সত্যিকারের ট্রাফিক প্রক্সি করে</h3>
+<p>Front Door <span class="kw">anycast</span> IP ব্যবহার করে — একটাই IP address পৃথিবীর সব POP থেকে announce করা হয়, তাই client নিজে থেকেই নেটওয়ার্ক-লেভেলে সবচেয়ে কাছের POP-এ রাউট হয়ে যায় (BGP routing-এর স্বাভাবিক আচরণ, কোনো DNS ম্যাজিক লাগে না)। এরপর সেই POP client-এর সাথে connection টার্মিনেট করে (TLS handshake, HTTP parse — সবকিছু), এবং origin পর্যন্ত বাকি পথটুকু যায় Microsoft-এর নিজস্ব প্রাইভেট backbone network দিয়ে, পাবলিক ইন্টারনেটের unpredictable routing দিয়ে না।</p>
+<div class="diagram"><pre>
+Client (Dhaka) ──► নিকটতম Front Door POP (anycast IP-তে স্বাভাবিকভাবেই রাউট হয়)
+                        │
+                  TLS terminate + HTTP parse এখানেই হয়
+                        │
+                  Cache HIT? ──► হ্যাঁ ──► সরাসরি রিটার্ন
+                        │
+                        ▼ না
+              Microsoft backbone network দিয়ে
+                        │
+                        ▼
+                  Origin (যেকোনো region)
+</pre></div>
+<div class="callout why"><span class="tag">কেন এটা শুধু ইন্টারনেট রাউটিং-এর চেয়ে দ্রুত</span>
+পাবলিক ইন্টারনেটে ট্রাফিক একাধিক ISP-এর মধ্য দিয়ে যায়, যেখানে congestion, suboptimal routing path, ও packet loss সাধারণ ঘটনা। POP থেকে origin পর্যন্ত Microsoft-এর নিজস্ব backbone ব্যবহার করলে সেই অনিশ্চয়তা এড়ানো যায় — এটা অনেকটা মহাসড়কের বদলে একটা প্রাইভেট এক্সপ্রেসওয়ে ব্যবহার করার মতো, যেখানে ট্রাফিক নিয়ন্ত্রণ পুরোপুরি এক হাতে।</div>
+
+<h3>Traffic Manager বনাম Front Door — সবচেয়ে গুরুত্বপূর্ণ পার্থক্য</h3>
+<p>এই দুইটা সার্ভিস দেখতে একই কাজ করে মনে হয় (একাধিক region-এর মধ্যে ট্রাফিক ভাগ করা), কিন্তু তারা সম্পূর্ণ ভিন্ন <b>স্তরে</b> কাজ করে — আর এই পার্থক্যটাই Azure networking-এর সবচেয়ে বেশি ভুল বোঝা বিষয়গুলোর একটা।</p>
+<div class="diagram"><pre>
+── Traffic Manager (DNS-level) ──
+Client → DNS query → Traffic Manager সিদ্ধান্ত নেয় → IP address ফেরত দেয়
+                                                          │
+                                          Client সরাসরি সেই IP-তে connect করে
+                                          Traffic Manager-এর ভূমিকা এখানেই শেষ
+                                          (packet/HTTP কিছুই দেখে না)
+
+── Front Door (HTTP-level) ──
+Client → Front Door-এর নিজের IP-তে connect করে (TLS handshake Front Door-এর সাথেই হয়)
+              │
+        Front Door নিজে HTTP request পড়ে, cache/WAF/routing decision নেয়
+              │
+        Front Door নিজে আলাদা connection খুলে origin-এর সাথে কথা বলে
+              │
+        Response client-কে ফেরত পাঠায় (Front Door এখনও connection-এর মাঝেই আছে)
+</pre></div>
+<table>
+<tr><th>বিষয়</th><th>Traffic Manager</th><th>Front Door</th></tr>
+<tr><td>কাজ করে কোন স্তরে</td><td>DNS resolution-এর সময়</td><td>প্রতিটা HTTP(S) request-এর সময়</td></tr>
+<tr><td>Connection টার্মিনেট করে?</td><td>না — client সরাসরি origin-এর IP-তে connect করে</td><td>হ্যাঁ — Front Door নিজেই client connection টার্মিনেট করে</td></tr>
+<tr><td>SSL/TLS termination</td><td>সম্ভব না (প্যাকেট দেখতেই পায় না)</td><td>হ্যাঁ, Front Door-এই TLS terminate হয়</td></tr>
+<tr><td>WAF/header-based routing</td><td>সম্ভব না</td><td>হ্যাঁ — HTTP header, path, cookie দেখে route করতে পারে</td></tr>
+<tr><td>Caching</td><td>সম্ভব না</td><td>হ্যাঁ, edge-এ response cache করে</td></tr>
+<tr><td>Failover-এর গতি</td><td>DNS TTL-এর উপর নির্ভরশীল, ধীর হতে পারে</td><td>প্রতিটা request-এই live health জেনে দ্রুত route করে</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন এই পার্থক্যটা মৌলিক, শুধু ফিচারের তালিকা না</span>
+Traffic Manager DNS resolution-এর মুহূর্তেই তার কাজ শেষ করে ফেলে — এরপর client আর Traffic Manager-এর মধ্যে কোনো সম্পর্কই থাকে না, client একাই সরাসরি origin-এর সাথে কথা বলে। তাই Traffic Manager কখনোই SSL terminate, WAF rule apply, বা header দেখে route করতে পারবে না — কারণ এসব করতে হলে আসল HTTP packet-টা দেখতে হয়, আর Traffic Manager প্যাকেট দেখেই না, শুধু নাম আর IP-র ম্যাপিং জানে। Front Door উল্টো — এটা নিজেই client-এর connection টার্মিনেট করে বসে থাকে (একটা proxy-র মতো), তাই তার হাতে পুরো HTTP request থাকে, ফলে caching/WAF/SSL/header routing সবকিছুই সম্ভব হয়ে যায়। এটা "কোনটা ভালো" প্রশ্ন না — এটা দুটো ভিন্ন layer-এর ভিন্ন সীমাবদ্ধতা।</div>
+
+<h3>Cache Purge</h3>
+<p>Origin-এ ফাইল বদলালেও edge-এ থাকা পুরনো কপি TTL শেষ না হওয়া পর্যন্ত সার্ভ হতে থাকে — ঠিক যেকোনো CDN-এর মতোই। Front Door-এ <span class="kw">Purge</span> রিকোয়েস্ট দিয়ে জোর করে নির্দিষ্ট path বা পুরো cache খালি করা যায়, কিন্তু এটা সব edge POP-এ propagate হতে কিছুটা সময় নেয় — instant গ্যারান্টি নেই।</p>
+<div class="callout mistake"><span class="tag">Common mistake — একই ফাইলনাম বারবার আপডেট করে purge-এর উপর নির্ভর করা</span>
+বারবার একই URL-এর কনটেন্ট বদলে প্রতিবার purge চালানো ব্যয়বহুল এবং সব POP-এ propagate হওয়ার আগে কিছু ইউজার পুরনো ভার্সনই পেতে থাকে। সঠিক practice হলো versioned/hash-ভিত্তিক ফাইলনাম (যেমন <code>app.a1b2c3.js</code>) ব্যবহার করা, যাতে নতুন কনটেন্টের জন্য নতুন URL তৈরি হয় এবং পুরনো cache-এর সাথে কোনো conflict-ই না থাকে।</div>
+
+<h3>Custom Domain ও HTTPS</h3>
+<p>Front Door-এ নিজের ডোমেইন (যেমন <code>shop.example.com</code>) যুক্ত করে সেটার জন্য ফ্রি, managed certificate ব্যবহার করা যায় — Front Door নিজেই certificate provision ও renew করে দেয়, ম্যানুয়াল renewal-এর ঝক্কি থাকে না।</p>
+<div class="callout best"><span class="tag">Best practice — origin-কে সরাসরি ইন্টারনেটে expose করবেন না</span>
+Origin-এর public endpoint-এ যদি সরাসরি অ্যাক্সেস সম্ভব হয়, তাহলে Front Door বাইপাস করে WAF, caching, DDoS protection সবকিছু ফাঁকি দেওয়া যায়। Origin firewall/NSG-তে শুধু Front Door-এর নির্দিষ্ট IP range বা <code>X-Azure-FDID</code> header যাচাই করে ট্রাফিক গ্রহণ করা উচিত, যাতে Front Door-ই একমাত্র প্রবেশপথ থাকে।</div>
+</template>
+
+<template data-page="functions">
+<h2 class="title">১২. Azure Functions ও Serverless</h2>
+<p class="lead">সার্ভার প্রভিশন, প্যাচ, স্কেল করার দায়িত্ব থেকে মুক্তি — কোড লিখুন, চালান, শুধু ব্যবহারের জন্যই পে করুন। Azure Functions-এ এই মডেলের একটা বাড়তি স্তর আছে — Binding — যেটা AWS Lambda-র চেয়ে সত্যিকারের ভিন্ন একটা ধারণা।</p>
+
+<h3>Azure App Service — প্রথমে PaaS Web Hosting-এর ভিত্তিটা বোঝা দরকার</h3>
+<p>Functions-এ ঢোকার আগে <span class="kw">Azure App Service</span> বোঝা জরুরি, কারণ এটাই Azure-এর মূল PaaS web-hosting প্ল্যাটফর্ম এবং Functions-এর কিছু hosting মডেল সরাসরি এর উপরেই দাঁড়িয়ে আছে। App Service দিয়ে একটা ওয়েব অ্যাপ, REST API, বা মোবাইল ব্যাকএন্ড হোস্ট করা যায় — কোনো VM প্রভিশন, OS প্যাচিং, বা load balancer সেটআপ ছাড়াই। আপনি শুধু কোড (বা container image) দেন, Azure বাকি ইনফ্রাস্ট্রাকচার (compute, networking, patching, SSL) সামলায়।</p>
+<p>এর কেন্দ্রীয় ধারণা হলো <span class="kw">App Service Plan</span> — এটা আসলে একগুচ্ছ VM resource (নির্দিষ্ট size, region, ও pricing tier) যার উপরে এক বা একাধিক App Service app চলে। একই Plan-এর নিচে একাধিক app রাখলে তারা compute resource শেয়ার করে (অনেকটা SQL Elastic Pool-এর মতোই যুক্তি — আলাদা আলাদা app-এর peak load ভিন্ন সময়ে হলে একসাথে রাখা সাশ্রয়ী)।</p>
+<table>
+<tr><th>Tier</th><th>বৈশিষ্ট্য</th><th>উপযুক্ত</th></tr>
+<tr><td>Free / Shared</td><td>Multi-tenant হোস্ট, সীমিত compute, custom domain নেই</td><td>শেখা, প্রোটোটাইপ</td></tr>
+<tr><td>Basic</td><td>Dedicated VM, manual scaling</td><td>ছোট dev/test workload</td></tr>
+<tr><td>Standard / Premium</td><td>Autoscale, deployment slot, daily backup, custom domain/SSL</td><td>প্রোডাকশন workload</td></tr>
+<tr><td>Isolated</td><td>Dedicated VNet-এর ভেতরে সম্পূর্ণ আইসোলেটেড (App Service Environment)</td><td>উচ্চ-নিরাপত্তা/কমপ্লায়েন্স-সংবেদনশীল enterprise workload</td></tr>
+</table>
+
+<h3>Deployment Slot — Zero-downtime Release</h3>
+<p>Standard/Premium tier-এ <span class="kw">Deployment Slot</span> ব্যবহার করে একটা আলাদা, লাইভ কিন্তু production-এর বাইরে থাকা environment (যেমন <code>staging</code>) তৈরি করা যায় — এটা প্রায় production-এর হুবহু কপি, নিজস্ব URL-সহ, কিন্তু কোনো লাইভ ট্রাফিক পায় না। নতুন ভার্সন প্রথমে staging slot-এ ডিপ্লয় করে যাচাই করা হয়, তারপর একটা <span class="kw">Swap</span> অপারেশন দিয়ে staging ও production-এর মধ্যে তাৎক্ষণিকভাবে জায়গা বদলে ফেলা হয়।</p>
+<div class="diagram"><pre>
+আগে:  [ staging: v2 (নতুন) ]     [ production: v1 (পুরনো, লাইভ ট্রাফিক) ]
+                    │  Swap  │
+পরে:   [ staging: v1 (পুরনো) ]   [ production: v2 (নতুন, লাইভ ট্রাফিক) ]
+</pre></div>
+<div class="callout why"><span class="tag">কেন Swap সত্যিকারের zero-downtime দেয়</span>
+Swap আসলে নতুন কোড কপি করে না — এটা শুধু দুই slot-এর ভেতরের রাউটিং কনফিগারেশন অদলবদল করে, এবং তার আগে নতুন slot-এ একটা "warm-up" রিকোয়েস্ট পাঠিয়ে নিশ্চিত করে অ্যাপ্লিকেশন ইতিমধ্যে বুট হয়ে রেডি আছে। ফলে সুইচের মুহূর্তে ব্যবহারকারী কোনো cold-start বা ডাউনটাইম টের পায় না — নতুন ভার্সন চালু হওয়ার অপেক্ষায় থাকতে হয় না, কারণ সেটা swap হওয়ার আগেই warm অবস্থায় প্রস্তুত ছিল। যদি নতুন ভার্সনে সমস্যা ধরা পড়ে, একই কারণে আবার Swap চালিয়ে সাথে সাথে আগের ভার্সনে ফিরে যাওয়া (rollback) সম্ভব।</div>
+
+<h3>Scale Up বনাম Scale Out</h3>
+<p><span class="kw">Scale Up</span> মানে App Service Plan-এর tier বদলে বড় VM (বেশি CPU/RAM) দেওয়া — vertical scaling। <span class="kw">Scale Out</span> মানে একই tier-এ instance সংখ্যা বাড়ানো — horizontal scaling, autoscale rule দিয়ে metric বা schedule-ভিত্তিক স্বয়ংক্রিয়ভাবেও করা যায় (৯ নম্বর অধ্যায়ে VMSS autoscale-এর মতোই যুক্তি)।</p>
+<div class="callout behind"><span class="tag">App Service ও Functions-এর সম্পর্ক</span>
+১২ নম্বর অধ্যায়ের নিচের অংশে Functions-এর "Dedicated (App Service Plan)" hosting option দেখবেন — এটা কোনো কাকতালীয় নামকরণ না। Functions আসলে App Service-এরই একটা রানটাইম মডেল হিসেবে শুরু হয়েছিল, আর Dedicated plan-এ Function app সরাসরি একটা App Service Plan-এর উপর চলে, ঠিক একটা Web App-এর মতোই — শুধু কোড চলে ভিন্নভাবে (event-driven function হিসেবে, request-response web app হিসেবে না)। এই কারণেই App Service-এর ধারণা আগে বুঝে নিলে Functions-এর hosting model অনেক স্পষ্ট হয়ে যায়।</div>
+
+<h3>Function Anatomy — একটা HTTP Trigger উদাহরণ</h3>
+<p>প্রতিটা Azure Function-এর একটা entry point থাকে, যেটা কোনো একটা event ঘটলে চলে। নিচে একটা HTTP trigger function-এর গঠন দেখানো হলো:</p>
+<pre>module.exports = async function (context, req) {
+    const name = req.query.name || (req.body &amp;&amp; req.body.name);
+
+    context.res = {
+        status: 200,
+        body: `Hello, ${name}`
+    };
+};
+
+<span class="c">// function.json — declarative বাইন্ডিং কনফিগারেশন</span>
+{
+  "bindings": [
+    { "type": "httpTrigger", "direction": "in", "name": "req", "methods": ["get", "post"] },
+    { "type": "http", "direction": "out", "name": "$return" }
+  ]
+}</pre>
+
+<h3>Trigger ও Binding — Azure Functions-এর সবচেয়ে ভিন্ন ধারণা</h3>
+<p><span class="kw">Trigger</span> নির্ধারণ করে function কখন চলবে — HTTP request, Timer (cron), Queue-তে message আসা, Blob upload হওয়া, ইত্যাদি। প্রতিটা function-এ ঠিক একটাই trigger থাকে। কিন্তু <span class="kw">Binding</span> সম্পূর্ণ আলাদা একটা ধারণা — এটা ঘোষণামূলকভাবে (declaratively) function-কে input/output ডেটা সোর্সের সাথে জুড়ে দেয়, কোনো client SDK initialize বা connection-string দিয়ে হাতে-কলমে কল করা ছাড়াই।</p>
+<pre><span class="c">// function.json — Cosmos DB input ও output binding declaratively বলে দেওয়া</span>
+{
+  "bindings": [
+    { "type": "httpTrigger", "direction": "in", "name": "req" },
+    {
+      "type": "cosmosDB",
+      "direction": "in",
+      "name": "inputDoc",
+      "databaseName": "shopdb",
+      "collectionName": "orders",
+      "id": "{Query.id}",
+      "connectionStringSetting": "CosmosDBConnection"
+    },
+    {
+      "type": "cosmosDB",
+      "direction": "out",
+      "name": "outputDoc",
+      "databaseName": "shopdb",
+      "collectionName": "orders",
+      "connectionStringSetting": "CosmosDBConnection"
+    }
+  ]
+}</pre>
+<pre>module.exports = async function (context, req, inputDoc) {
+    <span class="c">// inputDoc আগে থেকেই Cosmos DB থেকে পড়া হয়ে গেছে — কোনো SDK client লেখা লাগেনি</span>
+    const updated = { ...inputDoc, status: "shipped" };
+
+    context.bindings.outputDoc = updated; <span class="c">// এটা সেভ হয়ে যাবে Cosmos DB-তে, কোনো .save() কল ছাড়াই</span>
+    context.res = { status: 200, body: updated };
+};</pre>
+<div class="callout why"><span class="tag">কেন এটা AWS Lambda-র চেয়ে ভিন্ন</span>
+AWS Lambda-তে DynamoDB থেকে ডেটা পড়তে হলে কোডের ভেতরেই AWS SDK import করে client initialize করতে হয়, তারপর <code>GetItem</code>/<code>PutItem</code> কল লিখতে হয় — এই বয়লারপ্লেট প্রতিটা function-এ বারবার লিখতে হয়। Azure Functions-এ Binding-এর মাধ্যমে এই পুরো ইন্টিগ্রেশন কোডটাই <code>function.json</code>-এ (বা attribute হিসেবে) ঘোষণা করে দেওয়া হয়, আর Azure Functions runtime নিজেই সেই read/write সম্পন্ন করে function চলার আগে/পরে। ফলাফল — একই কাজের জন্য অনেক কম কোড, কিন্তু trade-off হলো logic-টা এখন `function.json`-এর configuration আর runtime-এর ভেতরে "লুকানো", যেটা debug করা মাঝে মাঝে কঠিন হতে পারে কারণ ঠিক কী হচ্ছে তা কোডে সরাসরি দেখা যায় না।</div>
+<div class="callout behind"><span class="tag">গভীরে — Trigger আসলে একটা বিশেষ ধরনের Input Binding</span>
+টেকনিক্যালি Trigger নিজেও একটা Binding-ই, শুধু বিশেষ এই অর্থে যে এটাই function invoke করার কারণ হয়ে দাঁড়ায় (direction "in" এবং invocation-trigger উভয়ই)। বাকি সব Binding শুধু ডেটা ইন/আউট করে, কিন্তু নিজে থেকে function চালায় না — এই পার্থক্যটাই বুঝলে "কেন একটা function-এ একাধিক trigger থাকতে পারে না, কিন্তু একাধিক input/output binding থাকতে পারে" প্রশ্নের উত্তর স্পষ্ট হয়ে যায়।</div>
+
+<h3>Hosting Plan — Consumption vs Premium vs Dedicated</h3>
+<table>
+<tr><th>Plan</th><th>বৈশিষ্ট্য</th><th>Cold Start</th><th>কখন ব্যবহার</th></tr>
+<tr><td>Consumption</td><td>pure serverless, pay-per-execution, ব্যবহার না হলে শূন্য খরচ</td><td>সবচেয়ে বেশি — instance idle থাকলে সম্পূর্ণভাবে deallocate হয়ে যায়</td><td>ইনফ্রিকোয়েন্ট বা spiky ট্রাফিক, খরচ সংবেদনশীল ওয়ার্কলোড</td></tr>
+<tr><td>Premium</td><td>pre-warmed instance always ready, VNet integration সাপোর্ট করে</td><td>কম — কিছু instance আগে থেকেই "গরম" রাখা হয়</td><td>latency-sensitive API, VNet-এর ভেতরে resource access লাগলে</td></tr>
+<tr><td>Dedicated (App Service Plan)</td><td>সবসময় চলমান VM-এর মতো instance, নির্দিষ্ট মাসিক খরচ</td><td>নেই</td><td>predictable, উচ্চ ও স্থির ট্রাফিক — কিন্তু তখন serverless-এর pay-per-use সুবিধাটাই হারিয়ে যায়</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — Consumption Plan-এ VNet integration আশা করা</span>
+Consumption Plan-এ পূর্ণ VNet integration নেই (সীমিত সাপোর্ট আছে regional VNet integration দিয়ে, কিন্তু private endpoint-এর মতো কিছু ফিচার Premium/Dedicated ছাড়া কাজ করে না) — যদি Function-কে private database বা internal API-তে VNet-এর মাধ্যমে কানেক্ট করতে হয় ও পুরোপুরি network isolation দরকার হয়, Premium Plan-এ যেতে হবে। Consumption-এর সস্তা দামে সব ফিচার আশা করাটাই ভুল প্রত্যাশা।</div>
+
+<h3>Durable Functions — Long-running, Stateful Orchestration</h3>
+<p>একটা single Function ভালো ছোট, stateless কাজের জন্য, কিন্তু বাস্তব ওয়ার্কফ্লো প্রায়ই একাধিক ধাপ, condition, retry, fan-out/fan-in নিয়ে গঠিত। <span class="kw">Durable Functions</span> এই ধরনের multi-step orchestration-কে সরাসরি <b>কোড দিয়েই</b> লেখার সুযোগ দেয় — AWS Step Functions-এর সমতুল্য ধারণা, কিন্তু সেখানে JSON-ভিত্তিক state machine ডিজাইন করতে হয়, এখানে সাধারণ প্রোগ্রামিং ভাষার loop/condition ব্যবহার করেই workflow লেখা যায়।</p>
+<pre>const df = require("durable-functions");
+
+module.exports = df.orchestrator(function* (context) {
+    const orderId = context.df.getInput();
+
+    yield context.df.callActivity("ChargePayment", orderId);
+    yield context.df.callActivity("UpdateInventory", orderId);
+    yield context.df.callActivity("SendConfirmationEmail", orderId);
+
+    <span class="c">// runtime নিজেই এই orchestration-এর state persist রাখে,</span>
+    <span class="c">// process মাঝপথে ক্র্যাশ করলেও ঠিক যেখানে ছিল সেখান থেকেই আবার শুরু হয়</span>
+});</pre>
+<div class="callout behind"><span class="tag">গভীরে — কীভাবে orchestrator function "মাঝপথ থেকে" আবার চলতে পারে</span>
+Durable Functions-এর runtime প্রতিটা <code>yield</code>-এর ফলাফল event history হিসেবে persist করে রাখে (event sourcing প্যাটার্ন)। orchestrator function যখন আবার re-invoke হয় (checkpoint-এর পর, বা crash recovery-তে), পুরো ফাংশনটা প্রথম থেকেই আবার চলে, কিন্তু ইতিমধ্যে সম্পন্ন হওয়া activity-গুলোর ফলাফল history থেকে সরাসরি "replay" হয় — নতুন করে সেই activity আবার চলে না। এই কারণেই orchestrator function-এর ভেতরে non-deterministic কোড (যেমন <code>Date.now()</code> বা random) লেখা নিষেধ, কারণ replay-এর সময় সেটা ভিন্ন ফলাফল দিতে পারে এবং পুরো state history-র সাথে অসামঞ্জস্য তৈরি করবে।</div>
+
+<h3>Logic Apps — Low-code Alternative</h3>
+<p><span class="kw">Logic Apps</span> Functions-এর মতোই workflow orchestration করে, কিন্তু একদম ভিন্ন পদ্ধতিতে — এটা একটা visual, drag-and-drop workflow designer, যেখানে কোড লেখার বদলে কানেক্টর যুক্ত করে workflow বানানো হয়। শত শত built-in connector আছে (Office 365, Salesforce, SAP, Twitter, SQL, ইত্যাদি), যেগুলো Function-এ হাতে লিখতে হলে অনেক বেশি সময় লাগত।</p>
+<table>
+<tr><th>বিষয়</th><th>Azure Functions</th><th>Logic Apps</th></tr>
+<tr><td>ডেভেলপমেন্ট মডেল</td><td>কোড লেখা (JS/C#/Python/...)</td><td>Visual designer, low-code/no-code</td></tr>
+<tr><td>উপযুক্ত টিম</td><td>ডেভেলপার</td><td>ডেভেলপার ও non-developer উভয়ই</td></tr>
+<tr><td>Complex logic/algorithm</td><td>সহজ — যেকোনো প্রোগ্রামিং লজিক লেখা যায়</td><td>সীমিত — জটিল conditional/loop logic লিখতে অসুবিধা</td></tr>
+<tr><td>Third-party integration</td><td>নিজে কোড লিখে SDK/API কল করতে হয়</td><td>শত শত built-in connector রেডি</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — টিমের দক্ষতা ও কাজের ধরন দেখে বেছে নিন</span>
+জটিল business logic বা custom algorithm-নির্ভর কাজে Functions ভালো, কারণ পূর্ণ প্রোগ্রামিং ভাষার ক্ষমতা পাওয়া যায়। কিন্তু "SharePoint-এ ফাইল এলে Teams-এ notification পাঠাও, তারপর Excel-এ log রাখো"-জাতীয় সাধারণ integration workflow-এর জন্য Logic Apps অনেক দ্রুত বানানো যায় ও maintain করা সহজ — বিশেষত non-developer stakeholder-রাও workflow দেখে বুঝতে পারে।</div>
+
+<h3>Cold Start — সংক্ষিপ্ত রিক্যাপ</h3>
+<p>Request না এলে Consumption Plan-এ কোনো compute বরাদ্দ থাকে না — request এলেই নতুন execution environment provision হয়, কোড লোড হয়, runtime বুট হয়, তারপর handler চলে। এই প্রভিশনিং সময়টাই <span class="kw">Cold Start</span>, যেটা universal serverless concept — AWS Lambda-তেও একই কারণে ঘটে। ধারাবাহিক ট্রাফিকে বেশিরভাগ request "warm" (পুরনো environment reuse) হিসেবে সার্ভ হয়, cold start শুধু নতুন স্পাইক বা দীর্ঘ নিষ্ক্রিয়তার পরেই দেখা দেয়।</p>
+</template>
+
+<template data-page="apim">
+<h2 class="title">১৩. API Management</h2>
+<p class="lead">যখন একটা organization-এ অনেকগুলো backend API থাকে — কিছু internal team-এর বানানো, কিছু legacy, কিছু নতুন microservice — তখন client-দের জন্য এগুলোকে সরাসরি expose করা বিশৃঙ্খল হয়ে যায়। <span class="kw">Azure API Management (APIM)</span> এই backend API-গুলোর সামনে একটা managed gateway layer বসায়, যেখানে versioning, security, throttling আর documentation একজায়গায় কেন্দ্রীভূত থাকে।</p>
+
+<h3>APIM আসলে কী সমস্যা সমাধান করে</h3>
+<p>ধরুন আপনার কাছে ১০টা মাইক্রোসার্ভিস আছে, প্রতিটা আলাদা টিমের বানানো, আলাদা authentication scheme, আলাদা error format। client অ্যাপকে যদি সরাসরি এই ১০টা backend-এর সাথে কথা বলতে হয়, তাহলে backend-এর যেকোনো পরিবর্তনে client-ও ভেঙে যাবে। APIM এই backend-গুলোর সামনে একটা <b>একক, স্থিতিশীল facade</b> তৈরি করে দেয় — client শুধু APIM-এর একটা consistent URL আর contract-এর সাথে কথা বলে, backend যেভাবেই বদলাক না কেন।</p>
+<div class="callout why"><span class="tag">কেন gateway layer দরকার — decoupling</span> APIM ছাড়া প্রতিটা backend সার্ভিসকে নিজে নিজে authentication, rate-limiting, logging ইমপ্লিমেন্ট করতে হতো। APIM এই cross-cutting concern-গুলোকে backend কোড থেকে আলাদা করে একটা কেন্দ্রীয় layer-এ নিয়ে আসে — backend developer শুধু business logic নিয়ে ভাবে, বাকিটা policy দিয়ে হ্যান্ডেল হয়।</div>
+
+<h3>মূল Component: API, Product, Subscription</h3>
+<p>APIM-এ একটা <span class="kw">API</span> মানে হলো কোনো backend-এর একটা definition বা wrapper — এতে operation (GET /users, POST /orders ইত্যাদি), schema, এবং কোন backend URL-এ এটা route হবে তা সংজ্ঞায়িত থাকে। কিন্তু client-কে সরাসরি API expose করা হয় না — এর বদলে একাধিক API-কে একসাথে গ্রুপ করে একটা <span class="kw">Product</span> তৈরি করা হয়।</p>
+<p>Product হলো subscription-যোগ্য একটা বান্ডেল। যেমন আপনি "Free Tier" নামে একটা Product বানাতে পারেন যাতে Weather API আর News API আছে, rate limit ১০০ call/দিন — আর "Premium" Product-এ একই API-গুলো আছে কিন্তু rate limit ১০,০০০ call/দিন এবং কিছু অতিরিক্ত API যুক্ত। এভাবে একই backend API-কে ভিন্ন ভিন্ন commercial tier-এ বিক্রি করা যায় কোনো backend কোড না ছুঁয়ে।</p>
+<div class="diagram"><pre>
+Client
+  │
+  │  Subscription Key দিয়ে call
+  ▼
+┌─────────────────────────────────────────┐
+│              Azure APIM Gateway           │
+│  ┌─────────────┐      ┌─────────────┐    │
+│  │ Product:      │      │ Product:      │    │
+│  │ Free Tier     │      │ Premium       │    │
+│  │ (rate-limit)  │      │ (rate-limit)  │    │
+│  │  ┌─────────┐  │      │  ┌─────────┐  │    │
+│  │  │ API: Weather│  │      │  │ API: Weather│  │    │
+│  │  │ API: News   │  │      │  │ API: News   │  │    │
+│  │  └─────────┘  │      │  │ API: Premium│  │    │
+│  └─────────────┘      │  └─────────┘  │    │
+│                        └─────────────┘    │
+└───────────────┬───────────────────────────┘
+                │  Policy pipeline প্রয়োগের পর
+                ▼
+      Backend সার্ভিস (App Service, AKS, on-prem…)
+</pre></div>
+
+<h3>Subscription Key — client অ্যাক্সেস নিয়ন্ত্রণ</h3>
+<p>যখন কোনো client কোনো Product-এ subscribe করে, তাকে একটা <span class="kw">Subscription Key</span> ইস্যু করা হয় (অন্য gateway-তে যেটাকে API Key/Usage Plan বলা হয়, সেই সমতুল্য)। প্রতিটা request-এ এই key পাঠাতে হয় (সাধারণত <code>Ocp-Apim-Subscription-Key</code> header-এ), APIM এই key দিয়ে চিহ্নিত করে কোন client, কোন Product, তাই কোন rate limit প্রযোজ্য।</p>
+<div class="callout mistake"><span class="tag">Common mistake — Subscription Key-কে authentication মনে করা</span> Subscription Key client-কে <b>শনাক্ত ও metering</b> করে, কিন্তু এটা নিজে strong authentication না। production-এ এর সাথে অবশ্যই OAuth 2.0/JWT validation policy যোগ করা উচিত — নাহলে key leak হলে যে কেউ Product ব্যবহার করতে পারবে।</div>
+
+<h3>Policy — APIM-এর সবচেয়ে শক্তিশালী ফিচার</h3>
+<p>APIM-এর আসল ক্ষমতা লুকানো আছে <span class="kw">Policy</span>-তে। এটা একটা XML-ভিত্তিক pipeline যেখানে চারটা section থাকে — <code>inbound</code> (request backend-এ যাওয়ার আগে), <code>backend</code> (backend call করার সময়), <code>outbound</code> (response client-এ ফেরত যাওয়ার আগে), আর <code>on-error</code> (কোনো ধাপে ব্যর্থ হলে)। এই pipeline-এ কোনো backend কোড না ছুঁয়েই rate-limiting, JWT validation, caching, IP filtering, request/response rewrite ইনজেক্ট করা যায়।</p>
+<pre>&lt;policies&gt;
+  &lt;inbound&gt;
+    &lt;base /&gt;
+    <span class="c">&lt;!-- প্রতি সাবস্ক্রিপশন key-তে মিনিটে ৫টা call, বার্স্ট ১০ পর্যন্ত --&gt;</span>
+    &lt;rate-limit-by-key calls="5" renewal-period="60"
+        counter-key="@(context.Subscription.Id)" /&gt;
+    &lt;validate-jwt header-name="Authorization"
+        failed-validation-httpcode="401"&gt;
+      &lt;openid-config url="https://login.microsoftonline.com/common/.well-known/openid-configuration" /&gt;
+    &lt;/validate-jwt&gt;
+  &lt;/inbound&gt;
+  &lt;backend&gt;
+    &lt;base /&gt;
+  &lt;/backend&gt;
+  &lt;outbound&gt;
+    &lt;base /&gt;
+    <span class="c">&lt;!-- response header থেকে backend-এর internal সার্ভার নাম মুছে ফেলা --&gt;</span>
+    &lt;set-header name="X-Powered-By" exists-action="delete" /&gt;
+  &lt;/outbound&gt;
+  &lt;on-error&gt;
+    &lt;base /&gt;
+  &lt;/on-error&gt;
+&lt;/policies&gt;</pre>
+<div class="callout best"><span class="tag">Best practice — policy scope layering</span> Policy Global, Product, API, বা individual Operation level-এ বসানো যায়, আর <code>&lt;base /&gt;</code> ট্যাগ দিয়ে parent scope-এর policy inherit করা যায়। সাধারণ নিয়ম: JWT validation ও rate-limit Global/Product level-এ রাখুন, আর operation-specific caching/rewrite নিচের level-এ রাখুন — এতে duplication কমে।</div>
+
+<h3>Developer Portal</h3>
+<p>APIM প্রতিটা instance-এর সাথে স্বয়ংক্রিয়ভাবে একটা <span class="kw">Developer Portal</span> তৈরি করে দেয় — এটা একটা interactive, browsable ডকুমেন্টেশন সাইট যেখানে যেকোনো ডেভেলপার আপনার publish করা API দেখতে, নিজের Subscription Key দিয়ে সরাসরি ব্রাউজার থেকে test call করতে, এমনকি code sample (cURL, C#, Python ইত্যাদি) auto-generate করতে পারে।</p>
+<div class="callout behind"><span class="tag">কেন এটা বড় productivity সুবিধা</span> সাধারণত API ডকুমেন্টেশন লেখা আর maintain করা backend team-এর জন্য বাড়তি বোঝা, আর প্রায়ই পুরনো হয়ে যায়। Developer Portal API definition (OpenAPI/Swagger schema) থেকে সরাসরি ডকুমেন্টেশন জেনারেট করে, তাই কোড আর ডকুমেন্টেশন কখনো out-of-sync হয় না — self-service onboarding-এর সময় অনেক কমে যায়।</div>
+
+<h3>Gateway Tier ও Self-hosted Gateway</h3>
+<p>APIM-এর managed gateway Azure-এর নিজস্ব region-এ চলে, কিন্তু কিছু organization-এর দরকার হয় on-premises বা অন্য cloud-এ থাকা backend-কেও একই policy/security মডেলের আওতায় আনতে। এজন্য APIM-এর <span class="kw">Self-hosted Gateway</span> ফিচার আছে — এটা একটা containerized gateway যা আপনার নিজের infrastructure-এ (Kubernetes cluster, on-prem VM) চালানো যায়, কিন্তু control plane, policy configuration, analytics সবই কেন্দ্রীয়ভাবে Azure APIM instance থেকেই ম্যানেজ হয়।</p>
+<table>
+<tr><th>Component</th><th>ভূমিকা</th></tr>
+<tr><td>API</td><td>একটা backend-এর definition/wrapper — operation, schema, backend URL</td></tr>
+<tr><td>Product</td><td>একাধিক API-কে subscription-যোগ্য বান্ডেলে গ্রুপ করা, নিজস্ব rate limit</td></tr>
+<tr><td>Policy</td><td>XML pipeline — inbound/backend/outbound/on-error-এ security, rewrite, caching ইনজেক্ট</td></tr>
+<tr><td>Subscription Key</td><td>client identification ও metering-এর জন্য key</td></tr>
+<tr><td>Developer Portal</td><td>auto-generated interactive ডকুমেন্টেশন ও self-service testing সাইট</td></tr>
+</table>
+
+</template>
+
+<template data-page="messaging">
+<h2 class="title">১৪. Service Bus, Event Grid ও Event Hub</h2>
+<p class="lead">Azure-এ messaging আর eventing-এর জন্য চারটা ভিন্ন সার্ভিস আছে — Storage Queue, Service Bus, Event Grid, আর Event Hub — এবং প্রতিটা একদম আলাদা সমস্যা সমাধানের জন্য ডিজাইন করা। নাম দেখে গুলিয়ে ফেলা সহজ, তাই এই পার্থক্যগুলো interview আর production দুই জায়গাতেই ভীষণ গুরুত্বপূর্ণ।</p>
+
+<h3>Storage Queue vs Service Bus Queue — কেন দুইটা আলাদা queue প্রোডাক্ট</h3>
+<p>AWS-এ queue-এর জন্য একটাই সার্ভিস — SQS। কিন্তু Azure-এ দুইটা সম্পূর্ণ আলাদা queue প্রোডাক্ট আছে, এবং এটা কোনো accident না — দুইটা ভিন্ন ব্যবহারের ধরনের জন্য দুইটা ভিন্ন design trade-off।</p>
+<table>
+<tr><th>বৈশিষ্ট্য</th><th>Storage Queue</th><th>Service Bus Queue</th></tr>
+<tr><td>উদ্দেশ্য</td><td>সাধারণ, সহজ background task queue</td><td>Enterprise messaging pattern</td></tr>
+<tr><td>মূল্য</td><td>খুবই সস্তা</td><td>তুলনামূলক দামি</td></tr>
+<tr><td>Capacity</td><td>একটা queue-তে ৫০০ TB পর্যন্ত</td><td>queue প্রতি সীমিত (৮০ GB পর্যন্ত, partitioning ছাড়া)</td></tr>
+<tr><td>Message ordering</td><td>নিশ্চিত না (best-effort)</td><td>Session ব্যবহার করলে strict FIFO সম্ভব</td></tr>
+<tr><td>Session</td><td>নেই</td><td>আছে — related message group-কে একসাথে, ক্রমানুসারে প্রসেস করা যায়</td></tr>
+<tr><td>Dead-lettering</td><td>নিজে নেই (poison message ম্যানুয়ালি হ্যান্ডেল করতে হয়)</td><td>বিল্ট-ইন Dead Letter Queue</td></tr>
+<tr><td>Duplicate Detection</td><td>নেই</td><td>আছে — নির্দিষ্ট সময় window-এ duplicate message বাতিল</td></tr>
+<tr><td>Transaction</td><td>নেই</td><td>আছে — একাধিক অপারেশন atomically commit/rollback</td></tr>
+<tr><td>Max message size</td><td>৬৪ KB (base64 encode করলে আরও কম)</td><td>২৫৬ KB (Premium tier-এ ১০০ MB পর্যন্ত)</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন Azure-এ দুইটা queue আছে</span> Storage Queue আসলে Azure Storage-এরই একটা অংশ — এটা সস্তা, বিশাল স্কেলে সাধারণ "কাজ পরে করব" টাইপের background job-এর জন্য যথেষ্ট। কিন্তু enterprise integration pattern-এ (যেমন ব্যাংকিং transaction, order processing pipeline) দরকার হয় strict ordering, duplicate না হওয়ার গ্যারান্টি, আর transactional আচরণ — এইজন্য Microsoft একদম আলাদা, ভারী messaging broker হিসেবে Service Bus বানিয়েছে, যা মূলত পুরনো enterprise message broker (MSMQ) ঐতিহ্যের উত্তরসূরি। দুইটা এক সার্ভিসে মেশালে সাধারণ ব্যবহারকারীকে অহেতুক জটিলতা আর খরচ বহন করতে হতো।</div>
+<div class="callout mistake"><span class="tag">Common mistake — সব জায়গায় Service Bus বেছে নেওয়া</span> "enterprise" নাম শুনে অনেকে সব ক্ষেত্রে Service Bus ব্যবহার করেন, যদিও একটা সাধারণ background email-sending queue-এর জন্য Storage Queue-ই যথেষ্ট এবং অনেক সস্তা। উল্টো দিকে, related message-এর strict ordering দরকার হলে Storage Queue দিয়ে তা implement করা কষ্টকর — সেখানে Service Bus Session-ই সঠিক সমাধান।</div>
+
+<h3>Service Bus Topic ও Subscription — Pub-Sub</h3>
+<p>Service Bus শুধু point-to-point queue না, এতে <span class="kw">Topic</span> ও <span class="kw">Subscription</span> মডেলও আছে — pub-sub/fan-out-এর জন্য (SNS-এর সমতুল্য ধারণা)। একজন publisher একটা Topic-এ message পাঠায়, আর একাধিক Subscription স্বাধীনভাবে সেই একই message-এর একটা কপি পায়। প্রতিটা Subscription নিজের <span class="kw">SQL Filter</span> বা Correlation Filter রাখতে পারে, তাই একটা Subscription শুধু নির্দিষ্ট শর্ত পূরণ করা message-ই গ্রহণ করবে।</p>
+<div class="diagram"><pre>
+                         ┌──────────────────────┐
+                         │  Subscription: "Orders>1000" │──▶ High-value পাইপলাইন
+                         │  Filter: Amount > 1000        │
+Publisher ──▶ [ Topic ] ─┤──────────────────────┤
+                         │  Subscription: "AllOrders"     │──▶ Analytics সার্ভিস
+                         │  Filter: (none)                │
+                         ├──────────────────────┤
+                         │  Subscription: "Region=BD"     │──▶ Regional handler
+                         │  Filter: Region = 'BD'          │
+                         └──────────────────────┘
+</pre></div>
+
+<h3>Event Grid — Event Routing</h3>
+<p><span class="kw">Event Grid</span> একটা event routing সার্ভিস — কোনো source-এ (যেমন Blob Storage-এ একটা নতুন ফাইল আপলোড, বা resource group-এ কোনো resource তৈরি) event ঘটলে, Event Grid সেই discrete event-টা subscription-ভিত্তিক ফিল্টার করে এক বা একাধিক handler-এ push করে দেয় (EventBridge-এর সমতুল্য ধারণা)। এটা push-based, near-real-time, আর latency খুবই কম — সাধারণত সেকেন্ডের ভগ্নাংশের মধ্যে handler-এ পৌঁছে যায়।</p>
+
+<h3>Event Hub — High-throughput Streaming Ingestion</h3>
+<p><span class="kw">Event Hub</span> সম্পূর্ণ ভিন্ন সমস্যার সমাধান — এটা লক্ষ লক্ষ device বা source থেকে আসা continuous data stream ingest করার জন্য ডিজাইন করা (Kinesis Data Streams-এর সমতুল্য ধারণা), যেমন IoT sensor telemetry বা clickstream analytics। এখানে প্রতিটা event আলাদা "ঘটনা" না, বরং বিশাল আয়তনের ধারাবাহিক ডেটা।</p>
+<p>Event Hub-এর মূল ধারণা হলো <span class="kw">Partition</span> ও <span class="kw">Consumer Group</span>। একটা Event Hub একাধিক Partition-এ ভাগ করা থাকে, প্রতিটা partition-এ event ordered sequence হিসেবে জমা হয় (অনেকটা append-only log)। <span class="kw">Consumer Group</span> হলো এক ধরনের independent "view" — প্রতিটা Consumer Group সম্পূর্ণ স্বাধীনভাবে পুরো stream পড়তে পারে নিজের গতিতে, নিজের checkpoint (কোন offset পর্যন্ত পড়া হয়েছে) রেখে। ডেটা কনজিউম করলেও মুছে যায় না — retention period (যেমন ১ থেকে ৭ দিন, বা Capture-এ আরও বেশি) পর্যন্ত থেকে যায়, ঠিক Kinesis-এর cursor/checkpoint মডেলের মতোই।</p>
+<div class="diagram"><pre>
+Producer ──▶ Event Hub
+              ┌─ Partition 0: [e1][e4][e7]... ─┐
+              ├─ Partition 1: [e2][e5][e8]... ─┤
+              └─ Partition 2: [e3][e6][e9]... ─┘
+                       │                │
+              ┌────────┴──────┐  ┌──────┴─────────┐
+              │ Consumer Group:  │  │ Consumer Group:   │
+              │ "real-time-dash" │  │ "analytics-batch"  │
+              │ offset: latest   │  │ offset: ১ ঘণ্টা পিছনে │
+              └──────────────┘  └────────────────┘
+</pre></div>
+<div class="callout why"><span class="tag">কেন Event Grid আর Event Hub আলাদা করে বোঝা জরুরি</span> <b>Event Grid</b> হলো reactive routing — "একটা নির্দিষ্ট জিনিস ঘটেছে" এই তথ্য push করে এক বা একাধিক handler-কে জানানো, প্রতিটা event আলাদাভাবে গুরুত্বপূর্ণ। <b>Event Hub</b> হলো continuous ingestion — "প্রচুর ডেটা ক্রমাগত আসছে" পরিস্থিতির জন্য, individual event তেমন গুরুত্বপূর্ণ না, গুরুত্বপূর্ণ হলো পুরো stream-এর throughput আর পরে batch/analytics pipeline-এ প্রসেস করার সক্ষমতা। একটাকে অন্যটার বদলে ব্যবহার করলে হয় latency বেড়ে যায় (Event Hub দিয়ে discrete event route করলে), নয়তো throughput bottleneck হয় (Event Grid দিয়ে millions/sec telemetry ingest করার চেষ্টা করলে)।</div>
+<div class="callout mistake"><span class="tag">Common mistake — নাম দেখে গুলিয়ে ফেলা</span> Interview-এ সবচেয়ে বেশি ভুল হওয়া প্রশ্নগুলোর একটা এই দুইটার পার্থক্য। মনে রাখার সহজ উপায়: Event <b>Grid</b> = রাউটিং গ্রিড, event ছড়িয়ে দেয়। Event <b>Hub</b> = কেন্দ্রীয় streaming হাব, বিশাল ডেটার স্রোত জমা করে।</div>
+
+<h3>সিদ্ধান্ত সারসংক্ষেপ</h3>
+<table>
+<tr><th>প্রয়োজন</th><th>সঠিক সার্ভিস</th></tr>
+<tr><td>সাধারণ, সস্তা background job queue</td><td>Storage Queue</td></tr>
+<tr><td>Ordering, dead-letter, duplicate detection, transaction দরকার</td><td>Service Bus Queue</td></tr>
+<tr><td>একই message একাধিক consumer-কে filter-ভিত্তিক পাঠানো (pub-sub)</td><td>Service Bus Topic/Subscription</td></tr>
+<tr><td>"কিছু একটা ঘটলো" — discrete event একাধিক handler-এ route করা</td><td>Event Grid</td></tr>
+<tr><td>লক্ষ লক্ষ device/source থেকে continuous telemetry/log stream ingest</td><td>Event Hub</td></tr>
+</table>
+
+</template>
+
+<template data-page="containers">
+<h2 class="title">১৫. AKS, Container Instances ও Containers</h2>
+<p class="lead">Container চালানোর জন্য Azure-এ একাধিক স্তরের সার্ভিস আছে — সবচেয়ে সহজ serverless single-container থেকে শুরু করে পূর্ণাঙ্গ Kubernetes orchestration পর্যন্ত। কোন স্তর বাছাই করবেন তা নির্ভর করে team-এর operational maturity আর workload pattern-এর উপর।</p>
+
+<h3>Container Orchestration কেন প্রয়োজন</h3>
+<p>একটা container চালানো সহজ, কিন্তু production-এ শত শত container-কে scale, health-check, service-discovery, rolling update করানো — এটাই orchestration-এর কাজ। এই concept সার্বজনীন (Docker/Kubernetes course-এ বিস্তারিত আলোচিত), Azure-এ মূল প্রশ্ন হলো — এই orchestration নিজে ম্যানেজ করবেন, নাকি Azure-কে করতে দেবেন, নাকি একদমই দরকার নেই।</p>
+
+<h3>Azure Container Instances (ACI) — সবচেয়ে সহজ পথ</h3>
+<p><span class="kw">Azure Container Instances (ACI)</span> হলো সার্ভারলেস container চালানোর সবচেয়ে সহজ উপায় — কোনো VM বা cluster provision/manage করতে হয় না, একটা কমান্ডে একটা single container বা container group সরাসরি চালানো যায় (AWS Fargate-এর সমতুল্য ধারণা)। বিলিং হয় per-second, তাই short-lived বা burst workload-এ (batch job, CI pipeline-এর একটা ধাপ) এটা খুবই সাশ্রয়ী।</p>
+<pre>az container create \
+  --resource-group myRG \
+  --name mytask \
+  --image myregistry.azurecr.io/worker:v1 \
+  --cpu 1 --memory 1.5 \
+  --restart-policy Never</pre>
+<div class="callout why"><span class="tag">কেন ACI cluster ছাড়াই কাজ করে</span> ACI-তে Azure নিজেই underlying compute host, networking, scheduling সব লুকিয়ে ম্যানেজ করে — আপনি শুধু "এই image এই resource দিয়ে চালাও" বলেন। এটা একটা single-purpose abstraction, তাই Kubernetes-এর মতো self-healing/service-discovery/rolling-update ফিচার এখানে নেই — দরকারও নেই যদি কাজটা এক-বার-চালাও-শেষ টাইপের হয়।</div>
+
+<h3>Azure Kubernetes Service (AKS) — Managed Control Plane</h3>
+<p><span class="kw">AKS</span> হলো Azure-এর managed Kubernetes অফারিং — AWS EKS-এর মতোই, Azure নিজে Kubernetes control plane (API server, etcd, scheduler) হোস্ট ও ম্যানেজ করে, বিনামূল্যে (শুধু node-এর জন্য চার্জ), আর node pool-এর দায়িত্ব গ্রাহকের।</p>
+<p>AKS-এ <span class="kw">Node Pool</span> একটা গুরুত্বপূর্ণ ধারণা — প্রতিটা cluster-এ কমপক্ষে একটা <b>system node pool</b> থাকে যেখানে Kubernetes-এর core system component (CoreDNS, metrics-server ইত্যাদি) চলে, আর ঐচ্ছিকভাবে এক বা একাধিক <b>user node pool</b> যেখানে আপনার application workload চলে।</p>
+<div class="callout why"><span class="tag">কেন system আর user node pool আলাদা রাখা হয়</span> system node pool-এ যদি আপনার application workload-ও চলে, আর সেই workload হঠাৎ node-এর সব resource খেয়ে ফেলে (noisy neighbor), তাহলে DNS resolution বা metrics collection-এর মতো critical system component-ও ব্যর্থ হতে পারে, পুরো cluster অস্থির হয়ে যাবে। আলাদা user node pool রাখলে application-এর resource চাহিদা (GPU node, spot instance, ভিন্ন VM size) system-এর থেকে স্বাধীনভাবে scale করা যায়, এবং node pool-ভিত্তিক upgrade/drain আলাদাভাবে করা যায়।</div>
+<div class="callout best"><span class="tag">Best practice — production cluster-এ workload isolate করুন</span> কখনো application pod-কে system node pool-এ schedule হতে দেবেন না — <code>CriticalAddonsOnly</code> taint ব্যবহার করে system pool-কে সংরক্ষিত রাখুন, আর application-এর জন্য আলাদা user node pool বানান, প্রয়োজনে node pool-ভিত্তিক autoscaler কনফিগার করুন।</div>
+
+<h3>Azure Container Registry (ACR) — Private Image Registry</h3>
+<p><span class="kw">Azure Container Registry (ACR)</span> হলো আপনার container image-এর জন্য private registry। এতে geo-replication সাপোর্ট আছে — একটা image push করলে একাধিক region-এ automatically replicate হয়ে যায়, ফলে বিভিন্ন region-এর AKS cluster কাছের registry থেকে দ্রুত image pull করতে পারে।</p>
+<p>ACR আর AKS-এর মধ্যে integration হয় <span class="kw">Managed Identity</span> দিয়ে — AKS cluster তৈরির সময় ACR attach করে দিলে, node-গুলো কোনো hardcoded docker credential ছাড়াই সরাসরি image pull করতে পারে।</p>
+<div class="callout why"><span class="tag">কেন managed identity নিরাপত্তার দিক থেকে ভালো</span> সাধারণ পদ্ধতিতে ACR-এর username/password বা service principal secret কোথাও (Kubernetes secret, CI variable) সংরক্ষণ করতে হয়, যা leak হওয়ার ঝুঁকি রাখে আর নিয়মিত rotate করতে হয়। Managed Identity ব্যবহার করলে কোনো credential-ই কোথাও store করতে হয় না — Azure AD নিজেই node-এর identity যাচাই করে অস্থায়ী token ইস্যু করে, credential leak-এর ঝুঁকি একদমই থাকে না।</div>
+
+<h3>App Service for Containers</h3>
+<p><span class="kw">App Service for Containers</span> একটা single container-কে PaaS web app হিসেবে চালানোর উপায় — deployment খুবই সহজ (একটা image দিন, Azure বাকিটা করে), কিন্তু এতে multi-container orchestration, custom scheduling, বা complex networking ফিচার নেই। এটা মূলত সেই application-এর জন্য যেগুলোর জন্য একটা single web/API container যথেষ্ট।</p>
+<div class="diagram"><pre>
+সহজ ─────────────────────────────────────────▶ জটিল/নমনীয়
+
+ App Service         ACI                  AKS
+ for Containers    (serverless          (full
+ (single web app,   single container/    orchestration,
+  auto-scale সীমিত)  group, per-second     node pool,
+                     billing)             self-healing)
+</pre></div>
+
+<h3>ACI vs AKS vs App Service for Containers — সিদ্ধান্ত টেবিল</h3>
+<table>
+<tr><th>বিবেচ্য বিষয়</th><th>ACI</th><th>AKS</th><th>App Service for Containers</th></tr>
+<tr><td>Team-এর Kubernetes অভিজ্ঞতা</td><td>দরকার নেই</td><td>প্রয়োজন</td><td>দরকার নেই</td></tr>
+<tr><td>Workload pattern</td><td>Short-lived, burst, batch job</td><td>জটিল microservice, multi-container orchestration</td><td>একটা simple web/API</td></tr>
+<tr><td>Operational overhead</td><td>প্রায় শূন্য</td><td>বেশি (node pool, upgrade, networking ম্যানেজ করতে হয়)</td><td>কম</td></tr>
+<tr><td>Billing model</td><td>Per-second, ব্যবহার অনুযায়ী</td><td>Node-ভিত্তিক (running থাকলেই চার্জ)</td><td>App Service Plan-ভিত্তিক</td></tr>
+<tr><td>Scaling নমনীয়তা</td><td>সীমিত (single instance/group)</td><td>সম্পূর্ণ নমনীয় (HPA, cluster autoscaler)</td><td>মধ্যম (built-in auto-scale rule)</td></tr>
+</table>
+
+</template>
+
+<template data-page="iac">
+<h2 class="title">১৬. ARM, Bicep ও IaC</h2>
+<p class="lead">Infrastructure as Code (IaC)-এর মূল ধারণা সার্বজনীন — infrastructure-কে কোড হিসেবে সংজ্ঞায়িত করে version control, review, আর পুনরাবৃত্তিযোগ্য deployment সম্ভব করা। Azure-এ এই কাজের জন্য প্রধান দুইটা টুল — ARM Template ও তার আধুনিক উত্তরসূরি Bicep।</p>
+
+<h3>ARM Template — JSON-ভিত্তিক Declarative Foundation</h3>
+<p><span class="kw">ARM Template (Azure Resource Manager Template)</span> হলো Azure-এর native declarative infrastructure format — JSON-এ লেখা, যেখানে আপনি বলে দেন "শেষ পর্যন্ত অবস্থা কেমন হওয়া উচিত", কীভাবে সেখানে পৌঁছাতে হবে তা Azure Resource Manager নিজেই বের করে। এতে চারটা মূল section থাকে — <code>parameters</code> (input value), <code>variables</code> (reusable expression), <code>resources</code> (আসল resource definition), আর <code>outputs</code> (deployment শেষে ফেরত দেওয়া value)।</p>
+<pre>{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccountName": { "type": "string" }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-01-01",
+      "name": "[parameters('storageAccountName')]",
+      "location": "[resourceGroup().location]",
+      "sku": { "name": "Standard_LRS" },
+      "kind": "StorageV2"
+    }
+  ]
+}</pre>
+<div class="callout mistake"><span class="tag">Common mistake — ARM JSON-এর verbosity underestimate করা</span> উপরের ছোট উদাহরণেও দেখা যাচ্ছে একটা মাত্র storage account-এর জন্য কতটা boilerplate লাগে। বাস্তব প্রজেক্টে যখন একাধিক resource, nested template, conditional logic যোগ হয়, তখন ARM JSON পড়া আর maintain করা কঠিন হয়ে যায় — string-এর ভেতরে function call (<code>"[parameters('x')]"</code>) লেখার syntax স্বাভাবিকভাবেই error-prone।</div>
+
+<h3>Bicep — Transparent Abstraction Layer</h3>
+<p>এই সমস্যা সমাধানের জন্য Microsoft বানিয়েছে <span class="kw">Bicep</span> — Azure-এর নিজস্ব declarative DSL (Domain-Specific Language), যা লেখার পর <b>transpile/compile হয়ে ARM JSON-এ পরিণত হয়</b>। এখানে জোর দেওয়া জরুরি একটা বিষয়: Bicep নিজে একটা declarative language, AWS CDK-এর মতো general-purpose প্রোগ্রামিং ভাষা (TypeScript/Python) না — এতে loop/condition-এর মতো সীমিত কিছু construct আছে, কিন্তু এটা মূলত "কী resource চাই" বলার একটা পরিষ্কার syntax, প্রোগ্রামিং না।</p>
+<div class="callout why"><span class="tag">কেন Bicep-এ আলাদা state file বা deployment engine নেই</span> AWS CDK যেমন synthesize হয়ে CloudFormation template তৈরি করে, আর CloudFormation-ই deployment engine হিসেবে কাজ করে (state Cloud নিজে রাখে) — ঠিক একই যুক্তিতে Bicep শুধু ARM JSON-এ transpile হয়, deployment ঘটায় সেই একই পুরনো Azure Resource Manager engine, একই idempotency আর deployment history মেকানিজম দিয়ে। ফলে Bicep গ্রহণ করার জন্য নতুন কোনো backend/state-management ইনফ্রাস্ট্রাকচার লাগে না — শুধু syntax বদলায়, engine একই থাকে।</div>
+<p>একই storage account Bicep-এ কতটা সংক্ষিপ্ত হয়ে যায় দেখুন:</p>
+<pre>param storageAccountName string
+
+resource storage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: storageAccountName
+  location: resourceGroup().location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  kind: 'StorageV2'
+}</pre>
+<div class="callout behind"><span class="tag">সংক্ষিপ্ততার পেছনের কারণ</span> Bicep-এ কোনো <code>"[parameters('x')]"</code> string-function syntax নেই — সরাসরি variable reference করা যায়, type-checking compile time-এই হয়, আর IDE-তে IntelliSense/auto-complete কাজ করে কারণ Bicep resource schema-গুলো strongly typed। এই কারণেই একই resource প্রায় অর্ধেকেরও কম লাইনে লেখা সম্ভব হয়।</div>
+
+<h3>Deployment Stack ও What-If</h3>
+<p>Deploy করার আগে ঠিক কী change হতে যাচ্ছে তা preview করা জরুরি (production-এ কোনো accidental resource delete বা recreate এড়াতে)। এজন্য Azure দেয় <span class="kw">What-If</span> অপারেশন — এটা template apply না করেই বর্তমান state আর desired state তুলনা করে দেখায় কোন resource তৈরি হবে, কোনটা modify হবে, কোনটা delete হবে (CloudFormation-এর Change Set-এর সমতুল্য যুক্তি)।</p>
+<pre>az deployment group what-if \
+  --resource-group myRG \
+  --template-file main.bicep \
+  --parameters storageAccountName=mystorageacct01</pre>
+<p><span class="kw">Deployment Stack</span> হলো একধাপ এগিয়ে — এটা একাধিক deployment-কে একটা logical unit হিসেবে group করে ট্র্যাক করে, এবং একটা গুরুত্বপূর্ণ ফিচার দেয়: <b>deny settings</b> ও automatic cleanup — যদি নতুন deployment থেকে কোনো resource সরিয়ে ফেলা হয়, Deployment Stack স্বয়ংক্রিয়ভাবে সেই এতিম (orphaned) resource detect করে delete করতে পারে, যা আলাদা deployment-এ ম্যানুয়ালি ট্র্যাক করতে হতো।</p>
+<div class="callout best"><span class="tag">Best practice — সবসময় What-If দিয়ে review করুন</span> CI/CD pipeline-এ production deploy-এর আগে অবশ্যই What-If ধাপ যোগ করুন এবং output manually বা approval gate-এ review করুন — বিশেষ করে যখন resource property change দেখাচ্ছে "delete then recreate" (যেমন storage account-এর কিছু immutable property বদলালে), কারণ এতে ডেটা loss হতে পারে।</div>
+
+<h3>Bicep vs Terraform</h3>
+<p>Bicep আর Terraform দুটোই declarative IaC টুল, কিন্তু scope আর state management-এ মৌলিক পার্থক্য আছে।</p>
+<table>
+<tr><th>বিষয়</th><th>Bicep / ARM</th><th>Terraform</th></tr>
+<tr><td>Scope</td><td>শুধু Azure-only</td><td>Multi-cloud (Azure, AWS, GCP, on-prem ইত্যাদি)</td></tr>
+<tr><td>State management</td><td>আলাদা state file নেই — Azure Resource Manager নিজেই deployment history রাখে</td><td>নিজস্ব state file রাখে (local বা remote backend, যেমন blob storage)</td></tr>
+<tr><td>ভাষা</td><td>Azure-specific declarative DSL, ARM JSON-এ compile হয়</td><td>HCL (HashiCorp Configuration Language), provider-ভিত্তিক</td></tr>
+<tr><td>Provider ecosystem</td><td>শুধু Azure resource</td><td>শত শত third-party provider (Datadog, GitHub, Cloudflare ইত্যাদি)</td></tr>
+<tr><td>State drift সমস্যা</td><td>কম — কারণ কোনো local state file sync রাখতে হয় না</td><td>থাকতে পারে যদি state file হারিয়ে যায় বা বাইরে থেকে resource পরিবর্তন হয়</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন state file-এর পার্থক্য গুরুত্বপূর্ণ</span> Terraform-কে জানতে হয় বর্তমান বাস্তব অবস্থা কী, তাই এটা নিজের state file-এ সব resource-এর তথ্য ট্র্যাক রাখে — এই state file হারালে বা corrupt হলে Terraform confuse হয়ে যায় ("resource আছে কিন্তু state-এ নেই" জাতীয় সমস্যা)। Bicep/ARM-এ এই সমস্যা নেই কারণ Azure নিজেই deployment engine এবং resource-এর প্রকৃত মালিক — তাই "state" বলে আলাদা কিছু sync রাখার দরকার পড়ে না, যা multi-team পরিবেশে অপারেশনাল ঝুঁকি কমায় কিন্তু multi-cloud নমনীয়তা কমায়।</div>
+
+</template>
+
+<template data-page="monitor">
+<h2 class="title">১৭. Azure Monitor ও Observability</h2>
+<p class="lead">প্রোডাকশনে একটা সিস্টেম "চলছে" মানেই যথেষ্ট না — কে কবে কী পরিবর্তন করলো, অ্যাপ্লিকেশন ভেতরে কোথায় ধীর হচ্ছে, আর সমস্যা হওয়ার আগেই কীভাবে সংকেত পাওয়া যায় — এই তিনটা প্রশ্নের উত্তর একসাথে দেয় Azure-এর observability স্ট্যাক, যার ছাতা হলো <span class="kw">Azure Monitor</span>।</p>
+
+<h3>Azure Monitor — একটা umbrella platform</h3>
+<p>Azure Monitor নিজে একটা আলাদা "সার্ভিস" না, বরং একটা প্ল্যাটফর্ম যেটা Azure-এর প্রায় প্রতিটা resource থেকে দুই ধরনের টেলিমেট্রি সংগ্রহ করে — <b>Metrics</b> (সময়ের সাথে বদলানো সংখ্যা, যেমন CPU % বা রিকোয়েস্ট কাউন্ট, লাইটওয়েট এবং প্রায় রিয়েল-টাইম) আর <b>Logs</b> (গঠনবিহীন বা semi-structured ইভেন্ট রেকর্ড, যেমন এক্সসেপশন স্ট্যাক ট্রেস বা রিসোর্স ক্রিয়েশন ইভেন্ট)। এই দুইটা ডেটা টাইপ ভিন্ন storage ও query ইঞ্জিনে থাকে বলেই Azure Monitor-এর ভেতরে একাধিক sub-component দেখা যায় — Metrics Explorer, Log Analytics, Application Insights, Alerts, Workbooks — সবগুলো একই ছাতার নিচে কিন্তু আলাদা আলাদা কাজের জন্য অপ্টিমাইজড।</p>
+
+<div class="diagram"><pre>
+   Azure Resource (VM/App/DB)         ARM / Resource Provider
+        │  metrics + resource logs          │  every control-plane API call
+        ▼                                   ▼
+   Monitor Logs (Log Analytics Wksp)    Activity Log (subscription-level)
+        │  KQL query                        │  export / diagnostic setting
+        ▼                                   ▼
+   Alerts ─ Workbooks ─ App Insights    Log Analytics / SIEM / Event Hub
+</pre></div>
+
+<h3>Activity Log vs Monitor Logs/Log Analytics — সবচেয়ে বেশি গুলিয়ে যাওয়া পার্থক্য</h3>
+<p><span class="kw">Activity Log</span> হলো <b>control-plane audit trail</b> — subscription-এর ওপর কে, কখন, কোন ARM API call করলো (VM create করলো, NSG rule বদলালো, resource delete করলো) তার রেকর্ড। এটা AWS-এর <b>CloudTrail</b>-এর সমতুল্য। এর বিপরীতে <span class="kw">Monitor Logs</span> (যেটা <span class="kw">Log Analytics Workspace</span>-এ জমা হয়) হলো <b>data-plane</b> টেলিমেট্রি — অ্যাপ্লিকেশনের নিজের লগ লাইন, VM-এর perf counter, resource-এর diagnostic log। দুইটাই "লগ" শব্দটা ব্যবহার করে বলে নতুনরা প্রায়ই ভাবে এরা একই জিনিস — বাস্তবে এরা সম্পূর্ণ ভিন্ন উদ্দেশ্যে তৈরি, ভিন্ন retention default, এমনকি ভিন্ন query ইন্টারফেস।</p>
+
+<table>
+<tr><th>বিষয়</th><th>Activity Log</th><th>Monitor Logs / Log Analytics</th></tr>
+<tr><td>স্তর</td><td>Control-plane (ARM API)</td><td>Data-plane (resource/app এর নিজের আচরণ)</td></tr>
+<tr><td>উদাহরণ ইভেন্ট</td><td>"কে VM stop/delete করলো", "NSG rule কে বদলালো"</td><td>অ্যাপ্লিকেশনের এক্সসেপশন, VM CPU metric history, SQL slow query log</td></tr>
+<tr><td>Scope</td><td>Subscription-wide, সবসময় automatic, অফ করা যায় না</td><td>Resource-ভিত্তিক, Diagnostic Settings দিয়ে opt-in করতে হয়</td></tr>
+<tr><td>Default retention</td><td>৯০ দিন (বিনামূল্যে)</td><td>Workspace-এর প্ল্যান অনুযায়ী (৩০ দিন ডিফল্ট, বাড়ানো যায়)</td></tr>
+<tr><td>Query ভাষা</td><td>Portal filter / Azure CLI</td><td>KQL (Kusto Query Language)</td></tr>
+<tr><td>AWS সমতুল্য</td><td>CloudTrail</td><td>CloudWatch Logs / Logs Insights</td></tr>
+</table>
+
+<div class="callout mistake"><span class="tag">Common mistake — "আমার তো Activity Log দেখছি, লগ তো আছে!"</span> Activity Log-এ কখনোই অ্যাপ্লিকেশনের নিজের এক্সসেপশন বা ৫০০ error দেখা যাবে না — সেটা শুধু কে API call করলো তার রেকর্ড রাখে। কোনো অ্যাপ কেন ক্র্যাশ করছে তা ডিবাগ করতে হলে অবশ্যই Monitor Logs/Application Insights ঘাঁটতে হবে, Activity Log সেখানে কোনো কাজেই আসবে না।</div>
+
+<h3>Log Analytics Workspace ও KQL (Kusto Query Language)</h3>
+<p><span class="kw">Log Analytics Workspace</span> হলো সেই কেন্দ্রীয় ডেটা স্টোর যেখানে VM, App Service, AKS, Application Insights ইত্যাদির লগ ও মেট্রিক জমা হয় টেবিল আকারে (যেমন <code>AppTraces</code>, <code>AppExceptions</code>, <code>Perf</code>, <code>AzureDiagnostics</code>)। এই ডেটা query করার ভাষা হলো <span class="kw">KQL</span> — SQL-এর মতো declarative কিন্তু pipe (<code>|</code>) দিয়ে ধাপে ধাপে ডেটা ফিল্টার/ট্রান্সফর্ম করার স্টাইল, অনেকটা CloudWatch Logs Insights-এর সাথে তুলনীয়। নিচে একটা বাস্তব উদাহরণ — গত ১ ঘণ্টায় প্রতি ৫ মিনিটের উইন্ডোতে কতগুলো error লগ এসেছে তা গুনে সবচেয়ে বেশি error হওয়া সময়সীমা বের করা:</p>
+
+<pre>traces
+| where timestamp &gt; ago(1h)
+| where severityLevel &gt;= 3          <span class="c">// 3=Error, 4=Critical</span>
+| summarize ErrorCount = count() by bin(timestamp, 5m)
+| order by ErrorCount desc
+| take 5</pre>
+
+<p><code>bin()</code> ফাংশনটা টাইমস্ট্যাম্পকে ৫ মিনিটের bucket-এ ভাগ করে দেয়, তারপর <code>summarize ... by</code> প্রতিটা bucket-এ কাউন্ট করে, শেষে সবচেয়ে বেশি error-প্রবণ সময় ওপরে আনে। একই প্যাটার্ন দিয়ে P99 latency, ইউনিক ইউজার কাউন্ট, বা কাস্টম বিজনেস মেট্রিক — সবই বের করা যায়, কারণ KQL মূলত একটা টাইম-সিরিজ-অপ্টিমাইজড analytical query ইঞ্জিন।</p>
+
+<div class="callout why"><span class="tag">কেন — KQL আলাদা ভাষা কেন লাগলো</span> SQL রিলেশনাল ডেটার জন্য অপ্টিমাইজড, কিন্তু টেলিমেট্রি ডেটা মূলত append-only, বিপুল ভলিউমের, টাইম-সিরিজ। KQL-এর ইঞ্জিন (Kusto) কলামভিত্তিক স্টোরেজে সেকেন্ডে বিলিয়ন রো স্ক্যান করতে পারে বলেই লগ অ্যানালাইসিসে এটা এত দ্রুত — যেটা সাধারণ রিলেশনাল SQL ইঞ্জিনে ব্যবহারিকভাবে সম্ভব না।</div>
+
+<h3>Application Insights — APM ও distributed tracing</h3>
+<p><span class="kw">Application Insights</span> হলো Azure Monitor-এর APM (Application Performance Monitoring) অংশ — কোডে একটা SDK/agent বসিয়ে দিলে এটা নিজে থেকে request, dependency call (DB, HTTP, queue), exception, এবং performance counter ধরে ফেলে। এর সবচেয়ে গুরুত্বপূর্ণ ফিচার <b>distributed tracing</b> — একটা রিকোয়েস্ট যদি একাধিক মাইক্রোসার্ভিস দিয়ে যায়, প্রতিটা হপ একটা কমন <code>operation_Id</code> দিয়ে যুক্ত থাকে, ফলে পুরো dependency chain এক জায়গায় দেখা যায় (এই ধারণাটা AWS X-Ray-এর মতো)। তবে Application Insights শুধু ট্রেসিং না — এর সাথে বিল্ট-ইন <b>Availability Test</b> (বাইরে থেকে পিরিয়ডিক্যালি এন্ডপয়েন্ট hit করে uptime চেক), Live Metrics Stream, এবং কাস্টম ইভেন্ট/মেট্রিক ট্র্যাকিং যুক্ত থাকে — তাই এটা X-Ray-এর চেয়ে ব্যাপ্তিতে বড়।</p>
+
+<div class="callout behind"><span class="tag">Application Insights আসলে Log Analytics Workspace-এর ওপর বসানো</span> নতুন ভার্সনে (workspace-based Application Insights) সব টেলিমেট্রি সরাসরি একটা Log Analytics Workspace-এ জমা হয় — তাই একই KQL query language দিয়ে <code>requests</code>, <code>dependencies</code>, <code>exceptions</code> টেবিল ক্যোয়ারি করা যায়। এর মানে Application Insights আলাদা কোনো স্টোরেজ ইঞ্জিন না, বরং Monitor Logs-এর ওপর একটা APM-স্পেসিফিক লেয়ার।</div>
+
+<h3>Alert: Metric Alert vs Log Alert, এবং Action Group</h3>
+<p><span class="kw">Metric Alert</span> একটা সংখ্যাসূচক থ্রেশহোল্ডের ওপর কাজ করে (যেমন "CPU গড়ে ৮০%-এর বেশি ৫ মিনিট ধরে") — এটা near-real-time (১ মিনিটের গ্রানুলারিটিতে), কম খরচ, কিন্তু কমপ্লেক্স লজিক করতে পারে না। <span class="kw">Log Alert</span> একটা KQL query চালিয়ে ফলাফলের ভিত্তিতে ট্রিগার করে (যেমন উপরের error-count query যদি কোনো bucket-এ ৫০-এর বেশি হয়) — এটা যেকোনো জটিল শর্ত এক্সপ্রেস করতে পারে কিন্তু query চলতে সময় লাগে বলে সাধারণত ৫-১৫ মিনিট গ্রানুলারিটিতে চলে।</p>
+<p>অ্যালার্ট ট্রিগার হলে কী হবে সেটা নির্ধারণ করে <span class="kw">Action Group</span> — এটা একটা reusable রিসিভার লিস্ট (ইমেইল, SMS, Webhook, Azure Function, Logic App, ITSM ইন্টিগ্রেশন) যেটা একাধিক অ্যালার্ট রুলে সংযুক্ত করা যায়। Action Group-কে অ্যালার্ট রুল থেকে আলাদা রাখা হয়েছে যাতে "কাকে জানাবো" আর "কখন জানাবো" এই দুইটা কনসার্ন ডিকাপল থাকে — একটা টিমের অন-কল রোটেশন বদলালে সব অ্যালার্ট রুল না ছুঁয়ে শুধু একটা Action Group আপডেট করলেই চলে।</p>
+
+<div class="callout best"><span class="tag">Best practice — Log Alert-কে ঘন ঘন চালাবেন না</span> Log Alert প্রতিবার একটা KQL query রান করে, আর Log Analytics-এ query চালানোর একটা cost থাকে (ইনজেস্টেড ডেটার পরিমাণ অনুযায়ী)। যেসব শর্ত সাধারণ থ্রেশহোল্ডে এক্সপ্রেস করা যায় (CPU, মেমরি, HTTP 5xx কাউন্ট) সেগুলোর জন্য Metric Alert ব্যবহার করুন — শুধু জটিল multi-condition বা cross-resource লজিকের জন্য Log Alert রাখুন।</div>
+
+</template>
+
+<template data-page="security">
+<h2 class="title">১৮. Security — Key Vault, Defender, WAF ও DDoS Protection</h2>
+<p class="lead">অ্যাপ্লিকেশন কোডে সিক্রেট হার্ডকোড করা, কে কোন রিসোর্সে অ্যাক্সেস পাচ্ছে তা না জানা, আর নেটওয়ার্ক লেয়ারে অরক্ষিত থাকা — এই তিনটা ফাঁক বন্ধ করার জন্য Azure-এর সিকিউরিটি স্ট্যাক তৈরি। এই চ্যাপ্টারে সিক্রেট ম্যানেজমেন্ট থেকে শুরু করে থ্রেট ডিটেকশন আর নেটওয়ার্ক-লেভেল প্রোটেকশন পর্যন্ত পুরো চিত্র দেখবো।</p>
+
+<h3>Azure Key Vault — Secret, Key, Certificate তিনটা আলাদা object</h3>
+<p><span class="kw">Azure Key Vault</span> একটা কেন্দ্রীভূত, hardware-backed vault যেখানে তিন ধরনের অবজেক্ট আলাদাভাবে ম্যানেজ হয় — এদের একই জিনিস ভাবাটা একটা সাধারণ ভুল ধারণা।</p>
+<table>
+<tr><th>Object type</th><th>কী রাখে</th><th>বৈশিষ্ট্য</th></tr>
+<tr><td><b>Secret</b></td><td>যেকোনো সাধারণ string ভ্যালু — DB connection string, API key, পাসওয়ার্ড</td><td>Encrypt হয়ে সফটওয়্যার-লেভেলে স্টোর হয়, get/set করা যায় প্লেইনটেক্সট হিসেবে</td></tr>
+<tr><td><b>Key</b></td><td>Cryptographic key (RSA/EC), যা encrypt/decrypt/sign/verify করতে ব্যবহার হয়</td><td>চাইলে HSM-backed (FIPS 140-2 Level 2/3) — key material কখনো vault-এর বাইরে বের হয় না, শুধু operation (sign, encrypt) vault-এর ভেতরে করা হয়</td></tr>
+<tr><td><b>Certificate</b></td><td>পূর্ণাঙ্গ X.509 সার্টিফিকেট (public + private key)</td><td>Key Vault পুরো lifecycle ম্যানেজ করে — auto-renewal, CA integration, expiry notification</td></tr>
+</table>
+<p>মূল পার্থক্যটা এইখানে: Secret হলো "একটা মান যা আমি ফেরত চাই", Key হলো "একটা ক্রিপ্টো অপারেশন যা vault-এর ভেতরেই ঘটবে, key কখনো বের হবে না", আর Certificate হলো Key + মেটাডেটা + lifecycle automation একসাথে।</p>
+
+<div class="diagram"><pre>
+  App (Managed Identity)
+        │  1. token request (no credential in code)
+        ▼
+  Microsoft Entra ID  ──── 2. access token issued
+        │
+        ▼
+  Key Vault  ──── 3. token দেখিয়ে Secret/Key/Cert চাওয়া
+        │
+        ├─ Secret  → প্লেইনটেক্সট মান রিটার্ন
+        ├─ Key     → vault-এর ভেতরেই sign/encrypt করে শুধু ফলাফল রিটার্ন
+        └─ Cert    → পুরো cert + private key handle রিটার্ন
+</pre></div>
+
+<h3>Managed Identity + Key Vault — কেন কোনো credential হার্ডকোড লাগে না</h3>
+<p>২ নম্বর অধ্যায়ে দেখা <span class="kw">Managed Identity</span>-র আসল শক্তি বোঝা যায় এই জায়গাতেই। একটা VM বা App Service-কে যদি একটা System-assigned Managed Identity দেওয়া হয়, আর সেই identity-কে Key Vault-এ অ্যাক্সেস দেওয়া হয়, তাহলে অ্যাপ্লিকেশন কোডে কোনো connection string, client secret, বা API key হার্ডকোড না করেই Key Vault থেকে সিক্রেট আনতে পারে — Azure SDK নিজে থেকে Entra ID-তে token রিকোয়েস্ট করে, সেই token দিয়ে Key Vault-এ কল করে। এর মানে "সিক্রেট আনার জন্য একটা সিক্রেট লাগবে" — এই chicken-and-egg সমস্যাটা সম্পূর্ণভাবে দূর হয়ে যায়।</p>
+
+<div class="callout why"><span class="tag">কেন — এটাই "zero hardcoded credential" এর মূল ভিত্তি</span> Managed Identity credential rotate করা লাগে না (Azure নিজে ম্যানেজ করে), কখনো সোর্স কোড বা CI/CD variable-এ এক্সপোজড হয় না, এবং resource ডিলিট হলে identity-ও স্বয়ংক্রিয়ভাবে চলে যায়। এই তিনটা বৈশিষ্ট্যই একটা static service principal secret দিয়ে অর্জন করা প্রায় অসম্ভব — কারণ static secret কোথাও না কোথাও স্টোর করতেই হয়।</div>
+
+<h3>Access Policy vs Azure RBAC for Key Vault</h3>
+<p>Key Vault-এ অ্যাক্সেস দেওয়ার দুইটা মডেল আছে। পুরনো <span class="kw">Access Policy</span> মডেলে vault-লেভেলে একটা লিস্টে বলা হয় কোন identity কোন operation (get secret, list key, ইত্যাদি) করতে পারবে — কিন্তু এটা vault-এর নিজস্ব একটা সিস্টেম, Azure-এর কেন্দ্রীয় RBAC-এর বাইরে, ফলে granular scope (যেমন শুধু একটা নির্দিষ্ট secret-এ অ্যাক্সেস) দেওয়া যায় না এবং audit trail Activity Log-এ পূর্ণাঙ্গভাবে ধরা পড়ে না। নতুন <span class="kw">Azure RBAC</span> মডেলে Key Vault একটা সাধারণ Azure resource-এর মতোই আচরণ করে — <code>Key Vault Secrets User</code>, <code>Key Vault Crypto Officer</code>-এর মতো built-in role assign করা যায় Management Group/Subscription/Resource Group/resource যেকোনো স্কোপে, এবং এটা বাকি সব Azure resource-এর মতোই একই RBAC ইঞ্জিন ব্যবহার করে।</p>
+
+<div class="callout best"><span class="tag">Best practice — নতুন প্রজেক্টে RBAC মডেল বেছে নিন</span> Access Policy মডেলে একটা ভুল হলো এটা vault-wide — কাউকে একটা মাত্র secret দেখার অনুমতি দিতে চাইলেও পুরো vault-এর ওপর policy বসাতে হয়। RBAC মডেলে granular scope, centralized audit (Activity Log-এ ধরা পড়ে), এবং deny assignment সাপোর্ট থাকে — তাই Microsoft নিজেই নতুন vault-এ RBAC মডেল ডিফল্ট করে দিয়েছে।</div>
+
+<h3>Microsoft Defender for Cloud — দুই সার্ভিসের কাজ এক প্রোডাক্টে</h3>
+<div class="callout behind"><span class="tag">AWS-এ যা দুই সার্ভিসে ভাগ, Azure-এ এক প্রোডাক্টে</span> AWS-এ থ্রেট ডিটেকশনের জন্য GuardDuty আর সিকিউরিটি পোস্চার/কমপ্লায়েন্স অ্যাগ্রিগেশনের জন্য Security Hub — দুইটা আলাদা সার্ভিস। Azure-এ <span class="kw">Microsoft Defender for Cloud</span> এই দুইটা কাজই একটা প্রোডাক্টে করে, দুই স্তরের প্ল্যান দিয়ে।</div>
+<table>
+<tr><th>প্ল্যান</th><th>কাজ</th><th>মূল্য</th><th>AWS সমতুল্য</th></tr>
+<tr><td><b>Foundational CSPM</b></td><td>Cloud Security Posture Management — সব resource স্ক্যান করে misconfiguration/recommendation দেখায়, Secure Score দেয়</td><td>ফ্রি</td><td>Security Hub-এর posture অংশ</td></tr>
+<tr><td><b>Defender plans</b></td><td>প্রতিটা resource type-এর জন্য active threat detection (Defender for Servers, Storage, SQL, Containers, Key Vault ইত্যাদি) — anomaly detection, malware scan, brute-force alert</td><td>Per-resource, পেইড</td><td>GuardDuty + resource-স্পেসিফিক গার্ড</td></tr>
+</table>
+
+<h3>Secure Score — শুধু একটা সংখ্যা না, একটা checklist</h3>
+<p><span class="kw">Secure Score</span>-কে অনেকে ভুলভাবে "একটা গ্রেড" ভাবে, কিন্তু আসল ভ্যালু এর পেছনের actionable recommendation লিস্টে — প্রতিটা রেকমেন্ডেশনের একটা weight (কতটুকু স্কোর বাড়াবে) এবং একটা "quick fix" অপশন থাকে যা এক ক্লিকে বা একটা স্ক্রিপ্টে ফিক্স করা যায়। তাই Secure Score-কে প্রায়োরিটাইজেশন টুল হিসেবে ব্যবহার করাই সঠিক — সবচেয়ে বেশি ওয়েটের রেকমেন্ডেশনগুলো আগে ঠিক করলে সবচেয়ে কম effort-এ সবচেয়ে বেশি ঝুঁকি কমে।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — শুধু স্কোর বাড়ানোর জন্য দৌড়ানো</span> কিছু রেকমেন্ডেশন প্রোডাকশনে প্রয়োগ করলে অ্যাপ্লিকেশন ভেঙে যেতে পারে (যেমন কঠোর NSG rule বা forced TLS version)। স্কোর বাড়ানোর আগে প্রতিটা রেকমেন্ডেশনের ব্লাস্ট রেডিয়াস বুঝে নেওয়া দরকার, নাহলে "সিকিউরিটি ফিক্স" নিজেই একটা আউটেজ হয়ে দাঁড়াতে পারে।</div>
+
+<h3>WAF (Web Application Firewall)</h3>
+<p><span class="kw">WAF</span> Application Gateway বা Front Door-এর সামনে বসে HTTP(S) ট্র্যাফিক পরীক্ষা করে — SQL injection, XSS, এবং OWASP-এর <b>Core Rule Set (CRS)</b>-এ তালিকাভুক্ত সাধারণ অ্যাটাক প্যাটার্ন ব্লক করে। এটা নেটওয়ার্ক লেয়ারের NSG থেকে সম্পূর্ণ ভিন্ন স্তরে কাজ করে — NSG শুধু IP/পোর্ট দেখে, WAF আসলে HTTP রিকোয়েস্ট বডি ও হেডার পার্স করে অ্যাটাক প্যাটার্ন খোঁজে। WAF Detection মোডে (শুধু লগ করে) বা Prevention মোডে (ব্লক করে) চালানো যায় — নতুন rule সেট প্রোডাকশনে বসানোর আগে Detection মোডে false-positive যাচাই করে নেওয়াই নিরাপদ পথ।</p>
+
+<h3>DDoS Protection — Basic vs Standard</h3>
+<table>
+<tr><th>প্ল্যান</th><th>বৈশিষ্ট্য</th><th>মূল্য</th></tr>
+<tr><td><b>Basic</b></td><td>প্রতিটা Azure public IP-তে স্বয়ংক্রিয়ভাবে বিল্ট-ইন, network-layer volumetric অ্যাটাক থেকে সুরক্ষা</td><td>ফ্রি</td></tr>
+<tr><td><b>Standard</b></td><td>Adaptive tuning (নিজের VNet-এর ট্রাফিক প্যাটার্ন শিখে থ্রেশহোল্ড ঠিক করে), attack analytics/telemetry, cost protection (স্কেলিং-জনিত বাড়তি বিল কভার), এবং DDoS Rapid Response টিমের সাপোর্ট</td><td>পেইড (VNet-লেভেলে সাবস্ক্রাইব করতে হয়)</td></tr>
+</table>
+<p>ধারণাটা AWS Shield Standard (সবার জন্য ফ্রি বিল্ট-ইন) vs Shield Advanced (পেইড, adaptive + cost protection + response team)-এর সাথে প্রায় হুবহু মেলে — শুধু নামকরণ ভিন্ন।</p>
+
+</template>
+
+<template data-page="cost">
+<h2 class="title">১৯. Cost Management ও Well-Architected Framework</h2>
+<p class="lead">ক্লাউডে কারিগরিভাবে সঠিক ডিজাইন যথেষ্ট না — খরচ নিয়ন্ত্রণে না রাখলে বা কোনো কাঠামোবদ্ধ চেকলিস্ট ছাড়া আর্কিটেকচার বানালে প্রোডাকশনে ধাক্কা খেতে হয়। এই চ্যাপ্টারে কস্ট ম্যানেজমেন্ট টুলিং, Well-Architected Framework-এর পাঁচ পিলার, আর ডিজাস্টার রিকভারি প্যাটার্ন — এই তিনটা একসাথে দেখবো।</p>
+
+<h3>Pricing model — সংক্ষিপ্ত রিক্যাপ</h3>
+<p>৩ নম্বর অধ্যায়ে বিস্তারিত আলোচনা হয়েছে বলে এখানে শুধু সারসংক্ষেপ:</p>
+<table>
+<tr><th>মডেল</th><th>এক কথায়</th></tr>
+<tr><td>Pay-As-You-Go</td><td>কোনো commitment ছাড়া প্রতি সেকেন্ড/ঘণ্টার ব্যবহার অনুযায়ী বিল</td></tr>
+<tr><td>Reserved Instances (১/৩ বছর)</td><td>নির্দিষ্ট SKU-তে আগাম commitment দিয়ে ৪০-৭২% পর্যন্ত ছাড়</td></tr>
+<tr><td>Azure Hybrid Benefit</td><td>বিদ্যমান Windows Server/SQL Server on-prem লাইসেন্স ক্লাউডে ক্যারি করে খরচ কমানো</td></tr>
+<tr><td>Spot VM</td><td>Azure-এর অব্যবহৃত ক্যাপাসিটি বড় ছাড়ে, যেকোনো সময় evict হতে পারে — stateless/batch workload-এর জন্য</td></tr>
+</table>
+
+<h3>Azure Cost Management + Billing</h3>
+<p><span class="kw">Cost Management + Billing</span> হলো Azure-এর কেন্দ্রীয় কস্ট ভিজিবিলিটি টুল — <b>Cost Analysis</b> ভিউতে resource, resource group, tag, বা সময় অনুযায়ী খরচ ব্রেকডাউন দেখা যায়, আর কোথায় হঠাৎ খরচ বেড়েছে তা ট্রেন্ড হিসেবে ধরা যায়। এর সাথে <span class="kw">Budget</span> সেট করে একটা থ্রেশহোল্ড (যেমন মাসিক $৫০০) বেঁধে দেওয়া যায়, আর সেটার ৮০%/১০০%/ফোরকাস্টেড ওভাররান-এ Action Group-এর মাধ্যমে অ্যালার্ট পাঠানো যায়। বাজেট অ্যালার্ট প্রোঅ্যাক্টিভ হওয়াটা জরুরি কারণ বিল সাধারণত মাস শেষে আসে — ততক্ষণে ওভারস্পেন্ড হয়ে গেলে সেটা আর ফেরত পাওয়া যায় না, তাই সমস্যা যত আগে ধরা যায় ক্ষতি তত কম।</p>
+
+<h3>Tagging strategy</h3>
+<p>প্রতিটা resource-এ <code>environment</code>, <code>team</code>, <code>cost-center</code>, <code>project</code>-এর মতো ট্যাগ বসানো একটা সার্বজনীন ক্লাউড প্র্যাক্টিস — এটা শুধু organization-এর জন্য না, Cost Analysis-এ ট্যাগ অনুযায়ী ফিল্টার করে কোন টিম বা প্রজেক্ট কতটা খরচ করছে তা নির্ভুলভাবে বের করার একমাত্র উপায়। Azure Policy দিয়ে ট্যাগ বাধ্যতামূলক করে দেওয়া যায়, যাতে কেউ ট্যাগ ছাড়া resource তৈরি করতে না পারে।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — ট্যাগিং পরে করবো ভেবে ফেলে রাখা</span> হাজার হাজার resource তৈরির পর রেট্রোঅ্যাকটিভলি ট্যাগ বসানো একটা বিশাল ম্যানুয়াল কাজ, আর ততদিনে কোন resource কার জন্য তৈরি হয়েছিল তা ভুলে যাওয়া হয়। Resource তৈরির প্রথম দিন থেকেই Azure Policy দিয়ে ট্যাগ enforcement বসিয়ে দেওয়াই সঠিক পথ।</div>
+
+<h3>Azure Advisor — ব্যক্তিগতকৃত সুপারিশ ইঞ্জিন</h3>
+<p><span class="kw">Azure Advisor</span> আপনার পুরো subscription স্ক্যান করে পাঁচটা ক্যাটাগরিতে actionable সুপারিশ দেয় — Cost (over-provisioned/idle resource চিহ্নিত করে Reserved Instance বা right-sizing সাজেস্ট করা), Security (Defender for Cloud-এর সাথে সরাসরি যুক্ত), Reliability, Operational Excellence, এবং Performance — লক্ষ করুন এই পাঁচটা ক্যাটাগরি ঠিক Well-Architected Framework-এর পাঁচটা pillar-এর সাথে হুবহু মিলে যায়, কারণ Advisor আসলে সেই framework-কেই স্বয়ংক্রিয় স্ক্যানিং টুল হিসেবে বাস্তবায়ন করে।</p>
+<div class="callout why"><span class="tag">কেন Advisor ও Well-Architected রিভিউ একসাথে ব্যবহার করা উচিত</span>
+Well-Architected রিভিউ একটা ম্যানুয়াল, প্রশ্ন-ভিত্তিক প্রক্রিয়া (আর্কিটেক্ট নিজে চিন্তা করে "আমার সিস্টেম এই প্রশ্নের উত্তরে কেমন করছে")। Advisor সেই একই পাঁচ pillar-এর উপর ভিত্তি করে automatically, continuously প্রতিটা resource স্ক্যান করে সুনির্দিষ্ট, resource-স্পেসিফিক সুপারিশ দেয় (যেমন "VM-xyz গত ৩০ দিনে গড়ে ৫% CPU ব্যবহার করেছে, ছোট SKU-তে নামিয়ে আনুন")। ম্যানুয়াল রিভিউ বড় ছবি ও দিকনির্দেশনা দেয়, Advisor সেই দিকনির্দেশনাকে দৈনন্দিন, নির্দিষ্ট কাজে রূপান্তর করে — দুটো একসাথে ব্যবহার করাই সবচেয়ে কার্যকর।</div>
+
+<h3>Azure Well-Architected Framework — পাঁচটা Pillar</h3>
+<p>Microsoft-এর <b>Azure Well-Architected Framework</b>-এ পাঁচটা পিলার আছে — প্রতিটা একটা কোয়ালিটি এট্রিবিউট প্রতিনিধিত্ব করে, আর প্রতিটার একটা নির্দিষ্ট গাইডিং প্রশ্ন আছে যা আর্কিটেকচার রিভিউতে জিজ্ঞাসা করা হয়।</p>
+<table>
+<tr><th>Pillar</th><th>সংজ্ঞা</th><th>রিভিউ প্রশ্ন</th></tr>
+<tr><td><b>Reliability</b></td><td>ফেইলিওর সহ্য করে recover করার সক্ষমতা</td><td>"একটা Availability Zone পুরো ডাউন হলে অ্যাপ চালু থাকবে কি?"</td></tr>
+<tr><td><b>Security</b></td><td>ডেটা ও সিস্টেম সুরক্ষিত রাখা, কনফিডেনশিয়ালিটি/ইন্টিগ্রিটি/অ্যাভেইলেবিলিটি</td><td>"কোনো credential হার্ডকোড করা আছে? Least-privilege RBAC মানা হচ্ছে?"</td></tr>
+<tr><td><b>Cost Optimization</b></td><td>প্রয়োজনীয় ভ্যালু অর্জন করে সর্বনিম্ন খরচে চালানো</td><td>"এই SKU কি ওভার-প্রোভিশনড? Reserved Instance দিয়ে বাঁচানো যেত?"</td></tr>
+<tr><td><b>Operational Excellence</b></td><td>ডিপ্লয়মেন্ট, মনিটরিং, ইনসিডেন্ট রেসপন্স প্রসেস কতটা পরিপক্ব</td><td>"একটা রোলব্যাক করতে কতক্ষণ লাগবে? IaC দিয়ে ডিপ্লয় হয় কি?"</td></tr>
+<tr><td><b>Performance Efficiency</b></td><td>লোডের সাথে সামঞ্জস্যপূর্ণভাবে স্কেল করা, রিসোর্স কার্যকরভাবে ব্যবহার করা</td><td>"ট্রাফিক ৫ গুণ বাড়লে সিস্টেম কি অটো-স্কেল করবে, নাকি ম্যানুয়াল হস্তক্ষেপ লাগবে?"</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">কেন — Azure-এ ৫টা পিলার, AWS-এ ৬টা</span> AWS-এর Well-Architected Framework-এ Sustainability একটা আলাদা টপ-লেভেল পিলার হিসেবে আছে। Azure-এর মূল Well-Architected Framework-এ আলাদা টপ-লেভেল Sustainability পিলার নেই — যদিও Microsoft "Sustainable workloads" নামে আলাদা একটা গাইডেন্স ডকুমেন্ট দেয়, সেটা এই পাঁচ-পিলার কাঠামোর অংশ না। ইন্টারভিউতে এই সংখ্যাগত পার্থক্যটা (৫ বনাম ৬) ভুলভাবে বলাটা একটা কমন ভুল, কারণ দুই ক্লাউডের ডকুমেন্টেশন একে অপরের প্রভাবে তৈরি হলেও কাঠামোয় হুবহু এক না।</div>
+
+<h3>Disaster Recovery</h3>
+<p>DR-এর দুইটা মূল মেট্রিক সংক্ষেপে রিক্যাপ করা যাক — <b>RTO (Recovery Time Objective)</b>: বিপর্যয়ের পর সার্ভিস আবার চালু হতে সর্বোচ্চ কতক্ষণ লাগতে পারে; <b>RPO (Recovery Point Objective)</b>: সর্বোচ্চ কতটুকু ডেটা হারানো মেনে নেওয়া যায় (শেষ ব্যাকআপ/রেপ্লিকেশনের পর থেকে)। Azure-এ এই DR অর্কেস্ট্রেশনের মূল টুল হলো <span class="kw">Azure Site Recovery (ASR)</span> — এটা VM-লেভেল রেপ্লিকেশন করে (এক রিজিওন থেকে আরেক রিজিওনে) এবং একটা পুরো ফেইলওভার প্ল্যান (কোন VM কোন অর্ডারে উঠবে) অর্কেস্ট্রেট করে।</p>
+<p>চারটা সার্বজনীন DR প্যাটার্ন Azure-প্রেক্ষাপটে:</p>
+<ul>
+<li><b>Backup & Restore</b> — শুধু Azure Backup দিয়ে নিয়মিত স্ন্যাপশট নেওয়া থাকে, বিপর্যয়ে নতুন resource প্রভিশন করে restore করা হয়। সবচেয়ে সস্তা, RTO/RPO সবচেয়ে বেশি (ঘণ্টা-দিন)।</li>
+<li><b>Pilot Light</b> — সেকেন্ডারি রিজিওনে ন্যূনতম কোর কম্পোনেন্ট (যেমন একটা ছোট DB replica) সবসময় চালু থাকে, ASR-এ বাকি VM-গুলো "replicated কিন্তু বন্ধ" অবস্থায় থাকে, ফেইলওভারে দ্রুত স্কেল-আপ করা হয়।</li>
+<li><b>Warm Standby</b> — সেকেন্ডারি রিজিওনে একটা ছোট আকারের কিন্তু সম্পূর্ণ কার্যকরী কপি সবসময় চলমান থাকে, ফেইলওভারে শুধু স্কেল-আপ করলেই চলে — RTO অনেক কম।</li>
+<li><b>Multi-Site Active-Active</b> — দুই রিজিওনেই একসাথে লাইভ ট্রাফিক সার্ভ হয় (Traffic Manager/Front Door দিয়ে রাউটিং), একটা রিজিওন হারালে অন্যটা পুরো লোড নেয় কোনো ম্যানুয়াল ফেইলওভার ছাড়াই — সবচেয়ে কম RTO/RPO, কিন্তু সবচেয়ে ব্যয়বহুল ও জটিল।</li>
+</ul>
+
+<div class="callout best"><span class="tag">Best practice — RTO/RPO আগে ঠিক করুন, তারপর প্যাটার্ন বেছে নিন</span> ব্যবসার প্রয়োজন না জেনে সরাসরি Multi-Site Active-Active বেছে নেওয়া একটা সাধারণ ওভার-ইঞ্জিনিয়ারিং ভুল। প্রথমে বিজনেস স্টেকহোল্ডারদের সাথে RTO/RPO সংখ্যায় ঠিক করুন, তারপর সেই সংখ্যার সাথে সবচেয়ে কম খরচের প্যাটার্ন মিলিয়ে বেছে নিন।</div>
+
+</template>
+
+<template data-page="interview">
+<h2 class="title">২০. Interview প্রশ্নোত্তর</h2>
+<p class="lead">Azure ইন্টারভিউতে বারবার আসা প্রশ্ন — প্রতিটা আগের চ্যাপ্টারের রেফারেন্স দিয়ে।</p>
+
+<h3>১) Management Group, Subscription, ও Resource Group-এর hierarchy এবং RBAC scope inheritance কীভাবে কাজ করে?</h3>
+<p><b>উত্তর:</b> Azure-এর রিসোর্স হায়ারার্কি চার স্তরের — Management Group (একাধিক subscription গ্রুপ করার জন্য) → Subscription (বিলিং ও কোটার সীমানা) → Resource Group (লজিক্যাল গ্রুপিং, একটা প্রজেক্টের সব রিসোর্স একসাথে ম্যানেজ/ডিলিট করার ইউনিট) → Resource। RBAC role যেকোনো স্তরে assign করা যায়, আর সেটা নিচের সব স্তরে স্বয়ংক্রিয়ভাবে ইনহেরিট হয় — Management Group-এ একটা role দিলে সেটার নিচের সব Subscription, Resource Group, Resource-এ প্রযোজ্য হয়ে যায়। এই hierarchy ও ইনহেরিটেন্স ১ নম্বর অধ্যায়ে বিস্তারিত আলোচিত হয়েছে।</p>
+
+<h3>২) RBAC vs Azure Policy — এই দুটার মধ্যে পার্থক্য কী?</h3>
+<p><b>উত্তর:</b> RBAC ঠিক করে "কে কী করতে পারবে" (identity-ভিত্তিক অথোরাইজেশন — কে VM তৈরি করতে পারবে, কে ডিলিট করতে পারবে), আর Azure Policy ঠিক করে "কী তৈরি করা যাবে ও কী নিয়মে" (resource-এর কনফিগারেশন নিয়ম — যেমন শুধু নির্দিষ্ট রিজিওনে resource তৈরি করা যাবে, বা প্রতিটা resource-এ ট্যাগ থাকতে হবে), এমনকি যাদের RBAC পারমিশন আছে তাদের ওপরও। এই দুটো একসাথে কাজ করে কিন্তু সম্পূর্ণ ভিন্ন স্তরে — একটা identity নিয়ন্ত্রণ করে, আরেকটা resource-এর কমপ্লায়েন্স নিয়ন্ত্রণ করে। ১ নম্বর অধ্যায়ে এই পার্থক্য বিস্তারিত হয়েছে।</p>
+
+<h3>৩) Managed Identity-এর System-assigned ও User-assigned টাইপের মধ্যে পার্থক্য কী?</h3>
+<p><b>উত্তর:</b> System-assigned identity একটা নির্দিষ্ট resource-এর (VM/App Service) সাথে জীবনচক্র বাঁধা থাকে — resource ডিলিট হলে identity-ও সাথে সাথে ডিলিট হয়, এবং এক resource-এর সাথে শুধু একটাই এমন identity থাকতে পারে। User-assigned identity একটা স্বাধীন Azure resource হিসেবে তৈরি হয়, একাধিক VM/App Service-এর সাথে সংযুক্ত করা যায়, এবং কোনো resource ডিলিট হলেও identity নিজে টিকে থাকে। একাধিক resource-এ একই পারমিশন সেট শেয়ার করতে চাইলে User-assigned বেছে নেওয়া হয়। এটা ২ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>৪) NSG-তে Allow এবং Deny দুটোই থাকে, কিন্তু AWS Security Group-এ শুধু Allow — এর প্রভাব কী?</h3>
+<p><b>উত্তর:</b> AWS Security Group স্টেটফুল এবং implicit-deny-only (শুধু allow rule লেখা যায়, deny লেখা যায় না — না লেখা মানেই deny)। Azure NSG-তে explicit Deny rule লেখা যায়, যার ফলে একটা broader Allow rule-এর ভেতরে নির্দিষ্ট একটা সোর্স/পোর্ট আলাদাভাবে ব্লক করা সম্ভব — priority নম্বর অনুযায়ী rule ইভ্যালুয়েট হয় (কম নম্বর আগে চেক হয়)। এই নমনীয়তার একটা ঝুঁকিও আছে — priority ভুল সাজালে একটা intended Allow rule একটা higher-priority Deny rule-এর কারণে কখনো এক্সিকিউটই হয় না। এটা ৪ নম্বর অধ্যায়ে আলোচিত হয়েছে।</p>
+
+<h3>৫) Availability Set ও Availability Zone-এর পার্থক্য কী?</h3>
+<p><b>উত্তর:</b> Availability Set একই ডেটা সেন্টারের ভেতরে VM-গুলোকে আলাদা আলাদা physical rack (fault domain) ও আলাদা host update batch (update domain)-এ ছড়িয়ে দেয় — এটা rack-level বা host-reboot-level ফেইলিওর থেকে রক্ষা করে, কিন্তু পুরো ডেটা সেন্টার ডাউন হলে কোনো সুরক্ষা দেয় না। Availability Zone সম্পূর্ণ আলাদা, ফিজিক্যালি বিচ্ছিন্ন ডেটা সেন্টার (নিজস্ব পাওয়ার, কুলিং, নেটওয়ার্ক)-এ resource ছড়িয়ে দেয়, ফলে পুরো একটা ডেটা সেন্টার হারালেও অ্যাপ চালু থাকে। Zone সবসময় বেশি রেজিলিয়েন্ট, তবে সব রিজিওনে Zone সাপোর্ট থাকে না। এটা ৩ ও ৯ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>৬) VM Stopped ও Stopped (Deallocated) অবস্থার মধ্যে বিলিং-এর পার্থক্য কী?</h3>
+<p><b>উত্তর:</b> শুধু OS থেকে "Stop" করলে (যেমন গেস্ট OS-এর ভেতর থেকে shutdown) VM-টা এখনো একটা ফিজিক্যাল হোস্টে কম্পিউট রিসোর্স ধরে রাখে, তাই compute বিলিং চলতেই থাকে। Azure Portal/CLI থেকে "Stop (Deallocated)" করলে VM-এর কম্পিউট রিসোর্স সম্পূর্ণভাবে হোস্ট থেকে মুক্ত করে দেওয়া হয়, ফলে compute বিলিং বন্ধ হয়ে যায় (শুধু disk/IP-এর মতো persistent resource-এর বিলিং চলতে থাকে)। এই পার্থক্যটা না জানার কারণে অনেকে VM "বন্ধ করেছি" ভেবেও বিল পেয়ে অবাক হন। এটা ৩ নম্বর অধ্যায়ে আলোচিত হয়েছে।</p>
+
+<h3>৭) Storage Account, Container, ও Blob-এর hierarchy ব্যাখ্যা করুন।</h3>
+<p><b>উত্তর:</b> Storage Account হলো সবচেয়ে ওপরের নেমস্পেস (একটা গ্লোবালি ইউনিক নাম, যা এন্ডপয়েন্ট URL-এর অংশ হয়ে যায়), এর ভেতরে একাধিক Container থাকে (ফাইল সিস্টেমের ফোল্ডারের মতো, কিন্তু nested container সাপোর্ট করে না — flat নেমস্পেস), আর প্রতিটা Container-এর ভেতরে Blob (আসল ফাইল/অবজেক্ট) থাকে। ব্লবের নামে স্ল্যাশ (/) ব্যবহার করে "ভার্চুয়াল ফোল্ডার"-এর মতো দেখানো যায়, কিন্তু আসলে সেটা একটা ফ্ল্যাট কী-ভ্যালু নেমস্পেস, প্রকৃত নেস্টেড ফোল্ডার না। এটা ৫ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>৮) Blob storage-এর রিডানডেন্সি অপশনগুলো (LRS/ZRS/GRS/RA-GRS) কী কী?</h3>
+<p><b>উত্তর:</b> LRS (Locally Redundant Storage) একই ডেটা সেন্টারে তিনটা কপি রাখে — শুধু ডিস্ক ফেইলিওর থেকে রক্ষা করে। ZRS (Zone Redundant Storage) একই রিজিওনের তিনটা Availability Zone-এ কপি ছড়িয়ে রাখে — একটা ডেটা সেন্টার হারালেও ডেটা টিকে থাকে। GRS (Geo Redundant Storage) প্রাইমারি রিজিওনে LRS-এর সাথে একটা দূরবর্তী secondary রিজিওনে অ্যাসিঙ্ক্রোনাসলি কপি রাখে (পুরো রিজিওন হারালে রক্ষা করে, কিন্তু secondary কপি সরাসরি read করা যায় না ফেইলওভারের আগে)। RA-GRS (Read-Access GRS) একই কিন্তু secondary রিজিওনের কপি সবসময় read-only অ্যাক্সেসযোগ্য একটা আলাদা এন্ডপয়েন্টে। এটা ৫ ও ৬ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>৯) SAS (Shared Access Signature) টোকেনের প্রকারভেদ কী কী?</h3>
+<p><b>উত্তর:</b> Account SAS পুরো Storage Account-এর একাধিক সার্ভিস (Blob, Queue, Table, File) জুড়ে পারমিশন দেয় — সবচেয়ে ব্রড স্কোপ। Service SAS একটা নির্দিষ্ট সার্ভিসের (যেমন শুধু Blob) একটা নির্দিষ্ট resource (একটা container বা blob)-এ পারমিশন দেয় — Storage Account key দিয়ে সাইন হয়। User Delegation SAS সবচেয়ে নিরাপদ, কারণ এটা Storage Account key দিয়ে না বরং একটা Microsoft Entra ID identity-র মাধ্যমে সাইন হয় (Managed Identity সহ ব্যবহারযোগ্য), ফলে অ্যাকাউন্ট key কখনো এক্সপোজ হয় না এবং RBAC-এর মাধ্যমে গ্রানুলার কন্ট্রোল পাওয়া যায়। এটা ৫ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>১০) Azure SQL-এর DTU ও vCore মডেলের পার্থক্য কী?</h3>
+<p><b>উত্তর:</b> DTU (Database Transaction Unit) মডেলে CPU, মেমরি, ও IO-কে একটা একক বান্ডলড সংখ্যায় প্যাকেজ করা হয় — সরল কিন্তু কোন রিসোর্স আসলে bottleneck সেটা আলাদাভাবে বোঝা যায় না। vCore মডেলে CPU কোর ও মেমরি আলাদাভাবে নির্দিষ্ট করা যায়, Azure Hybrid Benefit প্রযোজ্য হয়, এবং on-prem SQL Server-এর সাথে সাইজিং তুলনা করা সহজ হয়। নতুন প্রজেক্টে vCore মডেল সুপারিশ করা হয় কারণ এটা বেশি স্বচ্ছ ও নমনীয়। এটা ৭ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>১১) Azure SQL-এর ডিপ্লয়মেন্ট অপশনগুলোর স্পেকট্রাম কী?</h3>
+<p><b>উত্তর:</b> স্পেকট্রামের এক প্রান্তে SQL Server on VM — পুরো OS ও DB ইঞ্জিন নিজে ম্যানেজ করতে হয়, সর্বোচ্চ কন্ট্রোল কিন্তু সর্বোচ্চ ম্যানেজমেন্ট ওভারহেড। মাঝখানে Managed Instance — প্রায় পুরো SQL Server-এর ফিচার প্যারিটি (cross-database query, SQL Agent, CLR) পাওয়া যায় কিন্তু প্যাচিং/ব্যাকআপ Azure ম্যানেজ করে। আরেকটু কম কন্ট্রোলে Single Database ও Elastic Pool — সম্পূর্ণ PaaS, একটা মাত্র ডাটাবেসের জন্য (Single) বা একাধিক ডাটাবেস মিলে রিসোর্স শেয়ার করার জন্য (Elastic Pool, যেখানে আলাদা আলাদা DB-র পিক লোড ভিন্ন সময়ে হয়)। এটা ৭ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>১২) Cosmos DB-এর consistency level-গুলো কী কী এবং কেন এত গুরুত্বপূর্ণ?</h3>
+<p><b>উত্তর:</b> Cosmos DB পাঁচটা সুনির্দিষ্ট consistency level অফার করে, যা Strong (সবচেয়ে কড়া — সবসময় সর্বশেষ লেখা ডেটা পড়া যাবে, কিন্তু latency বেশি ও multi-region এ availability কম) থেকে Eventual (সবচেয়ে হালকা — সবচেয়ে কম latency, কিন্তু পুরনো ডেটা পড়ার সম্ভাবনা থাকে) পর্যন্ত একটা স্পেকট্রামে সাজানো: Strong, Bounded Staleness (staleness-এর একটা upper bound গ্যারান্টিযুক্ত, সময় বা ভার্সন-ল্যাগ দিয়ে নির্দিষ্ট), Session (একই ক্লায়েন্ট সেশনের ভেতর নিজের লেখা সবসময় পড়তে পারবে — "read your own writes", ডিফল্ট ও সবচেয়ে বহুল ব্যবহৃত), Consistent Prefix (ডেটা পুরনো হতে পারে কিন্তু লেখার অর্ডার কখনো এলোমেলো দেখাবে না), এবং Eventual। এই পাঁচটা লেভেল আসলে CAP থিওরির trade-off-কে একটা কন্টিনিউয়াম হিসেবে এক্সপোজ করে — ডেভেলপারকে প্রতিটা ওয়ার্কলোডের জন্য latency/availability বনাম consistency-র মধ্যে সচেতন সিদ্ধান্ত নিতে দেয়, একটা বাইনারি চয়েস না দিয়ে। এটা ৮ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>১৩) Cosmos DB-এর Request Unit (RU) কী?</h3>
+<p><b>উত্তর:</b> RU হলো Cosmos DB-এর নরমালাইজড থ্রুপুট কারেন্সি — একটা 1KB আইটেমের সিম্পল point read করতে ঠিক ১ RU লাগে, আর যেকোনো অপারেশন (write, query, stored procedure) এর জটিলতা ও ডেটার আকার অনুযায়ী কম-বেশি RU খরচ করে। এই abstraction-এর সুবিধা হলো আন্ডারলাইং হার্ডওয়্যার (CPU/IO/মেমরি) নিয়ে চিন্তা না করে শুধু "কত RU/সেকেন্ড দরকার" ভেবে প্রভিশনিং করা যায় — Provisioned Throughput মোডে আগে থেকে RU/s বেঁধে দেওয়া হয়, Serverless মোডে যতটুকু ব্যবহার ততটুকু বিল হয়। এটা ৮ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>১৪) Load Balancer, Application Gateway, ও Front Door-এর মধ্যে পার্থক্য কী?</h3>
+<p><b>উত্তর:</b> Azure Load Balancer একটা Layer 4 (TCP/UDP) রিজিওনাল লোড ব্যালান্সার — এটা শুধু IP/পোর্ট দেখে ট্রাফিক ছড়ায়, HTTP কনটেন্ট বোঝে না। Application Gateway একটা Layer 7 রিজিওনাল লোড ব্যালান্সার — URL path-ভিত্তিক রাউটিং, SSL termination, এবং বিল্ট-ইন WAF সাপোর্ট করে। Front Door একটা Layer 7 গ্লোবাল (multi-region) এন্ট্রি পয়েন্ট — Microsoft-এর এজ নেটওয়ার্ক থেকে ট্রাফিক নিয়ে সবচেয়ে কাছের/স্বাস্থ্যবান রিজিওনে রাউট করে, সাথে CDN ক্যাশিং ও WAF-ও দেয়। এই তিনটাকে স্তর অনুযায়ী সাজালে: Front Door (গ্লোবাল এন্ট্রি) → Application Gateway (রিজিওনাল, HTTP-aware) → Load Balancer (রিজিওনাল, TCP-level)। এটা ৯ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>১৫) Traffic Manager ও Front Door-এর পার্থক্য কী?</h3>
+<p><b>উত্তর:</b> Traffic Manager DNS-লেভেলে কাজ করে — ক্লায়েন্ট DNS রিজলভ করার সময় কোন রিজিওনের IP পাবে সেটা ঠিক করে দেয়, কিন্তু তারপর ক্লায়েন্ট সরাসরি সেই রিজিওনের সাথে কানেক্ট করে, ট্রাফিক Traffic Manager দিয়ে পাস হয় না। Front Door HTTP(S)-লেভেলে কাজ করে — প্রতিটা রিকোয়েস্ট আসলেই Microsoft-এর এজ নেটওয়ার্ক দিয়ে পাস হয়, ফলে path-ভিত্তিক রাউটিং, real-time health probe অনুযায়ী দ্রুত ফেইলওভার (DNS TTL/ক্যাশিং-এর অপেক্ষা ছাড়াই), এবং SSL termination সম্ভব হয়। এই DNS-level বনাম HTTP-level পার্থক্যটাই সবচেয়ে বেশি গুলিয়ে যায় — Traffic Manager দ্রুত ফেইলওভার দিতে পারে না কারণ ক্লায়েন্ট/রিজলভার DNS ক্যাশ করে রাখে। এটা ১০ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>১৬) Azure Functions-এর trigger ও binding-এর পার্থক্য কী?</h3>
+<p><b>উত্তর:</b> Trigger হলো সেই ইভেন্ট যা একটা ফাংশন এক্সিকিউশন শুরু করে — প্রতিটা ফাংশনের ঠিক একটা trigger থাকে (HTTP request, Timer, Queue message, Blob upload ইত্যাদি)। Binding হলো ডেটা সোর্সের সাথে declarative সংযোগ — input binding ফাংশন শুরুর আগে অতিরিক্ত ডেটা লোড করে দেয় (যেমন একটা ID দিয়ে DB থেকে রেকর্ড আনা), আর output binding ফাংশনের রিটার্ন ভ্যালুকে অটোমেটিক্যালি কোথাও লিখে দেয় (যেমন একটা Queue-তে মেসেজ পাঠানো) — কোনো SDK কোড না লিখেই। এটা ১২ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>১৭) Durable Functions ও Logic Apps-এর পার্থক্য কী?</h3>
+<p><b>উত্তর:</b> Durable Functions কোড-ফার্স্ট — একটা orchestrator ফাংশন সাধারণ প্রোগ্রামিং ভাষায় (C#/Python/JS) লেখা হয়, জটিল কন্ডিশনাল লজিক, লুপ, বা ডাইনামিক ফ্যান-আউট/ফ্যান-ইন প্যাটার্ন লেখার জন্য উপযুক্ত। Logic Apps লো-কোড/no-code — একটা ভিজুয়াল ডিজাইনারে ৪০০+ কানেক্টর দিয়ে ওয়ার্কফ্লো বানানো হয়, বিজনেস ইউজার বা কম টেকনিক্যাল টিমের জন্য সহজবোধ্য, কিন্তু জটিল কাস্টম লজিকে সীমাবদ্ধ হয়ে যায়। মূল সিদ্ধান্ত: যদি জটিল কোড-লজিক লাগে তাহলে Durable Functions, যদি প্রধানত এক্সিস্টিং সার্ভিসগুলো জুড়ে দেওয়া (SaaS ইন্টিগ্রেশন) লাগে তাহলে Logic Apps। এটা ১২ ও ১৪ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>১৮) Storage Queue ও Service Bus Queue-এর পার্থক্য কী?</h3>
+<p><b>উত্তর:</b> Storage Queue সরল, সস্তা, বড় ভলিউমের বেসিক মেসেজ পাসিং-এর জন্য (৬৪KB পর্যন্ত মেসেজ, at-least-once ডেলিভারি) — সাধারণ ব্যাকগ্রাউন্ড টাস্ক কিউয়িং-এ যথেষ্ট। Service Bus Queue এন্টারপ্রাইজ মেসেজিং ফিচার দেয় — FIFO অর্ডারিং (session ব্যবহার করে), dead-letter queue, duplicate detection, transaction সাপোর্ট, larger message size (up to 100MB with premium), এবং topic/subscription দিয়ে pub-sub প্যাটার্ন। জটিল এন্টারপ্রাইজ ওয়ার্কফ্লো বা গ্যারান্টিযুক্ত অর্ডারিং লাগলে Service Bus, সাধারণ decoupling-এ Storage Queue। এটা ১৪ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>১৯) Event Grid ও Event Hub-এর পার্থক্য কী?</h3>
+<p><b>উত্তর:</b> Event Grid ডিসক্রিট, লো-ভলিউম "কিছু একটা ঘটলো" টাইপ ইভেন্টের জন্য (যেমন "একটা blob আপলোড হলো", "একটা resource তৈরি হলো") — reactive/event-driven আর্কিটেকচারে push-ভিত্তিক ডেলিভারি, ফিল্টারিং সহ multiple subscriber-এ রাউট করা। Event Hub উচ্চ-ভলিউম, high-throughput টেলিমেট্রি/স্ট্রিমিং ডেটার জন্য (প্রতি সেকেন্ডে লক্ষ লক্ষ ইভেন্ট, যেমন IoT সেন্সর ডেটা বা ক্লিকস্ট্রিম) — Kafka-কম্প্যাটিবল, consumer নিজে থেকে pull করে পড়ে এবং partition-ভিত্তিক অর্ডারিং বজায় থাকে। মূল পার্থক্য: Event Grid ইভেন্ট নোটিফিকেশনের জন্য, Event Hub ডেটা স্ট্রিমিং পাইপলাইনের জন্য। এটা ১৪ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>২০) ACI, AKS, ও App Service for Containers — কখন কোনটা ব্যবহার করবেন?</h3>
+<p><b>উত্তর:</b> ACI (Azure Container Instances) সবচেয়ে সরল — কোনো অর্কেস্ট্রেশন ছাড়াই একক বা কয়েকটা কন্টেইনার সরাসরি চালানো, সেকেন্ডে স্পিন-আপ, শর্ট-লিভড ব্যাচ জব বা বার্স্ট ক্যাপাসিটির জন্য উপযুক্ত। App Service for Containers একটা PaaS ওয়েব হোস্টিং মডেল যেখানে কাস্টম কন্টেইনার ইমেজ ডিপ্লয় করা যায় কিন্তু স্কেলিং/নেটওয়ার্কিং প্ল্যাটফর্ম ম্যানেজ করে — সাধারণ ওয়েব অ্যাপের জন্য সবচেয়ে কম অপারেশনাল ওভারহেড। AKS (Azure Kubernetes Service) পূর্ণাঙ্গ Kubernetes অর্কেস্ট্রেশন দেয় — মাল্টি-কন্টেইনার মাইক্রোসার্ভিস, কাস্টম স্কেলিং লজিক, সার্ভিস মেশ, বা মাল্টি-ক্লাউড পোর্টেবিলিটি দরকার হলে এটাই সঠিক পছন্দ, তবে কন্ট্রোল বেশি মানে অপারেশনাল জটিলতাও বেশি। এটা ১৫ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>২১) Bicep ও ARM Template-এর পার্থক্য কী?</h3>
+<p><b>উত্তর:</b> ARM Template হলো JSON-ভিত্তিক native IaC ফরম্যাট — verbose, নেস্টেড ব্র্যাকেট বেশি, ম্যানুয়ালি লেখা কষ্টকর। Bicep হলো একটা DSL (Domain Specific Language) যা ARM Template-এর ওপর একটা abstraction layer — সিনট্যাক্স অনেক পরিষ্কার, টাইপ-চেকিং ও intellisense সাপোর্ট ভালো, আর কম্পাইল করলে সরাসরি ARM JSON-এ রূপান্তরিত হয় (তাই আন্ডারলাইং ডিপ্লয়মেন্ট ইঞ্জিন একই)। যেহেতু Bicep শুধু একটা সিনট্যাক্স সুবিধা এবং কোনো নতুন রানটাইম ক্যাপাবিলিটি যোগ করে না, Microsoft নিজেই নতুন IaC কাজে Bicep-কে ডিফল্ট সুপারিশ করে। এটা ১৬ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>২২) Key Vault-এ Secret, Key, ও Certificate-এর মধ্যে পার্থক্য কী?</h3>
+<p><b>উত্তর:</b> Secret একটা সাধারণ string ভ্যালু যা প্লেইনটেক্সট হিসেবে ফেরত পাওয়া যায় (যেমন connection string)। Key একটা cryptographic key যা encrypt/decrypt/sign/verify অপারেশনের জন্য ব্যবহার হয়, এবং চাইলে HSM-backed করে key material vault-এর বাইরে কখনো বের না হতে দেওয়া যায়। Certificate একটা পূর্ণাঙ্গ X.509 সার্টিফিকেট, যেখানে Key Vault পুরো lifecycle (auto-renewal, CA integration) ম্যানেজ করে। এই তিনটা আলাদা object type কারণ এদের সিকিউরিটি মডেল ও ব্যবহারের প্যাটার্ন ভিন্ন। এটা ১৮ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>২৩) Microsoft Defender for Cloud কীভাবে AWS-এর GuardDuty ও Security Hub-এর কাজ একসাথে করে?</h3>
+<p><b>উত্তর:</b> AWS-এ থ্রেট ডিটেকশন (GuardDuty) ও পোস্চার/কমপ্লায়েন্স অ্যাগ্রিগেশন (Security Hub) দুইটা আলাদা সার্ভিস। Microsoft Defender for Cloud এই দুইটা কাজই একটা প্রোডাক্টে করে দুই স্তরের প্ল্যান দিয়ে — Foundational CSPM (ফ্রি, সব resource স্ক্যান করে recommendation ও Secure Score দেয়, Security Hub-এর সমতুল্য) এবং Defender plans (পেইড, প্রতিটা resource type-এর জন্য active threat detection — GuardDuty-এর সমতুল্য)। এই মার্জিং না বুঝলে ইন্টারভিউতে ভুল করে দুইটা আলাদা Azure সার্ভিসের নাম খোঁজার চেষ্টা করা হয়, যেখানে বাস্তবে একটাই প্রোডাক্ট। এটা ১৮ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>২৪) Activity Log ও Monitor Logs-এর মধ্যে পার্থক্য কী?</h3>
+<p><b>উত্তর:</b> Activity Log হলো control-plane audit trail — কে, কখন, কোন ARM API call করলো (VM তৈরি/ডিলিট, NSG rule বদল) তার রেকর্ড, এবং এটা AWS CloudTrail-এর সমতুল্য। Monitor Logs (Log Analytics Workspace-এ) হলো data-plane টেলিমেট্রি — অ্যাপ্লিকেশনের নিজের লগ লাইন, resource-এর diagnostic log ও metric, যা KQL দিয়ে query করা যায়। এই দুইটাকে একই জিনিস ভাবা একটা সাধারণ ভুল — Activity Log-এ কখনো অ্যাপ্লিকেশনের এক্সসেপশন দেখা যাবে না, শুধু কে কী API call করলো তা দেখা যাবে। এটা ১৭ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>২৫) Well-Architected Framework-এ Azure-এর ৫টা পিলার AWS-এর ৬টা পিলার থেকে কীভাবে ভিন্ন?</h3>
+<p><b>উত্তর:</b> AWS Well-Architected Framework-এ ছয়টা পিলার আছে — Operational Excellence, Security, Reliability, Performance Efficiency, Cost Optimization, এবং আলাদা টপ-লেভেল Sustainability পিলার। Azure Well-Architected Framework-এ পাঁচটা পিলার — Reliability, Security, Cost Optimization, Operational Excellence, Performance Efficiency — আলাদা টপ-লেভেল Sustainability পিলার নেই (Microsoft এটা "Sustainable workloads" নামে আলাদা গাইডেন্স হিসেবে দেয়, মূল ফ্রেমওয়ার্কের অংশ না)। ইন্টারভিউতে এই সংখ্যাগত পার্থক্যটা সঠিকভাবে বলতে পারা গুরুত্বপূর্ণ, কারণ ভুলভাবে "Azure-এও ৬টা পিলার" বলাটা একটা কমন ভুল যা ইন্টারভিউয়ারের কাছে ধরা পড়ে যায়। এটা ১৯ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>২৬) RTO/RPO কী এবং DR স্ট্র্যাটেজি প্যাটার্নগুলো কী কী?</h3>
+<p><b>উত্তর:</b> RTO (Recovery Time Objective) হলো বিপর্যয়ের পর সার্ভিস আবার চালু হতে সর্বোচ্চ কতক্ষণ লাগতে পারে তার সীমা, আর RPO (Recovery Point Objective) হলো সর্বোচ্চ কতটুকু ডেটা হারানো মেনে নেওয়া যায় তার সীমা। চারটা মূল DR প্যাটার্ন — Backup & Restore (সস্তা, সবচেয়ে বেশি RTO/RPO, শুধু ব্যাকআপ থেকে restore), Pilot Light (ন্যূনতম কোর কম্পোনেন্ট সবসময় চালু, বাকিটা দ্রুত স্কেল-আপ), Warm Standby (একটা ছোট কিন্তু সম্পূর্ণ কার্যকরী কপি সবসময় চলমান), এবং Multi-Site Active-Active (দুই রিজিওনেই একসাথে লাইভ ট্রাফিক, সবচেয়ে কম RTO/RPO কিন্তু সবচেয়ে ব্যয়বহুল)। Azure-এ এই অর্কেস্ট্রেশনের মূল টুল Azure Site Recovery, যা VM-লেভেল রেপ্লিকেশন ও ফেইলওভার প্ল্যান পরিচালনা করে। এটা ১৯ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>২৭) Azure App Service-এ Deployment Slot ও Swap কীভাবে zero-downtime deployment দেয়?</h3>
+<p><b>উত্তর:</b> Deployment Slot একটা আলাদা, স্বাধীন URL-যুক্ত environment (যেমন staging) তৈরি করে যেখানে নতুন ভার্সন প্রথমে ডিপ্লয় ও যাচাই করা যায়, লাইভ ট্রাফিক না পেয়ে। Swap অপারেশন আসলে কোনো কোড কপি করে না — এটা শুধু routing configuration অদলবদল করে, এবং তার আগে নতুন slot-এ একটা warm-up request পাঠিয়ে নিশ্চিত করে অ্যাপ্লিকেশন আগে থেকেই বুট হয়ে রেডি আছে। ফলে সুইচের মুহূর্তে ব্যবহারকারী কোনো downtime বা cold-start টের পায় না, এবং সমস্যা হলে একই কারণে তাৎক্ষণিক rollback-ও সম্ভব (আবার swap করে)। এটা ১২ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>২৮) Azure Functions-এর "Dedicated (App Service Plan)" hosting option-টা আসলে কী?</h3>
+<p><b>উত্তর:</b> এটা কোনো কাকতালীয় নামকরণ না — Azure Functions আসলে App Service প্ল্যাটফর্মেরই একটা রানটাইম মডেল, আর Dedicated plan-এ একটা Function App সরাসরি একটা App Service Plan-এর উপর চলে, ঠিক একটা সাধারণ Web App-এর মতোই একই compute infrastructure শেয়ার করে — পার্থক্য শুধু কোড কীভাবে ইনভোক হয় (event-driven function বনাম request-response web app)। এই কারণে App Service-এর concept (App Service Plan, tier, scaling) আগে বুঝে নিলে Functions-এর hosting model অনেক স্পষ্ট হয়ে যায়। এটা ১২ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>২৯) NSG Flow Logs, IP Flow Verify, ও Connection Troubleshoot-এর মধ্যে সম্পর্ক কী?</h3>
+<p><b>উত্তর:</b> এই তিনটাই আসলে একটা বড় umbrella সার্ভিসের অংশ — Network Watcher, যা প্রতিটা region-এ স্বয়ংক্রিয়ভাবে সক্রিয় থাকে। NSG Flow Logs পুরনো IP ট্রাফিকের একটা historical মেটাডেটা লগ রাখে (post-hoc analysis-এর জন্য), যেখানে IP Flow Verify তাৎক্ষণিকভাবে একটা নির্দিষ্ট source/destination/port-এর ট্রাফিক allow/deny হচ্ছে কিনা এবং ঠিক কোন NSG rule দায়ী তা বলে দেয়, আর Connection Troubleshoot দুইটা resource-এর মধ্যে end-to-end কানেক্টিভিটি টেস্ট করে সমস্যার উৎস (NSG/route/DNS) চিহ্নিত করে। এই টুলগুলো জানা থাকলে ম্যানুয়ালি প্রতিটা NSG rule হাতে-কলমে চেক করার বদলে সরাসরি নির্দিষ্ট উত্তর পাওয়া যায়। এটা ৪ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+<h3>৩০) Azure Advisor কী, এবং এটা Well-Architected Framework-এর সাথে কীভাবে সম্পর্কিত?</h3>
+<p><b>উত্তর:</b> Azure Advisor পুরো subscription স্ক্যান করে পাঁচটা ক্যাটাগরিতে (Cost, Security, Reliability, Operational Excellence, Performance) actionable, resource-স্পেসিফিক সুপারিশ দেয় — এই পাঁচটা ক্যাটাগরি ঠিক Well-Architected Framework-এর পাঁচটা pillar-এর সাথেই মেলে, কারণ Advisor সেই framework-কে স্বয়ংক্রিয় continuous scanning টুল হিসেবে বাস্তবায়ন করে। Well-Architected রিভিউ একটা ম্যানুয়াল, প্রশ্ন-ভিত্তিক প্রক্রিয়া যেখানে আর্কিটেক্ট বড় ছবি বিচার করেন, আর Advisor সেই একই দিকনির্দেশনাকে দৈনন্দিন, নির্দিষ্ট resource-ভিত্তিক কাজে রূপান্তর করে — দুটো পরিপূরক, একটা আরেকটার বিকল্প না। এটা ১৯ নম্বর অধ্যায়ে বিস্তারিত হয়েছে।</p>
+
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  const searchIndex = {};
+  (function buildIndex(){
+    const tmp = document.createElement('div');
+    pages.forEach(p=>{
+      tmp.innerHTML = templates[p.id] || '';
+      searchIndex[p.id] = ((p.title||'') + ' ' + tmp.textContent).toLowerCase();
+    });
+  })();
+
+  let currentQuery = '';
+
+  function clearHighlights(root){
+    root.querySelectorAll('mark.hl').forEach(m=>{ m.replaceWith(document.createTextNode(m.textContent)); });
+    root.normalize();
+  }
+
+  function highlightIn(root, q){
+    if(!q) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        const p = node.parentNode;
+        if(!node.nodeValue || !p || p.tagName==='SCRIPT' || p.tagName==='STYLE' || p.tagName==='MARK') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes=[]; let n; while((n=walker.nextNode())) nodes.push(n);
+    const ql = q.toLowerCase();
+    nodes.forEach(node=>{
+      const text = node.nodeValue, lower = text.toLowerCase();
+      if(!lower.includes(ql)) return;
+      const frag = document.createDocumentFragment();
+      let idx=0, pos;
+      while((pos = lower.indexOf(ql, idx)) !== -1){
+        if(pos>idx) frag.appendChild(document.createTextNode(text.slice(idx,pos)));
+        const mark = document.createElement('mark');
+        mark.className='hl';
+        mark.textContent = text.slice(pos, pos+ql.length);
+        frag.appendChild(mark);
+        idx = pos+ql.length;
+      }
+      if(idx<text.length) frag.appendChild(document.createTextNode(text.slice(idx)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  function applyHighlight(){
+    const active = main.querySelector('.page.active');
+    if(!active) return;
+    clearHighlights(active);
+    if(currentQuery) highlightIn(active, currentQuery);
+  }
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    applyHighlight();
+    const active = main.querySelector('.page.active');
+    const firstMark = active ? active.querySelector('mark.hl') : null;
+    if(firstMark && firstMark.scrollIntoView) firstMark.scrollIntoView({block:'center'});
+    else window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const searchInput = document.getElementById('courseSearch');
+  const searchMeta = document.getElementById('searchMeta');
+  if(searchInput){
+    searchInput.addEventListener('input', ()=>{
+      const q = searchInput.value.trim();
+      currentQuery = q;
+      const ql = q.toLowerCase();
+      let matchCount = 0, firstMatch = null;
+      pages.forEach(p=>{
+        const btn = sidebar.querySelector('.navbtn[data-target="'+p.id+'"]');
+        const matches = !ql || searchIndex[p.id].includes(ql);
+        if(matches){ matchCount++; if(!firstMatch) firstMatch = p; }
+        if(btn) btn.classList.toggle('hide', !matches);
+      });
+      if(!ql) searchMeta.textContent = '';
+      else if(matchCount===0) searchMeta.textContent = 'কোনো ফলাফল নেই';
+      else searchMeta.textContent = matchCount + 'টা অধ্যায়ে ফলাফল পাওয়া গেছে';
+
+      const active = main.querySelector('.page.active');
+      const activeId = active ? active.id.replace('page-','') : null;
+      const activeMatches = !!(ql && activeId && searchIndex[activeId] && searchIndex[activeId].includes(ql));
+      if(ql && !activeMatches && firstMatch){
+        show(firstMatch.id);
+      } else {
+        applyHighlight();
+        const mark = active ? active.querySelector('mark.hl') : null;
+        if(ql && mark && mark.scrollIntoView) mark.scrollIntoView({block:'center'});
+      }
+    });
+    searchInput.addEventListener('keydown', e=>{
+      if(e.key==='Escape'){ searchInput.value=''; searchInput.dispatchEvent(new Event('input')); searchInput.blur(); }
+    });
+  }
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

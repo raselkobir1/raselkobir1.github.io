@@ -129,6 +129,8 @@
     .grid{grid-template-columns:1fr}
   }
 </style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1117">
 </head>
 <body>
 <div class="wrap">
@@ -269,6 +271,14 @@ const topics = [
   { id:"problemsolving", icon:"🧮", title:"Problem Solving ও DSA", accent:"#d946ef",
     desc:"Complexity analysis, Two Pointers/Sliding Window, Hashing, Recursion/Backtracking, Sorting/Binary Search, Linked List, Stack/Queue, Trees, Heap, Graph (BFS/DFS/Dijkstra/Union-Find), Dynamic Programming, Greedy ও Interview Strategy।",
     tags:["১৮ অধ্যায়","Beginner→Advanced"], ready:true, href:"problemsolving.html" },
+
+  { id:"aws", icon:"☁️", title:"AWS", accent:"#ff9900",
+    desc:"Cloud Foundation, IAM, EC2, VPC, S3, Storage, RDS/Aurora, DynamoDB, Load Balancing/Auto Scaling, Route 53, CloudFront, Lambda/Serverless, API Gateway, Messaging, Containers, IaC, Observability, Security ও Cost Optimization — Basic থেকে Advanced।",
+    tags:["২০ অধ্যায়","Beginner→Advanced"], ready:true, href:"aws.html" },
+
+  { id:"azure", icon:"🔷", title:"Azure", accent:"#0078d4",
+    desc:"Cloud Foundation, Microsoft Entra ID/RBAC, Virtual Machines, VNet, Blob Storage, Managed Disks/Files, Azure SQL, Cosmos DB, Load Balancing/Scale Sets, DNS/Traffic Manager, CDN/Front Door, Functions, API Management, Messaging, AKS/Containers, ARM/Bicep, Monitor, Security ও Cost Management — Basic থেকে Advanced।",
+    tags:["২০ অধ্যায়","Beginner→Advanced"], ready:true, href:"azure.html" },
 ];
 
 // ================= RENDER =================
@@ -327,6 +337,13 @@ const topics = [
 
   render();
 })();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>

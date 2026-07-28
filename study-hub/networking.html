@@ -98,6 +98,8 @@
     .grid2{grid-template-columns:1fr}
   }
 </style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1117">
 </head>
 <body>
 <div class="app">
@@ -980,6 +982,13 @@ VPN Tunnel-এ ঢোকার পর : [ New (Public) IP Header │ Encrypted( 
   const h=location.hash.replace('#','');
   if(h && pages.some(p=>p.id===h)) show(h);
 })();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>

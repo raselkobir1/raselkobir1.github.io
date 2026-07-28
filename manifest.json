@@ -1,0 +1,19 @@
+{
+  "name": "Study Hub — Rasel Kabir",
+  "short_name": "Study Hub",
+  "description": "বাংলায় Beginner-Advanced টেক কোর্স — AWS, Azure, Docker, Kubernetes, DDD ও আরও অনেক কিছু",
+  "start_url": "/study-hub/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "lang": "bn",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
