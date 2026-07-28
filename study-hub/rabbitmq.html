@@ -137,10 +137,11 @@ const pages = [
   {id:"dlx",        icon:"☠️", title:"DLX · DLQ · TTL · Retry"},
   {id:"flow",       icon:"🌊", title:"Flow Control · Performance"},
   {id:"ha",         icon:"🧱", title:"Clustering · Quorum · Federation"},
+  {id:"scaling",    icon:"📈", title:"Scaling — Throughput ও Horizontal Scale"},
   {id:"secmon",     icon:"🔐", title:"Security · Monitoring"},
   {id:"dotnet",     icon:"💜", title:"RabbitMQ.Client (.NET)"},
   {id:"prod",       icon:"🏦", title:"Troubleshooting · Best Practices"},
-  {id:"interview",  icon:"🎯", title:"১৩. Interview প্রশ্নোত্তর"},
+  {id:"interview",  icon:"🎯", title:"১৪. Interview প্রশ্নোত্তর"},
 ];
 </script>
 
@@ -700,8 +701,74 @@ Shovel:      [old broker] ──(shovel)──► [new broker]             — �
 </pre></div>
 </template>
 
+<template data-page="scaling">
+<h2 class="title">১০. Scaling — Throughput ও Horizontal Scale</h2>
+<p class="lead">RabbitMQ-তে Kafka-র মতো কোনো built-in partition নেই — একটা queue নিজে থেকে একাধিক node-এ ছড়িয়ে scale করে না। কীভাবে এই সীমা এড়াবেন, আর কোন পথে সত্যিকারের horizontal scale পাওয়া যায়।</p>
+
+<h3>কেন একটা Queue নিজে থেকে Scale করে না</h3>
+<p>একটা classic (বা quorum) queue-এর ভেতরের ডেটা ও dispatch logic একটা নির্দিষ্ট <b>একটা</b> Erlang process-এ চলে, যা একটা নির্দিষ্ট node-এর একটা CPU core ব্যবহার করে। এই queue-তে যত consumer-ই যুক্ত করুন, সেই একটা process যত দ্রুত message পড়ে/পাঠাতে পারে তার বেশি throughput সম্ভব না — এটা একটা <b>hard per-queue ceiling</b>।</p>
+<div class="callout why"><span class="tag">কেন এটা Kafka থেকে গঠনগতভাবে আলাদা</span>
+Kafka-তে একটা topic-এর throughput তার সব partition-এর সমষ্টি — partition যেকোনো broker-এ থাকতে পারে, আর নতুন broker/partition যুক্ত করলে সেই সমষ্টি সরাসরি বাড়ে। RabbitMQ-তে একটা queue সেই অর্থে "বিভাজনযোগ্য" না — queue নিজে একটা single-threaded ইউনিট, cluster-এ যত node-ই থাকুক। এই কারণেই RabbitMQ-এ scale করতে হলে <b>একটা queue-এর ভেতরে বেশি consumer</b> যুক্ত করার বদলে <b>একাধিক queue</b>-এ ট্রাফিক ভাগ করতে হয়।</div>
+
+<h3>সমাধান ১ — একাধিক Queue + Consistent Hash Exchange</h3>
+<p>একটা busy queue-এর বদলে N-টা queue বানিয়ে, একটা <span class="kw">Consistent Hash Exchange</span> দিয়ে routing key-এর হ্যাশ অনুযায়ী message ভিন্ন ভিন্ন queue-এ ভাগ করা যায় — একই key সবসময় একই queue-এ যাবে (per-key ordering বজায় থাকে), কিন্তু সামগ্রিক throughput N-টা queue-এর সমষ্টি হয়ে যায়।</p>
+<pre>var channel = connection.CreateModel();
+
+<span class="c">// consistent-hash exchange type — RabbitMQ-এর rabbitmq_consistent_hash_exchange plugin দরকার</span>
+channel.ExchangeDeclare("orders-hash", "x-consistent-hash", durable: true);
+
+for (int i = 0; i &lt; 8; i++) {
+    var queueName = $"orders-{i}";
+    channel.QueueDeclare(queueName, durable: true, exclusive: false, autoDelete: false);
+    <span class="c">// routing key "10" = এই queue-এর আপেক্ষিক "weight"</span>
+    channel.QueueBind(queueName, "orders-hash", "10");
+}
+
+<span class="c">// Publish করার সময় routing key = orderId (বা customerId) — হ্যাশ করেই queue বাছা হয়</span>
+channel.BasicPublish("orders-hash", routingKey: orderId.ToString(), body: payload);</pre>
+<div class="callout behind"><span class="tag">এটা কেন Kafka Partition-এর মতোই কাজ করে (কিন্তু ম্যানুয়াল)</span>
+একই key সবসময় একই queue-তে হ্যাশ হয় বলে সেই key-র সব message এক জায়গায়, একই ক্রমে থাকে — ঠিক Kafka partition key hashing-এর একই যুক্তি। পার্থক্য হলো, Kafka-তে এই partitioning built-in ও broker নিজে ম্যানেজ করে; RabbitMQ-তে আপনাকে নিজেই exchange, queue সংখ্যা, ও consumer বরাদ্দ ডিজাইন করতে হয়।</div>
+
+<h3>সমাধান ২ — Sharding Plugin</h3>
+<p>উপরের ম্যানুয়াল ডিজাইন প্রতিবার নিজে করার বদলে, <span class="kw">rabbitmq-sharding</span> plugin একটা policy দিয়ে এই কাজ স্বয়ংক্রিয় করে দেয় — আপনি একটা logical queue নাম ঘোষণা করেন, plugin নিজেই N-টা shard queue বানিয়ে cluster-এর node-গুলোতে ছড়িয়ে দেয়, এবং consumer শুধু logical queue নামে consume করলেই সব shard থেকে ভাগাভাগি করে message পায়।</p>
+<pre><span class="c"># একটা policy দিয়ে "orders" queue-কে ৮টা shard-এ ভাগ করা</span>
+rabbitmqctl set_policy orders-shard "^orders$" \
+  '{"shards-per-node": 2}' --apply-to queues</pre>
+<div class="callout best"><span class="tag">Best practice — Manual vs Plugin</span>
+Consistent Hash Exchange দেয় বেশি নিয়ন্ত্রণ (per-key ordering, custom weight), কিন্তু বেশি অপারেশনাল দায়িত্ব। Sharding plugin দ্রুত সেটআপ দেয় কিন্তু per-key ordering guarantee নেই (round-robin-ধাঁচের বণ্টন)। Ordering গুরুত্বপূর্ণ না হলে (বেশিরভাগ সাধারণ task-queue workload-এ) plugin-ই সহজ পথ।</div>
+
+<h3>Cluster Node যোগ করা — Capacity বনাম Single-Queue Throughput</h3>
+<p>নতুন node cluster-এ যুক্ত করলে সামগ্রিক cluster capacity বাড়ে (আরও queue, আরও connection, আরও aggregate memory/CPU), কিন্তু <b>একটা un-sharded queue এখনও একটা node-এই থাকে</b> — নতুন node সেই একটা queue-কে দ্রুত করে না।</p>
+<div class="callout mistake"><span class="tag">Common mistake — node যুক্ত করলেই busy queue দ্রুত হবে ভাবা</span>
+Kafka-তে যেমন নতুন broker-এ partition reassign করে সরাসরি throughput বাড়ানো যায়, RabbitMQ-তে নতুন node যুক্ত করলে existing single queue-র throughput বাড়ে না — কারণ সেই queue তো ভাগ হয়নি, এখনও একটা মাত্র node-এর একটা process চালাচ্ছে। নতুন node থেকে বাস্তবে উপকার পেতে হলে সমাধান ১/২ (একাধিক queue/sharding)-এর সাথে মিলিয়ে নতুন shard-গুলো নতুন node-এ ছড়িয়ে দিতে হয়।</div>
+
+<h3>RabbitMQ Streams — Kafka-ধাঁচের উচ্চ-throughput উত্তর</h3>
+<p>ক্লাসিক queue-এর সীমা এড়াতে RabbitMQ নিজেই <span class="kw">Streams</span> ফিচার যুক্ত করেছে (rabbitmq-stream plugin) — এটা একটা append-only log storage, যেখানে message consume করলেও delete হয় না (classic queue-র মতো ধ্বংসাত্মক read না), এবং একাধিক independent consumer নিজের offset ট্র্যাক করে স্বাধীনভাবে পুরো stream (বা তার একটা অংশ) replay করতে পারে — একদম Kafka topic-এর read model।</p>
+<table>
+<tr><th></th><th>Classic/Quorum Queue</th><th>Stream</th></tr>
+<tr><td>Read model</td><td>Destructive — ack করলে message চলে যায়</td><td>Non-destructive — offset-ভিত্তিক, replay সম্ভব</td></tr>
+<tr><td>একাধিক independent consumer</td><td>Competing (একই message একজনই পায়)</td><td>প্রতিটা consumer group স্বাধীনভাবে পুরো ডেটা পড়তে পারে</td></tr>
+<tr><td>Throughput প্রোফাইল</td><td>মাঝারি, per-queue single-thread সীমা</td><td>উচ্চ — sequential disk I/O, Kafka-র কাছাকাছি</td></tr>
+<tr><td>Super Stream (partitioned)</td><td>প্রযোজ্য না</td><td>একটা logical stream-কে একাধিক node-এ partition করা যায় — সরাসরি Kafka partition-এর সমতুল্য</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন RabbitMQ এটা যুক্ত করেছে</span>
+ক্লাসিক AMQP queue model event-streaming/replay/high-throughput analytics-ধাঁচের ব্যবহারের জন্য কখনোই ডিজাইন করা হয়নি — এই ফাঁকটা Kafka পূরণ করত। Streams ফিচার RabbitMQ-কে সেই একই ব্যবহারের ক্ষেত্রে প্রতিযোগী বানায়, অথচ একই broker/ecosystem-এর মধ্যে থেকে — যে টিম RabbitMQ-এ already invested, তাদের আলাদা Kafka cluster চালানো লাগে না শুধু high-throughput ব্যবহারের জন্য।</div>
+
+<h3>Kafka vs RabbitMQ — Scaling মডেল তুলনা</h3>
+<table>
+<tr><th>বিষয়</th><th>Kafka</th><th>RabbitMQ (Classic/Quorum)</th><th>RabbitMQ Streams</th></tr>
+<tr><td>মূল scaling ইউনিট</td><td>Partition — core design-এর অংশ, প্রথম দিন থেকেই</td><td>Queue — single-threaded, নিজে ভাগ হয় না</td><td>Stream partition (Super Stream) — Kafka partition-এর সমতুল্য</td></tr>
+<tr><td>Node যুক্ত করলে</td><td>Partition reassign করে সরাসরি throughput বাড়ে</td><td>Aggregate capacity বাড়ে, কিন্তু একটা un-sharded queue দ্রুত হয় না</td><td>Super stream partition নতুন node-এ ছড়ানো যায়</td></tr>
+<tr><td>Scale করতে যা লাগে</td><td>Partition/broker কনফিগ (built-in টুলিং)</td><td>ম্যানুয়াল sharding ডিজাইন বা plugin</td><td>প্রায় built-in (super stream কনফিগ)</td></tr>
+<tr><td>Flexible routing (priority, RPC, delayed, complex binding)</td><td>সীমিত — সরল topic/partition মডেল</td><td><b>Native strength</b> — AMQP exchange/binding অনেক নমনীয়</td><td>সীমিত (queue-এর মতো নমনীয় না)</td></tr>
+<tr><td>Replay/multiple independent reader</td><td>নেটিভ, ডিফল্ট আচরণ</td><td>না (destructive read)</td><td>নেটিভ, Kafka-র মতোই</td></tr>
+</table>
+<div class="callout behind"><span class="tag">তাহলে কোনটা "বেশি ভালো" scale করে</span>
+Kafka-র scaling মডেল গঠনগতভাবে সহজ ও predictable, কারণ partitioning শুরু থেকেই core design-এর ভেতরে বেক করা — raw, ক্রমাগত বাড়তে থাকা throughput-এর জন্য এটাই সাধারণত ভালো default। RabbitMQ (classic/quorum) সেই একই স্কেলে পৌঁছাতে পারে, কিন্তু আপনাকে নিজে sharding ডিজাইন করতে হয় — বিনিময়ে RabbitMQ-এর AMQP routing model (priority queue, delayed message, RPC pattern, জটিল binding logic) Kafka-র চেয়ে অনেক বেশি নমনীয়, যা অনেক ব্যবহারিক ক্ষেত্রে "raw throughput"-এর চেয়ে বেশি গুরুত্বপূর্ণ। আর যদি RabbitMQ ইকোসিস্টেমেই থেকে Kafka-ঘেঁষা high-throughput/replay দরকার হয়, Streams (super stream সহ) সেই ফাঁক পূরণ করে। সংক্ষেপে — <b>বিশুদ্ধ, ক্রমাগত-বর্ধনশীল event-streaming throughput-এর জন্য Kafka গঠনগতভাবে সহজ পথ; জটিল routing/task-queue/RPC pattern-সহ moderate-to-high throughput-এর জন্য RabbitMQ (প্রয়োজনে sharding/Streams সহ) বেশি ব্যবহারিক।</b></div>
+</template>
+
 <template data-page="secmon">
-<h2 class="title">১০. Security · Monitoring</h2>
+<h2 class="title">১১. Security · Monitoring</h2>
 <p class="lead">Production RabbitMQ মানে দুটো জিনিস অবহেলা করা যাবে না — কে access পাবে (security), আর ভেতরে কী ঘটছে (monitoring)।</p>
 
 <h3>Security</h3>
@@ -742,7 +809,7 @@ Shovel:      [old broker] ──(shovel)──► [new broker]             — �
 </template>
 
 <template data-page="dotnet">
-<h2 class="title">১১. RabbitMQ.Client (.NET)</h2>
+<h2 class="title">১২. RabbitMQ.Client (.NET)</h2>
 <p class="lead">আপনার background (.NET) ধরে — official <code>RabbitMQ.Client</code> দিয়ে reliable publish ও consume, confirms, manual ack, prefetch ও DLX সহ।</p>
 
 <div class="callout behind"><span class="tag">সংস্করণ নোট</span>
@@ -817,7 +884,7 @@ channel.BasicConsume("billing", autoAck:false, consumer);           <span class=
 </template>
 
 <template data-page="prod">
-<h2 class="title">১২. Troubleshooting · Production Best Practices</h2>
+<h2 class="title">১৩. Troubleshooting · Production Best Practices</h2>
 <p class="lead">বাস্তবে যা ভাঙে, কেন ভাঙে, আর কীভাবে ঠেকাবেন — শেষে একটা master checklist।</p>
 
 <h3>Troubleshooting — উপসর্গ → কারণ → সমাধান</h3>
@@ -904,7 +971,7 @@ channel.BasicConsume("billing", autoAck:false, consumer);           <span class=
 </template>
 
 <template data-page="interview">
-<h2 class="title">১৩. Interview প্রশ্নোত্তর</h2>
+<h2 class="title">১৪. Interview প্রশ্নোত্তর</h2>
 <p class="lead">Basic থেকে advanced পর্যন্ত RabbitMQ ইন্টারভিউতে বারবার ঘুরেফিরে আসা প্রশ্ন — প্রতিটার সংক্ষিপ্ত বাংলা ব্যাখ্যা, আগের অধ্যায়গুলোর টার্মিনোলজি অনুসরণ করে।</p>
 
 <h3>১) RabbitMQ ঠিক কী করে, আর producer কি সরাসরি queue-তে পাঠায়?</h3>

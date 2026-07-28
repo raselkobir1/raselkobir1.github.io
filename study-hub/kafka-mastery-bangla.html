@@ -1467,6 +1467,30 @@ Scaling summary:
   বেশি storage/HA?   → বেশি broker + reassignment
   Hot partition?     → key design বদলান বা partition বাড়ান (ordering trade-off সহ)
 </pre></div>
+
+<h3>Multi-Cluster ও Geo-Scaling — MirrorMaker 2</h3>
+<p>একটা single cluster একটা নির্দিষ্ট region/datacenter-এর মধ্যে ভালো scale করে, কিন্তু ভৌগোলিকভাবে দূরের producer/consumer-দের জন্য একই cluster-এ সরাসরি লিখতে/পড়তে গেলে network latency scaling-এর একটা নতুন বাধা তৈরি করে। <span class="kw">MirrorMaker 2 (MM2)</span> একটা cluster-এর topic-কে আরেকটা (দূরের) cluster-এ continuously replicate করে — প্রতিটা region নিজের কাছের cluster-এ লেখে/পড়ে, আর MM2 background-এ ডেটা sync রাখে।</p>
+<div class="diagram"><pre>
+  [US Producer] → [US Cluster] ──MirrorMaker 2──► [EU Cluster] → [EU Consumer]
+                       ▲                                 │
+                       └─────────── MirrorMaker 2 ◄───────┘
+                         (bidirectional হলে দুই দিকেই sync)
+</pre></div>
+<div class="callout why"><span class="tag">কেন এটা "scaling" সমস্যা — শুধু "DR" না</span>
+Cross-region replication শুধু disaster recovery-র জন্য না — এটা এক ধরনের <b>geographic scaling</b>। একটা single cluster-এ সব region-এর ট্রাফিক পাঠালে সবচেয়ে দূরের producer/consumer-এর জন্য latency বাড়তেই থাকে, cluster যতই বড় করা হোক। MM2 দিয়ে প্রতিটা region নিজের local cluster-এ কাজ করে, আর replication ব্যাকগ্রাউন্ডে চলে — এটা throughput বাড়ায় না, কিন্তু cluster-এর কার্যকরী reach বাড়িয়ে দেয়, যা partition/broker সংখ্যা বাড়ানোর চেয়ে ভিন্ন dimension-এর scaling।</div>
+
+<h3>Tiered Storage — Broker Disk-এর সীমা পেরিয়ে</h3>
+<p>প্রতিটা broker-এর local disk সীমিত, আর retention বাড়ানোর সাথে সাথে broker-এর disk-ই bottleneck হয়ে যায় — বেশি ডেটা রাখতে গেলে বেশি broker বা বড় disk লাগে, যদিও সেই পুরনো ডেটা কালেভদ্রেই পড়া হয়। <span class="kw">Tiered Storage</span> (KIP-405) পুরনো log segment-কে broker disk থেকে সরিয়ে S3/GCS-এর মতো cheap object storage-এ রাখে, আর broker শুধু recent/hot ডেটার জন্য local disk ব্যবহার করে।</p>
+<div class="callout why"><span class="tag">কেন এটা storage scaling-কে compute scaling থেকে আলাদা করে</span>
+Tiered storage ছাড়া, বেশি retention চাইলে বেশি broker/disk কিনতে হয় — যদিও সেই broker-এর CPU/network capacity-র কোনো বাড়তি প্রয়োজন নেই। Tiered storage storage আর compute-কে <b>decouple</b> করে — retention যতই বাড়ান, broker সংখ্যা (যা throughput ঠিক করে) তার সাথে বাঁধা থাকে না। এটা S3-এর "storage আলাদা, compute আলাদা" যুক্তির সাথে conceptually একই।</div>
+
+<h3>Quotas — Multi-tenant Cluster-এ Throughput ভাগ করা</h3>
+<p>একটা shared cluster-এ একাধিক team/অ্যাপ্লিকেশন থাকলে, একটা misbehaving producer/consumer পুরো cluster-এর bandwidth খেয়ে ফেলতে পারে (noisy neighbor)। <span class="kw">Quota</span> দিয়ে প্রতিটা client-id/user-এর জন্য byte/sec বা request/sec সীমা বেঁধে দেওয়া যায়।</p>
+<div class="callout best"><span class="tag">Best practice</span>
+Shared production cluster-এ প্রতিটা team-এর জন্য quota সেট করে রাখুন, যাতে scaling-এর সময় "কে সব bandwidth খেয়ে ফেলল" ধরনের ইনসিডেন্ট এড়ানো যায় — cluster বড় করার আগে quota দিয়ে existing capacity-র সুষ্ঠু ব্যবহার নিশ্চিত করা প্রায়ই বেশি cost-effective।</div>
+
+<div class="callout behind"><span class="tag">RabbitMQ-র সাথে তুলনা — কেন Kafka-র scaling গঠনগতভাবে সহজ</span>
+Kafka-তে partition শুরু থেকেই core design-এর অংশ — topic-এর throughput স্বাভাবিকভাবেই সব partition-এর সমষ্টি, আর partition যেকোনো broker-এ থাকতে পারে। RabbitMQ-তে একটা queue একটা single-threaded process-এ বাঁধা — নিজে থেকে multiple broker-এ ছড়ায় না, ম্যানুয়ালি sharding ডিজাইন করতে হয়। এই কারণে raw throughput-এর জন্য Kafka-র scaling মডেল বেশি predictable ও "built-in", যেখানে RabbitMQ flexible routing/AMQP semantics-এ শক্তিশালী কিন্তু scale করতে বেশি সচেতন ডিজাইন লাগে। সম্পূর্ণ তুলনা RabbitMQ কোর্সের Scaling চ্যাপ্টারে (১০ নম্বর অধ্যায়ে) দেখুন।</div>
 </template>
 
 <template data-page="failure">
