@@ -1,7 +1,7 @@
 // Service worker for offline access to raselkobir1.github.io (Study Hub + homepage).
 // Strategy: stale-while-revalidate — serve from cache instantly if available,
 // and always refresh the cache from the network in the background when online.
-const CACHE_NAME = 'studyhub-cache-v2';
+const CACHE_NAME = 'studyhub-cache-v3';
 
 const OFFLINE_URLS = [
   '/',
@@ -12,6 +12,7 @@ const OFFLINE_URLS = [
   '/study-hub/agile.html',
   '/study-hub/ai.html',
   '/study-hub/angular.html',
+  '/study-hub/architecture.html',
   '/study-hub/auth.html',
   '/study-hub/aws.html',
   '/study-hub/azure.html',

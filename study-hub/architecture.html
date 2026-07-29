@@ -1,0 +1,1166 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Software Architecture Patterns — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#6366f1; --accent2:#22d3ee;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --pink:#f472b6;
+    --code-bg:#0b0f14; --kw:#93c5fd;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(99,102,241,.24),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#0b0d1f}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent2); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--accent2)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--accent2)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#93c5fd}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  .search-wrap{padding:0 10px 14px}
+  .search-box{
+    width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    border-radius:9px; padding:9px 12px; font-size:13.5px; font-family:inherit;
+    outline:none; transition:border-color .15s;
+  }
+  .search-box:focus{border-color:var(--accent2)}
+  .search-box::placeholder{color:var(--muted)}
+  .search-meta{font-size:11.5px; color:var(--muted); padding:6px 2px 0; min-height:14px}
+  .navbtn.hide{display:none}
+  mark.hl{background:#fde047; color:#1a1a1a; padding:0 1px; border-radius:3px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1117">
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🏛️ Software Architecture</h1>
+      <p>Beginner → Advanced • বাংলায় (keyword ইংরেজিতে)</p>
+      <div class="search-wrap">
+        <input type="text" id="courseSearch" class="search-box" placeholder="🔍 এই কোর্সে সার্চ করুন..." autocomplete="off">
+        <div class="search-meta" id="searchMeta"></div>
+      </div>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",     icon:"🧭", title:"সফটওয়্যার আর্কিটেকচার কী এবং কেন গুরুত্বপূর্ণ"},
+  {id:"quality",        icon:"⚖️", title:"Quality Attributes (Non-functional Requirements) ও Architecture Trade-offs"},
+  {id:"layered",        icon:"🥞", title:"Layered (N-Tier) Architecture"},
+  {id:"clientserver",   icon:"🖥️", title:"Client-Server Architecture"},
+  {id:"monolith",       icon:"🧱", title:"Monolithic Architecture"},
+  {id:"modularmonolith",icon:"📦", title:"Modular Monolith"},
+  {id:"soa",            icon:"🚌", title:"Service-Oriented Architecture (SOA)"},
+  {id:"microservices",  icon:"🛰️", title:"Microservices Architecture — সংক্ষিপ্ত ওভারভিউ"},
+  {id:"eventdriven",    icon:"📨", title:"Event-Driven Architecture"},
+  {id:"hexagonal",      icon:"⬡",  title:"Hexagonal, Clean ও Onion Architecture (Ports & Adapters)"},
+  {id:"pipefilter",     icon:"🔧", title:"Pipe-and-Filter (Pipeline) Architecture"},
+  {id:"spacebased",     icon:"🗲",  title:"Space-Based Architecture"},
+  {id:"p2p",            icon:"🕸️", title:"Peer-to-Peer (P2P) Architecture"},
+  {id:"serverless",     icon:"☁️", title:"Serverless Architecture"},
+  {id:"documenting",    icon:"📐", title:"Architecture Documentation — C4 Model ও Architecture Decision Records"},
+  {id:"decision",       icon:"🧩", title:"সঠিক Architecture বেছে নেওয়া — Decision Framework, Case Study ও Anti-patterns"},
+  {id:"interview",      icon:"🎯", title:"Interview প্রশ্নোত্তর"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. সফটওয়্যার আর্কিটেকচার কী এবং কেন গুরুত্বপূর্ণ</h2>
+<p class="lead">আর্কিটেকচার মানে কোড না — আর্কিটেকচার মানে সেই সিদ্ধান্তগুলো, যেগুলো একবার নেওয়ার পর বদলাতে গেলে পুরো টিমকে মাসের পর মাস কষ্ট করতে হয়।</p>
+
+<h3>আর্কিটেকচার বনাম লো-লেভেল ডিজাইন — পার্থক্যটা আসলে কোথায়</h3>
+<p>একজন নতুন ইঞ্জিনিয়ার প্রায়ই মনে করেন <span class="kw">Software Architecture</span> মানে বড় বড় ডায়াগ্রাম আঁকা বা fancy শব্দ ব্যবহার করা। বাস্তবে পার্থক্যটা সম্পূর্ণ ভিন্ন জায়গায় — পার্থক্যটা হলো <b>reversibility</b>, অর্থাৎ একটা সিদ্ধান্ত কতটা সহজে বা কতটা ব্যয়বহুলভাবে পাল্টানো যায়। একটা ফাংশনের ভেতরে ভ্যারিয়েবলের নাম বদলানো, একটা sorting algorithm-কে quicksort থেকে mergesort-এ পাল্টানো, বা একটা ক্লাসের internal implementation রিফ্যাক্টর করা — এগুলো <span class="kw">low-level design</span>-এর অংশ, এবং এগুলো বদলাতে ঘণ্টাখানেক বা বড়জোর একদিন লাগে, কারণ এর প্রভাব একটা নির্দিষ্ট ফাইল বা মডিউলের মধ্যেই সীমাবদ্ধ থাকে। কিন্তু সিস্টেমকে কয়টা service-এ ভাগ করা হবে, কোন service কার সাথে network-এর মাধ্যমে কথা বলবে, প্রাইমারি ডেটা স্টোর হিসেবে কোনটা ব্যবহৃত হবে (relational না NoSQL), অথবা সিস্টেমের core communication pattern synchronous না asynchronous হবে — এই সিদ্ধান্তগুলো একবার নেওয়ার পর গোটা কোডবেস, deployment pipeline, টিমের গঠন এবং প্রোডাকশনে থাকা রিয়েল ডেটা — সবকিছুর সাথে জড়িয়ে যায়। এগুলোই হলো প্রকৃত আর্কিটেকচারাল সিদ্ধান্ত, কারণ এগুলো বদলাতে গেলে পুরো সিস্টেমের বিভিন্ন অংশ একসাথে ছুঁতে হয়।</p>
+
+<p>এই পার্থক্যটা বোঝার একটা সহজ পরীক্ষা হলো নিজেকে প্রশ্ন করা — "এই সিদ্ধান্তটা বদলাতে হলে আমাকে কয়টা টিম, কয়টা সার্ভিস, এবং কতগুলো প্রোডাকশন ডেটাসেট ছুঁতে হবে?" যদি উত্তর হয় "শুধু একটা ফাইল", সেটা লো-লেভেল ডিজাইন। যদি উত্তর হয় "একাধিক টিম, একাধিক সার্ভিস, এবং লাইভ ডেটা মাইগ্রেশন", তাহলে সেটা আর্কিটেকচারাল সিদ্ধান্ত — এবং ঠিক এই কারণেই এই সিদ্ধান্তগুলো নেওয়ার আগে যতটা সম্ভব চিন্তাভাবনা ও আলোচনা করা উচিত।</p>
+
+<h3>Cost of Change Curve — কেন দেরিতে ধরা পড়া ভুল এত ব্যয়বহুল</h3>
+<p>সফটওয়্যার ইঞ্জিনিয়ারিং-এর একটা সুপরিচিত পর্যবেক্ষণ হলো, একটা ভুল সিদ্ধান্তকে যত দেরিতে ধরা যায়, সেটা ঠিক করার খরচ তত দ্রুত এবং তত অসামঞ্জস্যপূর্ণভাবে (non-linearly) বেড়ে যায়। এটাকে <span class="kw">Cost of Change Curve</span> বলা হয়। ধরা যাক, একটা টিম আর্কিটেকচার আলোচনার সময়েই বুঝতে পারল যে তাদের বেছে নেওয়া রিলেশনাল ডাটাবেস কাঙ্ক্ষিত write throughput সামলাতে পারবে না — এই মুহূর্তে সমাধান হলো হোয়াইটবোর্ডে অন্য একটা ডেটা স্টোর বেছে নেওয়া, যার খরচ কয়েক ঘণ্টার আলোচনা মাত্র। কিন্তু যদি একই সমস্যা ধরা পড়ে দুই বছর প্রোডাকশনে চলার পর, যখন টেবিলে ইতিমধ্যে ৫০ কোটি রো জমা হয়ে গেছে এবং সেটা ইতিমধ্যে ভুল শার্ডিং কী (sharding key) দিয়ে একাধিক শার্ডে ছড়িয়ে দেওয়া হয়ে গেছে — তখন সমাধান মানে হলো live migration script লেখা, ডাউনটাইম প্ল্যান করা, ডেটা কনসিস্টেন্সি বজায় রাখা, এবং এই পুরো প্রক্রিয়ার মধ্যে নতুন ফিচার ডেভেলপমেন্ট থামিয়ে রাখা — যার খরচ কয়েক সপ্তাহ বা কয়েক মাসের ইঞ্জিনিয়ারিং সময়।</p>
+
+<div class="diagram"><pre>
+খরচ (রিলেটিভ স্কেল)
+  │
+  │                                                    ● প্রোডাকশন (রিয়েল ডেটা +
+  │                                                       ইন্টিগ্রেশন নির্ভরশীল)
+  │                                          ● QA/Staging
+  │                                ● কোড রিভিউ
+  │                     ● ইমপ্লিমেন্টেশন
+  │           ● আর্কিটেকচার আলোচনা
+  │  ● রিকোয়ারমেন্ট আলোচনা
+  └──────────────────────────────────────────────────────▶ সময় / প্রজেক্ট ফেজ
+     যত দেরিতে ভুল ধরা পড়ে, ঠিক করার খরচ তত দ্রুত বাড়ে (linear না, বরং exponential-এর কাছাকাছি)
+</pre></div>
+
+<div class="callout why"><span class="tag">কেন খরচ লিনিয়ারলি না বেড়ে exponential-ভাবে বাড়ে</span>
+আর্কিটেকচার আলোচনার সময় একটা সিদ্ধান্তের সাথে এখনো কোনো কোড, কোনো রিয়েল ডেটা, কোনো ডাউনস্ট্রিম ইন্টিগ্রেশন জড়িত থাকে না — তাই বদলানো মানে শুধু একটা ডকুমেন্ট আপডেট করা। প্রোডাকশনে পৌঁছানোর পর একটা সিদ্ধান্তের সাথে ডেটা মাইগ্রেশন, চলমান ইউজার ট্র্যাফিক, অন্য টিমের সার্ভিস যা এই সিস্টেমের উপর নির্ভর করে, এবং ব্যাকওয়ার্ড কম্প্যাটিবিলিটির প্রতিশ্রুতি — এই সবকিছু জড়িয়ে যায়। প্রতিটা নতুন dependency মানে বদলানোর সময় আরেকটা জিনিস ভেঙে যাওয়ার ঝুঁকি — আর ঠিক এই কারণেই খরচ যোগ হয় না, গুণ হয়।</div>
+
+<h3>একই সিস্টেম, ভিন্ন স্টেকহোল্ডার, ভিন্ন উদ্বেগ</h3>
+<p>আর্কিটেকচারের একটা গুরুত্বপূর্ণ বাস্তবতা হলো, একই সিস্টেমের প্রতি বিভিন্ন মানুষের প্রত্যাশা সম্পূর্ণ ভিন্ন — এবং কেউই ভুল না। একজন ডেভেলপার চান কোডটা <span class="kw">maintainable</span> এবং <span class="kw">testable</span> হোক, যাতে নতুন ফিচার যোগ করা সহজ হয় এবং বাগ দ্রুত ধরা পড়ে। একজন SRE (Site Reliability Engineer) চিন্তিত থাকেন <span class="kw">availability</span> এবং <span class="kw">observability</span> নিয়ে — মধ্যরাতে সিস্টেম ডাউন হলে তিনি কত দ্রুত বুঝতে পারবেন কোথায় সমস্যা, এবং কত দ্রুত রিকভার করা যাবে। একজন CFO বা প্রোডাক্ট ওনার মূলত চিন্তিত থাকেন <b>cost</b> নিয়ে — প্রতি মাসে ইনফ্রাস্ট্রাকচারে কত খরচ হচ্ছে, এবং সেই খরচ ব্যবসার রেভিনিউর সাথে সামঞ্জস্যপূর্ণ কি না। আর একজন এন্ড ইউজার শুধু চান অ্যাপটা দ্রুত লোড হোক — তাঁর কাছে <span class="kw">latency</span>-ই একমাত্র বাস্তবতা, বাকি সবকিছু অদৃশ্য।</p>
+
+<p>এই চার পক্ষের চাহিদা প্রায়ই একে অপরের বিপরীতে টানে। যেমন, availability বাড়াতে হলে redundancy দরকার — একাধিক সার্ভার, একাধিক ডেটা সেন্টার — যা সরাসরি cost বাড়িয়ে দেয়। সিস্টেমকে বেশি maintainable ও testable করতে হলে প্রায়ই বেশি abstraction layer বা indirection যোগ করতে হয়, যা সরাসরি রিকোয়েস্ট প্রসেসিং-এ সামান্য latency যোগ করতে পারে। তাই আর্কিটেক্টের কাজ কোনো একটা পক্ষকে সন্তুষ্ট করা না — কাজ হলো এই প্রতিযোগী উদ্বেগগুলোর মধ্যে একটা সচেতন, ব্যাখ্যাযোগ্য ভারসাম্য তৈরি করা।</p>
+
+<table>
+<tr><th>স্টেকহোল্ডার</th><th>প্রধান উদ্বেগ</th><th>উদাহরণ প্রশ্ন</th></tr>
+<tr><td>ডেভেলপার</td><td>Maintainability, Testability</td><td>নতুন ফিচার যোগ করতে কতটা কোড ছুঁতে হবে?</td></tr>
+<tr><td>SRE / Ops</td><td>Availability, Observability</td><td>একটা সার্ভিস ফেইল করলে বাকি সিস্টেম টিকে থাকবে কি?</td></tr>
+<tr><td>CFO / Business</td><td>Cost, ROI</td><td>ট্র্যাফিক দ্বিগুণ হলে বিল কতটা বাড়বে?</td></tr>
+<tr><td>এন্ড ইউজার</td><td>Latency, Reliability</td><td>পেজ কত দ্রুত লোড হয়, ঠিক কাজ করে কি না?</td></tr>
+</table>
+
+<div class="callout mistake"><span class="tag">Common mistake — শুধু একটা quality-কে optimize করা</span>
+নতুন ইঞ্জিনিয়াররা প্রায়ই একটা মাত্র quality attribute-এ (সাধারণত performance বা "সবচেয়ে scalable" ডিজাইন) ফোকাস করে বাকি সবকিছু উপেক্ষা করেন। ফলাফল হলো এমন একটা সিস্টেম যা হয়তো থিওরিটিক্যালি অসম্ভব রকম scalable, কিন্তু এত জটিল যে কেউ এটা maintain করতে পারে না, অথবা এত ব্যয়বহুল যে ব্যবসা টিকিয়ে রাখা যায় না। বাস্তব আর্কিটেকচার সবসময় একটা compromise — "সবচেয়ে ভালো" ডিজাইন বলে কিছু নেই, শুধু "এই কনটেক্সটে সবচেয়ে উপযুক্ত" ডিজাইন আছে।</div>
+
+<h3>কেন কোনো একক "সেরা" আর্কিটেকচার নেই</h3>
+<p>এই কোর্সে সামনে আমরা বিভিন্ন আর্কিটেকচার style নিয়ে আলোচনা করব — <span class="kw">Monolith</span>, <span class="kw">Microservices</span>, <span class="kw">Event-Driven Architecture</span>, <span class="kw">Layered Architecture</span>, এবং আরও অনেক প্যাটার্ন। একজন নতুন ইঞ্জিনিয়ার প্রায়ই ধরে নেন এর মধ্যে একটা "সবচেয়ে আধুনিক" বা "সবচেয়ে ভালো" — যেমন মনে করা হয় microservices সবসময় monolith থেকে ভালো, কারণ বড় বড় কোম্পানি সেটা ব্যবহার করে। বাস্তবতা হলো, প্রতিটা style একটা নির্দিষ্ট কনটেক্সটে সবচেয়ে ভালো কাজ করে — এবং সেই কনটেক্সট নির্ভর করে টিমের আকার, সিস্টেমের স্কেল, ডোমেইনের প্রকৃতি, এবং প্রতিষ্ঠানের নির্দিষ্ট constraint-এর উপর। একটা ৫ জনের স্টার্টআপ টিমের জন্য microservices প্রায়ই একটা ভুল সিদ্ধান্ত, কারণ এত ছোট টিমের জন্য distributed system-এর অপারেশনাল জটিলতা সামলানোর মতো লোকবল নেই — সেখানে একটা ভালোভাবে-organized monolith অনেক বেশি কার্যকর।</p>
+
+<p>অন্যদিকে, একটা ৫০০ জন ইঞ্জিনিয়ারের প্রতিষ্ঠানে, যেখানে একাধিক টিম স্বাধীনভাবে ডিপ্লয় করতে চায় এবং প্রতিটা টিমের ভিন্ন স্কেলিং প্রয়োজন, সেখানে একটা মনোলিথ ধীরে ধীরে একটা bottleneck হয়ে দাঁড়ায় — সবার একই কোডবেসে কাজ করতে হয়, একটা টিমের বাগ পুরো ডিপ্লয়মেন্ট আটকে দিতে পারে। তাই এই কোর্সের প্রতিটা চ্যাপ্টারকে "কোনটা সঠিক" হিসেবে না দেখে "কোন পরিস্থিতিতে কোনটা উপযুক্ত, এবং কী মূল্যে" — এই দৃষ্টিভঙ্গি দিয়ে পড়া উচিত। পরের চ্যাপ্টারে আমরা দেখব কীভাবে quality attribute-গুলো স্পষ্টভাবে চিহ্নিত করা যায়, যা এই "কোনটা উপযুক্ত" প্রশ্নের উত্তর দেওয়ার প্রধান হাতিয়ার।</p>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — বড় কোম্পানির আর্কিটেকচার নকল করা একটা ফাঁদ</span>
+Netflix বা Uber-এর মতো কোম্পানির মাইক্রোসার্ভিস আর্কিটেকচার নিয়ে আলোচনা প্রচুর, কিন্তু ভুলে যাওয়া হয় যে তারা এই আর্কিটেকচারে পৌঁছেছে বছরের পর বছর স্কেল করার পর, হাজার হাজার ইঞ্জিনিয়ারের সাপোর্ট নিয়ে, এবং বিশাল অপারেশনাল ইনভেস্টমেন্ট (dedicated platform team, custom tooling) দিয়ে। একটা ছোট টিম যদি দিন এক থেকেই সেই একই আর্কিটেকচার কপি করে, তারা মূল সুবিধাগুলো (independent scaling, team autonomy) ছাড়াই শুধু জটিলতাটুকু ইনহেরিট করে। আর্কিটেকচার সিদ্ধান্ত সবসময় নিজের কনটেক্সট থেকে নিতে হয়, অন্যের গল্প থেকে না।</div>
+
+<div class="callout best"><span class="tag">Best practice — প্রতিটা বড় সিদ্ধান্তে "কেন" লিখে রাখুন</span>
+যেকোনো আর্কিটেকচারাল সিদ্ধান্ত নেওয়ার সময় শুধু "কী" সিদ্ধান্ত নেওয়া হলো তা না, "কেন" এবং "কী কী বিকল্প বিবেচনা করে বাদ দেওয়া হলো" তাও লিখে রাখা উচিত — একে সাধারণত <span class="kw">Architecture Decision Record (ADR)</span> বলা হয়। ছয় মাস পর যখন কেউ প্রশ্ন করবে "আমরা কেন MongoDB বেছে নিলাম, PostgreSQL কেন না", তখন এই রেকর্ড ছাড়া উত্তর দেওয়া প্রায় অসম্ভব হয়ে যায় — এবং টিম না বুঝেই সেই সিদ্ধান্ত আবার নতুন করে re-litigate করতে বাধ্য হয়। এই কোর্সের পরের একটা অধ্যায়ে ADR ফরম্যাট বিস্তারিত আলোচনা করা হয়েছে।</div>
+</template>
+
+<template data-page="quality">
+<h2 class="title">২. Quality Attributes (Non-functional Requirements) ও Architecture Trade-offs</h2>
+<p class="lead">সিস্টেম "কী করে" সেটা যতটা গুরুত্বপূর্ণ, তার চেয়ে বেশি গুরুত্বপূর্ণ সিস্টেম "কেমন করে" কাজ করে — আর ঠিক এই "কেমন করে"-টাই নির্ধারণ করে কোন আর্কিটেকচার আপনার জন্য সঠিক।</p>
+
+<h3>Functional বনাম Non-functional Requirement — মৌলিক পার্থক্য</h3>
+<p><span class="kw">Functional Requirement</span> বলতে বোঝায় সিস্টেম আসলে কী কাজ করবে — যেমন "ইউজার লগইন করতে পারবে", "একটা অর্ডার প্লেস করা যাবে", "একটা মেসেজ পাঠানো যাবে"। এগুলো সাধারণত প্রোডাক্ট রিকোয়ারমেন্ট থেকে সরাসরি আসে এবং কোড লিখেই বাস্তবায়ন করা যায় — একজন ডেভেলপার একটা ফাংশন লিখে ফিচারটা "কাজ করাতে" পারেন। কিন্তু <span class="kw">Quality Attribute</span> বা <span class="kw">Non-functional Requirement (NFR)</span> বলতে বোঝায় সিস্টেম সেই কাজটা কতটা ভালোভাবে, কতটা নির্ভরযোগ্যভাবে, এবং কতটা স্কেলে করতে পারে — যেমন <b>scalability</b> (ট্র্যাফিক বাড়লে সিস্টেম টিকে থাকে কি না), <b>availability</b> (সিস্টেম কতটা সময় চালু থাকে), <b>performance/latency</b> (প্রতিটা রিকোয়েস্ট কত দ্রুত সম্পন্ন হয়), <b>maintainability</b> (নতুন ফিচার যোগ করা কতটা সহজ), <b>testability</b> (বাগ কতটা সহজে ধরা যায়), <b>security</b> (আক্রমণ থেকে কতটা সুরক্ষিত), এবং <b>deployability</b> (নতুন ভার্সন প্রোডাকশনে দেওয়া কতটা সহজ ও ঝুঁকিমুক্ত)।</p>
+
+<p>এখানে একটা গুরুত্বপূর্ণ পার্থক্য বোঝা দরকার — একটা ফিচার "কাজ করা" এবং একটা ফিচার "ভালোভাবে কাজ করা" সম্পূর্ণ ভিন্ন জিনিস। একটা লগইন ফিচার লোকাল মেশিনে একজন ইউজারের জন্য নিখুঁতভাবে কাজ করতে পারে, কিন্তু ১০ লাখ ইউজার একসাথে লগইন করার চেষ্টা করলে সেটা ভেঙে পড়তে পারে — এটা একটা functional bug না, এটা একটা <b>scalability</b> সমস্যা, এবং এর সমাধান কোডের ভেতরে খুঁজে পাওয়া যায় না, খুঁজে পাওয়া যায় আর্কিটেকচারে।</p>
+
+<h3>কেন Quality Attribute নির্ধারণ করে কোড না, আর্কিটেকচার</h3>
+<p>একটা সাধারণ ভুল ধারণা হলো, quality attribute মূলত কোডের মান বা ডেভেলপারের দক্ষতার উপর নির্ভর করে। বাস্তবে বেশিরভাগ গুরুত্বপূর্ণ quality attribute নির্ধারিত হয় সিস্টেমের গঠনগত সিদ্ধান্ত দিয়ে, নিখুঁত কোড লেখা দিয়ে না। <span class="kw">Availability</span>-এর কথাই ধরুন — একটা সার্ভিসের মাত্র একটা ইনস্ট্যান্স চললে, সেই ইনস্ট্যান্স যত সুন্দর কোডেই লেখা হোক না কেন, হার্ডওয়্যার ফেইলিওর বা ডিপ্লয়মেন্টের সময় সিস্টেম ডাউন হবেই। Availability মূলত নির্ধারিত হয় redundancy দিয়ে — কতগুলো instance আছে, একাধিক availability zone বা region-এ ছড়ানো আছে কি না — এটা একটা আর্কিটেকচারাল সিদ্ধান্ত, কোড-লেভেল সিদ্ধান্ত না।</p>
+
+<p>একইভাবে <span class="kw">Scalability</span> নির্ধারিত হয় সিস্টেম <b>stateless</b> কি না, ডেটা কীভাবে partition করা আছে, এবং bottleneck component (যেমন একটা single database instance) সিস্টেমের কেন্দ্রে বসে আছে কি না তার উপর — একজন ব্রিলিয়ান্ট ডেভেলপার একটা মনোলিথিক, single-database আর্কিটেকচারের ভেতরে যত optimized কোডই লিখুন, একটা নির্দিষ্ট স্কেলের পরে সিস্টেম আটকে যাবে, কারণ বাধাটা algorithm-এ না, গঠনে। <span class="kw">Maintainability</span> নির্ধারিত হয় module-গুলোর মধ্যে কতটা কম coupling আছে এবং responsibility কতটা স্পষ্টভাবে বিভক্ত তার উপর — একটা ভালো layered বা modular আর্কিটেকচারে একজন গড় ডেভেলপারও নিরাপদে পরিবর্তন করতে পারেন, কিন্তু একটা tightly-coupled "spaghetti" আর্কিটেকচারে সবচেয়ে দক্ষ ডেভেলপারও ভয়ে ভয়ে পরিবর্তন করেন, কারণ একটা ছোট পরিবর্তন কোথায় গিয়ে কী ভাঙবে তা অনুমান করা কঠিন।</p>
+
+<div class="callout why"><span class="tag">কেন এটা ইন্টারভিউ ও রিয়েল কাজ দুই জায়গাতেই গুরুত্বপূর্ণ</span>
+একজন ইঞ্জিনিয়ার যদি মনে করেন "ভালো কোড লিখলেই availability বা scalability এমনিতেই চলে আসবে", তিনি ভুল জায়গায় সময় ব্যয় করবেন — কোড রিভিউতে মাইক্রো-অপ্টিমাইজেশন নিয়ে তর্ক করবেন, অথচ redundancy বা data partitioning-এর মতো প্রকৃত কাঠামোগত সিদ্ধান্ত অগোছালো থেকে যাবে। Quality attribute-কে আর্কিটেকচারাল সমস্যা হিসেবে চেনা মানেই সঠিক জায়গায় সময় ও রিসোর্স বিনিয়োগ করা।</div>
+
+<h3>Quality Attribute-গুলো একে অপরের সাথে সংঘর্ষে জড়ায়</h3>
+<p>আর্কিটেকচারের সবচেয়ে গুরুত্বপূর্ণ উপলব্ধি হলো — কোনো সিস্টেমই সব quality attribute একসাথে সর্বোচ্চ মাত্রায় অর্জন করতে পারে না। প্রতিটা attribute বাড়াতে গেলে সাধারণত অন্তত একটা আরেকটা attribute-এ ছাড় দিতে হয়। সবচেয়ে ক্লাসিক উদাহরণ হলো <b>Consistency বনাম Availability</b> — CAP Theorem অনুযায়ী, নেটওয়ার্ক পার্টিশন ঘটলে একটা distributed system হয় strong consistency বজায় রাখার জন্য কিছু রিকোয়েস্ট প্রত্যাখ্যান করবে (Availability কমবে), অথবা সব রিকোয়েস্টের উত্তর দেবে কিন্তু stale/inconsistent ডেটা দিয়ে (Consistency কমবে) — দুটোই একসাথে ১০০% পাওয়া সম্ভব না।</p>
+
+<p>দ্বিতীয় গুরুত্বপূর্ণ জোড়া হলো <b>Performance বনাম Maintainability</b>। একটা সিস্টেমকে সর্বোচ্চ পারফরম্যান্সের জন্য অপ্টিমাইজ করতে গেলে প্রায়ই abstraction layer সরিয়ে ফেলতে হয়, ফাংশন inline করতে হয়, cache এবং denormalized ডেটা structure যোগ করতে হয় — এই প্রতিটা টেকনিক কোডকে দ্রুত করে, কিন্তু একই সাথে কোডকে বোঝা এবং পরিবর্তন করা কঠিন করে তোলে। একটা পরিষ্কার, ভালোভাবে layered সিস্টেম সহজে maintain করা যায় কিন্তু প্রতিটা layer অতিক্রম করতে সামান্য অতিরিক্ত latency যোগ করে। তৃতীয় একটা সাধারণ জোড়া হলো <b>Security বনাম Performance/Usability</b> — প্রতিটা অতিরিক্ত encryption layer, প্রতিটা অতিরিক্ত authentication চেক সিস্টেমকে নিরাপদ করে কিন্তু প্রতিটা রিকোয়েস্টে প্রসেসিং সময় ও জটিলতা যোগ করে।</p>
+
+<div class="diagram"><pre>
+        Consistency                       Performance
+             ▲                                  ▲
+             │  Trade-off                       │  Trade-off
+             │  (একটা বাড়ালে                    │  (একটা বাড়ালে
+             │   অন্যটা কমে)                     │   অন্যটা কমে)
+             ▼                                  ▼
+        Availability                      Maintainability
+
+  কোনো সিস্টেমই উভয় প্রান্তে একসাথে থাকতে পারে না —
+  আর্কিটেক্ট-কে সচেতনভাবে বেছে নিতে হয় কোন প্রান্তের দিকে ঝুঁকবে
+</pre></div>
+
+<div class="callout mistake"><span class="tag">Common mistake — সব quality attribute একসাথে "high" চাওয়া</span>
+রিকোয়ারমেন্ট ডকুমেন্টে প্রায়ই লেখা থাকে "সিস্টেমটা হাইলি scalable, হাইলি available, হাইলি secure, এবং হাইলি maintainable হতে হবে" — বাস্তবে এটা কোনো constraint না, এটা একটা wishlist। এই ধরনের রিকোয়ারমেন্ট আর্কিটেক্টকে কোনো দিকনির্দেশনা দেয় না, কারণ আসল প্রশ্ন হলো conflict হলে কোনটা জিতবে। একটা ভালো রিকোয়ারমেন্ট বলবে "availability, consistency-এর চেয়ে বেশি গুরুত্বপূর্ণ, কারণ কয়েক সেকেন্ড stale ডেটা গ্রহণযোগ্য কিন্তু ডাউনটাইম না" — এটাই আসল, actionable তথ্য।</div>
+
+<h3>ATAM চিন্তাভাবনা — style বেছে নেওয়ার আগে অগ্রাধিকার ঠিক করা</h3>
+<p><span class="kw">ATAM (Architecture Tradeoff Analysis Method)</span> একটা প্রাতিষ্ঠানিক পদ্ধতি যা মূলত একটা সহজ কিন্তু গুরুত্বপূর্ণ প্রশ্নের উপর ভিত্তি করে তৈরি — এই নির্দিষ্ট সিস্টেমের জন্য কোন quality attribute-গুলো সবচেয়ে বেশি গুরুত্বপূর্ণ, এবং কোন কোনটাতে ছাড় দেওয়া যাবে? এই প্রশ্নের উত্তর কোনো একটা আর্কিটেকচার style বেছে নেওয়ার আগেই দিতে হয়, কারণ এই উত্তরটাই বলে দেয় কোন style আদৌ প্রাসঙ্গিক। একটা ব্যাংকিং লেজার সিস্টেমের জন্য <b>consistency</b> এবং <b>security</b> সবচেয়ে বেশি গুরুত্বপূর্ণ — একটা টাকা ট্রান্সফার দুইবার হয়ে গেলে বা ভুল ব্যালেন্স দেখালে সেটা একটা বিপর্যয়, তাই এখানে সামান্য বাড়তি latency মেনে নিয়ে হলেও strong consistency এবং rigorous validation প্রাধান্য পায়। অন্যদিকে, একটা সোশ্যাল মিডিয়া ফিড সিস্টেমের জন্য <b>availability</b> এবং <b>latency</b> সবচেয়ে গুরুত্বপূর্ণ — একজন ইউজার যদি একটা নতুন পোস্ট তার ফিডে কয়েক সেকেন্ড দেরিতে দেখেন (eventual consistency), সেটা প্রায় কেউ খেয়ালই করবে না, কিন্তু ফিড লোড হতে যদি কয়েক সেকেন্ড দেরি হয়, ইউজার অ্যাপ ছেড়ে চলে যাবেন।</p>
+
+<p>এই অগ্রাধিকার নির্ধারণের কাজ style বেছে নেওয়ার প্রথম ধাপ হওয়া উচিত, শেষ ধাপ না। যদি একটা টিম আগে থেকেই ঠিক করে ফেলে "আমরা microservices ব্যবহার করব" বা "আমরা event-driven যাব" এবং তারপর quality attribute নিয়ে চিন্তা করে, তাহলে তারা আসলে সমাধান দিয়ে সমস্যা খোঁজার চেষ্টা করছে। সঠিক ক্রম হলো — আগে ব্যবসার প্রেক্ষাপট থেকে বুঝে নেওয়া কোন attribute-গুলো non-negotiable এবং কোনগুলোতে নমনীয়তা আছে, তারপর সামনের চ্যাপ্টারগুলোতে আলোচিত style (Layered, Microservices, Event-Driven, ইত্যাদি) থেকে যেটা সেই নির্দিষ্ট অগ্রাধিকারের সাথে সবচেয়ে ভালো মেলে সেটা বেছে নেওয়া।</p>
+
+<table>
+<tr><th>Quality Attribute</th><th>সংক্ষিপ্ত সংজ্ঞা</th><th>মূল আর্কিটেকচারাল সিদ্ধান্ত যা এটা নির্ধারণ করে</th></tr>
+<tr><td>Availability</td><td>সিস্টেম কতটা সময় ব্যবহারযোগ্য থাকে</td><td>Redundancy — instance/zone/region-এর সংখ্যা</td></tr>
+<tr><td>Scalability</td><td>ট্র্যাফিক বাড়লে সিস্টেম টিকে থাকতে পারে কি না</td><td>Statelessness ও ডেটা partitioning strategy</td></tr>
+<tr><td>Performance / Latency</td><td>প্রতিটা রিকোয়েস্ট কত দ্রুত সম্পন্ন হয়</td><td>Caching layer, ডেটা locality, network hop-এর সংখ্যা</td></tr>
+<tr><td>Maintainability</td><td>নতুন ফিচার যোগ/পরিবর্তন কতটা সহজ</td><td>Module boundary ও coupling-এর মাত্রা</td></tr>
+<tr><td>Testability</td><td>বাগ কতটা সহজে ও দ্রুত ধরা যায়</td><td>Dependency injection, component isolation</td></tr>
+<tr><td>Security</td><td>আক্রমণ ও অননুমোদিত অ্যাক্সেস থেকে সুরক্ষা</td><td>Trust boundary, authentication/authorization placement</td></tr>
+<tr><td>Deployability</td><td>নতুন ভার্সন প্রোডাকশনে দেওয়া কতটা নিরাপদ ও সহজ</td><td>Service boundary ও deployment independence</td></tr>
+</table>
+
+<div class="callout best"><span class="tag">Best practice — quality attribute-কে র‍্যাঙ্ক করুন, শুধু তালিকা করবেন না</span>
+প্রতিটা প্রজেক্টের শুরুতে quality attribute-গুলোর একটা সাধারণ তালিকা বানানো যথেষ্ট না — সেগুলোকে অগ্রাধিকার অনুযায়ী র‍্যাঙ্ক করা উচিত, এবং প্রতিটার জন্য একটা নির্দিষ্ট, পরিমাপযোগ্য টার্গেট (যেমন "৯৯.৯% uptime", "p99 latency ২০০ms-এর নিচে") লিখে রাখা উচিত। এই র‍্যাঙ্কিং এবং টার্গেট পুরো টিমের জন্য একটা শেয়ার্ড রেফারেন্স হয়ে ওঠে, যা পরবর্তীতে যেকোনো আর্কিটেকচারাল বিতর্ক (যেমন "আমরা কি caching layer যোগ করব?") দ্রুত ও বস্তুনিষ্ঠভাবে মীমাংসা করতে সাহায্য করে।</div>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — অগ্রাধিকার সময়ের সাথে বদলায়</span>
+একটা স্টার্টআপের প্রাথমিক পর্যায়ে প্রায়ই <b>development speed</b> এবং <b>deployability</b> সবচেয়ে গুরুত্বপূর্ণ থাকে, কারণ প্রোডাক্ট-মার্কেট ফিট খুঁজে পাওয়াই তখন প্রধান লক্ষ্য — সেই পর্যায়ে একটা সাধারণ মনোলিথ প্রায়ই সঠিক সিদ্ধান্ত, কারণ এটা দ্রুত ইটারেট করতে দেয়। কোম্পানি যখন স্কেল করে এবং লক্ষ লক্ষ ইউজার পেয়ে যায়, তখন হঠাৎ availability এবং scalability সবচেয়ে গুরুত্বপূর্ণ হয়ে ওঠে। তাই আর্কিটেকচার একটা এককালীন সিদ্ধান্ত না — quality attribute-এর অগ্রাধিকার পুনর্মূল্যায়ন করা এবং প্রয়োজনে আর্কিটেকচার বিবর্তিত (evolve) করাও আর্কিটেক্টের কাজের অংশ।</div>
+</template>
+
+<template data-page="layered">
+<h2 class="title">৩. Layered (N-Tier) Architecture</h2>
+<p class="lead">সবচেয়ে প্রচলিত এই স্টাইলটা এত সহজাত মনে হয় যে অনেকে এটাকে "আর্কিটেকচার" হিসেবে চিনতেই ভুলে যান — অথচ এটাকে ভুলভাবে বাস্তবায়ন করাই সবচেয়ে বেশি production কোডবেসকে "big ball of mud"-এ পরিণত করে।</p>
+
+<h3>মূল ধারণা — অনুভূমিক স্তরে ভাগ করা</h3>
+<p>Layered Architecture-এ কোডকে অনুভূমিক স্তরে (layer) ভাগ করা হয়, প্রতিটা স্তর শুধু তার ঠিক নিচের স্তরকে কল করে — উপরের স্তর নিচের স্তরের implementation detail জানে না, শুধু তার interface ব্যবহার করে। ক্লাসিক তিন-স্তর মডেল: <span class="kw">Presentation Layer</span> (UI/API controller — request গ্রহণ ও response ফরম্যাট করা), <span class="kw">Business/Application Logic Layer</span> (domain rule, validation, orchestration — আসল সিদ্ধান্ত এখানে নেওয়া হয়), আর <span class="kw">Data Access Layer</span> (repository, ORM, SQL query — persistence-এর সব খুঁটিনাটি এখানে লুকানো)।</p>
+
+<div class="diagram"><pre>
+   Presentation Layer   (HTTP controller, request/response mapping)
+          │
+          ▼
+   Business Logic Layer (domain rule, validation, orchestration)
+          │
+          ▼
+   Data Access Layer    (repository, ORM, SQL query)
+          │
+          ▼
+       Database
+</pre></div>
+
+<h3>দুই-স্তর, তিন-স্তর, N-স্তর — এবং Physical বনাম Logical Layering</h3>
+<p>ঐতিহাসিকভাবে <span class="kw">Two-Tier</span> architecture-এ client সরাসরি database-এর সাথে কথা বলত (মাঝে কোনো business logic layer ছাড়াই) — সহজ কিন্তু client-এর ভেতরে business rule ছড়িয়ে থাকায় একাধিক client (web, mobile, admin panel) থাকলে rule ডুপ্লিকেট হতো। Three-tier এই সমস্যা সমাধান করে business logic-কে একটা কেন্দ্রীয় middle layer-এ নিয়ে আসে, যাতে সব client একই rule শেয়ার করে। এটাকে আরও ভাঙলে N-tier হয় — যেমন business logic layer-কে আবার application service ও domain service-এ ভাগ করা। এখানে একটা গুরুত্বপূর্ণ পার্থক্য বোঝা দরকার — <b>logical layering</b> (একই process-এর ভেতরে কোড namespace/folder দিয়ে আলাদা, কিন্তু deploy একসাথেই হয়) বনাম <b>physical layering</b> (প্রতিটা layer সত্যিকারের আলাদা মেশিনে/process-এ চলে, network-এর মাধ্যমে কথা বলে — যেমন একটা আলাদা web server tier, আলাদা application server tier, আলাদা database server)। বেশিরভাগ আধুনিক ওয়েব অ্যাপ্লিকেশন logical layering ব্যবহার করে একটামাত্র deployable-এর ভেতরে, physical layering সাধারণত শুধু database ও cache-এর জন্যই সত্যি হয়।</p>
+
+<table>
+<tr><th>সুবিধা</th><th>ব্যাখ্যা</th></tr>
+<tr><td>শেখা ও onboarding সহজ</td><td>নতুন ইঞ্জিনিয়ারের জন্য predictable — "validation logic কোথায় খুঁজব" প্রশ্নের উত্তর সবসময় একই জায়গায়</td></tr>
+<tr><td>স্তর-নির্দিষ্ট পরিবর্তন সহজ</td><td>UI framework পাল্টানো বা ORM বদলানো তাত্ত্বিকভাবে শুধু সেই একটা layer-কে প্রভাবিত করে</td></tr>
+<tr><td>টিম-বিভাজন সহজ</td><td>একটা টিম frontend/API layer নিয়ে, আরেকটা database/persistence নিয়ে কাজ করতে পারে</td></tr>
+</table>
+
+<div class="callout mistake"><span class="tag">Common mistake — "Layered" মানেই "Decoupled" ধরে নেওয়া</span>
+Layer আলাদা থাকা মানেই কোড decoupled, এই ধারণাটা ভুল। disciplined না থাকলে business logic ধীরে ধীরে presentation layer-এ (যেমন controller-এর ভেতরে সরাসরি validation ও calculation বসিয়ে দেওয়া) অথবা data access layer-এ (stored procedure-এর ভেতরে business rule লুকিয়ে রাখা) leak করে যায় — একে <b>"big ball of mud"</b> বলা হয়। শুধু ফোল্ডার/namespace দিয়ে আলাদা করলেই আসল সুবিধা পাওয়া যায় না, প্রতিটা layer-এর responsibility স্পষ্টভাবে বেঁধে রাখতে হয় এবং dependency শুধু এক দিকে (নিচের দিকে) যেতে দিতে হয়।</div>
+
+<div class="callout why"><span class="tag">কেন "Layer Skipping" একটা বিপজ্জনক শর্টকাট</span>
+একটা সাধারণ চাপ — presentation layer সরাসরি data access layer-কে কল করে ফেলা, business logic layer বাইপাস করে, "এটা তো শুধু একটা সহজ read" যুক্তিতে। সমস্যা হলো এই শর্টকাট একবার নেওয়া শুরু হলে থামানো কঠিন — ধীরে ধীরে ব্যবসায়িক নিয়ম (যেমন authorization check, soft-delete filter) কিছু path-এ থাকে, কিছু path-এ থাকে না, আর কোন read কোন rule মেনে চলছে তা ট্র্যাক করা অসম্ভব হয়ে যায়। প্রতিটা read/write একইভাবে business logic layer দিয়ে যাওয়া উচিত, ব্যতিক্রম ছাড়া।</div>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — Layered Architecture-ই বেশিরভাগ অন্য স্টাইলের ভিত্তি</span>
+Layering কোনো "পুরনো" বা "সরল" কৌশল না যা আধুনিক আর্কিটেকচার প্রতিস্থাপন করে ফেলেছে — বরং প্রায় প্রতিটা আধুনিক স্টাইল (Hexagonal/Clean/Onion Architecture, এমনকি একটা একক Microservice-এর ভেতরের গঠনও) কোনো না কোনোভাবে layering-এর ধারণাকেই আরও কঠোর নিয়মে (dependency শুধু কেন্দ্রের দিকে যেতে হবে) প্রয়োগ করে। এই কোর্সের পরের একটা অধ্যায়ে (Hexagonal/Clean/Onion) দেখা যাবে কীভাবে সেই কঠোরতা layering-এর সাধারণ দুর্বলতাগুলো (layer skipping, leak হওয়া business logic) কাঠামোগতভাবেই ঠেকিয়ে দেয়।</div>
+</template>
+
+<template data-page="modularmonolith">
+<h2 class="title">৬. Modular Monolith</h2>
+<p class="lead">একটা monolith-কে "খারাপ" করে তোলে deployment ইউনিট একটা হওয়া না — খারাপ করে তোলে কোডের ভেতরে কোনো সীমানাই না থাকা; <span class="kw">Modular Monolith</span> ঠিক সেই সমস্যাটার সমাধান, deployment জটিলতা বাড়ানো ছাড়াই।</p>
+
+<h3>Modular Monolith কী — একই Deployment, কিন্তু শৃঙ্খলাবদ্ধ সীমানা</h3>
+<p>একটা <span class="kw">Modular Monolith</span> আগের অধ্যায়ে আলোচিত plain monolith-এর মতোই একটা একক deployable প্রসেস/আর্টিফ্যাক্ট, আর প্রায়ই একটাই ডেটাবেস ব্যবহার করে — বাইরে থেকে দেখলে এটা এখনও একটা monolith। পার্থক্যটা ভেতরে — কোডবেসটা কড়াকড়িভাবে সংজ্ঞায়িত, ভালোভাবে-সীমাবদ্ধ <span class="kw">module</span>-এ সংগঠিত থাকে, আর প্রতিটা module একটা স্পষ্ট <span class="kw">public interface</span> (contract) উন্মুক্ত করে। একটা module অন্য module-এর সাথে যোগাযোগ করে শুধু সেই প্রকাশিত contract-এর মাধ্যমে — কখনোই অন্য module-এর internal ক্লাস, টেবিল, বা shared mutable state-এ সরাসরি ঢুকে পড়ে না। ফলাফল হলো এমন একটা সিস্টেম যেখানে ডেভেলপাররা একটা module নিয়ে চিন্তা করতে পারে সম্পূর্ণ সিস্টেমের প্রতিটা বিবরণ মনে না রেখেই — ঠিক যেমন microservices-এ হয়, কিন্তু network call, distributed transaction, বা আলাদা deployment pipeline-এর জটিলতা ছাড়াই।</p>
+
+<h3>Package by Feature, Not by Layer — এই একটা সিদ্ধান্তই সব বদলে দেয়</h3>
+<p>বেশিরভাগ monolith যেভাবে ভুলভাবে গঠিত হয় তা হলো <span class="kw">Package by Layer</span> — একটা <code>controllers/</code>, একটা <code>services/</code>, একটা <code>repositories/</code> ফোল্ডার, আর প্রতিটার ভেতরে সব ফিচারের ক্লাস মিশিয়ে রাখা। এতে একটা একক বিজনেস ফিচার (যেমন "Order")-এর কোড তিনটা ভিন্ন ফোল্ডারে ছড়িয়ে থাকে, আর যেহেতু ভাষাগত visibility rule (public class) সবকিছুকেই সবার জন্য দৃশ্যমান করে রাখে, কোনো ডেভেলপার ইচ্ছা করলেই <code>InventoryRepository</code>-কে সরাসরি <code>OrderService</code> থেকে import করে ফেলতে পারে। বিপরীতে <span class="kw">Package by Feature/Domain</span>-এ কোডবেস সংগঠিত হয় <code>orders/</code>, <code>inventory/</code>, <code>billing/</code>-এর মতো ডোমেইন-ভিত্তিক ফোল্ডারে — প্রতিটার নিজের ভেতরেই নিজস্ব controller/service/repository স্তর থাকে, কিন্তু বাইরের জগতের কাছে উন্মুক্ত থাকে শুধু একটা সরু public API। এই সাংগঠনিক পার্থক্যটাই নির্ধারণ করে দেয় ভবিষ্যতে microservices-এ রূপান্তর আদৌ সম্ভব কিনা — একটা "layered কিন্তু modular নয়" monolith-এ কিছুই সত্যিকারভাবে আলাদা করার মতো নয়, কারণ কোনো একটা ফিচারের কোড কখনোই এক জায়গায় জড়ো ছিল না।</p>
+<div class="diagram"><pre>
+Package by Layer (টেকনিক্যাল স্তর অনুযায়ী)          Package by Feature (ডোমেইন অনুযায়ী)
+
+controllers/                                    orders/
+ ├─ OrderController                               ├─ (internal) Controller, Service, Repo
+ ├─ InventoryController                           └─ OrdersApi.java   ← একমাত্র public entry point
+ └─ BillingController
+services/                                       inventory/
+ ├─ OrderService                                  ├─ (internal) Controller, Service, Repo
+ ├─ InventoryService                               └─ InventoryApi.java
+ └─ BillingService
+repositories/                                   billing/
+ ├─ OrderRepository                                ├─ (internal) Controller, Service, Repo
+ ├─ InventoryRepository                            └─ BillingApi.java
+ └─ BillingRepository
+
+"Order" ফিচার বদলাতে ৩টা ফোল্ডার ছুঁতে হয়,          প্রতিটা মডিউলের ভেতরের ক্লাস অন্য মডিউল থেকে
+প্রতিটা ক্লাস সব জায়গা থেকে সরাসরি visible            অদৃশ্য — শুধু *Api ক্লাসটাই যোগাযোগের একমাত্র পথ
+</pre></div>
+
+<h3>সীমানা বলবৎ করা — শুধু নিয়ম লিখলেই হয় না, বিল্ড-টাইমে আটকাতে হয়</h3>
+<p>একটা module boundary কাগজে-কলমে ঘোষণা করলেই টেকে না — সেটাকে <span class="kw">architectural fitness function</span> দিয়ে বিল্ড-টাইমে বলবৎ করতে হয়। ব্যবহারিকভাবে এর মানে হলো: একটা module অন্য module-এর internal namespace সরাসরি রেফারেন্স করতে পারবে না, শুধু তার public interface-কে পারবে। কিছু ইকোসিস্টেম এটা ভাষার নিজস্ব visibility feature দিয়ে বলবৎ করে — Java-তে <code>package-private</code> ভিজিবিলিটি বা Java 9+ module system (<code>module-info.java</code>), .NET-এ <code>internal</code> কীওয়ার্ড আর project reference rule (একটা প্রজেক্ট শুধু অন্য প্রজেক্টের সেই ক্লাসগুলোই দেখতে পায় যেগুলো ইচ্ছাকৃতভাবে <code>public</code> করা হয়েছে)। যেসব ভাষায় এই ধরনের কড়া visibility নেই, সেখানে static analysis টুল বা <span class="kw">ArchUnit</span>-এর মতো "architecture test" ব্যবহার করা হয় — এগুলো ইউনিট টেস্টের মতোই CI pipeline-এ চলে, আর যদি কেউ <code>orders</code> প্যাকেজ থেকে <code>inventory.internal</code>-এর কোনো ক্লাস import করে ফেলে, বিল্ড ব্যর্থ হয়ে যায়।</p>
+
+<h3>কেন সরাসরি Microservices-এ না গিয়ে Modular Monolith বেছে নেওয়া হয়</h3>
+<p>একটা সুশৃঙ্খল Modular Monolith প্রায় সব সুবিধাই দেয় যা একটা টিম domain boundary থেকে চায় — প্রতিটা module স্বাধীনভাবে reason করা যায়, একটা টিম একটা module-এর মালিকানা নিতে পারে, আর কোড রিভিউ ও টেস্টিং সহজ থাকে কারণ সীমানাগুলো স্পষ্ট। একইসাথে এটা deployment, transaction, আর operational জটিলতা একেবারে সরল রাখে — যদি সত্যিকারভাবে একাধিক module জুড়ে একটা atomic transaction লাগে (যেমন একটা অর্ডার তৈরির সময় inventory কমানো ও billing রেকর্ড তৈরি করা একসাথে সফল বা ব্যর্থ হওয়া দরকার), সেটা এখনও একটা local ACID ডেটাবেস transaction দিয়েই সমাধান করা যায় — distributed transaction বা Saga pattern-এর প্রয়োজন নেই। এই কারণেই Modular Monolith একটা pragmatic মধ্যবর্তী পথ, আর বেশিরভাগ ক্ষেত্রে এটাই সঠিক শুরুর বিন্দু — সরাসরি microservices দিয়ে শুরু করার বদলে। যখন কোনো একটা নির্দিষ্ট module সত্যিই আলাদা স্কেলিং, আলাদা deployment cadence, বা আলাদা টিম দাবি করে (যেমন Notifications module হঠাৎ অনেক বেশি throughput চায়, অথবা একটা নতুন টিম শুধু Payments-এর মালিকানা নিতে চায়), তখনই সেই একটা module-কে বের করে আসল microservice বানানো হয় — এই এক্সট্র্যাকশন সিদ্ধান্ত কীভাবে নেওয়া হয় তা এই কোর্সের decision-framework অধ্যায়ে বিস্তারিত আলোচিত।</p>
+
+<h3>উদাহরণ — E-commerce Monolith-এ Boundary Violation-এর ক্ষতি</h3>
+<p>ধরা যাক একটা e-commerce monolith-এ চারটা module আছে: <code>Orders</code>, <code>Inventory</code>, <code>Payments</code>, আর <code>Notifications</code>। সঠিক ডিজাইনে, একটা নতুন অর্ডার তৈরি হলে <code>Orders</code> module স্টক আছে কিনা জানতে <code>InventoryApi.checkAndReserve(sku, qty)</code>-এর মতো একটা public মেথড কল করে — <code>Inventory</code> module কীভাবে অভ্যন্তরীণভাবে স্টক গণনা করে, কোন টেবিলে রাখে, কী ইনডেক্স ব্যবহার করে তা <code>Orders</code>-এর জানার দরকার নেই। কিন্তু একটা সাধারণ, প্রথমদিকে নিরীহ মনে হওয়া shortcut হলো: একটা রিপোর্টিং ফিচারের জন্য দ্রুত ফল পেতে <code>Orders</code> module সরাসরি <code>inventory_stock</code> টেবিলে SQL join করে ফেলা, public interface এড়িয়ে। এই মুহূর্ত থেকে <code>Orders</code> module <code>Inventory</code>-এর internal ডেটাবেস স্কিমার ওপর নির্ভরশীল হয়ে যায় — <code>Inventory</code> টিম যদি পরে টেবিল রিফ্যাক্টর করে, ইনডেক্স বদলায়, বা ডেটা মডেল উন্নত করে, <code>Orders</code> ভেঙে পড়বে, অথচ কোনো contract test সেটা আগেই ধরতে পারবে না। এই hidden coupling জমতে জমতে এমন অবস্থায় পৌঁছায় যেখানে <code>Inventory</code>-কে আলাদা microservice হিসেবে বের করতে গেলে প্রথমে <code>Orders</code>-এর ভেতরে ছড়িয়ে থাকা প্রতিটা সরাসরি টেবিল অ্যাক্সেস খুঁজে বের করে সেগুলোকে API call-এ রূপান্তর করতে হবে — এটাই সেই বেদনাদায়ক "untangling rewrite" যা একটা প্রকৃত Modular Monolith প্রথম থেকেই ঠেকিয়ে রাখে।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — "Layered মানেই Modular" ধরে নেওয়া</span>
+অনেক টিম মনে করে তাদের monolith ইতিমধ্যেই "ভালোভাবে সংগঠিত" কারণ এতে controller/service/repository স্তর আলাদা করা আছে। কিন্তু layering আর modularity সম্পূর্ণ ভিন্ন জিনিস — layering বলে কোন ধরনের কোড কোথায় থাকবে (technical concern অনুযায়ী), আর modularity বলে কোন বিজনেস ডোমেইনের কোড একসাথে আটকানো আর বাকি সবার থেকে লুকানো থাকবে। একটা তিন-স্তরের monolith-এ Order, Inventory, Payment-এর সব লজিক <code>services/</code> ফোল্ডারে পাশাপাশি বসে থাকতে পারে, একে অপরকে অবাধে কল করতে করতে — এটা layered, কিন্তু মোটেও modular নয়, আর ভবিষ্যতে আলাদা করার কোনো সহজ পথ এতে তৈরি হয় না।</div>
+
+<div class="callout why"><span class="tag">কেন শুধু ডেভেলপার-ডিসিপ্লিনের ওপর ভরসা করা যায় না</span>
+"আমরা সবাই মেনে চলব যে module-এর ভেতরে ঢুকব না" — এই ধরনের অলিখিত নিয়ম শুরুতে টেকে, কিন্তু ডেডলাইনের চাপে ভেঙে পড়ে। একজন ডেভেলপার একটা জরুরি বাগ ফিক্স করতে গিয়ে একটা "quick shortcut" নেয় — সরাসরি অন্য module-এর রিপোজিটরি কল করে। একবার এই ধরনের shortcut মার্জ হয়ে গেলে সেটা একটা precedent হয়ে যায়, আর কয়েক মাস পরে দেখা যায় প্রতিটা module প্রতিটা module-এর internal-এর সাথে জড়িয়ে গেছে। এই কারণেই boundary enforcement-কে বিল্ড পাইপলাইনের একটা automated gate হতে হবে, শুধু কোড রিভিউ চেকলিস্টের একটা লাইন নয়।</div>
+
+<div class="callout best"><span class="tag">Best practice — Architecture Test CI pipeline-এ যুক্ত করা</span>
+প্রতিটা Modular Monolith প্রজেক্টে একটা automated architecture test থাকা উচিত যা প্রতিটা কমিটে চেক করে কোনো module অন্য module-এর internal namespace রেফারেন্স করছে কিনা। ArchUnit (Java), NetArchTest (.NET), বা dependency-cruiser (JavaScript/TypeScript)-এর মতো টুল দিয়ে এই নিয়ম কোড হিসেবে লেখা যায়। এই টেস্ট ব্যর্থ হলে বিল্ডই আটকে যায়, ফলে boundary violation প্রোডাকশনে পৌঁছানোর আগেই ধরা পড়ে — মানুষের মনে রাখার ওপর নির্ভর না করে।</div>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — বেশিরভাগ সফল microservices migration একটা ভালো Modular Monolith থেকেই শুরু হয়েছিল</span>
+Shopify, GitHub-এর মতো প্রতিষ্ঠান বছরের পর বছর একটা সুশৃঙ্খল modular monolith চালিয়েছে, আর যখনই একটা নির্দিষ্ট module (যেমন Shopify-এর checkout) সত্যিকারভাবে স্বাধীন স্কেলিং দাবি করেছে, তখনই শুধু সেই একটা module বের করা হয়েছে — গোটা সিস্টেম একসাথে ভাঙা হয়নি। যে module-এর সীমানা প্রথম থেকেই স্পষ্ট আর enforced ছিল, সেটা বের করা একটা কয়েক সপ্তাহের কাজ; যেখানে সীমানা কখনোই সত্যিকারভাবে ছিল না, সেখানে একই কাজ মাসের পর মাস লাগে।</div>
+</template>
+
+<template data-page="soa">
+<h2 class="title">৭. Service-Oriented Architecture (SOA)</h2>
+<p class="lead"><span class="kw">Microservices</span> নতুন কোনো আবিষ্কার নয় — এটা একটা পুরনো ধারণার নতুন, বিকেন্দ্রীভূত সংস্করণ, আর সেই পুরনো ধারণাটার নামই <span class="kw">SOA</span>; SOA-কে না বুঝলে microservices আসলে কী সমস্যার সমাধান করছে তাও পুরোপুরি বোঝা যায় না।</p>
+
+<h3>SOA কী — এন্টারপ্রাইজ যুগের সার্ভিস-কেন্দ্রিক আর্কিটেকচার</h3>
+<p><span class="kw">Service-Oriented Architecture (SOA)</span> ২০০০-এর দশকের এন্টারপ্রাইজ সফটওয়্যার জগতে প্রতিষ্ঠিত একটা আর্কিটেকচারাল স্টাইল, যেখানে একটা সিস্টেম তৈরি হয় পুনঃব্যবহারযোগ্য সার্ভিসের সমষ্টি হিসেবে — প্রতিটা সার্ভিস একটা নির্দিষ্ট বিজনেস ক্যাপাবিলিটি (যেমন "Customer Lookup" বা "Credit Check") উন্মুক্ত করে একটা ভালোভাবে-সংজ্ঞায়িত contract-এর মাধ্যমে। এই সার্ভিসগুলো একে অপরের সাথে সরাসরি কথা বলত না — বরং একটা কেন্দ্রীয় ইন্টিগ্রেশন স্তর, <span class="kw">Enterprise Service Bus (ESB)</span>, সব যোগাযোগের মধ্যস্থতা করত। ESB-এর কাজ ছিল routing (কোন request কোন সার্ভিসে যাবে ঠিক করা), message transformation (একটা সার্ভিসের ডেটা ফরম্যাট আরেকটার বোধগম্য ফরম্যাটে রূপান্তর করা), protocol translation (যেমন একটা পুরনো mainframe সার্ভিসের প্রোটোকলকে একটা আধুনিক সার্ভিসের প্রোটোকলে সেতু বাঁধা), আর প্রায়ই একাধিক সার্ভিস জুড়ে orchestration।</p>
+<div class="diagram"><pre>
+SOA — কেন্দ্রীভূত ESB ("smart pipes")
+
+ ┌─────────┐      ┌─────────┐      ┌─────────┐
+ │Service A│      │Service B│      │Service C│
+ └────┬────┘      └────┬────┘      └────┬────┘
+      │ SOAP/XML       │ SOAP/XML       │ SOAP/XML
+      ▼                ▼                ▼
+ ┌───────────────────────────────────────────┐
+ │      Enterprise Service Bus (ESB)           │
+ │  routing · transformation · orchestration   │
+ │      (সব business/integration লজিক এখানে)   │
+ └───────────────────────────────────────────┘
+</pre></div>
+
+<h3>SOA-এর বৈশিষ্ট্য — Heavyweight Contract, Coarse-grained Service</h3>
+<p>SOA-র সার্ভিসগুলো ঐতিহাসিকভাবে <span class="kw">SOAP</span>/<span class="kw">WSDL</span>/XML-ভিত্তিক ছিল — একটা ভারী, কড়াকড়িভাবে টাইপ করা contract যা <span class="kw">contract-first</span> পদ্ধতিতে ডিজাইন করা হতো, অর্থাৎ ইন্টারফেসটা সুনির্দিষ্টভাবে (WSDL ফাইলে) লেখা হতো বাস্তবায়নের আগেই। SOA-র সার্ভিসগুলো ছিল <span class="kw">coarse-grained</span> — অর্থাৎ তুলনামূলক কম সংখ্যক কিন্তু বড় সার্ভিস, প্রতিটা একটা গোটা বিজনেস ডোমেইন ঢেকে রাখত — microservices-এর মতো একেকটা সরু, একক-দায়িত্বের সার্ভিসে ভাঙা হতো না। আর সবচেয়ে গুরুত্বপূর্ণ, গভর্নেন্স ও ইন্টিগ্রেশন লজিক কেন্দ্রীভূত থাকত ESB-তে, যা সাধারণত একটা আলাদা বিশেষায়িত টিম পরিচালনা করত।</p>
+
+<table>
+<tr><th>মাত্রা</th><th>SOA</th><th>Microservices</th></tr>
+<tr><td>Integration style</td><td>কেন্দ্রীভূত ESB — "smart pipes, dumb endpoints"</td><td>বিকেন্দ্রীভূত point-to-point/event-based — "smart endpoints, dumb pipes"</td></tr>
+<tr><td>Governance</td><td>কেন্দ্রীভূত — একটা ESB টিম নিয়ম ও ইন্টিগ্রেশন লজিক ঠিক করে</td><td>বিকেন্দ্রীভূত — প্রতিটা টিম নিজের সার্ভিসের সম্পূর্ণ মালিক</td></tr>
+<tr><td>Data ownership</td><td>প্রায়ই shared enterprise database একাধিক সার্ভিস জুড়ে</td><td>Database-per-service — কোনো সার্ভিস অন্যের ডেটা সরাসরি ছোঁয় না</td></tr>
+<tr><td>Granularity</td><td>Coarse-grained — কম সংখ্যক, বড় সার্ভিস</td><td>Fine-grained — একক-দায়িত্বের ছোট সার্ভিস</td></tr>
+<tr><td>Typical protocol</td><td>SOAP/WSDL/XML, contract-first</td><td>REST/gRPC/JSON, event/message</td></tr>
+<tr><td>Deployment</td><td>প্রায়ই bundled/coordinated release সাইকেল</td><td>প্রতিটা সার্ভিস সম্পূর্ণ স্বাধীনভাবে deployable</td></tr>
+</table>
+
+<h3>কেন SOA জনপ্রিয়তা হারিয়েছে — ESB নিজেই একটা Bottleneck হয়ে ওঠে</h3>
+<p>SOA-র মূল প্রতিশ্রুতি ছিল সার্ভিসগুলোর মধ্যে coupling কমানো, কিন্তু বাস্তবে এটা coupling-টাকে সরিয়ে একটা একক কেন্দ্রীয় বিন্দুতে জমা করেছিল — ESB। যেহেতু routing, transformation, আর orchestration-এর সব জ্ঞান ESB-এর ভেতরে থাকত, প্রতিটা নতুন ফিচার বা সার্ভিসের পরিবর্তনের জন্য ESB টিমের সাথে সমন্বয় করতে হতো। ESB একটা <span class="kw">single point of failure</span>-ও হয়ে উঠত — এটা ডাউন বা ধীর হলে তার ওপর নির্ভরশীল প্রতিটা সার্ভিসের মধ্যকার যোগাযোগ থেমে যেত। ফলাফল ছিল ঠিক সেই ধরনের সমন্বয়-বাধা যা SOA আসলে সার্ভিস স্তরে সমাধান করতে চেয়েছিল, কিন্তু সেটা এখন ইন্টিগ্রেশন স্তরে পুনরায় ঘটছিল। Microservices ইচ্ছাকৃতভাবে এই মডেল উল্টে দেয় — ইন্টিগ্রেশন ও রাউটিং লজিককে কেন্দ্র থেকে সরিয়ে প্রান্তে নিয়ে যায়, একে বলা হয় <span class="kw">"smart endpoints, dumb pipes"</span>।</p>
+
+<div class="callout why"><span class="tag">কেন কেন্দ্রীভূত ইন্টিগ্রেশন ধীরগতির হয়ে পড়ে</span>
+একটা ESB টিম যখন প্রতিষ্ঠানের সব সার্ভিসের ইন্টিগ্রেশন লজিকের মালিক, তখন প্রতিটা টিমের প্রতিটা পরিবর্তনের অনুরোধ একই সারিতে গিয়ে জমা হয় — এই একটা টিমের ক্যাপাসিটিই পুরো প্রতিষ্ঠানের ডেলিভারি গতির সিলিং হয়ে দাঁড়ায়। এটা ঠিক Conway's Law-এর বিপরীত প্রয়োগ — সিস্টেমের গঠন (কেন্দ্রীভূত ESB) প্রতিষ্ঠানের একাধিক স্বাধীন টিমের গঠনের সাথে মেলে না।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — SOA-র ধারণাকেই সেকেলে ভাবা</span>
+"SOA মৃত, microservices-ই ভবিষ্যৎ" — এটা একটা ভুল সরলীকরণ। SOA-র মূল ধারণা — একটা সার্ভিস একটা বিজনেস ক্যাপাবিলিটি একটা ভালোভাবে-সংজ্ঞায়িত contract-এর মাধ্যমে উন্মুক্ত করবে — ঠিক সেটাই microservices-ও করে। microservices-কে বরং SOA-র ধারণার একটা বিবর্তন হিসেবে দেখা উচিত, যেখানে গভর্নেন্স কেন্দ্রীভূত থেকে বিকেন্দ্রীভূত হয়েছে, প্রোটোকল ভারী SOAP/XML থেকে হালকা REST/gRPC/event-এ নেমে এসেছে, আর সার্ভিসের আকার এক গোটা ডোমেইন থেকে ছোট হয়ে একটা টিম/একটা bounded context-এর সমান হয়ে এসেছে।</div>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — বড় এন্টারপ্রাইজে SOA/ESB এখনও পুরোপুরি প্রাসঙ্গিক</span>
+অনেক বড় ব্যাংক, ইন্স্যুরেন্স, বা টেলিকম প্রতিষ্ঠান আজও সফলভাবে SOA-স্টাইল আর্কিটেকচার চালায় — বিশেষত legacy সিস্টেম ইন্টিগ্রেশনের জন্য। যখন প্রতিষ্ঠানে ২০ বছরের পুরনো mainframe সিস্টেম, একাধিক ভেন্ডর-সাপ্লাইড প্যাকেজ, আর নতুন ক্লাউড-নেটিভ সার্ভিস একসাথে থাকতে হয় — যেগুলো পুনর্লিখন করা বাস্তবসম্মত নয় — তখন একটা ESB প্রোটোকল অনুবাদ ও মেসেজ রূপান্তরের জন্য প্রকৃতপক্ষেই সবচেয়ে বাস্তবসম্মত পছন্দ হতে পারে। সমস্যাটা SOA প্যাটার্ন নিজে নয় — সমস্যা হয় যখন এই একই কেন্দ্রীভূত মডেল নতুন, দ্রুত-বিকশিত গ্রিনফিল্ড সিস্টেমে চাপিয়ে দেওয়া হয়।</div>
+</template>
+
+<template data-page="hexagonal">
+<h2 class="title">১০. Hexagonal, Clean ও Onion Architecture (Ports & Adapters)</h2>
+<p class="lead">তিনটা আলাদা নামের, তিনটা আলাদা ডায়াগ্রামের আর্কিটেকচার আসলে একটাই নিয়ম বলে — ডিপেন্ডেন্সি সবসময় বাইরে থেকে ভেতরে যাবে, ভেতরের বিজনেস লজিক বাইরের জগৎ সম্পর্কে কিছুই জানবে না।</p>
+
+<h3>একই ধারণা, তিনটা নাম</h3>
+<p><span class="kw">Hexagonal Architecture</span> (Alistair Cockburn), <span class="kw">Clean Architecture</span> (Robert C. Martin) আর <span class="kw">Onion Architecture</span> (Jeffrey Palermo) — এই তিনটাকে আলাদা তিনটা প্যাটার্ন মনে হলেও, ইন্টারভিউ বা প্রোডাকশন কোডে এদের মধ্যে বাস্তবিক পার্থক্য প্রায় শূন্য। Cockburn হেক্সাগন এঁকেছেন কারণ ষড়ভুজের ছয়টা পাশে ছয়টা আলাদা পোর্ট বসানো যায় বলে — সংখ্যাটা গুরুত্বপূর্ণ না, শুধু এটা বোঝাতে চেয়েছেন যে কোর লজিকের চারপাশে একাধিক দিক থেকে বাইরের জগৎ ঢুকতে পারে। Martin এঁকেছেন কেন্দ্রীভূত বৃত্ত (concentric circles), আর Palermo পেঁয়াজের মতো স্তরে স্তরে সাজানো লেয়ার। ডায়াগ্রামের আকৃতি ভিন্ন, কিন্তু নিয়মটা অভিন্ন — একে <span class="kw">The Dependency Rule</span> বলা হয়: সোর্স কোড ডিপেন্ডেন্সি শুধু ভেতরের দিকে নির্দেশ করবে, বাইরের কোনো লেয়ার জানে ভেতরের লেয়ার সম্পর্কে, কিন্তু ভেতরের লেয়ার বাইরের কোনো কিছু সম্পর্কে জানে না। ব্যবসায়িক নিয়ম — অর্ডার প্লেস করার শর্ত, সুদ হিসাব করার ফর্মুলা, ইনভেন্টরি রিজার্ভ করার লজিক — এগুলো কেন্দ্রে বসে থাকে, আর ডেটাবেস, ওয়েব ফ্রেমওয়ার্ক, মেসেজ কিউ, UI — এসব বাইরের রিং-এ, প্রতিস্থাপনযোগ্য ডিটেইল হিসেবে থাকে।</p>
+
+<h3>Port আর Adapter মানে ঠিক কী</h3>
+<p>একটা <span class="kw">Port</span> হলো একটা ইন্টারফেস, যেটা ডোমেইন বা অ্যাপ্লিকেশন কোর নিজে সংজ্ঞায়িত করে — এটা কোরের একটা চাহিদা (driven/outbound port) অথবা কোরের একটা সেবা (driving/inbound port) প্রকাশ করে। যেমন কোরের যদি অর্ডার সেভ করা দরকার হয়, কোর নিজেই একটা <code>OrderRepository</code> ইন্টারফেস ডিফাইন করবে <code>save(order)</code> আর <code>findById(id)</code> মেথড দিয়ে — কীভাবে সেভ হবে সেটা কোরের মাথাব্যথা না, শুধু কী দরকার সেটাই বলে দেয়। একটা <span class="kw">Adapter</span> হলো সেই পোর্টের একটা কংক্রিট বাস্তবায়ন, যেটা কোরের বাইরে বসে থাকে আর পোর্টে প্লাগ-ইন করে — যেমন <code>PostgresOrderRepository</code> ক্লাস যেটা <code>OrderRepository</code> ইন্টারফেস ইমপ্লিমেন্ট করে আসলে SQL চালায়। একইভাবে ইনবাউন্ড দিকে, <code>PlaceOrderUseCase</code> একটা পোর্ট যেটা অ্যাপ্লিকেশন কোর ইমপ্লিমেন্ট করে, আর একটা HTTP controller বা CLI কমান্ড সেই ইন্টারফেসকে কল করা একটা অ্যাডাপ্টার। এখানে ডিপেন্ডেন্সির দিকটা লক্ষ করার মতো — ইন্টারফেসটা সংজ্ঞায়িত হয় কোরে, বাস্তবায়ন হয় বাইরে, আর বাইরের কোড কোরের ইন্টারফেসের ওপর নির্ভর করে, কখনো উল্টোটা না। এটাই স্থাপত্য স্তরে প্রয়োগ করা <span class="kw">Dependency Inversion Principle</span> — উচ্চ-স্তরের মডিউল (ডোমেইন) নিম্ন-স্তরের মডিউলের (ডেটাবেস) ওপর নির্ভর করে না, বরং দুজনেই একটা অ্যাবস্ট্রাকশনের ওপর নির্ভর করে, আর সেই অ্যাবস্ট্রাকশনের মালিক ডোমেইন।</p>
+
+<div class="diagram"><pre>
+                 ┌───────────────────────────────────────┐
+                 │        Frameworks & Drivers (বাইরে)     │
+                 │   HTTP, Postgres driver, message broker │
+                 │   ┌─────────────────────────────────┐  │
+                 │   │   Interface Adapters             │  │
+                 │   │  Controller, Presenter, Gateway   │  │
+                 │   │   ┌───────────────────────────┐   │  │
+                 │   │   │   Use Cases (Ports)        │   │  │
+                 │   │   │  PlaceOrderUseCase          │   │  │
+                 │   │   │   ┌─────────────────────┐   │   │  │
+                 │   │   │   │   Entities (কেন্দ্র)   │   │   │  │
+                 │   │   │   │  Order, Domain Rule   │   │   │  │
+                 │   │   │   └─────────────────────┘   │   │  │
+                 │   │   └───────────────────────────┘   │  │
+                 │   └─────────────────────────────────┘  │
+                 └───────────────────────────────────────┘
+                       ডিপেন্ডেন্সি সবসময় ▶ ভেতরের দিকে
+</pre></div>
+
+<h3>এই কষ্ট করে কী লাভ — টেস্টেবিলিটি, সোয়াপেবিলিটি, ফ্রেমওয়ার্ক-স্বাধীনতা</h3>
+<p>প্রথম আর সবচেয়ে বাস্তব সুবিধা হলো <span class="kw">Testability</span>। যেহেতু <code>PlaceOrderUseCase</code> শুধু <code>OrderRepository</code> পোর্টের ওপর নির্ভর করে, একটা ইউনিট টেস্টে আসল Postgres-এর বদলে একটা in-memory fake repository বসিয়ে দেওয়া যায় — কোনো ডেটাবেস কানেকশন লাগে না, কোনো HTTP সার্ভার চালু করতে হয় না, টেস্ট মিলিসেকেন্ডে চলে। দ্বিতীয় সুবিধা <span class="kw">Swappability</span> — PostgreSQL থেকে MongoDB-তে সরে যাওয়া, REST থেকে gRPC-তে যাওয়া, বা ওয়েব অ্যাডাপ্টারের পাশাপাশি একটা CLI অ্যাডাপ্টার যোগ করা — এসবের জন্য শুধু অ্যাডাপ্টার লেয়ার বদলাতে হয়, বিজনেস লজিকের একটা লাইনও ছুঁতে হয় না। তৃতীয় সুবিধা <span class="kw">Framework Independence</span> — ডোমেইন কোড কোনো ওয়েব ফ্রেমওয়ার্ক বা ORM ইমপোর্ট করে না, ফলে দুই বছর পর যখন ফ্রেমওয়ার্ক আপগ্রেড বা রিপ্লেস করতে হয়, সেই পরিবর্তনের ঢেউ বিজনেস রুলে গিয়ে আছড়ে পড়ে না।</p>
+
+<table>
+<tr><th>Clean Architecture (Martin)</th><th>Onion Architecture (Palermo)</th><th>Hexagonal (Cockburn)</th></tr>
+<tr><td>Entities (কেন্দ্র)</td><td>Domain Model (কেন্দ্র)</td><td>Domain / Core</td></tr>
+<tr><td>Use Cases</td><td>Domain Services</td><td>Application (inbound ports)</td></tr>
+<tr><td>Interface Adapters</td><td>Application Services</td><td>Adapters</td></tr>
+<tr><td>Frameworks & Drivers</td><td>Infrastructure</td><td>Driving/Driven Actors</td></tr>
+</table>
+
+<h3>উদাহরণ — অর্ডার প্লেস করার use case</h3>
+<p>একজন ইউজার একটা POST রিকোয়েস্ট পাঠায় <code>/orders</code> এন্ডপয়েন্টে — এই HTTP অ্যাডাপ্টার রিকোয়েস্ট পার্স করে <code>PlaceOrderUseCase.execute(command)</code> কল করে। এই ইউজ কেস অ্যাপ্লিকেশন কোরের ভেতরে বাস করে, ডোমেইন লজিক চালায় (স্টক আছে কি না, দাম ঠিক কি না), আর তারপর ফলাফল সেভ করার জন্য <code>OrderRepository.save(order)</code> কল করে — এই কলটা যায় একটা পোর্টে, যেটার আসল বাস্তবায়ন <code>PostgresOrderRepository</code>। প্রোডাকশনে এই পুরো চেইনটা Postgres পর্যন্ত পৌঁছায়। কিন্তু টেস্টে, <code>PlaceOrderUseCase</code>-কে একটা <code>InMemoryOrderRepository</code> দিয়ে ইনস্ট্যান্শিয়েট করা হয় — use case-এর কোড, ডোমেইন এন্টিটির কোড, কোনোটাই এক অক্ষর বদলায় না, শুধু কনস্ট্রাক্টরে কোন adapter ইনজেক্ট করা হচ্ছে সেটা বদলায়।</p>
+<div class="diagram"><pre>
+  HTTP Adapter ──▶ PlaceOrderUseCase (port) ──▶ Domain Logic ──▶ OrderRepository (port)
+   (controller)      [application core]         [Order entity]         │
+                                                                        ▼
+                                                          PROD: PostgresOrderRepository
+                                                          TEST: InMemoryOrderRepository (fake)
+</pre></div>
+
+<h3>DDD-র সাথে সম্পর্ক</h3>
+<p>Hexagonal/Clean/Onion কোনোটাই ডোমেইন মডেলিং করার পদ্ধতি না — এগুলো বলে দেয় সেই ডোমেইন মডেলটা কোথায় বসবে এবং কীভাবে বাইরের জগৎ থেকে বিচ্ছিন্ন থাকবে। একটা সমৃদ্ধ, Aggregate আর Entity দিয়ে গড়া DDD ডোমেইন মডেলের জন্য এই আর্কিটেকচার হলো স্বাভাবিক ঘর — Aggregate Root, Value Object, Domain Event সব কেন্দ্রে বসে থাকে, ইনফ্রাস্ট্রাকচার কনসার্ন থেকে সম্পূর্ণ বিচ্ছিন্ন। ডোমেইন মডেলিং-এর গভীর দিকটা এই সাইটের আলাদা Domain-Driven Design কোর্সে বিস্তারিত কভার করা আছে; এই চ্যাপ্টার সেই ডোমেইনকে ঘিরে থাকা স্থাপত্যের খোলসটার ওপর ফোকাস করেছে।</p>
+
+<div class="callout why"><span class="tag">কেন — ইন্টারফেস কোরে কেন থাকে, adapter-এ কেন না</span>
+যদি <code>OrderRepository</code> ইন্টারফেসটা ইনফ্রাস্ট্রাকচার লেয়ারে ডিফাইন করা হতো, তাহলে ডোমেইন কোডকে সেই ইনফ্রাস্ট্রাকচার প্যাকেজ ইমপোর্ট করতে হতো — অর্থাৎ ডিপেন্ডেন্সি বাইরের দিকে যেত। ইন্টারফেসের মালিকানা কোরের হাতে রাখাই এই পুরো প্যাটার্নের চাবিকাঠি — এটাই নিশ্চিত করে ডিপেন্ডেন্সি অ্যারো সবসময় ভেতরের দিকে থাকে।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — শুধু ফোল্ডার সাজালেই Hexagonal হয় না</span>
+অনেক প্রজেক্টে <code>domain/</code>, <code>application/</code>, <code>infrastructure/</code> ফোল্ডার বানিয়ে দাবি করা হয় "আমরা Hexagonal করছি" — কিন্তু যদি <code>domain/</code> প্যাকেজের ভেতরের ক্লাস কোনো JPA অ্যানোটেশন বা Spring <code>@Autowired</code> ব্যবহার করে, তাহলে সেটা আসলে ফ্রেমওয়ার্কের ওপর নির্ভরশীল, শুধু ফোল্ডার আলাদা করাটা কসমেটিক। আসল পরীক্ষা হলো — ডোমেইন প্যাকেজের import স্টেটমেন্টগুলো দেখুন; সেখানে কোনো ফ্রেমওয়ার্ক, ORM, বা HTTP লাইব্রেরির নাম থাকা মানেই নিয়ম ভাঙা হয়েছে।</div>
+
+<div class="callout best"><span class="tag">Best practice — dependency injection দিয়ে adapter ওয়্যারিং</span>
+কোন adapter কোন port-এ প্লাগ হবে সেটা কোরের ভেতর থেকে ঠিক না করে, একটা কম্পোজিশন রুট (সাধারণত <code>main</code> বা <code>Startup</code> ফাইলে) থেকে dependency injection দিয়ে ওয়্যার করা উচিত। এতে প্রোডাকশন বনাম টেস্ট কনফিগারেশনের মধ্যে সুইচ করা হয়ে যায় স্রেফ একটা কনফিগারেশন পরিবর্তন, কোডের গভীরে কিছু বদলাতে হয় না।</div>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — সব কিছু পোর্ট বানানো ওভারকিল হতে পারে</span>
+ছোট প্রজেক্টে বা প্রোটোটাইপে যদি ডেটাবেস বদলানোর কোনো বাস্তব সম্ভাবনা না থাকে, তাহলে প্রতিটা সামান্য জিনিসের জন্য একটা ইন্টারফেস আর একটা ইমপ্লিমেন্টেশন বানানো অতিরিক্ত ইন্ডাইরেকশন আর boilerplate যোগ করে যার লাভ কখনো তোলা হবে না। এই প্যাটার্নের আসল মূল্য বড় সিস্টেমে, দীর্ঘ জীবনচক্রে, আর একাধিক টিমের কোডবেসে সবচেয়ে স্পষ্ট বোঝা যায় — সব প্রজেক্টেই অন্ধভাবে ফুল হেক্সাগন বসানো একটা over-engineering-এর ফাঁদ হতে পারে।</div>
+</template>
+
+<template data-page="pipefilter">
+<h2 class="title">১১. Pipe-and-Filter (Pipeline) Architecture</h2>
+<p class="lead">একেকটা ছোট, একক-উদ্দেশ্যের কম্পোনেন্ট একে অপরকে না চিনেও যখন সিরিজে বসে জটিল একটা কাজ সম্পন্ন করে ফেলে — সেটাই Pipe-and-Filter-এর আসল জাদু, আর Unix শেল থেকে শুরু করে ASP.NET middleware পর্যন্ত সবখানেই এটা লুকিয়ে আছে।</p>
+
+<h3>Pipe-and-Filter আসলে কী</h3>
+<p>এই আর্কিটেকচারে একটা সিস্টেমকে সাজানো হয় একের পর এক স্বাধীন প্রসেসিং কম্পোনেন্ট দিয়ে, যাদের বলা হয় <span class="kw">Filter</span> — প্রতিটা ফিল্টার ইনপুট ডেটা নেয়, নিজের নির্দিষ্ট কাজটা করে (ট্রান্সফর্ম, ফিল্টার-আউট, এনরিচ), আর আউটপুট পরের স্টেজে পাঠিয়ে দেয় একটা <span class="kw">Pipe</span> নামের কানেক্টরের মাধ্যমে। এখানে সবচেয়ে গুরুত্বপূর্ণ বৈশিষ্ট্যটা হলো — প্রতিটা ফিল্টার সম্পূর্ণভাবে অজ্ঞ থাকে তার আগে বা পরে কী বসানো আছে সে সম্পর্কে; সে শুধু জানে তার নিজের ইনপুট/আউটপুট ডেটা ফরম্যাটের কন্ট্র্যাক্ট কী। এই "না-জানা"টাই আসলে ফিচার, বাগ না — কারণ এর ফলে যেকোনো ফিল্টারকে যেকোনো পাইপলাইনে বসিয়ে দেওয়া যায়, যতক্ষণ ইনপুট/আউটপুট ফরম্যাট মেলে।</p>
+
+<h3>ক্লাসিক উদাহরণ — Unix শেল পাইপলাইন</h3>
+<p>এই প্যাটার্নের সবচেয়ে বিখ্যাত আর সবচেয়ে শিক্ষণীয় উদাহরণ হলো Unix শেল পাইপ। <code>cat file.txt | grep "error" | sort | uniq -c</code> কমান্ডে চারটা প্রোগ্রাম আছে, প্রতিটাই সম্পূর্ণ স্বতন্ত্রভাবে লেখা, একে অপরের অস্তিত্ব সম্পর্কে কম্পাইল-টাইমে কিছুই জানে না। শেল এই প্রসেসগুলোকে pipe (<code>|</code>) দিয়ে জোড়া লাগিয়ে দেয় — একটার stdout আরেকটার stdin-এ রি-ডিরেক্ট করে। এখানে আসল আকর্ষণটা হলো <span class="kw">Composability</span> — এই একই চারটা টুল দিয়ে হাজারো ভিন্ন কম্বিনেশন বানানো যায়, অথচ কোনো টুলের একটা লাইন কোডও বদলাতে হয় না। ছোট ছোট, একক-দায়িত্বের ফিল্টার দিয়ে জটিল আচরণ বানানোর এই ক্ষমতাই পুরো প্যাটার্নের মূল প্রতিশ্রুতি।</p>
+
+<pre><span class="c">// একটা লগ ফাইল থেকে "error" লাইন খুঁজে, সর্ট করে, ডুপ্লিকেট গুনে বের করা</span>
+cat access.log | grep "ERROR" | sort | uniq -c | sort -rn | head -10</pre>
+
+<h3>শেল ছাড়াও বাস্তব উদাহরণ</h3>
+<p>Pipe-and-Filter শুধু শেল স্ক্রিপ্টের জিনিস না। একটা <span class="kw">Compiler</span> ভেতরে ভেতরে একটা পাইপলাইন — Lexer উৎস কোডকে টোকেনে ভাঙে, Parser টোকেন থেকে একটা Abstract Syntax Tree বানায়, Semantic Analyzer টাইপ চেক করে, Optimizer কোড দক্ষ করে, আর শেষে Code Generator মেশিন কোড বের করে। ইমেজ বা ভিডিও প্রসেসিং পাইপলাইনেও একই প্যাটার্ন — decode → resize → color-correct → watermark → encode। ডেটা ইঞ্জিনিয়ারিং-এ <span class="kw">ETL (Extract-Transform-Load)</span> পাইপলাইনও একই স্থাপত্য — সোর্স থেকে ডেটা এক্সট্র্যাক্ট, তারপর ক্লিন/ট্রান্সফর্ম, তারপর ওয়্যারহাউজে লোড। আর স্ট্রিম-প্রসেসিং ফ্রেমওয়ার্কে (Kafka Streams, Flink) একটা ইনকামিং স্ট্রিমের ওপর একের পর এক ট্রান্সফরমেশন স্টেজ বসানো হয় — এটাও পাইপ-অ্যান্ড-ফিল্টারেরই ধারাবাহিক রূপ, শুধু ডেটা একবারে না এসে অবিরাম প্রবাহে আসে।</p>
+
+<div class="diagram"><pre>
+  ┌────────┐ pipe ┌────────┐ pipe ┌──────────────┐ pipe ┌───────────┐ pipe ┌────────┐
+  │  Lexer │─────▶│ Parser │─────▶│ Semantic     │─────▶│ Optimizer │─────▶│ Code   │
+  │(tokens)│      │ (AST)  │      │ Analyzer     │      │           │      │ Gen    │
+  └────────┘      └────────┘      └──────────────┘      └───────────┘      └────────┘
+   প্রতিটা filter শুধু নিজের input format আর output format জানে —
+   আগে/পরে কে বসে আছে তা নিয়ে অজ্ঞ
+</pre></div>
+
+<h3>ট্রেড-অফ — কী পাওয়া যায়, কী হারাতে হয়</h3>
+<p>এই প্যাটার্নের সবচেয়ে বড় সুবিধা হলো <span class="kw">Separation of Concerns</span> — প্রতিটা ফিল্টার একটামাত্র কাজ ভালোভাবে করে, যার ফলে প্রতিটাকে আলাদাভাবে ইউনিট টেস্ট করা সহজ, আর প্রতিটাকে নতুন কনটেক্সটে পুনর্ব্যবহার করা যায়। কিন্তু এর দাম আছে। প্রথমত, <span class="kw">Latency</span> বেড়ে যায় — ডেটা একের পর এক স্টেজ পার হয়ে যাওয়ার সময় লাগে, বিশেষ করে যদি প্রতিটা স্টেজ নিজে I/O করে। দ্বিতীয়ত, end-to-end error handling কঠিন হয়ে যায় — যদি তৃতীয় স্টেজে একটা এরর ঘটে, সেটাকে পরিষ্কারভাবে আগের স্টেজে ফিরিয়ে দিতে হবে নয়তো পুরো পাইপলাইন থমকে যাবে। তৃতীয়ত, একাধিক অ-সংলগ্ন ফিল্টারের একই শেয়ার্ড কনটেক্সট দরকার হলে সেটা পাস করা বিশ্রী হয়ে যায়, কারণ আদর্শভাবে একটা ফিল্টার শুধু আগের স্টেজের আউটপুট দেখে, কোনো গ্লোবাল স্টেট দেখে না।</p>
+
+<table>
+<tr><th>সুবিধা</th><th>ব্যাখ্যা</th></tr>
+<tr><td>Separation of Concerns</td><td>প্রতিটা ফিল্টার একটামাত্র রূপান্তরের দায়িত্ব নেয়</td></tr>
+<tr><td>Testability</td><td>প্রতিটা ফিল্টার আলাদা, বিচ্ছিন্নভাবে টেস্ট করা যায়</td></tr>
+<tr><td>Composability / Reusability</td><td>নতুন পাইপলাইন = পুরনো ফিল্টারের নতুন বিন্যাস</td></tr>
+</table>
+<table>
+<tr><th>অসুবিধা</th><th>ব্যাখ্যা</th></tr>
+<tr><td>Latency</td><td>একাধিক sequential স্টেজ, বিশেষত I/O সহ স্টেজে দেরি বাড়ে</td></tr>
+<tr><td>Error propagation</td><td>মাঝের স্টেজের এরর পুরো চেইন থামিয়ে দিতে পারে</td></tr>
+<tr><td>Shared context</td><td>non-adjacent ফিল্টারদের মধ্যে গ্লোবাল স্টেট পাস করা কঠিন</td></tr>
+</table>
+
+<h3>HTTP Middleware — না চিনলেও রোজ ব্যবহার করা পাইপলাইন</h3>
+<p>ওয়েব ডেভেলপাররা প্রতিদিন যেটা "middleware" নামে চেনেন, সেটা আসলে সিঙ্গেল রিকোয়েস্ট/রেসপন্সের ওপর প্রয়োগ করা Pipe-and-Filter। ASP.NET Core বা Express.js-এ একটা রিকোয়েস্ট একটা মিডলওয়্যার চেইনের ভেতর দিয়ে যায় — logging middleware → authentication middleware → authorization middleware → routing → আসল হ্যান্ডলার → response formatting middleware। প্রতিটা মিডলওয়্যার শুধু জানে তার আগেরটা কী পাস করেছে আর তাকে পরের স্টেজে এগিয়ে দিতে হবে কি না — logging middleware জানে না authentication কীভাবে কাজ করে। ব্যাচ ডেটার বদলে এখানে একটা একক রিকোয়েস্ট পাইপলাইনের মধ্য দিয়ে প্রবাহিত হয়, কিন্তু মৌলিক গঠনটা একই — `next()` কল করাটাই আসলে পরের ফিল্টারে ডেটা পাস করে দেওয়া।</p>
+
+<div class="diagram"><pre>
+  Request ─▶ Logging ─▶ Auth ─▶ Authorization ─▶ Routing ─▶ Handler ─▶ Response Formatting ─▶ Response
+             middleware        middleware                              middleware
+   প্রতিটা middleware পরেরটাকে "next()" দিয়ে কল করে — এটাই pipe-এর ভূমিকা পালন করে
+</pre></div>
+
+<h3>Batch বনাম Streaming, আর Backpressure-এর প্রশ্ন</h3>
+<p>Pipe-and-Filter দুই রূপে দেখা যায়। <span class="kw">Batch</span> ভ্যারিয়েন্টে ডেটাসেট সসীম — যেমন একটা রাতের ETL জব একবার চলে শেষ হয়ে যায়। <span class="kw">Streaming</span> ভ্যারিয়েন্টে ডেটা অবিরাম, অসীম — যেমন রিয়েল-টাইম লগ প্রসেসিং। স্ট্রিমিং পাইপলাইনে একটা ধীর ডাউনস্ট্রিম ফিল্টার বড় সমস্যা তৈরি করতে পারে — যদি একটা স্টেজ আগেরটার চেয়ে ধীরে ডেটা প্রসেস করে, আউটপুট বাফারে জমতে থাকে, আর সেই বাফার একসময় আউট-অফ-মেমরি করে ফেলবে যদি কোনো নিয়ন্ত্রণ ব্যবস্থা না থাকে। এই সমস্যার সমাধান হলো <span class="kw">Backpressure</span> — একটা মেকানিজম যাতে ধীর ডাউনস্ট্রিম ফিল্টার আপস্ট্রিম ফিল্টারকে সংকেত দিতে পারে "একটু ধীরে দাও"। এই সাইটের System Design কোর্সের Message Queue চ্যাপ্টার আর আলাদা Kafka কোর্সে backpressure, consumer lag, আর flow control নিয়ে গভীরভাবে আলোচনা করা আছে।</p>
+
+<div class="callout why"><span class="tag">কেন — ফিল্টার একে অপরকে চেনে না বলেই composability আসে</span>
+যদি একটা ফিল্টার জানত যে তার আগে কোন ফিল্টার বসানো আছে, তাহলে সেই কাপলিং-এর কারণে তাকে অন্য কোনো কনটেক্সটে ব্যবহার করা কঠিন হয়ে যেত। ফিল্টারদের মধ্যে অজ্ঞতা বজায় রাখাটাই তাদের স্বাধীনভাবে পুনর্ব্যবহারযোগ্য রাখে — এটাই কম্পোজেবিলিটির মূল ভিত্তি।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — মাঝের স্টেজে গ্লোবাল স্টেট গুঁজে দেওয়া</span>
+একটা সাধারণ ভুল হলো, যখন স্টেজ ৫-এর কোনো তথ্য স্টেজ ২-এ দরকার হয়, তখন একটা শেয়ার্ড গ্লোবাল কনটেক্সট অবজেক্ট বসিয়ে দেওয়া, যেটা সব ফিল্টার অ্যাক্সেস করতে পারে। এটা প্যাটার্নের মূল প্রতিশ্রুতি ভেঙে ফেলে — ফিল্টারগুলো আর স্বাধীন থাকে না, ফলে টেস্টেবিলিটি আর পুনর্ব্যবহারযোগ্যতা দুটোই নষ্ট হয়ে যায়।</div>
+
+<div class="callout best"><span class="tag">Best practice — প্রতিটা ফিল্টারের কন্ট্র্যাক্ট স্পষ্টভাবে ডকুমেন্ট করা</span>
+যেহেতু ফিল্টারগুলো একে অপরের ইমপ্লিমেন্টেশন জানে না, তাদের একমাত্র চুক্তি হলো ইনপুট/আউটপুট ডেটা ফরম্যাট — এই কন্ট্র্যাক্টটা স্পষ্টভাবে ডকুমেন্ট আর ভার্সন করা উচিত, যাতে একটা ফিল্টার আপগ্রেড করলে বাকিরা নীরবে ভেঙে না যায়।</div>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — production পাইপলাইনে observability ছাড়া ডিবাগিং দুঃস্বপ্ন</span>
+একটা পাঁচ-স্টেজের প্রোডাকশন ডেটা পাইপলাইনে যদি আউটপুট ভুল আসে, কোন স্টেজে সমস্যা হয়েছে সেটা বের করা কঠিন যদি প্রতিটা স্টেজের মধ্যবর্তী আউটপুট লগ বা ট্রেস করা না থাকে। বাস্তব সিস্টেমে প্রতিটা স্টেজের ইনপুট/আউটপুট স্যাম্পল করে লগ করা, বা distributed tracing দিয়ে প্রতিটা স্টেজে একটা correlation ID পাস করা — এগুলো প্যাটার্নের "খাঁটি" সংস্করণে নেই, কিন্তু production-এ টিকে থাকার জন্য প্রায় বাধ্যতামূলক।</div>
+</template>
+
+<template data-page="clientserver">
+<h2 class="title">৪. Client-Server Architecture</h2>
+<p class="lead">প্রায় প্রতিটা ওয়েব বা মোবাইল সিস্টেম এই একটা মৌলিক বিভাজনের উপর দাঁড়িয়ে আছে, অথচ এর ভেতরের "thin বনাম thick" সিদ্ধান্তটাই ঠিক করে দেয় আপনার রিলিজ প্রক্রিয়া কতটা সহজ বা কঠিন হবে।</p>
+
+<h3>মূল ধারণা — Request পাঠানো বনাম Request সামলানো</h3>
+<p>Client-Server মডেলে <span class="kw">client</span> (browser, mobile app, desktop app) একটা request পাঠায়, আর <span class="kw">server</span> সেই request গ্রহণ করে প্রসেস করে, data ও business logic নিয়ন্ত্রণ করে, এবং একটা response ফেরত পাঠায়। এই বিভাজনের মূল সুবিধা হলো centralization — data ও business rule একটা কেন্দ্রীয় জায়গায় থাকে বলে একাধিক ভিন্ন client (web, iOS, Android, third-party integration) একই server-এর সাথে কথা বলে সবসময় সামঞ্জস্যপূর্ণ আচরণ পায়, প্রতিটা client নিজে থেকে rule বাস্তবায়ন করার দরকার নেই।</p>
+
+<h3>Thin Client বনাম Thick Client</h3>
+<p><span class="kw">Thin Client</span>-এ প্রায় সব logic ও state server-এ থাকে, client শুধু render করে — classic server-rendered web application (প্রতিটা click একটা নতুন page load) এর উদাহরণ। <span class="kw">Thick Client</span>-এ (Single Page Application, native mobile app) client নিজেই যথেষ্ট logic, routing, ও state রাখে, server শুধু data (JSON API) সরবরাহ করে।</p>
+
+<table>
+<tr><th>মাত্রা</th><th>Thin Client</th><th>Thick Client</th></tr>
+<tr><td>Deploy/rollout</td><td>সহজ — server আপডেট হলেই সব ইউজার সাথে সাথে নতুন ভার্সন পায়</td><td>জটিল — client-সাইড কোড versioning প্রয়োজন, সব ইউজার সাথে সাথে নতুন ভার্সনে যায় না (বিশেষত mobile app store review-এর কারণে)</td></tr>
+<tr><td>Interaction latency</td><td>প্রতিটা interaction-এ পূর্ণ network round trip</td><td>দ্রুত অনুভূত হয় — অনেক interaction client-সাইডেই সামলানো যায়</td></tr>
+<tr><td>Backward compatibility বোঝা</td><td>কম — client সবসময় server-এর latest ভার্সনের সাথেই কথা বলে</td><td>বেশি — server-কে client-এর পুরনো ভার্সনের (যেসব ইউজার আপডেট করেনি) সাথেও চলার মতো API রাখতে হয়</td></tr>
+<tr><td>Offline সক্ষমতা</td><td>প্রায় নেই</td><td>সম্ভব — client নিজের কাছে data cache/store রাখতে পারে</td></tr>
+</table>
+
+<div class="diagram"><pre>
+Thin Client:                          Thick Client (SPA/Mobile):
+
+  Browser ──full page request──▶ Server    App ──JSON API call──▶ Server
+         ◀── rendered HTML ─────┘             ◀── data only ─────┘
+  প্রতিটা interaction = নতুন round trip     routing/state/logic client-এ,
+                                            শুধু data-র জন্য server-এ যায়
+</pre></div>
+
+<h3>REST API — Client-Server নীতির একটা প্রামাণ্য বাস্তবায়ন</h3>
+<p>REST architectural style-এর constraint-গুলোর একটা মূল ভিত্তিই হলো client-server separation — client ও server স্বাধীনভাবে develop ও deploy হতে পারে যতক্ষণ contract (API shape) স্থির থাকে। এই স্বাধীনতা বাস্তবে একটা টিমকে backend redesign করতে দেয় সম্পূর্ণ ভিন্নভাবে (database বদলানো, internal caching যোগ করা), যদি বাইরে থেকে API-র আচরণ অপরিবর্তিত থাকে — client টিমের কিছুই জানার দরকার নেই।</p>
+
+<div class="callout why"><span class="tag">কেন Mobile App-এ Thick Client হওয়াটা প্রায় বাধ্যতামূলক</span>
+একটা mobile app যদি প্রতিটা সামান্য interaction-এও (যেমন একটা ট্যাব বদলানো) network call করত, প্রতিটা টুকরো ধীরগতির বা offline নেটওয়ার্কে ব্যবহারযোগ্যতা ধ্বংস হয়ে যেত। তাই mobile app-কে অনিবার্যভাবে thick client হতে হয় — navigation, form validation, এবং প্রায়ই কিছু data caching client-সাইডেই থাকে, আর server শুধু authoritative data ও business rule-এর জন্য call করা হয়।</p></div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Thick Client-এ security-critical লজিক রাখা</span>
+Client-সাইড কোড (JavaScript, decompiled mobile app) ব্যবহারকারীর নিয়ন্ত্রণে থাকা একটা device-এ চলে — তাই সেখানে থাকা যেকোনো validation বা authorization logic bypass করা সম্ভব (browser devtools দিয়ে সরাসরি API call করে বা modified request পাঠিয়ে)। মূল্য গণনা, discount যোগ্যতা, বা permission check-এর মতো security-critical সিদ্ধান্ত কখনো শুধু client-সাইডে রাখা উচিত না — client-সাইড validation UX-এর জন্য ভালো (তাৎক্ষণিক feedback), কিন্তু server-কে সবসময় সেই একই validation স্বাধীনভাবে আবার করতে হবে, client-কে বিশ্বাস না করে।</div>
+
+<div class="callout best"><span class="tag">Best practice — API contract-কে client থেকে স্বাধীনভাবে version করা</span>
+Client ও server স্বাধীনভাবে deploy হওয়ার আসল সুবিধা পেতে হলে API-কে একটা স্পষ্ট, স্থিতিশীল contract হিসেবে treat করা উচিত — breaking change করতে হলে versioning (যেমন <code>/api/v2/...</code>) ব্যবহার করা এবং পুরনো client-দের জন্য কিছুদিন backward-compatible রাখা। এভাবে server টিম নতুন ফিচার ship করতে পারে client টিমের release cycle-এর জন্য অপেক্ষা না করেই।</div>
+</template>
+
+<template data-page="monolith">
+<h2 class="title">৫. Monolithic Architecture</h2>
+<p class="lead">"Monolith" শব্দটা প্রায়ই নেতিবাচক অর্থে ব্যবহৃত হয়, অথচ বেশিরভাগ সফল প্রোডাক্টের ইতিহাস শুরু হয়েছে ঠিক এই স্টাইল দিয়েই — সমস্যা হয় যখন এটাকে ভুলভাবে গঠন করা হয়, স্টাইলটা নিজে থেকে খারাপ নয়।</p>
+
+<h3>মূল ধারণা</h3>
+<p>একটা <span class="kw">Monolith</span>-এ পুরো অ্যাপ্লিকেশন একটামাত্র কোডবেস, একটামাত্র build artifact, আর সাধারণত একটামাত্র shared database হিসেবে থাকে — সব module একই process-এর ভেতরে in-memory function call দিয়ে একে অপরকে কল করে। এখানে কোনো network hop নেই মডিউলগুলোর মধ্যে যোগাযোগে, তাই latency ন্যূনতম এবং failure mode সরল (হয় পুরো process চলছে, নাহলে বন্ধ)।</p>
+
+<div class="diagram"><pre>
+              ┌─────────────── একটা প্রসেস, একটা deployable ───────────────┐
+Client ──▶    │  Orders Module ──call──▶ Inventory Module ──call──▶ Billing │  ──▶ Database
+              │       (in-memory function call, network hop নেই)           │      (shared)
+              └──────────────────────────────────────────────────────────┘
+</pre></div>
+
+<table>
+<tr><th>সুবিধা</th><th>ব্যাখ্যা</th></tr>
+<tr><td>সরল deployment</td><td>একটা artifact, একটা deploy pipeline — একাধিক service-এর version মিলিয়ে coordinate করার দরকার নেই</td></tr>
+<tr><td>Local reasoning সহজ</td><td>একটা IDE-তে পুরো কল-চেইন দেখা যায়, breakpoint দিয়ে end-to-end debug করা যায় — network hop-এর মধ্যে trace হারিয়ে যায় না</td></tr>
+<tr><td>সহজ transaction</td><td>একই database-এ একাধিক টেবিল একই সাথে আপডেট করা একটা স্থানীয় ACID transaction দিয়েই সম্ভব — distributed transaction-এর জটিলতা নেই</td></tr>
+</table>
+<table>
+<tr><th>অসুবিধা</th><th>ব্যাখ্যা</th></tr>
+<tr><td>একসাথে scale করতে হয়</td><td>শুধু একটা মডিউল (যেমন image processing) বেশি লোড পেলেও পুরো অ্যাপ্লিকেশনের নতুন instance চালাতে হয় — বাকি মডিউলের জন্যও অপ্রয়োজনীয় resource খরচ হয়</td></tr>
+<tr><td>Deployment risk কেন্দ্রীভূত</td><td>একটা ছোট মডিউলের একটা বাগও পুরো অ্যাপ্লিকেশনকে ক্র্যাশ করাতে পারে বা পুরো deploy আটকে দিতে পারে</td></tr>
+<tr><td>টিম স্কেল করা কঠিন</td><td>বহু টিম একই কোডবেসে কাজ করলে merge conflict, ধীর CI build, আর coordinated release-এর ঝামেলা বাড়ে</td></tr>
+</table>
+
+<h3>"Monolith" বনাম "Big Ball of Mud" — একটা গুরুত্বপূর্ণ পার্থক্য</h3>
+<p>Monolith সম্পর্কে সবচেয়ে সাধারণ ভুল ধারণা হলো এটাকে "বিশৃঙ্খল কোড"-এর সমার্থক ভাবা। বাস্তবে একটা monolith সুশৃঙ্খল internal module boundary নিয়েও বানানো যায় (দেখুন পরের অধ্যায় — Modular Monolith), অথবা সম্পূর্ণ বিশৃঙ্খলভাবেও বানানো যায় যেখানে যেকোনো ফাইল যেকোনো ফাইলকে সরাসরি কল করতে পারে কোনো নিয়ম ছাড়াই (এটাই আসল "big ball of mud")। সমস্যাটা deployment-ইউনিট একটা হওয়া না — সমস্যা হলো কোডের ভেতরে কোনো discipline বা boundary না থাকা। একটা ভালো-গঠিত monolith থেকে ভবিষ্যতে প্রয়োজনে একটা module বের করে আনা তুলনামূলক সহজ; একটা বিশৃঙ্খল monolith থেকে কিছুই আলাদা করা যায় না পুরো জিনিস না বুঝে।</p>
+
+<div class="callout why"><span class="tag">কেন বেশিরভাগ সফল স্টার্টআপ Monolith দিয়েই শুরু করে</span>
+প্রথম দিকে product-market fit খোঁজার সময় requirement প্রতি সপ্তাহে বদলায় — কোন module থাকবে, কোনটা থাকবে না তা নিজেই অনিশ্চিত। এই পর্যায়ে microservices-এর মতো আগেভাগে কঠোর service boundary টেনে ফেলা মানে ভুল জায়গায় boundary টানার ঝুঁকি নেওয়া, আর পরে সেই ভুল boundary ঠিক করা network-based service-এর মধ্যে ঠিক করার চেয়ে একটা monolith-এর ভেতরে ফাইল সরানো অনেক সস্তা। তাই দ্রুত iterate করার পর্যায়ে monolith-এর কম overhead একটা প্রকৃত প্রতিযোগিতামূলক সুবিধা।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Deployment ইউনিট একটাই মানে Scaling ইউনিটও একটাই ধরে নেওয়া</span>
+অনেকে ভাবেন monolith মানেই পুরো সিস্টেম সবসময় একই horizontal scale-এ থাকতে বাধ্য। বাস্তবে একটা monolith-এর একাধিক identical instance চালানো (সবগুলো পুরো কোডবেস চালাচ্ছে) সম্পূর্ণ সম্ভব এবং সাধারণ — Load Balancer-এর পেছনে stateless monolith instance যোগ করে horizontal scale করা যায় ঠিক যেভাবে একটা individual microservice করত। সীমাবদ্ধতা হলো <i>granular</i> scaling সম্ভব না — আপনি শুধু "Inventory module"-কে বেশি instance দিতে পারবেন না, পুরো অ্যাপ্লিকেশনের আরেকটা কপি চালাতে হবে, যেখানে বাকি মডিউলের capacity ব্যবহারই হবে না।</div>
+</template>
+
+<template data-page="microservices">
+<h2 class="title">৮. Microservices Architecture — সংক্ষিপ্ত ওভারভিউ</h2>
+<p class="lead">এই সাইটে Microservices নিয়ে একটা সম্পূর্ণ, গভীর কোর্স আছে — এই অধ্যায়ের উদ্দেশ্য সেটার পুনরাবৃত্তি না, বরং এই architecture-survey কোর্সের প্রসঙ্গে Monolith-এর ঠিক বিপরীত মেরুতে এটা কোথায় দাঁড়িয়ে আছে তা স্পষ্ট করা।</p>
+
+<h3>মূল ধারণা</h3>
+<p>Microservices-এ সিস্টেমকে ব্যবসায়িক ক্ষমতা (business capability) অনুযায়ী স্বাধীন service-এ ভাগ করা হয় — প্রতিটা service নিজের কোডবেস, নিজের database, নিজস্ব deployment cycle রাখে, এবং network-এর মাধ্যমে (REST, gRPC, বা message queue দিয়ে) অন্য service-এর সাথে যোগাযোগ করে। প্রতিটা service একটা নির্দিষ্ট team owner রাখে যে সম্পূর্ণ স্বাধীনভাবে সেই service-এর প্রযুক্তি, release cadence, ও internal design নিয়ন্ত্রণ করতে পারে।</p>
+
+<div class="diagram"><pre>
+   Monolith:                              Microservices:
+
+   ┌── একটা deployable ──┐                 ┌─────────┐  ┌───────────┐  ┌─────────┐
+   │ Orders │ Inventory │                 │ Orders  │  │ Inventory │  │ Billing │
+   │ Billing│ Shipping  │                 │ Service │◀▶│  Service  │◀▶│ Service │
+   └──────────────────────┘                 (own DB)     (own DB)      (own DB)
+      একটা shared database              network-এর মাধ্যমে যোগাযোগ, প্রতিটার আলাদা deploy
+</pre></div>
+
+<table>
+<tr><th>মাত্রা</th><th>Monolith</th><th>Microservices</th></tr>
+<tr><td>Deployment</td><td>একটা ইউনিট, একসাথে সব</td><td>প্রতিটা service স্বাধীনভাবে deploy — একটার বাগ ফিক্সে পুরো সিস্টেম redeploy লাগে না</td></tr>
+<tr><td>Scaling granularity</td><td>পুরো অ্যাপ্লিকেশন একসাথে scale</td><td>শুধু যে service-এ বেশি লোড, শুধু সেটাই scale করা যায়</td></tr>
+<tr><td>Data ownership</td><td>সাধারণত একটা shared database</td><td>প্রতিটা service নিজের database owner — সরাসরি অন্য service-এর টেবিলে query করা নিষেধ</td></tr>
+<tr><td>Failure isolation</td><td>একটা মডিউলের ক্র্যাশ পুরো process-কে নামিয়ে দিতে পারে</td><td>একটা service down হলে বাকিরা (graceful degradation সহ) চলতে থাকতে পারে</td></tr>
+<tr><td>Transaction</td><td>স্থানীয় ACID transaction সহজ</td><td>একাধিক service জুড়ে transaction-এর জন্য Saga-এর মতো জটিল distributed pattern লাগে</td></tr>
+<tr><td>Operational complexity</td><td>কম — একটা log stream, একটা metric dashboard</td><td>বেশি — distributed tracing, service discovery, প্রতিটা service-এর আলাদা on-call/monitoring দরকার</td></tr>
+<tr><td>Team autonomy</td><td>বড় টিমে সমন্বয়ের ঘর্ষণ বাড়ে</td><td>প্রতিটা টিম নিজের service স্বাধীনভাবে owner হিসেবে চালাতে পারে</td></tr>
+</table>
+
+<h3>যোগাযোগের দুটো মূল ধরন</h3>
+<p>Microservices-এর মধ্যে যোগাযোগ মূলত দুই ধরনের — <span class="kw">Synchronous</span> (একটা service সরাসরি REST/gRPC কল করে অন্য service-কে, response-এর জন্য অপেক্ষা করে) এবং <span class="kw">Asynchronous</span> (একটা service একটা event/message পাঠিয়ে দেয়, response-এর জন্য অপেক্ষা করে না)। কোনটা কখন ব্যবহার হবে তার বিস্তারিত এই কোর্সের Event-Driven Architecture অধ্যায়ে এবং dedicated Microservices কোর্সে আলোচনা করা হয়েছে — সংক্ষেপে, synchronous ব্যবহার হয় যখন caller-এর অবিলম্বে একটা উত্তর দরকার (যেমন "এই ইউজারের balance কত"), asynchronous ব্যবহার হয় যখন কাজটা eventual ভাবে সম্পন্ন হলেই চলে (যেমন "email পাঠাও")।</p>
+
+<div class="callout why"><span class="tag">Conway's Law — আর্কিটেকচার কেন সংগঠনের প্রতিচ্ছবি</span>
+Conway's Law বলে, একটা সংগঠন যে সিস্টেম ডিজাইন করে তা অনিবার্যভাবে সেই সংগঠনের যোগাযোগ-কাঠামোর একটা প্রতিলিপি হয়ে দাঁড়ায়। এর ব্যবহারিক প্রভাব দুই দিকেই কাজ করে — যদি টিম-বিভাজন স্বাধীন হয় (প্রতিটা টিম একটা স্পষ্ট business domain owner), microservices স্বাভাবিকভাবেই সেই বিভাজন অনুসরণ করে ভালো কাজ করে। কিন্তু টিম-কাঠামো এখনো কেন্দ্রীভূত/coupled থাকলে (সবাইকে সবসময় একে অপরের সাথে সমন্বয় করতে হয়), সেই একই সংগঠন microservices split করলেও সার্ভিসগুলো একে অপরের সাথে এত ঘনিষ্ঠভাবে জড়িয়ে থাকে যে ফলাফল হয় একটা <b>distributed monolith</b> — নেটওয়ার্ক hop-এর latency ও অপারেশনাল জটিলতা যোগ হয়, অথচ স্বাধীন deployability-র আসল সুবিধাটাই পাওয়া যায় না।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — "Resume-driven" microservices adoption</span>
+একটা ৫ জনের ইঞ্জিনিয়ারিং টিম প্রথম দিনেই ৩০টা microservice ডিজাইন করে ফেলা একটা সাধারণ ভুল — প্রায়ই আসল ব্যবসায়িক প্রয়োজনের চেয়ে resume-এ "microservices experience" লেখার আকাঙ্ক্ষা থেকে। ফলাফল — টিমের বেশিরভাগ সময় চলে যায় infrastructure বানাতে (প্রতিটা service-এর জন্য আলাদা CI/CD pipeline, service discovery, distributed tracing setup) product feature বানানোর বদলে। এর চেয়েও খারাপ, যদি সব service একটা shared database ব্যবহার করে বা একসাথেই deploy করা হয়, তাহলে microservices-এর network overhead সহ্য করেও monolith-এর কোনো সুবিধাই (সহজ transaction, সহজ deploy) অবশিষ্ট থাকে না — এটাই distributed monolith।</div>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — এখানে যা দেখানো হলো তার চেয়ে অনেক বেশি গভীরতা আছে</span>
+Service decomposition strategy (DDD bounded context দিয়ে boundary টানা), Saga pattern দিয়ে distributed transaction সামলানো, API Gateway/BFF, service discovery, service mesh, resilience pattern (circuit breaker, retry, bulkhead), আর একটা monolith থেকে migration roadmap — এই সবকিছুই dedicated Microservices কোর্সে ১৮টা অধ্যায় জুড়ে বিস্তারিত কভার করা হয়েছে। এই অধ্যায়ের লক্ষ্য শুধু architecture-survey-এর প্রসঙ্গে Monolith-এর তুলনায় trade-off-টা স্পষ্ট করা।</div>
+</template>
+
+<template data-page="eventdriven">
+<h2 class="title">৯. Event-Driven Architecture</h2>
+<p class="lead">এই স্টাইলে কেউ কাউকে সরাসরি call করে না — সিস্টেমটা একে অপরের কাছে "কী ঘটেছে" ঘোষণা করে চলে, আর সেই একটা সিদ্ধান্তই পুরো সিস্টেমকে radically decoupled করে দেয়।</p>
+
+<h3>মূল ধারণা</h3>
+<p>Event-Driven Architecture-এ একটা service কোনো state পরিবর্তন ঘটলে একটা <span class="kw">event</span> publish করে (যেমন <code>OrderPlaced</code>), আর একাধিক consumer সেই event-এ independently প্রতিক্রিয়া দেখায় — producer জানেও না তার event কে কে consume করছে, এমনকি জানেও না কেউ আদৌ শুনছে কিনা। এটা System Design কোর্সের Message Queue অধ্যায়ে দেখা asynchronous messaging-এর ধারণার সরাসরি সম্প্রসারণ, শুধু এখানে ফোকাস একটা নির্দিষ্ট queue-এর mechanics না, পুরো সিস্টেমের যোগাযোগ-স্টাইলের উপর।</p>
+
+<div class="diagram"><pre>
+                                   ┌──▶ Inventory Service   (stock কমায়)
+   Order Service ──"OrderPlaced"──┼──▶ Notification Service (email/SMS পাঠায়)
+        (publisher)     event     └──▶ Analytics Service    (dashboard আপডেট করে)
+                                          (subscribers — একে অপরের সম্পর্কে অজ্ঞ)
+</pre></div>
+
+<h3>Request-Response বনাম Event-Driven</h3>
+<table>
+<tr><th>মাত্রা</th><th>Request-Response (Synchronous)</th><th>Event-Driven (Asynchronous)</th></tr>
+<tr><td>Coupling</td><td>Caller-কে callee-র ঠিকানা ও contract জানতে হয়</td><td>Producer, consumer-দের সম্পর্কে কিছুই জানে না</td></tr>
+<tr><td>নতুন consumer যোগ করা</td><td>Caller-এর কোড বদলাতে হয় (নতুন কল যোগ করতে হবে)</td><td>শুধু নতুন consumer subscribe করে, producer অপরিবর্তিত থাকে</td></tr>
+<tr><td>Consistency</td><td>তাৎক্ষণিক (response এলেই কাজ সম্পন্ন)</td><td>Eventual — event process হতে কিছুটা সময় লাগে</td></tr>
+<tr><td>Debug/trace করা</td><td>একটামাত্র call stack/log অনুসরণ করলেই চলে</td><td>একাধিক service জুড়ে distributed tracing ছাড়া কঠিন</td></tr>
+</table>
+
+<h3>Choreography বনাম Orchestration</h3>
+<p>একাধিক service-কে একসাথে একটা ব্যবসায়িক প্রক্রিয়া (যেমন order fulfillment) সম্পন্ন করতে হলে দুটো ভিন্ন কৌশল আছে। <span class="kw">Choreography</span>-তে কোনো কেন্দ্রীয় নিয়ন্ত্রক নেই — প্রতিটা service নিজের event শুনে নিজের কাজ করে পরের event publish করে, পুরো flow টা "emergent" (কোনো একক জায়গায় সম্পূর্ণ প্রক্রিয়াটা লেখা নেই)। <span class="kw">Orchestration</span>-এ একটা কেন্দ্রীয় orchestrator service প্রতিটা ধাপ স্পষ্টভাবে নির্দেশ দেয় ও ক্রম নিয়ন্ত্রণ করে। Choreography বেশি decoupled কিন্তু পুরো প্রক্রিয়া বোঝা কঠিন (কোনো একটা ফাইলে পুরো flow লেখা নেই); Orchestration বুঝতে সহজ ও error-handling কেন্দ্রীভূত, কিন্তু orchestrator নিজে একটা কেন্দ্রীয় নির্ভরতা হয়ে দাঁড়ায়।</p>
+
+<div class="callout why"><span class="tag">কেন Event-Driven সিস্টেম ডিবাগ করা কঠিন</span>
+Synchronous call chain-এ একটা request কোন পথে গিয়েছে তা একটামাত্র stack trace থেকেই বোঝা যায়। কিন্তু event-driven সিস্টেমে event publish হওয়ার পর producer জানেও না কোন consumer কখন সেটা প্রসেস করবে — একটা bug রিপোর্ট এলে একাধিক service-এর আলাদা log একসাথে মেলাতে হয়, যা manually প্রায় অসম্ভব। সমাধান একটা <code>correlation ID</code>/<code>trace ID</code> প্রতিটা event-এর সাথে propagate করা এবং centralized distributed tracing tool (Jaeger, Zipkin) ব্যবহার করা।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Event-এ শুধু একটা ID পাঠানো, দরকারি data না</span>
+কিছু টিম event-কে অতিরিক্ত হালকা রাখতে গিয়ে শুধু <code>{"orderId": 123}</code> পাঠায়, ধরে নিয়ে consumer প্রয়োজনে producer-এর API কল করে বাকি data নিয়ে নেবে। এতে event-driven-এর মূল সুবিধা (decoupling) নষ্ট হয়ে যায় — consumer এখন producer-এর availability-র উপর নির্ভরশীল হয়ে পড়ে ঠিক synchronous call-এর মতোই। Best practice হলো event-এর ভেতরেই যথেষ্ট data (একটা "fat event") রাখা যাতে বেশিরভাগ consumer সরাসরি event থেকেই কাজ চালাতে পারে, producer-কে আবার কল না করে।</div>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — CQRS ও Event Sourcing এই ধারণারই গভীরতর প্রয়োগ</span>
+Event-Driven Architecture-এর একটা advanced প্রয়োগ হলো <span class="kw">Event Sourcing</span> (state-কে সরাসরি না রেখে state-পরিবর্তনকারী event-গুলোর একটা append-only log হিসেবে রাখা, বর্তমান state সেই log replay করে derive করা হয়) এবং <span class="kw">CQRS</span> (Command ও Query-র জন্য আলাদা মডেল/স্টোর ব্যবহার করা)। এই দুটো প্যাটার্ন যথেষ্ট গভীর যে এই কোর্সের scope-এর বাইরে — dedicated Microservices ও Domain-Driven Design কোর্সে এগুলো বিস্তারিত আলোচনা করা হয়েছে।</div>
+</template>
+
+<template data-page="serverless">
+<h2 class="title">১৪. Serverless Architecture</h2>
+<p class="lead">"Serverless" নামটা বিভ্রান্তিকর — সার্ভার ঠিকই আছে, শুধু আপনাকে আর সেটার provisioning, patching, বা idle-time-এর জন্য পয়সা দেওয়ার কথা ভাবতে হয় না।</p>
+
+<h3>মূল ধারণা — FaaS ও BaaS</h3>
+<p>Serverless-এর মূল রূপ হলো <span class="kw">Function-as-a-Service (FaaS)</span> — যেমন AWS Lambda, Azure Functions, Google Cloud Functions — যেখানে কোডকে ছোট ছোট, stateless ফাংশনে ভাগ করা হয়, প্রতিটা ফাংশন একটা নির্দিষ্ট event (HTTP request, queue message, file upload, scheduled timer) ঘটলেই চালু হয়। এর পাশাপাশি <span class="kw">Backend-as-a-Service (BaaS)</span> — managed authentication, managed database, managed file storage-এর মতো সম্পূর্ণ ready-made backend service — একসাথে মিলিয়ে পুরো backend-কেই "সার্ভার নিজে চালানো লাগে না" এমন বানানো সম্ভব।</p>
+
+<div class="diagram"><pre>
+   HTTP Request ──▶ API Gateway ──▶ [ Function চালু হয় ] ──▶ Response
+                                         │
+                          Idle সময়ে কোনো instance চলমান থাকে না,
+                          কোনো খরচ নেই — শুধু execution-এর সময়টুকু বিল হয়
+</pre></div>
+
+<h3>Cold Start — সবচেয়ে আলোচিত সীমাবদ্ধতা</h3>
+<p>যেহেতু idle থাকা অবস্থায় কোনো function instance চলমান থাকে না, একটা নতুন invocation এলে প্ল্যাটফর্মকে প্রথমে একটা নতুন execution environment তৈরি করতে হয় (কনটেইনার/VM বুট করা, runtime initialize করা, কোড লোড করা) — এই বিলম্বকে <span class="kw">cold start</span> বলে, যা কয়েকশো মিলিসেকেন্ড থেকে কয়েক সেকেন্ড পর্যন্ত হতে পারে (runtime ও package size অনুযায়ী)। একবার একটা instance "গরম" (warm) হয়ে গেলে পরের কিছুক্ষণের invocation দ্রুত হয়, কিন্তু কম-ট্রাফিক ফাংশনে বা হঠাৎ স্পাইকে বহু নতুন instance একসাথে দরকার হলে (concurrent cold start) latency-sensitive অ্যাপ্লিকেশনে এটা একটা বাস্তব সমস্যা।</p>
+
+<table>
+<tr><th>সুবিধা</th><th>ব্যাখ্যা</th></tr>
+<tr><td>শূন্য idle cost</td><td>ট্রাফিক না থাকলে কোনো বিল নেই — spiky/অনিয়মিত workload-এ ব্যয়সাশ্রয়ী</td></tr>
+<tr><td>স্বয়ংক্রিয় scaling</td><td>ট্রাফিক বাড়লে প্ল্যাটফর্ম নিজে নতুন instance চালু করে, capacity planning করতে হয় না</td></tr>
+<tr><td>কম অপারেশনাল দায়িত্ব</td><td>OS patch, runtime upgrade, সার্ভার provisioning — কিছুই নিজে করতে হয় না</td></tr>
+</table>
+<table>
+<tr><th>সীমাবদ্ধতা</th><th>ব্যাখ্যা</th></tr>
+<tr><td>Cold start latency</td><td>latency-sensitive, সবসময়-চালু workload-এ (যেমন একটা high-traffic API-এর p99 latency) সমস্যা তৈরি করতে পারে</td></tr>
+<tr><td>Vendor lock-in</td><td>একটা cloud provider-এর নির্দিষ্ট event trigger/API-এর সাথে কোড ঘনিষ্ঠভাবে জড়িয়ে যায়, migrate করা কঠিন</td></tr>
+<tr><td>দীর্ঘস্থায়ী/stateful workload অনুপযুক্ত</td><td>Function-এর execution time-এর একটা upper limit থাকে (সাধারণত মিনিট কয়েক); দীর্ঘ-চলা প্রসেস বা persistent in-memory state-এর জন্য উপযুক্ত না</td></tr>
+<tr><td>অনিয়ন্ত্রিত খরচ-স্পাইক</td><td>একটা bug (যেমন infinite retry loop) বা আসল ট্রাফিক-স্পাইকে বিল দ্রুত বেড়ে যেতে পারে, প্রথাগত fixed-capacity সার্ভারের বিপরীতে</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">কেন Serverless spiky ট্রাফিকে বিশেষভাবে উপযোগী</span>
+একটা ফিচার যা দিনে মাত্র কয়েকবার ট্রিগার হয় (যেমন একটা nightly report generator, বা একটা webhook handler) — একটা সবসময়-চালু সার্ভারে রাখলে ৯৯% সময় সেই সার্ভার idle বসে থাকবে অথচ বিল আসবে পুরো সময়ের জন্য। Serverless-এ শুধু সেই কয়েক সেকেন্ড execution-এর জন্যই বিল আসে — এই ধরনের অনিয়মিত, কম-ফ্রিকোয়েন্সি workload-এ cost efficiency-র পার্থক্য বিশাল।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — সব ধরনের workload-এর জন্য Serverless বেছে নেওয়া</span>
+Serverless-এর হাইপ দেখে একটা ক্রমাগত উচ্চ-ট্রাফিক, latency-critical API-কেও পুরোপুরি FaaS-এ সরিয়ে ফেলা একটা ভুল হতে পারে — একটা সবসময়-ব্যস্ত সার্ভিসে cold start-এর সুবিধা নেই (instance প্রায় সবসময় warm), অথচ per-invocation pricing model traditional always-on সার্ভারের চেয়ে বেশি খরচ করাতে পারে উচ্চ, স্থির ট্রাফিকে। Serverless সবচেয়ে বেশি মূল্য দেয় যখন ট্রাফিক প্যাটার্ন সত্যিই spiky বা বিরল, স্থির-উচ্চ না।</div>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — প্ল্যাটফর্ম-নির্দিষ্ট বিস্তারিত অন্য কোর্সে</span>
+AWS Lambda ও Azure Functions-এর নির্দিষ্ট configuration, trigger type, cost model, ও production best practice এই সাইটের AWS ও Azure কোর্সে বিস্তারিত আলোচনা করা হয়েছে — এই অধ্যায়ের লক্ষ্য শুধু Serverless-কে architecture-style হিসেবে বাকি স্টাইলগুলোর পাশে রেখে তুলনা করা।</div>
+</template>
+
+<template data-page="spacebased">
+<h2 class="title">১২. Space-Based Architecture</h2>
+<p class="lead">যখন লক্ষ লক্ষ ইউজার একই মুহূর্তে একই <span class="kw">database</span>-এ আঘাত করে, তখন সমস্যাটা আর অ্যাপ্লিকেশন সার্ভারের সংখ্যা নয় — সমস্যাটা হলো, ডেটা এক জায়গায় কেন্দ্রীভূত থাকা মাত্রই সেটা একটা অলঙ্ঘনীয় সিলিং হয়ে দাঁড়ায়।</p>
+
+<h3>সমস্যা — Database সবসময় প্রথম বটলনেক</h3>
+<p>সাধারণ layered বা client-server আর্কিটেকচারে scaling-এর গল্পটা অর্ধেক পর্যন্ত খুব সহজ শোনায় — লোড বাড়লে load balancer-এর পেছনে আরও stateless অ্যাপ্লিকেশন সার্ভার যোগ করে দাও, request সমান ভাগে ভাগ হয়ে যাবে। কিন্তু এই প্রতিটা সার্ভার শেষমেশ একটাই কেন্দ্রীয় <span class="kw">database</span>-এ গিয়ে মিশে যায়, আর একটা database-এর write throughput-এর একটা কঠিন সিলিং থাকে — ডিস্ক I/O, lock contention, connection pool, replication lag — যা দিয়ে যতই vertical scale করা হোক না কেন, একটা সীমার পর আর বাড়ানো যায় না। অ্যাপ্লিকেশন সার্ভার যোগ করা সস্তা ও প্রায় লিনিয়ার, কিন্তু database scale করা ব্যয়বহুল, জটিল, আর প্রায়ই একটা single point of contention। Space-Based Architecture — যাকে অনেক সময় <span class="kw">Cloud Architecture Pattern</span>ও বলা হয় — ঠিক এই একটা সমস্যা সমাধানের জন্যই ডিজাইন করা হয়েছে: extreme-scale, হঠাৎ বিস্ফোরিত (bursty) লোডের নিচে কেন্দ্রীয় database-কে বটলনেক হিসেবে সম্পূর্ণ বাদ দেওয়া।</p>
+
+<h3>মূল কৌশল — ডেটা আর লজিক বাইরে ছড়িয়ে দেওয়া</h3>
+<p>এই প্যাটার্নের মূল ধারণা হলো, কেন্দ্রীয় database-এর বদলে ডেটা আর প্রসেসিং লজিক দুটোই distributed, replicated, in-memory data grid-এর ভেতরে ছড়িয়ে দেওয়া, যা স্বয়ংসম্পূর্ণ ইউনিটের ভেতরে বাস করে — একে বলা হয় <span class="kw">Processing Unit</span>। প্রতিটা Processing Unit-এ থাকে অ্যাপ্লিকেশন লজিক, শেয়ার্ড ডেটার একটা partition বা replica (in-memory-তে), এবং একটা messaging component — ফলে একটা request প্রসেস করার পুরো critical path-এ কোনো synchronous round-trip কেন্দ্রীয় database পর্যন্ত যেতে হয় না, সব কিছু মেমোরির মধ্যেই ঘটে যায়। লেখাগুলো (writes) তাৎক্ষণিকভাবে ডিস্কে persist না করে asynchronously এবং eventually একটা backing database-এ পাঠানো হয় — এই কৌশলটাকে বলে <span class="kw">write-behind</span>। এর মানে request-এর latency আর database-এর ডিস্ক I/O-এর মধ্যে সরাসরি নির্ভরতা ভেঙে যায়।</p>
+
+<div class="diagram"><pre>
+প্রচলিত Layered আর্কিটেকচার:
+  Client ──▶ Load Balancer ──▶ [App][App][App][App] ──▶ একটাই Database  ✗ বটলনেক
+                                                              │
+                                                    সব write এখানে জমা হয়
+
+Space-Based Architecture:
+  Client ──▶ Messaging Grid ──┬──▶ Processing Unit 1  (App + In-Memory Data Grid slice)
+                               ├──▶ Processing Unit 2  (App + In-Memory Data Grid slice)
+                               └──▶ Processing Unit N  (App + In-Memory Data Grid slice)
+                                          │
+                          asynchronous write-behind (batched)
+                                          ▼
+                                  Backing Database  (শুধু persistence-এর জন্য, critical path-এ নেই)
+</pre></div>
+
+<h3>চারটা মূল বিল্ডিং ব্লক</h3>
+<p>Space-Based Architecture সাধারণত চারটা উপাদান নিয়ে গঠিত। <span class="kw">In-Memory Data Grid (IMDG)</span> হলো একটা distributed, replicated key-value store যা অনেকগুলো নোড জুড়ে ছড়িয়ে থাকে এবং পুরো ডেটাসেট (বা তার একটা কাজ চালানোর মতো অংশ) মেমোরিতে রাখে — Hazelcast, Apache Ignite, GigaSpaces এর পরিচিত উদাহরণ। <span class="kw">Processing Unit</span> হলো deployment-এর সবচেয়ে ছোট স্বয়ংসম্পূর্ণ একক — অ্যাপ্লিকেশন লজিক আর তার নিজের ডেটা grid-এর একটা slice একসাথে বান্ডেল করা। <span class="kw">Messaging Grid</span> incoming request-কে ঠিক কোন Processing Unit-এ পাঠাতে হবে তা রুট করে, এবং বিভিন্ন Processing Unit-এর মধ্যে ডেটা grid আপডেট replicate করার দায়িত্বও নেয়। আর <span class="kw">Deployment Manager</span> লোড অনুযায়ী dynamically নতুন Processing Unit provision করে বা অব্যবহৃত ইউনিট decommission করে — এটাই এই প্যাটার্নকে প্রায় তাৎক্ষণিক, elastic horizontal scale-out ক্ষমতা দেয়।</p>
+
+<table>
+<tr><th>উপাদান</th><th>ভূমিকা</th></tr>
+<tr><td>In-Memory Data Grid (IMDG)</td><td>distributed, replicated in-memory key-value store — পুরো working data set মেমোরিতে রাখে</td></tr>
+<tr><td>Processing Unit</td><td>app logic + ডেটার নিজস্ব slice + messaging — একসাথে ডিপ্লয় হওয়া স্বয়ংসম্পূর্ণ একক</td></tr>
+<tr><td>Messaging Grid</td><td>request-কে সঠিক Processing Unit-এ রুট করে, grid-এর ভেতর ডেটা replicate করে</td></tr>
+<tr><td>Deployment Manager</td><td>লোড দেখে dynamically Processing Unit বাড়ায়/কমায় — elastic scaling দেয়</td></tr>
+</table>
+
+<h3>ট্রেড-অফ — Eventual Consistency আর অপারেশনাল জটিলতার বিনিময়ে extreme scale</h3>
+<p>এই প্যাটার্ন বিনামূল্যে আসে না। in-memory data grid আর backing database কখনোই synchronously consistent নয় — write-behind সম্পূর্ণ হওয়ার আগেই যদি একটা Processing Unit ক্র্যাশ করে, তাহলে সাম্প্রতিকতম কিছু write হারিয়ে যেতে পারে। এটা মেনে নিতে হয় যে সিস্টেমটা <span class="kw">eventual consistency</span> মডেলে চলে, strong consistency-তে নয়। এছাড়া একটা distributed in-memory data grid চালানো, tune করা, আর মনিটর করা একটা বিশেষায়িত দক্ষতা। Capacity planning-ও ভিন্নভাবে করতে হয়: প্রশ্নটা আর "database কতটুকু ডিস্ক লাগবে" নয়, বরং "পুরো grid জুড়ে কতটুকু working data set মেমোরিতে ধরানো সম্ভব" — কারণ মেমোরি ডিস্কের চেয়ে অনেক বেশি ব্যয়বহুল আর সীমিত।</p>
+
+<h3>ক্লাসিক ব্যবহার-ক্ষেত্র — ফ্ল্যাশ সেল আর টিকিট বিক্রি</h3>
+<p>এই প্যাটার্নটা সবচেয়ে ভালোভাবে বোঝা যায় একটা কনসার্ট টিকিট সেল বা Black Friday ফ্ল্যাশ সেলের উদাহরণে — যেখানে ঠিক সকাল ১০টায় বিক্রি শুরু হওয়ার মুহূর্তে লক্ষ লক্ষ ইউজার একসাথে ঝাঁপিয়ে পড়ে, আর স্বাভাবিক লোডের তুলনায় ট্র্যাফিক ১০০ থেকে ১০০০ গুণ পর্যন্ত বেড়ে যায় — কিন্তু এই স্পাইক স্থায়ী হয় মাত্র কয়েক মিনিট। একটা প্রচলিত database-কেন্দ্রিক আর্কিটেকচারে এই লোড সামলাতে হলে সারা বছর ধরেই সেই পিক ক্যাপাসিটির জন্য infrastructure over-provision করে রাখতে হবে — যা বছরের বাকি দিন অলস পড়ে থাকবে, বিশাল অপচয়। Space-Based Architecture-এ Deployment Manager স্পাইকের ঠিক আগে অসংখ্য Processing Unit স্পিন-আপ করতে পারে, স্পাইক কেটে গেলে আবার সেগুলো টিয়ার-ডাউন করে দিতে পারে — আর পুরো burst-টা in-memory grid শুষে নেয়, যেটা একটা database-এর ডিস্ক I/O-কে সহজেই saturate করে ফেলত।</p>
+
+<div class="callout why"><span class="tag">কেন write-behind জরুরি — ডিস্ক I/O কে critical path থেকে সরানো</span>
+যদি প্রতিটা write synchronously database-এ persist করতে হতো, তাহলে ডিস্ক I/O-ই request latency নির্ধারণ করত, আর হাজার হাজার concurrent write ডিস্কের queue-তে জমে গিয়ে পুরো সিস্টেমকে থামিয়ে দিত। write-behind এই persistence-কে critical path থেকে সরিয়ে ব্যাকগ্রাউন্ডে ব্যাচে ব্যাচে করার সুযোগ দেয়, ফলে user-facing latency মেমোরি-স্পিডে থেকে যায়।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — সব ব্যবহার-ক্ষেত্রেই Space-Based Architecture বসিয়ে দেওয়া</span>
+এই প্যাটার্ন সাধারণ CRUD অ্যাপ্লিকেশনের জন্য নয়। যদি ট্র্যাফিক প্যাটার্ন predictable আর মোটামুটি স্থির হয়, আর কড়া strong consistency দরকার হয় (যেমন ব্যাংকিং লেনদেন), তাহলে distributed in-memory grid চালানোর অতিরিক্ত অপারেশনাল জটিলতা কোনো বাস্তব সুবিধা দেয় না — বরং debugging আর data-loss-এর ঝুঁকি বাড়ায়।</div>
+
+<div class="callout best"><span class="tag">Best practice — critical, ধারাবাহিকতা-দরকার ডেটা আলাদা রাখা</span>
+সব ডেটা in-memory grid-এ রাখার দরকার নেই। যে ডেটা অস্থায়ী ও burst-এর সময়টুকুর জন্য গুরুত্বপূর্ণ (যেমন "কতটা টিকিট বাকি আছে" গণনা করা) সেটা grid-এ রেখে, আর যে ডেটার দীর্ঘমেয়াদি strong consistency দরকার (যেমন চূড়ান্ত পেমেন্ট রেকর্ড) সেটার জন্য আলাদা synchronous confirmation ধাপ রাখা — এতে speed আর নির্ভরযোগ্যতা দুটোই বজায় থাকে।</div>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — বেশিরভাগ কোম্পানি নিজে IMDG বানায় না</span>
+বাস্তবে খুব কম টিমই শুরু থেকে নিজস্ব Space-Based আর্কিটেকচার হাতে বানায়। বরং Hazelcast, Apache Ignite, বা Redis-এর মতো ম্যানেজড/সেমি-ম্যানেজড in-memory grid ব্যবহার করে উপরে নিজস্ব Processing Unit ও Deployment Manager লজিক বসানো হয় — কারণ একটা distributed data grid-এর নিজস্ব consistency, partitioning, আর failover সমস্যাগুলো ইতিমধ্যেই বহু বছর ধরে সমাধান করা আছে এমন টুলে।</div>
+</template>
+
+<template data-page="p2p">
+<h2 class="title">১৩. Peer-to-Peer (P2P) Architecture</h2>
+<p class="lead">Client-server-এ একটা প্রশ্নের উত্তর সবসময় একটাই কেন্দ্রীয় জায়গা থেকে আসে; P2P-তে প্রশ্নটাই ভুল — এখানে "কেন্দ্র" বলে আসলে কিছু নেই, প্রতিটা নোডই একসাথে প্রশ্নকর্তা আর উত্তরদাতা।</p>
+
+<h3>Client-Server-এর বিপরীতে — কোনো কেন্দ্রীয় নির্ভরতা নেই</h3>
+<p>এর আগের একটা অধ্যায়ে আমরা client-server মডেল দেখেছি, যেখানে একটা নির্দিষ্ট ভূমিকা বিভাজন থাকে — client request পাঠায়, server উত্তর দেয়, আর সব client-ই সেই একটা (বা একগুচ্ছ) কেন্দ্রীয় server-এর ওপর নির্ভরশীল। <span class="kw">Peer-to-Peer (P2P) Architecture</span>-এ এই বিভাজনটাই থাকে না — প্রতিটা অংশগ্রহণকারী নোডকে বলা হয় <span class="kw">peer</span>, আর প্রতিটা peer একই সাথে client এবং server দুটোরই ভূমিকা পালন করে। এর সরাসরি ফলাফল হলো — সিস্টেমে কোনো single point of failure নেই, আর কোনো কেন্দ্রীয় বটলনেকও নেই, কারণ সিস্টেমের মোট ক্যাপাসিটি একটা নির্দিষ্ট server-এর ক্যাপাসিটিতে আটকে থাকে না, বরং যতগুলো peer অংশগ্রহণ করে তার সাথে সাথে স্বাভাবিকভাবেই বেড়ে যায়। কোনো একটা peer অফলাইন হয়ে গেলেও বাকি নেটওয়ার্ক স্বাভাবিকভাবেই কাজ চালিয়ে যেতে পারে।</p>
+
+<h3>কেন্দ্রীয় ডিরেক্টরি ছাড়া কীভাবে ডেটা খুঁজে পাওয়া যায় — Distributed Hash Table</h3>
+<p>যদি কোনো কেন্দ্রীয় সার্ভার না থাকে, তাহলে একটা স্বাভাবিক প্রশ্ন ওঠে — একটা নির্দিষ্ট ডেটা কোন peer-এর কাছে আছে সেটা কীভাবে জানা যাবে? এর উত্তর হলো <span class="kw">Distributed Hash Table (DHT)</span> — Kademlia এর পরিচিত উদাহরণ, যা BitTorrent-এর trackerless mode-এ ব্যবহৃত হয়। ধারণাটা এরকম: প্রতিটা ডেটা (বা ডেটার অবস্থান) একটা hash function দিয়ে একটা key-তে রূপান্তরিত হয়, আর নেটওয়ার্কের নোডগুলো যৌথভাবে ছোট ছোট routing table বজায় রাখে — প্রতিটা নোড শুধু নিজের "কাছাকাছি" কিছু নোড সম্পর্কে জানে, পুরো নেটওয়ার্কের সদস্য তালিকা কারও কাছে থাকে না। এই কাঠামোর সৌন্দর্য হলো, একটা key খোঁজার জন্য মাত্র হাতেগোনা কয়েকটা intermediate peer-কে জিজ্ঞাসা করলেই চলে — সাধারণত n জন peer থাকলে লুকআপ শেষ হতে O(log n) হপ লাগে।</p>
+
+<div class="diagram"><pre>
+Client-Server:                          Peer-to-Peer:
+   [C1] [C2] [C3] [C4]                     [P1]───────[P2]
+      \   |   |   /                         │  \     /  │
+       \  |   |  /                          │   \   /   │
+        ▼ ▼   ▼ ▼                          [P4]───────[P3]
+      ┌──────────┐                       প্রতিটা peer client + server —
+      │  Server  │  ✗ একক নির্ভরতা        একে অন্যের সাথে সরাসরি সংযুক্ত,
+      └──────────┘                        কোনো কেন্দ্রীয় নোড নেই
+
+DHT lookup (conceptual, n peer, O(log n) hops):
+  Peer A খুঁজছে key "X" ──▶ কাছের রাউটিং টেবিল দেখে নিকটতম peer-এ ফরওয়ার্ড
+                         ──▶ সেই peer আরও কাছেরটা চেনে ──▶ ... ──▶ key "X" ধারণকারী peer-এ পৌঁছায়
+</pre></div>
+
+<h3>বাস্তব উদাহরণ — ফাইল শেয়ারিং থেকে ব্লকচেইন পর্যন্ত</h3>
+<p><span class="kw">BitTorrent</span> এই মডেলের সবচেয়ে পরিচিত উদাহরণ — একটা ফাইলকে ছোট ছোট piece-এ ভাগ করা হয়, আর একজন downloader একসাথে বিভিন্ন peer থেকে ভিন্ন ভিন্ন piece ডাউনলোড করে, আবার নিজের কাছে থাকা piece-গুলো একই সময়ে অন্যদের upload-ও করে — ফলে যত বেশি peer যোগ দেয়, effective download throughput ততই বাড়ে। <span class="kw">Blockchain</span> নেটওয়ার্ক — Bitcoin বা Ethereum — আরেকটা গুরুত্বপূর্ণ উদাহরণ, যেখানে প্রতিটা full node পুরো ledger-এর একটা সম্পূর্ণ কপি রাখে এবং স্বাধীনভাবে প্রতিটা transaction/block validate করে, আর consensus পৌঁছানো হয় একটা distributed protocol-এর মাধ্যমে। আর <span class="kw">WebRTC</span>-ভিত্তিক peer-to-peer ভিডিও কল একটা আধুনিক উদাহরণ — ব্রাউজারগুলো একে অপরের সাথে সরাসরি সংযুক্ত হয়, সব media কেন্দ্রীয় সার্ভারের মধ্য দিয়ে রুট না করে।</p>
+
+<table>
+<tr><th>উদাহরণ</th><th>P2P যেভাবে ব্যবহৃত হয়</th></tr>
+<tr><td>BitTorrent</td><td>ফাইলের piece সমান্তরালভাবে বহু peer থেকে ডাউনলোড/আপলোড — peer বাড়লে throughput বাড়ে</td></tr>
+<tr><td>Bitcoin / Ethereum</td><td>প্রতিটা full node সম্পূর্ণ ledger রাখে, distributed consensus-এ transaction validate হয়</td></tr>
+<tr><td>WebRTC video call</td><td>ব্রাউজার সরাসরি ব্রাউজারের সাথে media স্ট্রিম করে, কেন্দ্রীয় relay ছাড়াই (সম্ভব হলে)</td></tr>
+</table>
+
+<h3>সৎ ট্রেড-অফ — coordination, churn আর NAT-এর বাস্তবতা</h3>
+<p>P2P-এর আকর্ষণ যতটা, তার চ্যালেঞ্জও ততটাই বাস্তব। কেন্দ্রীয় কর্তৃপক্ষ ছাড়া consistency আর coordination অর্জন করা সত্যিকার অর্থেই কঠিন একটা সমস্যা — এই কারণেই blockchain নেটওয়ার্কগুলোকে Proof-of-Work বা Proof-of-Stake-এর মতো ব্যয়বহুল consensus mechanism দরকার হয়; বিশ্বস্ত কেন্দ্র ছাড়া agreement-এ পৌঁছানো, একটা কেন্দ্রীয় coordinator থাকলে যতটা সহজ (quorum বা leader-ভিত্তিক replication, যা এই সাইটের System Design ও Distributed Systems কোর্সে আলোচিত হয়েছে) তার চেয়ে মৌলিকভাবেই কঠিনতর একটা ডিস্ট্রিবিউটেড সিস্টেম সমস্যা। এছাড়া peer-রা অবিশ্বস্ত — তারা যেকোনো সময় নেটওয়ার্কে যোগ দিতে বা বেরিয়ে যেতে পারে (একে বলে <span class="kw">churn</span>)। বাস্তবেও একটা নিরীহ-দেখতে সমস্যা আছে — দুটো peer যদি দুজনেই বাসার রাউটারের পেছনে NAT-এর আড়ালে থাকে, তাহলে তাদের মধ্যে সরাসরি সংযোগ স্থাপন করাটা একটা প্রকৃত নেটওয়ার্কিং সমস্যা, যার জন্য প্রায়ই একটা relay সার্ভার বা hole-punching কৌশল লাগে।</p>
+
+<h3>P2P কখন সঠিক পছন্দ, কখন নয়</h3>
+<p>P2P সবচেয়ে ভালো কাজ করে তখন যখন লক্ষ্য হলো বড় পরিসরের কনটেন্ট ডিস্ট্রিবিউশনে একটা কেন্দ্রীয় বটলনেক বা খরচ পুরোপুরি বাদ দেওয়া, অথবা যখন কোনো একক পক্ষের হাতে কেন্দ্রীয় কর্তৃত্ব থাকা উচিত না — যেমন censorship-resistant সিস্টেম বা cryptocurrency। কিন্তু সাধারণ বিজনেস অ্যাপ্লিকেশনের জন্য এটা একটা খারাপ পছন্দ, যেখানে strong consistency, সহজ access control, আর predictable low-latency read দরকার — একটা সাধারণ CRUD ওয়েব অ্যাপ্লিকেশনের P2P হওয়ার কোনো কারণ নেই।</p>
+
+<div class="callout why"><span class="tag">কেন peer বাড়লে throughput কমার বদলে বাড়ে</span>
+প্রচলিত client-server মডেলে বেশি client মানে একটা নির্দিষ্ট server-এর রিসোর্সের ওপর বেশি চাপ — throughput কমে যায়। কিন্তু BitTorrent-এর মতো P2P সিস্টেমে প্রতিটা নতুন peer শুধু চাহিদা যোগ করে না, নিজের upload bandwidth-ও নেটওয়ার্কে যোগ করে — তাই সামগ্রিক ক্যাপাসিটি চাহিদার সাথে সাথেই বাড়তে থাকে।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — P2P মানেই "কোনো সার্ভার লাগে না" ভাবা</span>
+বাস্তবে প্রায় সব P2P সিস্টেমেই কিছু হালকা কেন্দ্রীয় উপাদান থেকে যায় — BitTorrent-এ bootstrap-এর জন্য tracker বা DHT bootstrap নোড, WebRTC-তে signaling সার্ভার আর প্রায়ই একটা TURN relay। P2P কেন্দ্রীয় ডেটা-পাথ বাদ দেয়, কিন্তু নোড আবিষ্কার ও সংযোগ স্থাপনের জন্য প্রায়শই এখনও ছোট আকারের কোনো coordination প্রয়োজন হয়।</div>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — consensus-এর দাম</span>
+Proof-of-Work-এর বিশাল বিদ্যুৎ খরচ বা Proof-of-Stake-এর জটিল স্টেকিং প্রোটোকল কোনো accident নয় — এগুলো ঠিক সেই দামটা, যেটা দিতে হয় যখন কোনো বিশ্বস্ত কেন্দ্র ছাড়াই হাজার হাজার অপরিচিত, সম্ভাব্য অসৎ নোডের মধ্যে agreement আদায় করতে হয়। যেখানে কিছুটা কেন্দ্রীয় বিশ্বাস মেনে নেওয়া যায়, সেখানে অনেক সস্তা replication কৌশল ব্যবহার করা যায় — সেটাই বেশিরভাগ ডিস্ট্রিবিউটেড ডেটাবেজ করে।</div>
+</template>
+
+<template data-page="documenting">
+<h2 class="title">১৫. Architecture Documentation — C4 Model ও Architecture Decision Records</h2>
+<p class="lead">যে আর্কিটেকচার লেখা নেই, সে আর্কিটেকচার আসলে নেই — কারণ ছয় মাস পর কেউ মনে রাখবে না কেন জিনিসটা এভাবে বানানো হয়েছিল, আর কেউ একজন সেই "সমস্যা" আবার ফিরিয়ে আনবে যেটা এড়ানোর জন্যই আসল সিদ্ধান্তটা নেওয়া হয়েছিল।</p>
+
+<h3>একটা মাত্র "সব-কিছু" ডায়াগ্রাম কেন ব্যর্থ হয়</h3>
+<p>বেশিরভাগ টিমের প্রথম চেষ্টা হয় হোয়াইটবোর্ডে বা একটা draw.io ফাইলে পুরো সিস্টেমটা একটা মাত্র ডায়াগ্রামে এঁকে ফেলা — একই ছবিতে থাকে system-এর বাইরের ইউজার, ভেতরের সার্ভিসগুলো, প্রতিটা সার্ভিসের ভেতরের module, এমনকি কিছু জায়গায় class-level detail। শুরুতে এটা সম্পূর্ণ ও গর্বের মনে হয়, কিন্তু কয়েক সপ্তাহের মধ্যেই এটা এমন এক জঞ্জালে পরিণত হয় যেখানে সরু সরু লাইন একে অপরকে কাটাকাটি করে, ছোট ফন্টে গাদাগাদি লেখা থাকে, আর নতুন কেউ দেখে বোঝার বদলে আরও বিভ্রান্ত হয়। সমস্যাটা শুধু বিশৃঙ্খলা না — সমস্যাটা হলো, এই ধরনের ডায়াগ্রাম কেউ আপডেট রাখে না, কারণ একটা ছোট পরিবর্তনের জন্যও পুরো জটিল ছবিটা আবার ঘাঁটতে হয়, তাই কয়েক মাস পরে ডায়াগ্রামটা বাস্তব সিস্টেমের সাথে মেলে না অথচ এখনও উইকিতে "official" হিসেবে ঝুলে থাকে।</p>
+<p>আসল কারণটা গভীরে — একজন executive, একজন নতুন যোগ দেওয়া ইঞ্জিনিয়ার, আর একজন security auditor একই প্রশ্ন নিয়ে ডায়াগ্রামের কাছে আসেন না। executive জানতে চান সিস্টেমটা কী করে আর কোন বাহ্যিক পক্ষের সাথে যুক্ত; নতুন ইঞ্জিনিয়ার জানতে চান কোন সার্ভিস কোথায় ডিপ্লয় হয় আর একে অপরের সাথে কীভাবে কথা বলে; auditor জানতে চান একটা নির্দিষ্ট module-এর ভেতরে ডেটা কীভাবে প্রবাহিত হয়। একটাই ডায়াগ্রামে এই তিনটা প্রশ্নের উত্তর গুঁজে দেওয়া মানে কারও প্রশ্নেরই পরিষ্কার উত্তর না দেওয়া — প্রয়োজন ছিল ভিন্ন ভিন্ন <span class="kw">zoom level</span>-এর ডায়াগ্রাম, একটা মনোলিথিক ছবির বদলে।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — একটা ডায়াগ্রামে সব লেভেল মেশানো</span>
+অনেক টিম একই ডায়াগ্রামে গোটা সিস্টেমের বক্স, তার ভেতরের সার্ভিস, আবার সেই সার্ভিসের ভেতরের class পর্যন্ত এঁকে ফেলেন এই ভেবে যে "একবারেই সব বোঝানো ভালো"। বাস্তবে এতে প্রতিটা zoom level-এর নিজস্ব পাঠযোগ্যতা নষ্ট হয় — high-level বোঝার চেষ্টায় low-level detail বাধা দেয়, আর low-level বোঝার চেষ্টায় high-level context হারিয়ে যায়। সমাধান হলো লেভেল আলাদা রাখা, প্রতিটা ডায়াগ্রাম একটাই নির্দিষ্ট প্রশ্নের উত্তর দেবে।</div>
+
+<h3>C4 Model: চারটা হায়ারার্কিক্যাল zoom level</h3>
+<p><span class="kw">C4 Model</span> (Simon Brown-এর তৈরি — Context, Container, Component, Code) এই সমস্যার একটা সোজাসাপ্টা সমাধান দেয়: একটা মাত্র ছবির বদলে চারটা আলাদা ডায়াগ্রাম, প্রতিটা একটা নির্দিষ্ট zoom level-এ থেকে একটা নির্দিষ্ট দর্শকের একটা নির্দিষ্ট প্রশ্নের উত্তর দেয়।</p>
+<table>
+<tr><th>Level</th><th>কী দেখায়</th><th>দর্শক (Audience)</th><th>যে প্রশ্নের উত্তর দেয়</th></tr>
+<tr><td><span class="kw">1. Context</span></td><td>পুরো সিস্টেমটাকে একটামাত্র বক্স হিসেবে, তার চারপাশে ইউজার/persona ও বাইরের সিস্টেমগুলো</td><td>যে কেউ — নন-টেকনিক্যাল স্টেকহোল্ডার সহ</td><td>এই সিস্টেমটা কী, আর এটা কার/কীসের সাথে কথা বলে?</td></tr>
+<tr><td><span class="kw">2. Container</span></td><td>সিস্টেমের ভেতরে zoom করে বড় deployable/runnable অংশগুলো — web app, mobile app, API service, database, message broker</td><td>টেকনিক্যাল মানুষ — ইঞ্জিনিয়ার, ops</td><td>বড় movable অংশগুলো কী কী, আর তারা কোন protocol-এ যোগাযোগ করে?</td></tr>
+<tr><td><span class="kw">3. Component</span></td><td>একটা মাত্র container-এর ভেতরে zoom করে তার প্রধান internal component/module ও তাদের দায়িত্ব</td><td>যে ইঞ্জিনিয়াররা সেই নির্দিষ্ট container নিয়ে কাজ করেন</td><td>এই container-টা ভেতরে কীভাবে গঠিত?</td></tr>
+<tr><td><span class="kw">4. Code</span></td><td>একটা component-এর ভেতরে class/interface লেভেল পর্যন্ত — যেমন UML class diagram</td><td>সেই code অংশে সরাসরি কাজ করা ডেভেলপার</td><td>এই component-এর ভেতরের class-গুলো কীভাবে সম্পর্কিত?</td></tr>
+</table>
+
+<p>এই মডেলের আসল discipline লুকিয়ে আছে একটা সরল নিয়মে — কখনোই একই ডায়াগ্রামে দুইটা ভিন্ন লেভেল মেশানো যাবে না। Context diagram-এ কোনো individual class দেখানো হবে না, Container diagram-এ পুরো external system-কে যেমন একটা মাত্র বক্স হিসেবে দেখানো হয় তেমনি ভেতরের method-level detail দেখানো হবে না। ঠিক এই কড়াকড়িটাই প্রতিটা ডায়াগ্রামকে ছোট, পাঠযোগ্য, আর সৎভাবে maintain করার মতো রাখে।</p>
+
+<h3>Level ৪ (Code) নিয়ে বাস্তব চর্চা</h3>
+<p>Simon Brown নিজেই বলেছেন Code diagram লেভেলটা হাতে আঁকার দরকার প্রায় নেই, কারণ আধুনিক IDE (IntelliJ, Visual Studio ইত্যাদি) সরাসরি বাস্তব কোড থেকে on-demand class diagram জেনারেট করতে পারে। এই কারণেই বাস্তবে বেশিরভাগ টিম Level ৩ (Component) পর্যন্ত গিয়েই থেমে যায়।</p>
+
+<div class="callout why"><span class="tag">কেন Level ৪ হাতে আঁকা অপচয়</span>
+Class-level diagram সবচেয়ে দ্রুত stale হয়ে যায় — একটা রিফ্যাক্টরে দুইটা method যোগ হলেই হাতে আঁকা ছবি ভুল হয়ে যায়। যেহেতু এই তথ্য কোডেই সম্পূর্ণভাবে বিদ্যমান, তাই এটা হাতে ডুপ্লিকেট না করে IDE-কে জেনারেট করতে দেওয়াই যুক্তিসঙ্গত।</div>
+
+<h3>Architecture Decision Record (ADR): সিদ্ধান্তের প্রাতিষ্ঠানিক স্মৃতি</h3>
+<p><span class="kw">Architecture Decision Record (ADR)</span> হলো একটা হালকা, version-controlled নথি — সাধারণত একটা ছোট Markdown ফাইল, প্রতিটা গুরুত্বপূর্ণ আর্কিটেকচারাল সিদ্ধান্তের জন্য একটা করে, কোডের সাথেই একই repository-তে commit করা। ADR-এর মূল বৈশিষ্ট্য হলো এটা সিদ্ধান্ত নেওয়ার সাথে সাথেই লেখা হয় — পরে স্মৃতি থেকে পুনর্গঠন করা না। একটা সাধারণ ADR-এর কাঠামো নিচের মতো।</p>
+
+<pre>
+# ADR-০০১২: Order Service-এ Event-Driven Update ব্যবহার
+
+## Status
+Accepted (২০২৬-০৩-১৫)
+
+## Context
+Order Service থেকে Inventory Service-এ synchronous REST call করা হতো
+stock আপডেট করার জন্য। পিক আওয়ারে Inventory Service একটু ধীর হলেই
+পুরো checkout flow ব্লক হয়ে যাচ্ছিল, cascading timeout তৈরি হচ্ছিল।
+
+## Decision
+Order confirmation-এর পর একটা "OrderPlaced" event publish করা হবে
+message broker-এ; Inventory Service সেটা asynchronously consume করে
+stock আপডেট করবে।
+
+## Consequences
++ Checkout latency Inventory Service-এর health থেকে decouple হলো।
++ Inventory Service ডাউন থাকলেও order নেওয়া বন্ধ হবে না।
+- Stock eventually consistent হবে — সাময়িকভাবে oversell-এর সম্ভাবনা আছে।
+- ডিবাগিং জটিল — একাধিক সার্ভিস ও broker log দেখতে হবে।
+</pre>
+
+<p>Status ফিল্ডটা গুরুত্বপূর্ণ কারণ একটা ADR স্থায়ী সত্য না — এটা proposed অবস্থা থেকে accepted হতে পারে, পরে deprecated হতে পারে, অথবা নতুন কোনো ADR এসে সেটাকে superseded করতে পারে। এই status-চেইনটাই আর্কিটেকচারের evolution-এর একটা readable ইতিহাস তৈরি করে।</p>
+
+<h3>ADR কেন ডায়াগ্রামের চেয়েও বেশি গুরুত্বপূর্ণ</h3>
+<p>C4 ডায়াগ্রাম দেখায় সিস্টেমটা এখন কেমন দেখতে — কিন্তু কেন এই আকৃতিটা এলো, সেই প্রশ্নের উত্তর ডায়াগ্রামে থাকে না। ছয় মাস পর একজন নতুন ইঞ্জিনিয়ার প্রশ্ন তোলেন — "আমরা এখানে Postgres না নিয়ে একটা document store কেন নিলাম না?"। যদি ADR না থাকে, তাহলে সেই প্রসঙ্গ চিরতরে হারিয়ে যায় — আর এর চেয়েও বিপজ্জনক ব্যাপার হলো, কেউ হয়তো সরল উদ্দেশ্যে সেই "অদ্ভুত" সিদ্ধান্তটাকে "ঠিক করে" ফেলবেন, ঠিক সেই সমস্যাটাই আবার ফিরিয়ে আনবেন যেটা এড়ানোর জন্য মূল সিদ্ধান্তটা সচেতনভাবে নেওয়া হয়েছিল।</p>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — একই "ভুল" বারবার ফিরে আসা</span>
+প্রোডাকশন সিস্টেমে এটা অস্বাভাবিক না যে একটা টিম একটা deliberate trade-off (যেমন eventual consistency মেনে নেওয়া) নিয়ে ভালোভাবেই আলোচনা করে সিদ্ধান্তে পৌঁছেছিল, কিন্তু ছয়-নয় মাস পর নতুন কেউ যোগ দিয়ে ভাবেন এটা একটা bug, আর "fix" করতে গিয়ে সেই পুরনো সমস্যাটাই ফিরিয়ে আনেন। ADR না থাকলে এই ইতিহাস পুনরাবৃত্তি ঠেকানোর কোনো উপায় নেই।</div>
+
+<h3>Diagrams-as-code: ডকুমেন্টেশনকে code-এর মতো treat করা</h3>
+<p>একটা GUI টুলে (draw.io, Visio) হাতে আঁকা ডায়াগ্রাম একটা static image হিসেবে উইকিতে পেস্ট হয়ে যায়, আর architecture বদলানোর মুহূর্তেই সেটা নীরবে ভুল হয়ে যায়। এর বিপরীতে <span class="kw">diagrams-as-code</span> পদ্ধতিতে ডায়াগ্রামের definition একটা টেক্সট ফাইল — Mermaid বা PlantUML সিনট্যাক্স, অথবা C4-এর জন্য বিশেষভাবে বানানো Structurizr DSL। এই টেক্সট ফাইলগুলো কোড আর ADR-এর ঠিক পাশেই একই repository-তে থাকে, git দিয়ে version হয়, pull request-এ code-এর মতোই review করা যায়, আর দরকার হলেই render করে নতুন ছবি জেনারেট করা যায়।</p>
+
+<div class="callout best"><span class="tag">Best practice — ডায়াগ্রাম, ADR, কোড — একসাথে থাকুক</span>
+একটা repository-তে docs/architecture/ নামে একটা ফোল্ডার রাখা ভালো অভ্যাস, যেখানে diagrams-as-code ফাইল (.mmd বা .puml) আর ADR মার্কডাউন ফাইলগুলো একসাথে থাকে। এতে একটা নতুন feature-এর PR-এ কোড পরিবর্তনের সাথে সাথেই যদি container বাউন্ডারি বদলায়, সেই একই PR-এ diagram ফাইল আর প্রয়োজনে একটা নতুন ADR যোগ করা স্বাভাবিক অভ্যাসে পরিণত হয়।</div>
+
+<h3>তিনটা টুকরো একসাথে — যা আসলে বিশ্বাসযোগ্য ডকুমেন্টেশন তৈরি করে</h3>
+<p>একা C4 diagram শুধু বর্তমান আকৃতি দেখায়, একা ADR শুধু অতীতের যুক্তি দেখায়, আর একা diagrams-as-code শুধু একটা মাধ্যম — তিনটা একসাথে কাজ করলেই তবে একটা টিম সত্যিকারের ভরসাযোগ্য ডকুমেন্টেশন পায়। এই সমন্বয়ই পার্থক্য তৈরি করে একটা ডকুমেন্টেশনের মধ্যে যেটা টিম সত্যিই খুলে দেখে, আর একটা ডকুমেন্টেশনের মধ্যে যেটা সবাই জানে ভুল অথচ কেউ মুখে বলে না।</p>
+</template>
+
+<template data-page="decision">
+<h2 class="title">১৬. সঠিক Architecture বেছে নেওয়া — Decision Framework, Case Study ও Anti-patterns</h2>
+<p class="lead">এই কোর্স জুড়ে চোদ্দটা আলাদা আর্কিটেকচার স্টাইল দেখা হয়েছে — এই শেষ অধ্যায়ের কাজ সেগুলোকে আলাদা আলাদা তথ্য হিসেবে না রেখে একটা একক, ব্যবহারযোগ্য সিদ্ধান্ত-গ্রহণ প্রক্রিয়ায় একত্র করা।</p>
+
+<h3>সিদ্ধান্তটা সবসময় Quality Attribute থেকে শুরু হয়, Style থেকে না</h3>
+<p>দ্বিতীয় অধ্যায়ে যে ATAM চিন্তাভাবনা দেখা হয়েছিল তা এই পুরো কোর্সের কেন্দ্রীয় সুতো — কোনো আর্কিটেকচার style বেছে নেওয়ার আগে প্রশ্ন করতে হয় "এই সিস্টেমের জন্য কোন quality attribute সবচেয়ে গুরুত্বপূর্ণ, আর কোনটাতে ছাড় দেওয়া যাবে?" একটা টিম যদি উল্টো ক্রমে চলে — আগে "আমরা microservices করব" ঠিক করে ফেলে, তারপর সেই সিদ্ধান্তকে justify করার চেষ্টা করে — তাহলে তারা সমাধান দিয়ে সমস্যা খুঁজছে। সঠিক ক্রম সবসময় একই: প্রথমে প্রেক্ষাপট (টিমের আকার, ট্র্যাফিক প্যাটার্ন, consistency প্রয়োজন, দলের সাংগঠনিক গঠন) বোঝা, তারপর নিচের টেবিল থেকে কোন style সেই প্রেক্ষাপটের সাথে সবচেয়ে ভালো মেলে তা বেছে নেওয়া।</p>
+
+<h3>একনজরে — প্রতিটা Style কোথায় সবচেয়ে ভালো, কোথায় খারাপ</h3>
+<p>নিচের টেবিলটা এই কোর্সের প্রতিটা অধ্যায়ের সারমর্ম একসাথে রাখে — ইন্টারভিউয়ে বা বাস্তব সিদ্ধান্তে দ্রুত রেফারেন্স হিসেবে ব্যবহারযোগ্য।</p>
+<table>
+<tr><th>Style</th><th>সবচেয়ে ভালো যখন</th><th>এড়িয়ে চলুন যখন</th></tr>
+<tr><td>Layered / N-Tier</td><td>দল নতুন, স্পষ্ট concern-বিভাজন দরকার, দ্রুত onboarding চাই</td><td>discipline বজায় রাখার মতো code review culture নেই (layer leak-এর ঝুঁকি)</td></tr>
+<tr><td>Monolith</td><td>ছোট টিম, requirement এখনো দ্রুত বদলাচ্ছে, দ্রুত iterate করা priority</td><td>একাধিক স্বাধীন টিম, module-ভেদে স্কেলিং চাহিদা ব্যাপক ভিন্ন</td></tr>
+<tr><td>Modular Monolith</td><td>বেশিরভাগ প্রজেক্টের সঠিক ডিফল্ট শুরুর বিন্দু — সীমানা লাগবে, কিন্তু distributed system-এর দাম না</td><td>একটা module সত্যিই প্রমাণিতভাবে স্বাধীন স্কেল/টিম দাবি করছে</td></tr>
+<tr><td>SOA</td><td>legacy/vendor সিস্টেম ইন্টিগ্রেট করতে হচ্ছে, কেন্দ্রীভূত governance-ই বাস্তবসম্মত</td><td>গ্রিনফিল্ড প্রজেক্ট, দলগুলোর স্বাধীন গতির দরকার সবচেয়ে বেশি</td></tr>
+<tr><td>Microservices</td><td>বড় সংগঠন, একাধিক স্বাধীন টিম, module-ভেদে scaling/reliability চাহিদা প্রমাণিতভাবে ভিন্ন</td><td>ছোট টিম, boundary এখনো অনিশ্চিত, distributed tracing/service mesh চালানোর লোকবল নেই</td></tr>
+<tr><td>Event-Driven</td><td>একটা state change-এ একাধিক স্বাধীন সিস্টেমের প্রতিক্রিয়া দরকার, তাৎক্ষণিক response আবশ্যক না</td><td>ব্যবহারকারীর তাৎক্ষণিক, নিশ্চিত response দরকার (যেমন balance check)</td></tr>
+<tr><td>Hexagonal/Clean/Onion</td><td>দীর্ঘমেয়াদি প্রজেক্ট, সমৃদ্ধ ডোমেইন লজিক, টেস্টেবিলিটি ও ফ্রেমওয়ার্ক-স্বাধীনতা গুরুত্বপূর্ণ</td><td>ছোট, স্বল্পস্থায়ী প্রোটোটাইপ যেখানে indirection-এর মূল্য কখনো তোলা হবে না</td></tr>
+<tr><td>Pipe-and-Filter</td><td>ডেটা ধারাবাহিক রূপান্তরের মধ্য দিয়ে যায় (ETL, compiler, media processing, HTTP middleware)</td><td>latency-critical single-step অপারেশন যেখানে multi-stage overhead অপ্রয়োজনীয়</td></tr>
+<tr><td>Space-Based</td><td>extreme, bursty ট্র্যাফিক স্পাইক (ফ্ল্যাশ সেল, টিকিট বিক্রি) একটা কেন্দ্রীয় DB ভেঙে ফেলবে</td><td>স্থির, predictable ট্র্যাফিক এবং strong consistency আবশ্যক</td></tr>
+<tr><td>Peer-to-Peer</td><td>কেন্দ্রীয় বটলনেক/কর্তৃত্ব বাদ দেওয়াই লক্ষ্য (কনটেন্ট ডিস্ট্রিবিউশন, cryptocurrency)</td><td>সাধারণ বিজনেস অ্যাপ্লিকেশন — strong consistency, সহজ access control দরকার</td></tr>
+<tr><td>Serverless</td><td>স্পাইকি/অনিয়মিত ট্র্যাফিক, ছোট অপারেশন টিম, cost-sensitivity</td><td>ক্রমাগত উচ্চ, স্থির ট্র্যাফিক (cold start-এর সুবিধা নেই); দীর্ঘস্থায়ী stateful workload</td></tr>
+</table>
+
+<h3>Migration Path — Modular Monolith থেকে Microservices, ধাপে ধাপে</h3>
+<p>এই কোর্সে বারবার একটা সুপারিশ ফিরে এসেছে — একটা সুশৃঙ্খল <span class="kw">Modular Monolith</span> দিয়ে শুরু করা, তারপর প্রমাণিত প্রয়োজনে নির্দিষ্ট module extract করা। এই এক্সট্র্যাকশন প্রক্রিয়ার প্রচলিত নাম <span class="kw">Strangler Fig</span> — একটা গাছকে (পুরনো monolith) ধীরে ধীরে একটা লতা (নতুন সার্ভিস) জড়িয়ে ধরে, একদিন লতাটাই একা দাঁড়িয়ে থাকে, কিন্তু কখনোই একদিনে পুরনো গাছ কেটে ফেলা হয় না। ব্যবহারিকভাবে এর মানে — প্রথমে module boundary-কে code-এর ভেতরে perfect করা (যদি এখনো করা না থাকে), তারপর সেই module-এর জন্য একটা আলাদা database প্রস্তুত করা এবং dual-write বা event-ভিত্তিক sync দিয়ে ডেটা migrate করা, এরপর ট্র্যাফিকের একটা ছোট অংশ নতুন সার্ভিসে রুট করে যাচাই করা, আর সবশেষে পুরনো monolith থেকে সেই module-এর কোড সম্পূর্ণ সরিয়ে ফেলা। প্রতিটা ধাপে সিস্টেম সচল থাকে, আর যেকোনো ধাপে সমস্যা দেখা দিলে আগের ধাপে ফিরে যাওয়া সম্ভব — একটা "বিগ ব্যাং" rewrite-এর বিপরীতে, যেখানে মাসের পর মাস কাজ করার পর একদিনে সবকিছু সুইচ করতে হয় এবং ব্যর্থ হলে ফিরে যাওয়ার পথ প্রায়ই থাকে না।</p>
+
+<div class="diagram"><pre>
+ধাপ ১                ধাপ ২                  ধাপ ৩                    ধাপ ৪
+Module boundary       আলাদা DB প্রস্তুত,       ট্র্যাফিকের অংশ           পুরনো কোড
+কোডে perfect করা   →  dual-write/event      → নতুন সার্ভিসে রুট করে  →  monolith থেকে
+(এখনো একই deploy)     দিয়ে ডেটা sync            যাচাই করা                সরিয়ে ফেলা
+
+  প্রতিটা ধাপে সিস্টেম সচল থাকে — কোনো ধাপে সমস্যা হলে আগের ধাপে ফিরে যাওয়া সম্ভব
+</pre></div>
+
+<div class="callout why"><span class="tag">কেন "প্রমাণিত প্রয়োজন" ছাড়া extract করা বিপজ্জনক</span>
+একটা module extract করার আগে যদি সত্যিকারের মেট্রিক (আলাদা scaling দরকার, আলাদা deployment cadence দরকার, আলাদা টিম দরকার) না থাকে, তাহলে পুরো এক্সট্র্যাকশন প্রক্রিয়ার খরচ (network latency, distributed transaction, আলাদা monitoring) কোনো প্রকৃত সুবিধার বিনিময়ে আসে না — এটাই আগের অধ্যায়গুলোতে আলোচিত "resume-driven microservices" আর "distributed monolith" সমস্যার মূল উৎস। Extract করার সিদ্ধান্ত সবসময় একটা নির্দিষ্ট, পরিমাপযোগ্য pain point থেকে আসা উচিত, "এটা তো industry best practice" থেকে না।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — একই সিদ্ধান্ত প্রতিটা module-এর জন্য একইভাবে প্রয়োগ করা</span>
+একটা সাধারণ ভুল হলো, একবার microservices-এ migrate করার সিদ্ধান্ত নিলে প্রতিটা module-কেই সমান আগ্রহে ভেঙে ফেলা — এমনকি যেগুলোর কোনো স্বাধীন স্কেলিং দরকার নেই। বাস্তবে সিদ্ধান্তটা module-বাই-module ভিত্তিতে নেওয়া উচিত — কিছু module (core billing) হয়তো চিরকালই monolith-এর ভেতরে থাকা ভালো, আর শুধু নির্দিষ্ট hot-spot module (notification, image processing) আলাদা করা হয়। "সব-অথবা-কিছু-না" চিন্তা এখানে ক্ষতিকর।</div>
+
+<div class="callout best"><span class="tag">Best practice — প্রতিটা বড় আর্কিটেকচারাল সিদ্ধান্তে ADR লিখুন</span>
+১৫ নম্বর অধ্যায়ে আলোচিত Architecture Decision Record ঠিক এই ধরনের সিদ্ধান্তের জন্যই সবচেয়ে বেশি মূল্যবান — "কেন আমরা এই মুহূর্তে Notifications module extract করছি, বাকিগুলো না" এই যুক্তিটা লিখে রাখলে ভবিষ্যতে (যখন হয়তো দলের অর্ধেক মানুষ বদলে গেছে) এই সিদ্ধান্ত পুনরায় ন্যায্যতা প্রমাণ করার প্রয়োজন পড়ে না, আর কেউ ভুল করে "সবকিছু একসাথে মাইক্রোসার্ভিস করি" বলে আগের সুচিন্তিত সীমানা ভেঙে ফেলে না।</div>
+
+<h3>বাস্তবতা — বেশিরভাগ বড় কোম্পানি বিশুদ্ধ কোনো একটা Style-এ নেই</h3>
+<p>পাঠ্যবইয়ের ডায়াগ্রামে যেমন দেখানো হয়, বাস্তবে প্রায় কোনো বড় প্রতিষ্ঠানের সিস্টেমই "বিশুদ্ধ মাইক্রোসার্ভিস" বা "বিশুদ্ধ মনোলিথ" না। একটা টিপিক্যাল বড় সিস্টেমে একসাথে দেখা যায় — একটা core modular monolith (বেশিরভাগ ব্যবসায়িক লজিক), তার পাশে হাতে গোনা কয়েকটা প্রকৃতপক্ষে extract করা microservice (যেগুলোর সত্যিই স্বাধীন scaling প্রমাণিত হয়েছে), একটা event-driven layer কিছু নির্দিষ্ট cross-cutting flow-এর জন্য (notification, analytics), হয়তো একটা space-based component একটা নির্দিষ্ট high-burst ফিচারের জন্য (flash sale), আর কিছু serverless function ছোট, স্বল্প-ফ্রিকোয়েন্সি টাস্কের জন্য (scheduled report, webhook handler)। এই হাইব্রিড বাস্তবতা কোনো ব্যর্থতা না — এটাই পরিণত আর্কিটেকচারাল চিন্তার লক্ষণ, যেখানে প্রতিটা style তার সবচেয়ে উপযুক্ত জায়গায় প্রয়োগ করা হয়েছে, কোনো একটা "সিলভার বুলেট" সবকিছুতে চাপিয়ে দেওয়া হয়নি।</p>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — বড় কোম্পানির আর্কিটেকচার কপি করা একটা ফাঁদ, দ্বিতীয়বার বলা প্রয়োজন</span>
+প্রথম অধ্যায়ে যা বলা হয়েছিল তা এই শেষ অধ্যায়ে পুনরাবৃত্তি করার মতোই গুরুত্বপূর্ণ — Netflix বা Uber-এর আর্কিটেকচার বছরের পর বছর evolution আর বিপুল অপারেশনাল বিনিয়োগের ফলাফল। এই কোর্সের প্রতিটা style আলাদা আলাদা trade-off বহন করে, আর "কোনটা সঠিক" প্রশ্নের উত্তর সবসময় নির্ভর করবে আপনার নিজের টিম, নিজের স্কেল, আর নিজের constraint-এর উপর — অন্য কারও গল্পের উপর না।</div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৭. Interview প্রশ্নোত্তর</h2>
+<p class="lead">আর্কিটেকচার ইন্টারভিউতে বারবার আসা প্রশ্ন — প্রতিটা আগের চ্যাপ্টারের রেফারেন্স দিয়ে।</p>
+
+<h3>১) একটা low-level design সিদ্ধান্ত আর একটা architectural সিদ্ধান্তের মধ্যে পার্থক্য কীভাবে করবেন?</h3>
+<p><b>উত্তর:</b> ১ নম্বর অধ্যায়ে দেখা মূল টেস্ট হলো <span class="kw">reversibility</span> — সিদ্ধান্তটা বদলাতে কয়টা টিম, কয়টা সার্ভিস, আর কতগুলো প্রোডাকশন ডেটাসেট ছুঁতে হবে। ভ্যারিয়েবলের নাম বদলানো বা একটা algorithm পাল্টানো একটা ফাইলের মধ্যেই সীমাবদ্ধ থাকে — এটা low-level design। কিন্তু সার্ভিসের সংখ্যা, primary data store, বা communication pattern (sync/async) বদলাতে হলে গোটা কোডবেস, deployment pipeline, আর লাইভ ডেটা জড়িয়ে যায় — এটা architectural সিদ্ধান্ত, আর এই ধরনের সিদ্ধান্তে ভুল হলে "Cost of Change Curve" অনুযায়ী পরে ঠিক করার খরচ exponentially বেড়ে যায়।</p>
+
+<h3>২) দুইটা quality attribute একে অপরের বিপরীতে থাকলে (যেমন consistency বনাম availability) কীভাবে সিদ্ধান্ত নেবেন?</h3>
+<p><b>উত্তর:</b> ২ নম্বর অধ্যায়ে দেখা ATAM চিন্তাভাবনা অনুযায়ী, প্রথমে বুঝতে হবে এই নির্দিষ্ট সিস্টেমের জন্য কোন attribute non-negotiable আর কোনটাতে ছাড় দেওয়া যাবে — এই সিদ্ধান্ত ব্যবসার প্রেক্ষাপট থেকে আসা উচিত, প্রযুক্তিগত পছন্দ থেকে না। একটা ব্যাংকিং লেজারে consistency জেতে (ভুল ব্যালেন্স বিপর্যয়কর), কিন্তু একটা সোশ্যাল ফিডে availability জেতে (কয়েক সেকেন্ড stale ডেটা কেউ খেয়াল করবে না, কিন্তু ধীর লোড ইউজার হারায়)। কোনো একটা "সঠিক" উত্তর নেই — শুধু একটা সচেতন, ব্যাখ্যাযোগ্য অগ্রাধিকার আছে।</p>
+
+<h3>৩) Layered Architecture-এ "layer skipping" কী, আর এটা কেন বিপজ্জনক?</h3>
+<p><b>উত্তর:</b> ৩ নম্বর অধ্যায়ে দেখা এই অ্যান্টি-প্যাটার্নে presentation layer সরাসরি data access layer-কে কল করে ফেলে, business logic layer বাইপাস করে — সাধারণত "এটা তো শুধু একটা সহজ read" যুক্তিতে। সমস্যা হলো এই শর্টকাট থামানো কঠিন হয়ে যায়, আর ধীরে ধীরে ব্যবসায়িক নিয়ম (authorization check, soft-delete filter) কিছু path-এ থাকে, কিছুতে না — কোন read কোন rule মেনে চলছে তা ট্র্যাক করা অসম্ভব হয়ে যায়।</p>
+
+<h3>৪) Thick client-এ কেন security-critical validation রাখা উচিত না?</h3>
+<p><b>উত্তর:</b> ৪ নম্বর অধ্যায়ে দেখা মূল কারণ — client-সাইড কোড ব্যবহারকারীর নিয়ন্ত্রণে থাকা একটা device-এ চলে, তাই সেখানে থাকা যেকোনো validation বা authorization logic browser devtools দিয়ে বা modified request পাঠিয়ে bypass করা সম্ভব। ক্লায়েন্ট-সাইড validation ভালো UX দেয় (তাৎক্ষণিক feedback), কিন্তু server-কে সবসময় সেই একই validation স্বাধীনভাবে আবার করতে হবে — client-কে বিশ্বাস না করে।</p>
+
+<h3>৫) "Monolith" আর "Big Ball of Mud" কি সমার্থক শব্দ?</h3>
+<p><b>উত্তর:</b> না — ৫ নম্বর অধ্যায়ে দেখা এই একটা গুরুত্বপূর্ণ পার্থক্য। Monolith মানে শুধু একটামাত্র deployment ইউনিট। "Big Ball of Mud" মানে কোডের ভেতরে কোনো discipline বা boundary নেই, যেকোনো ফাইল যেকোনো ফাইলকে সরাসরি কল করতে পারে। একটা monolith সুশৃঙ্খল internal module boundary নিয়েও বানানো যায় (Modular Monolith), অথবা সম্পূর্ণ বিশৃঙ্খলভাবেও বানানো যায় — সমস্যাটা deployment ইউনিট একটা হওয়া না, সমস্যা হলো internal discipline-এর অভাব।</p>
+
+<h3>৬) একটা Modular Monolith-এ module boundary কীভাবে বলবৎ করা হয়, শুধু নিয়ম লিখে রাখলে কী সমস্যা হয়?</h3>
+<p><b>উত্তর:</b> ৬ নম্বর অধ্যায়ে দেখা মূল সমস্যা — অলিখিত নিয়ম ("আমরা module-এর ভেতরে ঢুকব না") ডেডলাইনের চাপে ভেঙে পড়ে, একজন একটা shortcut নেয় আর সেটা precedent হয়ে যায়। সমাধান হলো boundary-কে বিল্ড-টাইমে automated enforcement দিয়ে বলবৎ করা — ভাষাগত visibility (Java package-private, .NET internal) অথবা ArchUnit/dependency-cruiser-এর মতো architecture test দিয়ে, যা violation হলে CI pipeline-এ বিল্ড ব্যর্থ করে দেয়।</p>
+
+<h3>৭) SOA-তে Enterprise Service Bus (ESB) কেন নিজেই একটা bottleneck হয়ে দাঁড়ায়?</h3>
+<p><b>উত্তর:</b> ৭ নম্বর অধ্যায়ে দেখা কারণ — routing, transformation, আর orchestration-এর সব জ্ঞান ESB-এর ভেতরে কেন্দ্রীভূত থাকত, যা একটা আলাদা, বিশেষায়িত টিম পরিচালনা করত। প্রতিটা টিমের প্রতিটা পরিবর্তনের অনুরোধ এই একই টিমের কাছে গিয়ে জমা হতো — এই একটা টিমের ক্যাপাসিটিই পুরো প্রতিষ্ঠানের ডেলিভারি গতির সিলিং হয়ে দাঁড়াত, ঠিক সেই সমন্বয়-বাধা যা SOA সার্ভিস-স্তরে সমাধান করতে চেয়েছিল তা ইন্টিগ্রেশন-স্তরে পুনরায় তৈরি হতো।</p>
+
+<h3>৮) Monolith থেকে Microservices-এ যাওয়ার সিদ্ধান্ত কোন signal-এর ভিত্তিতে নেওয়া উচিত?</h3>
+<p><b>উত্তর:</b> ৮ ও ১৬ নম্বর অধ্যায়ে দেখা মূল কথা — এই সিদ্ধান্ত অনুমান থেকে না, প্রমাণিত প্রয়োজন থেকে আসা উচিত। তিনটা concrete signal দেখা যায়: (১) একটা নির্দিষ্ট module-এর scaling চাহিদা বাকি সিস্টেম থেকে স্পষ্টভাবে ভিন্ন; (২) একাধিক টিম একই কোডবেসে কাজ করে merge conflict-এ আটকে যাচ্ছে, আর টিম-বিভাজন ইতিমধ্যে স্পষ্ট business domain অনুযায়ী; (৩) একটা module-এর reliability/release cadence চাহিদা বাকিদের থেকে আলাদা। এই signal ছাড়া শুধু "microservices আধুনিক" ভেবে split করলে distributed monolith-এ পরিণত হওয়ার ঝুঁকি থাকে।</p>
+
+<h3>৯) Conway's Law কী, আর এটা কীভাবে "distributed monolith" তৈরি করে?</h3>
+<p><b>উত্তর:</b> ৮ নম্বর অধ্যায়ে দেখা Conway's Law বলে, একটা সংগঠন যে সিস্টেম ডিজাইন করে তা অনিবার্যভাবে সেই সংগঠনের যোগাযোগ-কাঠামোর প্রতিলিপি হয়ে দাঁড়ায়। যদি টিম-কাঠামো এখনো কেন্দ্রীভূত/coupled থাকে (সবাইকে সবসময় একে অপরের সাথে সমন্বয় করতে হয়), সেই একই সংগঠন microservices split করলেও সার্ভিসগুলো একে অপরের সাথে ঘনিষ্ঠভাবে জড়িয়ে থাকে — ফলাফল একটা distributed monolith, যেখানে network hop-এর latency ও অপারেশনাল জটিলতা যোগ হয়, কিন্তু স্বাধীন deployability-র সুবিধা পাওয়া যায় না।</p>
+
+<h3>১০) Event-Driven Architecture একটা সিস্টেমকে ডিবাগ করা কঠিন করে তোলে কেন, এবং এটা কীভাবে সামলানো হয়?</h3>
+<p><b>উত্তর:</b> Synchronous call chain-এ একটা request কোন পথে গিয়েছে তা একটামাত্র stack trace থেকেই বোঝা যায়। কিন্তু ৯ নম্বর অধ্যায়ে দেখা Event-Driven সিস্টেমে একটা event publish হওয়ার পর producer জানেও না কোন consumer কখন সেটা প্রসেস করবে — একটা bug রিপোর্ট এলে একাধিক service-এর আলাদা log একসাথে মেলাতে হয়। সমাধান হলো প্রতিটা event-এর সাথে একটা <code>correlation ID</code> প্রতিটা event/request-এর সাথে propagate করা এবং centralized distributed tracing tool (Jaeger, Zipkin) ব্যবহার করা।</p>
+
+<h3>১১) Choreography আর Orchestration-এর মধ্যে পার্থক্য কী?</h3>
+<p><b>উত্তর:</b> ৯ নম্বর অধ্যায়ে দেখা — Choreography-তে কোনো কেন্দ্রীয় নিয়ন্ত্রক নেই, প্রতিটা service নিজের event শুনে নিজের কাজ করে পরের event publish করে; পুরো flow emergent, decoupling বেশি কিন্তু বোঝা কঠিন। Orchestration-এ একটা কেন্দ্রীয় orchestrator প্রতিটা ধাপ স্পষ্টভাবে নির্দেশ দেয় ও ক্রম নিয়ন্ত্রণ করে — বুঝতে সহজ, error-handling কেন্দ্রীভূত, কিন্তু orchestrator নিজে একটা কেন্দ্রীয় নির্ভরতা হয়ে দাঁড়ায়।</p>
+
+<h3>১২) Ports & Adapters প্যাটার্নে কেন ইন্টারফেসটা domain layer-এ সংজ্ঞায়িত হয়, infrastructure layer-এ না?</h3>
+<p><b>উত্তর:</b> ১০ নম্বর অধ্যায়ে দেখা মূল কারণ — এটাই Dependency Inversion Principle-এর architectural প্রয়োগ। যদি <code>OrderRepository</code> ইন্টারফেসটা infrastructure layer-এ ডিফাইন করা হতো, ডোমেইন কোডকে সেই infrastructure প্যাকেজ ইমপোর্ট করতে হতো, অর্থাৎ dependency বাইরের দিকে যেত — The Dependency Rule ভেঙে যেত। ইন্টারফেসের মালিকানা domain-এর হাতে রাখাই নিশ্চিত করে dependency সবসময় ভেতরের দিকে থাকে, আর একটা fake/in-memory adapter বসিয়ে domain logic কে ডেটাবেস-মুক্তভাবে টেস্ট করা যায়।</p>
+
+<h3>১৩) Pipe-and-Filter আর্কিটেকচারে "backpressure" কেন জরুরি, বিশেষ করে streaming variant-এ?</h3>
+<p><b>উত্তর:</b> ১১ নম্বর অধ্যায়ে দেখা কারণ — যদি একটা ডাউনস্ট্রিম filter আপস্ট্রিম filter-এর চেয়ে ধীরে ডেটা প্রসেস করে, আউটপুট বাফারে জমতে থাকে, আর সেই বাফার সসীম মেমরিতে চলা একটা প্রসেসকে একসময় আউট-অফ-মেমরি করে ফেলবে। Backpressure একটা মেকানিজম যাতে ধীর filter আপস্ট্রিমকে সংকেত দিতে পারে "একটু ধীরে দাও" — batch pipeline-এ এই সমস্যা কম গুরুত্বপূর্ণ (জব শেষ হতে দেরি হয় মাত্র), কিন্তু অবিরাম চলা streaming pipeline-এ এটা ছাড়া সিস্টেম ক্র্যাশ করবে।</p>
+
+<h3>১৪) Space-Based Architecture কেন সাধারণ CRUD অ্যাপ্লিকেশনের জন্য উপযুক্ত না?</h3>
+<p><b>উত্তর:</b> ১২ নম্বর অধ্যায়ে দেখা কারণ — এই প্যাটার্নের মূল্য আসে এমন পরিস্থিতিতে যেখানে ট্র্যাফিক extreme ও bursty (ফ্ল্যাশ সেল, টিকিট বিক্রি) এবং একটা কেন্দ্রীয় database প্রকৃতই ভেঙে পড়ার ঝুঁকিতে থাকে। একটা সাধারণ, predictable ট্র্যাফিকের CRUD অ্যাপ্লিকেশনে distributed in-memory data grid চালানোর অতিরিক্ত অপারেশনাল জটিলতা আর eventual consistency-র ঝুঁকি কোনো বাস্তব সুবিধা দেয় না — একটা সাধারণ database-কেন্দ্রিক আর্কিটেকচার সহজ ও যথেষ্ট।</p>
+
+<h3>১৫) P2P সিস্টেমে বেশি peer যোগ দিলে throughput কমার বদলে বাড়ে কেন?</h3>
+<p><b>উত্তর:</b> ১৩ নম্বর অধ্যায়ে দেখা কারণ — প্রচলিত client-server মডেলে বেশি client মানে একটা নির্দিষ্ট server-এর রিসোর্সের ওপর বেশি চাপ। কিন্তু BitTorrent-এর মতো P2P সিস্টেমে প্রতিটা নতুন peer শুধু চাহিদা যোগ করে না, নিজের upload bandwidth-ও নেটওয়ার্কে যোগ করে — তাই সামগ্রিক ক্যাপাসিটি চাহিদার সাথে সাথেই বাড়তে থাকে, এটাই P2P-এর সবচেয়ে বড় স্ট্রাকচারাল সুবিধা।</p>
+
+<h3>১৬) Serverless-এ "cold start" কী, আর কোন ধরনের workload-এ এটা সবচেয়ে বেশি সমস্যা করে?</h3>
+<p><b>উত্তর:</b> ১৪ নম্বর অধ্যায়ে দেখা — যেহেতু idle থাকা অবস্থায় কোনো function instance চলমান থাকে না, একটা নতুন invocation এলে প্ল্যাটফর্মকে প্রথমে একটা নতুন execution environment তৈরি করতে হয় (কনটেইনার বুট, runtime initialize) — এই বিলম্বই cold start। এটা সবচেয়ে বেশি সমস্যা করে latency-sensitive, ক্রমাগত-চালু workload-এ (উচ্চ-ট্রাফিক API-র p99 latency), কিন্তু স্পাইকি বা বিরল-ফ্রিকোয়েন্সি workload-এ এই খরচ cost efficiency-র বিনিময়ে গ্রহণযোগ্য।</p>
+
+<h3>১৭) C4 Model-এ Level ৪ (Code diagram) হাতে আঁকা কেন অপচয় বলে বিবেচিত হয়?</h3>
+<p><b>উত্তর:</b> ১৫ নম্বর অধ্যায়ে দেখা কারণ — class-level diagram সবচেয়ে দ্রুত stale হয়ে যায়, একটা রিফ্যাক্টরেই ভুল হয়ে যেতে পারে। যেহেতু এই তথ্য কোডেই সম্পূর্ণভাবে বিদ্যমান, আধুনিক IDE সরাসরি বাস্তব কোড থেকে on-demand class diagram জেনারেট করতে পারে — তাই বেশিরভাগ টিম Level ৩ (Component) পর্যন্ত হাতে বানায়, Level ৪ প্রয়োজনে টুল দিয়ে জেনারেট করে নেয়।</p>
+
+<h3>১৮) একটা ADR-এ "Status" ফিল্ড কেন গুরুত্বপূর্ণ?</h3>
+<p><b>উত্তর:</b> ১৫ নম্বর অধ্যায়ে দেখা কারণ — একটা ADR স্থায়ী সত্য না, এটা proposed থেকে accepted হতে পারে, পরে deprecated হতে পারে, বা নতুন কোনো ADR এসে সেটাকে superseded করতে পারে। এই status-চেইনটাই আর্কিটেকচারের evolution-এর একটা readable ইতিহাস তৈরি করে — কেউ একটা পুরনো ADR পড়ে বুঝতে পারেন এটা এখনও বলবৎ কিনা, আর বলবৎ না হলে কোন নতুন ADR সেটা replace করেছে।</p>
+
+<h3>১৯) "Strangler Fig" migration pattern কী, আর এটা "বিগ ব্যাং rewrite"-এর চেয়ে কেন নিরাপদ?</h3>
+<p><b>উত্তর:</b> ১৬ নম্বর অধ্যায়ে দেখা এই পদ্ধতিতে একটা module ধাপে ধাপে বের করে আনা হয় — প্রথমে boundary perfect করা, তারপর আলাদা database প্রস্তুত করে dual-write/event দিয়ে sync করা, এরপর ট্র্যাফিকের একটা অংশ নতুন সার্ভিসে রুট করে যাচাই করা, সবশেষে পুরনো কোড সরানো। প্রতিটা ধাপে সিস্টেম সচল থাকে এবং সমস্যা হলে আগের ধাপে ফিরে যাওয়া সম্ভব — একটা বিগ ব্যাং rewrite-এ মাসের পর মাস কাজ করার পর একদিনে সব সুইচ করতে হয়, ব্যর্থ হলে ফিরে যাওয়ার পথ প্রায়ই থাকে না।</p>
+
+<h3>২০) একজন ইন্টারভিউয়ার যদি জিজ্ঞাসা করেন "আপনি কোন আর্কিটেকচার বেছে নেবেন?", সবচেয়ে ভালো উত্তরের কাঠামো কী?</h3>
+<p><b>উত্তর:</b> সবচেয়ে দুর্বল উত্তর একটা নির্দিষ্ট style-এর নাম বলে থেমে যাওয়া। সবচেয়ে শক্তিশালী উত্তরের কাঠামো (২ ও ১৬ নম্বর অধ্যায়ে দেখা) হলো — প্রথমে স্পষ্ট করা কোন quality attribute এই সিস্টেমের জন্য সবচেয়ে গুরুত্বপূর্ণ (এবং কেন), তারপর সেই অগ্রাধিকারের সাথে কোন style সবচেয়ে ভালো মেলে তা বলা, এবং সবশেষে স্বীকার করা এই সিদ্ধান্তে কী ছাড় দেওয়া হচ্ছে ও ভবিষ্যতে কোন signal দেখলে সিদ্ধান্ত পুনর্বিবেচনা করা হবে। এই কাঠামোটাই দেখায় যে আপনি একটা মুখস্থ উত্তর দিচ্ছেন না, বরং সত্যিকারের trade-off reasoning করছেন — এবং শেষ পর্যন্ত এটাই এই পুরো কোর্সের কেন্দ্রীয় শিক্ষা।</p>
+</template>
+
+<!-- ============================ RENDER ============================ -->
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  const searchIndex = {};
+  (function buildIndex(){
+    const tmp = document.createElement('div');
+    pages.forEach(p=>{
+      tmp.innerHTML = templates[p.id] || '';
+      searchIndex[p.id] = ((p.title||'') + ' ' + tmp.textContent).toLowerCase();
+    });
+  })();
+
+  let currentQuery = '';
+
+  function clearHighlights(root){
+    root.querySelectorAll('mark.hl').forEach(m=>{ m.replaceWith(document.createTextNode(m.textContent)); });
+    root.normalize();
+  }
+
+  function highlightIn(root, q){
+    if(!q) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        const p = node.parentNode;
+        if(!node.nodeValue || !p || p.tagName==='SCRIPT' || p.tagName==='STYLE' || p.tagName==='MARK') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes=[]; let n; while((n=walker.nextNode())) nodes.push(n);
+    const ql = q.toLowerCase();
+    nodes.forEach(node=>{
+      const text = node.nodeValue, lower = text.toLowerCase();
+      if(!lower.includes(ql)) return;
+      const frag = document.createDocumentFragment();
+      let idx=0, pos;
+      while((pos = lower.indexOf(ql, idx)) !== -1){
+        if(pos>idx) frag.appendChild(document.createTextNode(text.slice(idx,pos)));
+        const mark = document.createElement('mark');
+        mark.className='hl';
+        mark.textContent = text.slice(pos, pos+ql.length);
+        frag.appendChild(mark);
+        idx = pos+ql.length;
+      }
+      if(idx<text.length) frag.appendChild(document.createTextNode(text.slice(idx)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  function applyHighlight(){
+    const active = main.querySelector('.page.active');
+    if(!active) return;
+    clearHighlights(active);
+    if(currentQuery) highlightIn(active, currentQuery);
+  }
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    applyHighlight();
+    const active = main.querySelector('.page.active');
+    const firstMark = active ? active.querySelector('mark.hl') : null;
+    if(firstMark && firstMark.scrollIntoView) firstMark.scrollIntoView({block:'center'});
+    else window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const searchInput = document.getElementById('courseSearch');
+  const searchMeta = document.getElementById('searchMeta');
+  if(searchInput){
+    searchInput.addEventListener('input', ()=>{
+      const q = searchInput.value.trim();
+      currentQuery = q;
+      const ql = q.toLowerCase();
+      let matchCount = 0, firstMatch = null;
+      pages.forEach(p=>{
+        const btn = sidebar.querySelector('.navbtn[data-target="'+p.id+'"]');
+        const matches = !ql || searchIndex[p.id].includes(ql);
+        if(matches){ matchCount++; if(!firstMatch) firstMatch = p; }
+        if(btn) btn.classList.toggle('hide', !matches);
+      });
+      if(!ql) searchMeta.textContent = '';
+      else if(matchCount===0) searchMeta.textContent = 'কোনো ফলাফল নেই';
+      else searchMeta.textContent = matchCount + 'টা অধ্যায়ে ফলাফল পাওয়া গেছে';
+
+      const active = main.querySelector('.page.active');
+      const activeId = active ? active.id.replace('page-','') : null;
+      const activeMatches = !!(ql && activeId && searchIndex[activeId] && searchIndex[activeId].includes(ql));
+      if(ql && !activeMatches && firstMatch){
+        show(firstMatch.id);
+      } else {
+        applyHighlight();
+        const mark = active ? active.querySelector('mark.hl') : null;
+        if(ql && mark && mark.scrollIntoView) mark.scrollIntoView({block:'center'});
+      }
+    });
+    searchInput.addEventListener('keydown', e=>{
+      if(e.key==='Escape'){ searchInput.value=''; searchInput.dispatchEvent(new Event('input')); searchInput.blur(); }
+    });
+  }
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
