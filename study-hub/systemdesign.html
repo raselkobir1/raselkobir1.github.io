@@ -138,6 +138,7 @@ const pages = [
   {id:"ridesharing",    icon:"🚕", title:"Case Study — Ride-Sharing System (Uber)"},
   {id:"videostreaming", icon:"🎬", title:"Case Study — Video Streaming Platform (YouTube/Netflix)"},
   {id:"webcrawler",     icon:"🕷️", title:"Case Study — Web Crawler ও Search Autocomplete"},
+  {id:"architecture",   icon:"🏛️", title:"System Architecture Patterns — Monolith, Microservices, Layered ও Event-Driven"},
   {id:"interview",      icon:"🎯", title:"Interview প্রশ্নোত্তর"},
 ];
 </script>
@@ -1978,8 +1979,101 @@ Web crawler-এ per-domain politeness আর Bloom-filter-ভিত্তিক 
 </div>
 </template>
 
+<template data-page="architecture">
+<h2 class="title">২০. System Architecture Patterns — Monolith, Microservices, Layered ও Event-Driven</h2>
+<p class="lead">এখন পর্যন্ত প্রতিটা অধ্যায় একটা নির্দিষ্ট component (cache, database, queue) নিয়ে আলোচনা করেছে। কিন্তু তার আগে একটা আরও মৌলিক প্রশ্নের উত্তর দরকার হয় — পুরো কোডবেস আর টিমকে কীভাবে ভাগ করা হবে, কোন অংশ একসাথে deploy হবে আর কোন অংশ আলাদা। এই সিদ্ধান্তটাই আর্কিটেকচার স্টাইল, এবং এটাই বাকি সব সিদ্ধান্তের কাঠামো ঠিক করে দেয়।</p>
+
+<h3>কেন Architecture Style একটা আলাদা আলোচনার বিষয়</h3>
+<p>Scalability বা caching নিয়ে সিদ্ধান্ত একটা নির্দিষ্ট component-কে কীভাবে দ্রুত ও নির্ভরযোগ্য বানানো যায় তা নিয়ে। Architecture style এর থেকে এক স্তর উপরে — এটা ঠিক করে দেয় কোডের কোন অংশ কার সাথে network-এর মাধ্যমে কথা বলবে (এবং তাই latency, partial failure, consistency-র ঝুঁকি নেবে), আর কোন অংশ একই process-এর ভেতরে function call-এর মাধ্যমে কথা বলবে (দ্রুত, atomic, কিন্তু একসাথে deploy ও scale হতে বাধ্য)। এই একটা সিদ্ধান্ত দল-গঠন, deployment pipeline, এমনকি on-call rotation পর্যন্ত প্রভাবিত করে — তাই ইন্টারভিউতে "monolith না microservices" প্রশ্নের উত্তর নিছক প্রযুক্তিগত না, organizational trade-off-ও বটে।</p>
+
+<h3>Layered (N-Tier) Architecture</h3>
+<p>সবচেয়ে প্রচলিত ও সরলতম স্টাইল — কোডকে অনুভূমিক স্তরে (layer) ভাগ করা, প্রতিটা স্তর শুধু তার ঠিক নিচের স্তরকে কল করে। ক্লাসিক তিন-স্তর মডেল: <span class="kw">Presentation</span> (UI/API controller), <span class="kw">Business/Application Logic</span> (domain rules, use case), আর <span class="kw">Data Access</span> (database query/ORM)।</p>
+<div class="diagram"><pre>
+   Presentation Layer   (HTTP controller, request/response mapping)
+          │
+          ▼
+   Business Logic Layer (domain rule, validation, orchestration)
+          │
+          ▼
+   Data Access Layer    (repository, ORM, SQL query)
+          │
+          ▼
+       Database
+</pre></div>
+<p>সুবিধা — নতুন ইঞ্জিনিয়ারের জন্য বোঝা সহজ (কোথায় কী খুঁজতে হবে তা predictable), concern আলাদা থাকায় একটা স্তর বদলালে (যেমন UI framework পাল্টানো) বাকি স্তরে কম প্রভাব পড়ে। কিন্তু এটা deployment-এর দিক থেকে সাধারণত একটাই ইউনিট থেকে যায় — পুরো অ্যাপ্লিকেশন একসাথে deploy হয়, স্বতন্ত্রভাবে না।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — "Layered" মানেই "Decoupled" ধরে নেওয়া</span>
+Layer আলাদা থাকা মানেই কোড decoupled, এই ধারণাটা ভুল। disciplined না থাকলে business logic ধীরে ধীরে presentation layer-এ (যেমন controller-এর ভেতরে সরাসরি validation ও calculation) অথবা data access layer-এ (stored procedure-এ business rule) leak করে যায় — একে "big ball of mud" বলা হয়। শুধু ফোল্ডার/namespace দিয়ে আলাদা করলেই আসল সুবিধা পাওয়া যায় না, প্রতিটা layer-এর responsibility স্পষ্টভাবে বেঁধে রাখতে হয় এবং dependency শুধু এক দিকে (নিচের দিকে) যেতে দিতে হয়।</div>
+
+<h3>Client-Server ও Thin vs Thick Client</h3>
+<p>প্রায় সব ওয়েব/মোবাইল সিস্টেম client-server মডেলের উপর দাঁড়িয়ে — client (browser, mobile app) request পাঠায়, server সেই request প্রসেস করে data ও business logic নিয়ন্ত্রণ করে। <span class="kw">Thin client</span>-এ প্রায় সব logic server-এ থাকে, client শুধু render করে (classic server-rendered web app) — আপডেট deploy করা সহজ (server বদলালেই সব ইউজার আপডেট পায়), কিন্তু প্রতিটা interaction-এ network round trip লাগে। <span class="kw">Thick client</span>-এ (SPA, native mobile app) client নিজেই যথেষ্ট logic ও state রাখে — interaction দ্রুত অনুভূত হয় (কম round trip), কিন্তু client-সাইড কোড versioning/rollout জটিল (সব ইউজার সাথে সাথে নতুন ভার্সনে যায় না) এবং server-কে client-এর পুরনো ভার্সনের সাথেও backward-compatible থাকতে হয়।</p>
+
+<h3>Monolithic Architecture</h3>
+<p>একটা <span class="kw">Monolith</span>-এ পুরো অ্যাপ্লিকেশন একটামাত্র কোডবেস, একটামাত্র build artifact, আর সাধারণত একটামাত্র shared database হিসেবে থাকে — সব module একই process-এর ভেতরে in-memory function call দিয়ে একে অপরকে কল করে।</p>
+<table>
+<tr><th>সুবিধা</th><th>ব্যাখ্যা</th></tr>
+<tr><td>সরল deployment</td><td>একটা artifact, একটা deploy pipeline — একাধিক service-এর version মিলিয়ে coordinate করার দরকার নেই</td></tr>
+<tr><td>Local reasoning সহজ</td><td>একটা IDE-তে পুরো কল-চেইন দেখা যায়, breakpoint দিয়ে end-to-end debug করা যায় — network hop-এর মধ্যে trace হারিয়ে যায় না</td></tr>
+<tr><td>সহজ transaction</td><td>একই database-এ একাধিক টেবিল একই সাথে আপডেট করা একটা স্থানীয় ACID transaction দিয়েই সম্ভব — distributed transaction-এর জটিলতা নেই</td></tr>
+</table>
+<table>
+<tr><th>অসুবিধা</th><th>ব্যাখ্যা</th></tr>
+<tr><td>একসাথে scale করতে হয়</td><td>শুধু একটা মডিউল (যেমন image processing) বেশি লোড পেলেও পুরো অ্যাপ্লিকেশনের নতুন instance চালাতে হয় — বাকি মডিউলের জন্যও অপ্রয়োজনীয় resource খরচ হয়</td></tr>
+<tr><td>Deployment risk কেন্দ্রীভূত</td><td>একটা ছোট মডিউলের একটা বাগও পুরো অ্যাপ্লিকেশনকে ক্র্যাশ করাতে পারে বা পুরো deploy আটকে দিতে পারে</td></tr>
+<tr><td>টিম স্কেল করা কঠিন</td><td>বহু টিম একই কোডবেসে কাজ করলে merge conflict, ধীর CI build, আর coordinated release-এর ঝামেলা বাড়ে</td></tr>
+</table>
+
+<h3>Microservices Architecture</h3>
+<p>Microservices-এ সিস্টেমকে ব্যবসায়িক ক্ষমতা (business capability) অনুযায়ী স্বাধীন service-এ ভাগ করা হয় — প্রতিটা service নিজের কোডবেস, নিজের database, নিজস্ব deployment cycle রাখে, এবং network-এর মাধ্যমে (REST, gRPC, বা message queue দিয়ে) অন্য service-এর সাথে যোগাযোগ করে। এই সাইটে একটা সম্পূর্ণ Microservices কোর্স আছে (decomposition strategy, Saga pattern, service mesh, resilience pattern বিস্তারিত) — এখানে শুধু system-design ইন্টারভিউ প্রসঙ্গে মূল trade-off গুলো দেখা যাক।</p>
+<table>
+<tr><th>মাত্রা</th><th>Monolith</th><th>Microservices</th></tr>
+<tr><td>Deployment</td><td>একটা ইউনিট, একসাথে সব</td><td>প্রতিটা service স্বাধীনভাবে deploy — একটার বাগ ফিক্সে পুরো সিস্টেম redeploy লাগে না</td></tr>
+<tr><td>Scaling granularity</td><td>পুরো অ্যাপ্লিকেশন একসাথে scale</td><td>শুধু যে service-এ বেশি লোড, শুধু সেটাই scale করা যায়</td></tr>
+<tr><td>Data ownership</td><td>সাধারণত একটা shared database</td><td>প্রতিটা service নিজের database owner — সরাসরি অন্য service-এর টেবিলে query করা নিষেধ</td></tr>
+<tr><td>Failure isolation</td><td>একটা মডিউলের ক্র্যাশ পুরো process-কে নামিয়ে দিতে পারে</td><td>একটা service down হলে বাকিরা (graceful degradation সহ) চলতে থাকতে পারে</td></tr>
+<tr><td>Transaction</td><td>স্থানীয় ACID transaction সহজ</td><td>একাধিক service জুড়ে transaction-এর জন্য Saga-এর মতো জটিল distributed pattern লাগে</td></tr>
+<tr><td>Operational complexity</td><td>কম — একটা log stream, একটা metric dashboard</td><td>বেশি — distributed tracing, service discovery, প্রতিটা service-এর আলাদা on-call/monitoring দরকার</td></tr>
+<tr><td>Team autonomy</td><td>বড় টিমে সমন্বয়ের ঘর্ষণ বাড়ে</td><td>প্রতিটা টিম নিজের service স্বাধীনভাবে owner হিসেবে চালাতে পারে</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">Conway's Law — আর্কিটেকচার কেন সংগঠনের প্রতিচ্ছবি</span>
+Conway's Law বলে, একটা সংগঠন যে সিস্টেম ডিজাইন করে তা অনিবার্যভাবে সেই সংগঠনের যোগাযোগ-কাঠামোর একটা প্রতিলিপি হয়ে দাঁড়ায়। এর ব্যবহারিক প্রভাব দুই দিকেই কাজ করে — যদি টিম-বিভাজন স্বাধীন হয় (প্রতিটা টিম একটা স্পষ্ট business domain owner), microservices স্বাভাবিকভাবেই সেই বিভাজন অনুসরণ করে ভালো কাজ করে। কিন্তু টিম-কাঠামো এখনো কেন্দ্রীভূত/coupled থাকলে (সবাইকে সবসময় একে অপরের সাথে সমন্বয় করতে হয়), সেই একই সংগঠন microservices split করলেও সার্ভিসগুলো একে অপরের সাথে এত ঘনিষ্ঠভাবে জড়িয়ে থাকে যে ফলাফল হয় একটা <b>distributed monolith</b> — নেটওয়ার্ক hop-এর latency ও অপারেশনাল জটিলতা যোগ হয়, অথচ স্বাধীন deployability-র আসল সুবিধাটাই পাওয়া যায় না।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — "Resume-driven" microservices adoption</span>
+একটা ৫ জনের ইঞ্জিনিয়ারিং টিম প্রথম দিনেই ৩০টা microservice ডিজাইন করে ফেলা একটা সাধারণ ভুল — প্রায়ই আসল ব্যবসায়িক প্রয়োজনের চেয়ে resume-এ "microservices experience" লেখার আকাঙ্ক্ষা থেকে। ফলাফল — টিমের বেশিরভাগ সময় চলে যায় infrastructure বানাতে (প্রতিটা service-এর জন্য আলাদা CI/CD pipeline, service discovery, distributed tracing setup) product feature বানানোর বদলে। এর চেয়েও খারাপ, যদি সব service একটা shared database ব্যবহার করে বা একসাথেই deploy করা হয়, তাহলে microservices-এর network overhead সহ্য করেও monolith-এর কোনো সুবিধাই (সহজ transaction, সহজ deploy) অবশিষ্ট থাকে না — এটাই distributed monolith।</div>
+
+<h3>Event-Driven Architecture</h3>
+<p>Event-Driven Architecture-এ একটা service কোনো state পরিবর্তন ঘটলে একটা <span class="kw">event</span> publish করে (যেমন <code>OrderPlaced</code>), আর একাধিক consumer সেই event-এ independently প্রতিক্রিয়া দেখায় — producer জানেও না তার event কে কে consume করছে। এটা ৭ নম্বর অধ্যায়ে দেখা asynchronous message queue-এর ধারণার সরাসরি সম্প্রসারণ, শুধু এখানে ফোকাস একটা নির্দিষ্ট queue না, পুরো সিস্টেমের যোগাযোগ-স্টাইলের উপর।</p>
+<div class="diagram"><pre>
+                                   ┌──▶ Inventory Service   (stock কমায়)
+   Order Service ──"OrderPlaced"──┼──▶ Notification Service (email/SMS পাঠায়)
+        (publisher)     event     └──▶ Analytics Service    (dashboard আপডেট করে)
+                                          (subscribers — একে অপরের সম্পর্কে অজ্ঞ)
+</pre></div>
+<p>সুবিধা — producer আর consumer সম্পূর্ণ decoupled, একটা নতুন consumer (যেমন ভবিষ্যতে একটা fraud-detection service) যোগ করতে producer-এর কোনো কোড বদলাতে হয় না, শুধু নতুন consumer নিজে সেই event topic-এ subscribe করে নেয়। বিনিময়ে — সিস্টেম eventual consistency মেনে নেয় (event process হতে কিছুটা সময় লাগে), আর একটা request পুরো সিস্টেমে ঠিক কোন কোন সার্ভিস স্পর্শ করেছে তা ট্রেস করা কঠিন হয়ে যায় — distributed tracing ছাড়া ডিবাগ করা প্রায় অসম্ভব। CQRS ও Event Sourcing-এর মতো গভীর প্যাটার্ন Microservices কোর্সে বিস্তারিত আলোচনা করা হয়েছে।</p>
+
+<h3>Serverless / Function-as-a-Service — সংক্ষেপে</h3>
+<p>Serverless-এ (AWS Lambda, Azure Functions) কোডকে ছোট ছোট ফাংশনে ভাগ করা হয় যা কোনো নির্দিষ্ট event ঘটলেই চালু হয় — server provisioning বা capacity planning করার দরকার নেই, প্ল্যাটফর্ম স্বয়ংক্রিয়ভাবে (শূন্য পর্যন্ত) scale করে এবং শুধু প্রকৃত execution time-এর জন্য বিল করে। এটা spiky বা অনিয়মিত traffic-এর জন্য cost-efficient (idle সময়ে কোনো খরচ নেই), অপারেশনাল ওভারহেড কম (কোনো সার্ভার patch করতে হয় না)। কিন্তু <span class="kw">cold start</span> latency (নতুন ইনভোকেশনে ফাংশন প্রথমবার চালু হতে সময় লাগে), vendor lock-in, আর দীর্ঘস্থায়ী/stateful workload-এ অনুপযুক্ততা — এগুলো এর সীমাবদ্ধতা। AWS ও Azure কোর্সে এর প্ল্যাটফর্ম-নির্দিষ্ট বিস্তারিত আলোচনা করা হয়েছে।</p>
+
+<h3>ইন্টারভিউতে Architecture Style কীভাবে Justify করবেন</h3>
+<p>কোনো একটা স্টাইল সবসময় "সেরা" না — signal অনুযায়ী বেছে নেওয়ার প্রশ্ন। ইন্টারভিউয়ারকে এই যুক্তির ধারাটাই স্পষ্টভাবে বলা উচিত।</p>
+<table>
+<tr><th>Signal</th><th>ঝোঁক যেদিকে</th></tr>
+<tr><td>ছোট টিম (৫-১৫ জন), early-stage product, requirement এখনো দ্রুত বদলাচ্ছে</td><td>Monolith (বা Modular Monolith) — deployment ও reasoning-এর overhead কম রাখা priority</td></tr>
+<tr><td>বড় সংগঠন, একাধিক স্বাধীন টিম, প্রতিটা অংশের scaling/reliability চাহিদা ভিন্ন</td><td>Microservices — স্বাধীন deploy ও scale প্রয়োজনটা প্রমাণিত</td></tr>
+<tr><td>একটা state change-এ একাধিক স্বাধীন সিস্টেমের প্রতিক্রিয়া দরকার, সরাসরি response দরকার নেই</td><td>Event-Driven — producer-consumer decoupling সরাসরি উপকারী</td></tr>
+<tr><td>Traffic স্পাইকি/অনিয়মিত, ছোট অপারেশন টিম, cost-sensitivity</td><td>Serverless — idle cost শূন্য, ops overhead কম</td></tr>
+</table>
+
+<div class="callout best"><span class="tag">Best practice — Monolith দিয়ে শুরু, প্রমাণিত প্রয়োজনে extract করা</span>
+বেশিরভাগ সফল সিস্টেম একটা well-structured <b>Modular Monolith</b> দিয়ে শুরু করে — একটামাত্র deployable-এর ভেতরেই স্পষ্ট module boundary ও clean interface রাখা হয় (যেন পরে আলাদা করা সহজ হয়), কিন্তু deployment এখনো একটাই থাকে। যখন একটা নির্দিষ্ট module-এর জন্য স্বাধীন scaling, স্বাধীন release cadence, বা ভিন্ন reliability requirement সত্যিই প্রমাণিত হয় (অনুমান নয়, প্রকৃত মেট্রিক দিয়ে), তখনই সেই module-কে <span class="kw">Strangler Fig</span> পদ্ধতিতে ধীরে ধীরে একটা স্বাধীন service হিসেবে বের করে আনা হয় — পুরো সিস্টেম একসাথে rewrite না করে। এই ক্রমান্বয়িক migration roadmap Microservices কোর্সে বিস্তারিত আছে।</div>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — বেশিরভাগ বড় কোম্পানি বিশুদ্ধ কোনো একটা স্টাইলে নেই</span>
+পাঠ্যবইয়ের ছবিতে যেমন দেখানো হয়, বাস্তবে প্রায় কোনো বড় কোম্পানির সিস্টেমই "বিশুদ্ধ মাইক্রোসার্ভিস" বা "বিশুদ্ধ মনোলিথ" না। বাস্তব architecture সাধারণত একটা হাইব্রিড — একটা core modular monolith (যেখানে বেশিরভাগ ব্যবসায়িক লজিক থাকে) এবং তার পাশে হাতে গোনা কয়েকটা service যেগুলো সত্যিই আলাদা scaling/reliability প্রোফাইল দরকার বলে বিশেষভাবে extract করা হয়েছে (যেমন image processing, search indexing, বা notification delivery)। ইন্টারভিউয়ে এই বাস্তবতা স্বীকার করা — "শুরুতে সবকিছু microservices না করে, প্রমাণিত bottleneck-গুলোই আলাদা করব" — প্রায়ই একটা dogmatic "সবকিছু microservices" উত্তরের চেয়ে বেশি বিশ্বাসযোগ্য শোনায়।</div>
+</template>
+
 <template data-page="interview">
-<h2 class="title">২০. Interview প্রশ্নোত্তর</h2>
+<h2 class="title">২১. Interview প্রশ্নোত্তর</h2>
 <p class="lead">System Design ইন্টারভিউতে বারবার আসা প্রশ্ন — প্রতিটা আগের চ্যাপ্টারের রেফারেন্স দিয়ে।</p>
 
 <h3>১) একটা ওপেন-এন্ডেড System Design প্রশ্ন (যেমন "Design Twitter") পেলে ঠিক কীভাবে এগোনো উচিত?</h3>
@@ -2058,6 +2152,12 @@ owner = hash(key) % N     <span class="c">// N=৩ থেকে N=৪ হলে 
 
 <h3>২৪) Graceful degradation আর circuit breaker pattern রিলায়েবিলিটির জন্য কীভাবে কাজ করে?</h3>
 <p><b>উত্তর:</b> একটা বড় সিস্টেমে একটা downstream dependency (যেমন একটা recommendation service) ধীর বা down হয়ে গেলে, তার জন্য অপেক্ষা করতে থাকা calling service-এর thread/connection pool-ও আটকে যেতে পারে এবং সেই ব্যর্থতা upstream-এ ছড়িয়ে পড়তে পারে (cascading failure, ১০ নম্বর অধ্যায়)। <span class="kw">Circuit breaker</span> pattern একটা failure threshold পার হলে সেই dependency-কে কল করা বন্ধ করে দেয় (fail fast) এবং একটা cooldown-এর পর সীমিতভাবে পুনরায় চেষ্টা করে দেখে dependency ফিরে এসেছে কিনা। <span class="kw">Graceful degradation</span> এর পরিপূরক — circuit open থাকলে সিস্টেম সম্পূর্ণ ব্যর্থ না হয়ে একটা কমপক্ষে-কার্যকরী ফলব্যাক দেখায় (যেমন personalized recommendation না দেখিয়ে generic popular item দেখানো) — মূল ফিচার সম্পূর্ণ কাজ না করলেও ব্যবহারকারীর কাছে সিস্টেম আংশিকভাবে চালু থাকে, পুরোপুরি ভেঙে পড়ে না।</p>
+
+<h3>২৫) Monolith থেকে Microservices-এ যাওয়ার সিদ্ধান্ত কোন signal-এর ভিত্তিতে নেওয়া উচিত?</h3>
+<p><b>উত্তর:</b> ২০ নম্বর অধ্যায়ে দেখা মূল কথা — এই সিদ্ধান্ত অনুমান থেকে না, প্রমাণিত প্রয়োজন থেকে আসা উচিত। তিনটা concrete signal দেখা যায়: (১) একটা নির্দিষ্ট module-এর scaling চাহিদা বাকি সিস্টেম থেকে স্পষ্টভাবে ভিন্ন (যেমন image-processing module CPU-heavy, বাকি সিস্টেম I/O-heavy — একসাথে scale করলে resource অপচয় হচ্ছে); (২) একাধিক টিম একই কোডবেসে কাজ করে merge conflict ও ধীর CI-তে আটকে যাচ্ছে, আর টিম-বিভাজন ইতিমধ্যে স্পষ্ট business domain অনুযায়ী; (৩) একটা module-এর reliability/release cadence চাহিদা বাকিদের থেকে আলাদা (যেমন একটা experimental feature ঘন ঘন deploy হতে চায়, কিন্তু core billing module স্থিতিশীল থাকতে চায়)। এই signal ছাড়া শুধু "microservices আধুনিক" ভেবে split করলে distributed monolith-এ পরিণত হওয়ার ঝুঁকি থাকে।</p>
+
+<h3>২৬) Event-Driven Architecture একটা সিস্টেমকে ডিবাগ করা কঠিন করে তোলে কেন, এবং এটা কীভাবে সামলানো হয়?</h3>
+<p><b>উত্তর:</b> Synchronous call chain-এ (যেমন monolith বা সরাসরি REST কল) একটা request কোন পথে গিয়েছে তা একটামাত্র stack trace বা log stream থেকেই বোঝা যায়। কিন্তু Event-Driven সিস্টেমে (২০ নম্বর অধ্যায়) একটা event publish হওয়ার পর producer জানেও না কোন consumer কখন সেটা প্রসেস করবে — একটা bug রিপোর্ট করা হলে "এই request-টা ঠিক কোন কোন service স্পর্শ করেছে, কোথায় ব্যর্থ হয়েছে" জানতে একাধিক service-এর আলাদা log একসাথে মেলাতে হয়, যা manually প্রায় অসম্ভব। সমাধান হলো প্রতিটা event/request-এর সাথে একটা <code>correlation ID</code> বা <code>trace ID</code> সংযুক্ত করে পুরো chain জুড়ে propagate করা, আর একটা centralized distributed tracing tool (যেমন Jaeger, Zipkin) ব্যবহার করে পুরো path একটা একক timeline-এ visualize করা — এই tooling ছাড়া production-এ event-driven সিস্টেম operate করা ব্যবহারিকভাবে অসম্ভব হয়ে যায়।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->
