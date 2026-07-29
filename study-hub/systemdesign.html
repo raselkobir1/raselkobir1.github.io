@@ -670,6 +670,23 @@ Asynchronous:
 <h3>API Gateway-এর ভূমিকা</h3>
 <p>বড় সিস্টেমে একাধিক microservice থাকলে প্রতিটাকে সরাসরি ইন্টারনেটে expose করা বিপজ্জনক ও ব্যবস্থাপনার দিক থেকে অগোছালো। <span class="kw">API Gateway</span> একটা single entry point হিসেবে কাজ করে — authentication/authorization যাচাই, সঠিক backend service-এ routing, request/response transformation, এবং rate limiting একটা কেন্দ্রীয় জায়গা থেকে প্রয়োগ করে। (এই সাইটের Cloud/AWS-Azure কোর্সে managed API Gateway service-এর বিস্তারিত কনফিগারেশন কভার করা হয়েছে — এখানে system-design প্রসঙ্গেই সংক্ষিপ্ত রাখা হলো।)</p>
 
+<h3>Authentication ও Authorization — কোথায় কী চেক হয়</h3>
+<p>API Gateway-এর উপরের প্যারায় "authentication/authorization যাচাই" এক লাইনে বলা হলেও ইন্টারভিউতে এটা প্রায়ই নিজেই একটা গভীর প্রশ্ন — <span class="kw">Authentication (AuthN)</span> মানে "আপনি কে তা যাচাই করা" (identity verification), আর <span class="kw">Authorization (AuthZ)</span> মানে "আপনি এই নির্দিষ্ট কাজটা করার অনুমতি রাখেন কিনা" (permission check) — দুটো সম্পূর্ণ ভিন্ন প্রশ্ন, যদিও প্রায়ই একই middleware-এ পাশাপাশি বাস্তবায়িত হয়। একজন সফলভাবে login করা ইউজার (authenticated) অন্য কারও অর্ডার দেখার চেষ্টা করলে সেটা একটা authorization ব্যর্থতা, authentication ব্যর্থতা না।</p>
+
+<table>
+<tr><th>পদ্ধতি</th><th>কীভাবে কাজ করে</th><th>ব্যবহার করুন যখন</th></tr>
+<tr><td>API Key</td><td>একটা স্থায়ী, দীর্ঘমেয়াদি secret string প্রতিটা request-এর header-এ পাঠানো হয়; সার্ভার সেটা lookup করে কোন client তা শনাক্ত করে</td><td>server-to-server বা third-party integration, যেখানে একটা নির্দিষ্ট client/অ্যাপ্লিকেশনকে চিহ্নিত করাই যথেষ্ট, ব্যক্তি-ইউজার লগইন দরকার নেই</td></tr>
+<tr><td>Session Token (Cookie-based)</td><td>Login-এর পর সার্ভার একটা random session ID তৈরি করে server-side store-এ (Redis) সেশন ডেটা রাখে, client-কে শুধু ID-টা cookie হিসেবে দেয়</td><td>traditional server-rendered web app; session invalidate করা সহজ (server-side store থেকে মুছে দিলেই হয়)</td></tr>
+<tr><td>JWT (JSON Web Token)</td><td>ইউজারের identity ও claim (role, expiry) একটা signed token-এর ভেতরেই এনকোড থাকে — সার্ভারকে প্রতিটা request-এ ডেটাবেস/session store lookup করতে হয় না, শুধু signature যাচাই করলেই চলে</td><td>stateless API, microservices-এর মধ্যে identity propagate করা (একটা service অন্য service-কে কল করার সময় token forward করে)</td></tr>
+<tr><td>OAuth 2.0 / OpenID Connect</td><td>একটা third-party identity provider (Google, একটা কোম্পানির নিজস্ব auth service) ইউজারকে authenticate করে একটা access token ইস্যু করে, যেটা দিয়ে resource server-এ সীমিত-পরিসরে (scope) অ্যাক্সেস পাওয়া যায়</td><td>"Login with Google"-এর মতো third-party login, অথবা একটা centralized identity provider দিয়ে একাধিক অ্যাপ্লিকেশন জুড়ে single sign-on</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">কেন JWT-তে সার্ভারকে প্রতিবার ডেটাবেসে যেতে হয় না</span>
+একটা session token শুধু একটা random ID — সার্ভারকে প্রতিটা request-এ সেই ID দিয়ে session store-এ lookup করে বুঝতে হয় এটা কার session। JWT-তে ইউজারের identity ও role সরাসরি token-এর ভেতরেই থাকে (Base64-encoded JSON payload), আর token-টা সার্ভারের একটা secret key দিয়ে cryptographically signed — তাই সার্ভার শুধু signature যাচাই করেই নিশ্চিত হতে পারে token-টা বৈধ এবং কেউ payload বদলায়নি, কোনো lookup ছাড়াই। এই কারণেই stateless, horizontally-scaled সিস্টেমে JWT জনপ্রিয় — কোনো shared session store দরকার হয় না। বিনিময়ে, একটা JWT ইস্যু হওয়ার পর তার expiry-র আগে সেটাকে জোর করে invalidate করা কঠিন (কারণ সার্ভার কোনো central store চেক করছে না) — সাধারণ সমাধান হলো token-এর মেয়াদ ছোট রাখা (কয়েক মিনিট থেকে ঘণ্টা) এবং একটা আলাদা, দীর্ঘমেয়াদি refresh token দিয়ে নতুন access token নেওয়া, যাতে refresh token বাতিল করে effectively পুরো session বন্ধ করা যায়।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — শুধু API Gateway-তে auth check করে বাকি সব service-কে বিশ্বাস করা</span>
+একটা সাধারণ ভুল ধারণা হলো, যেহেতু API Gateway ইতিমধ্যে authentication যাচাই করেছে, ভেতরের প্রতিটা microservice নিজে থেকে আর কোনো চেক না করে blindly trust করতে পারে যে request-টা বৈধ। বাস্তবে যদি একটা আক্রমণকারী কোনোভাবে internal network-এ ঢুকে যায় (একটা compromised container, একটা misconfigured service), সে সরাসরি ভেতরের service-গুলোকে কল করে Gateway সম্পূর্ণ বাইপাস করতে পারে। এই কারণে একটা <span class="kw">Zero Trust</span> মডেলে প্রতিটা service নিজেও (অন্তত হালকা ভাবে, propagated identity token যাচাই করে) নিশ্চিত হয় request-টা বৈধ — Gateway-লেভেল চেক প্রথম defense layer, শেষ নয়।</div>
+
 <h3>Rate Limiting Algorithm — গভীর তুলনা</h3>
 <p>Rate limiting একটা ক্লাসিক system-design ইন্টারভিউ প্রশ্ন কারণ এতে সহজ কিন্তু গভীর trade-off আছে। নিচে পাঁচটা প্রধান algorithm বিশ্লেষণ করা হলো।</p>
 
@@ -883,10 +900,17 @@ Load Balancer
 <h3>Circuit Breaker — সংক্ষিপ্ত reminder</h3>
 <p>Microservices কোর্সে <span class="kw">Circuit Breaker</span> প্যাটার্ন বিস্তারিত আলোচিত হয়েছে — সংক্ষেপে, একটা downstream service repeatedly fail করলে circuit breaker "খুলে" যায় এবং সাথে সাথেই fail করে দেয় (retry ছাড়া), যাতে caller অপেক্ষা করে resource ব্লক না করে এবং failing service-কে আরও রিকোয়েস্ট দিয়ে চাপ না দেয়। System design প্রসঙ্গে এটা গুরুত্বপূর্ণ কারণ এটা <b>cascading failure</b> ঠেকায় — একটা ছোট সার্ভিসের সমস্যা যাতে চেইন রিঅ্যাকশনে পুরো সিস্টেমকে না ফেলে দেয়।</p>
 
-<h3>Monitoring ও Alerting</h3>
-<p>একটা সিস্টেম ডিজাইন করার পর সেটা fail করলে কীভাবে জানা যাবে — এই প্রশ্নের প্রস্তুত উত্তর না থাকলে ডিজাইন অসম্পূর্ণ বলে গণ্য হয়।</p>
+<h3>Monitoring ও Observability — তিনটা স্তম্ভ</h3>
+<p>একটা সিস্টেম ডিজাইন করার পর সেটা fail করলে কীভাবে জানা যাবে — এই প্রশ্নের প্রস্তুত উত্তর না থাকলে ডিজাইন অসম্পূর্ণ বলে গণ্য হয়। <span class="kw">Observability</span> সাধারণত তিনটা স্তম্ভে ভাগ করে দেখা হয় — <b>Metrics</b> (সময়ের সাথে সংখ্যাসূচক পরিমাপ, যেমন request latency, error rate, queue depth — dashboard ও threshold-ভিত্তিক alert-এর ভিত্তি), <b>Logging</b> (প্রতিটা ঘটনার বিস্তারিত, টেক্সট-ভিত্তিক রেকর্ড — একটা নির্দিষ্ট request ঠিক কী করেছে তা পরে খুঁজে বের করার জন্য), আর <b>Tracing</b> (একটা একক request পুরো সিস্টেমের কোন কোন service স্পর্শ করেছে এবং প্রতিটা ধাপে কতটুকু সময় লেগেছে তার end-to-end রেকর্ড)। একটা microservices বা event-driven সিস্টেমে (এই কোর্সের ৭ ও ৮ নম্বর অধ্যায়ে দেখা প্যাটার্ন) শুধু metrics ও logging যথেষ্ট না — একটা request একাধিক service অতিক্রম করলে সেই পুরো path একসাথে দেখতে <span class="kw">Distributed Tracing</span> লাগে, যেখানে প্রতিটা request-এর সাথে একটা <code>trace ID</code>/<code>correlation ID</code> সংযুক্ত থাকে এবং প্রতিটা service সেই একই ID তাদের log-এ রেকর্ড করে, ফলে পরে একটা tool (Jaeger, Zipkin) দিয়ে পুরো path একটা timeline-এ পুনর্গঠন করা যায়।</p>
+
+<h3>SLI, SLO ও SLA — Reliability-কে সংখ্যায় রূপান্তর করা</h3>
+<p>"সিস্টেমটা reliable হতে হবে" একটা অস্পষ্ট বাক্য — অর্থপূর্ণ আলোচনার জন্য এটাকে নির্দিষ্ট সংখ্যায় ভাঙা দরকার। <span class="kw">SLI (Service Level Indicator)</span> হলো প্রকৃত পরিমাপ (যেমন "গত ৫ মিনিটে সফল request-এর শতাংশ")। <span class="kw">SLO (Service Level Objective)</span> হলো সেই পরিমাপের একটা অভ্যন্তরীণ লক্ষ্যমাত্রা (যেমন "৯৯.৯% request ৩০ দিনে সফল হতে হবে") — এটা টিমের নিজস্ব টার্গেট, যা alert threshold ঠিক করতে ব্যবহৃত হয়। <span class="kw">SLA (Service Level Agreement)</span> হলো একটা বাহ্যিক, প্রায়ই আইনগতভাবে বাঁধা প্রতিশ্রুতি একজন গ্রাহকের সাথে (যেমন "৯৯.৫% এর নিচে uptime হলে বিল-এ ছাড়) — সাধারণত SLA-র সংখ্যা SLO-র চেয়ে কিছুটা শিথিল রাখা হয়, যাতে অভ্যন্তরীণ target সামান্য miss হলেও গ্রাহকের সাথে করা প্রতিশ্রুতি অক্ষত থাকে।</p>
+
+<div class="callout why"><span class="tag">কেন ১০০% Availability কখনো লক্ষ্য হওয়া উচিত না</span>
+১০০% uptime-এর লক্ষ্য রাখলে প্রতিটা deploy, প্রতিটা experiment, প্রতিটা নতুন ফিচার একটা ঝুঁকি হিসেবে দেখা হয় — টিম deploy করতেই ভয় পায়। এর বদলে একটা বাস্তবসম্মত SLO (যেমন ৯৯.৯%, বছরে প্রায় ৮.৭ ঘণ্টা downtime allowed) ঠিক করে সেই "allowed downtime"-কে একটা <span class="kw">Error Budget</span> হিসেবে ব্যবহার করা হয় — যতক্ষণ budget আছে, টিম দ্রুত ship করতে পারে; budget শেষ হয়ে গেলে নতুন ফিচার থামিয়ে reliability-তে ফোকাস করা হয়। এভাবে "কত reliable" প্রশ্নটা একটা সংখ্যাভিত্তিক, আলোচনাযোগ্য সিদ্ধান্তে পরিণত হয়, অন্তহীন নিখুঁততার আকাঙ্ক্ষা না।</div>
+
 <div class="callout best"><span class="tag">Best practice — "how will you know if it breaks" প্রশ্নের প্রস্তুতি রাখুন</span>
-System design ইন্টারভিউয়ে ডিজাইনের শেষে ইন্টারভিউয়ার প্রায়ই প্রশ্ন করে "এই সিস্টেম fail করলে আপনি কীভাবে বুঝবেন?" — সবসময় key metric-এর একটা ছোট তালিকা প্রস্তুত রাখুন (latency percentile, error rate, queue depth, replica lag) এবং বলুন কীভাবে threshold ছাড়ালে alert যাবে। এটা দেখায় আপনি শুধু "happy path" না, operational reliability নিয়েও ভাবছেন।</div>
+System design ইন্টারভিউয়ে ডিজাইনের শেষে ইন্টারভিউয়ার প্রায়ই প্রশ্ন করে "এই সিস্টেম fail করলে আপনি কীভাবে বুঝবেন?" — সবসময় key metric-এর একটা ছোট তালিকা প্রস্তুত রাখুন (latency percentile, error rate, queue depth, replica lag), বলুন কীভাবে threshold ছাড়ালে alert যাবে, এবং একটা distributed সিস্টেমে হলে যোগ করুন যে trace ID দিয়ে সমস্যার মূল কোথায় তা কীভাবে খুঁজে বের করবেন। এটা দেখায় আপনি শুধু "happy path" না, operational reliability নিয়েও ভাবছেন।</div>
 </template>
 
 <template data-page="urlshortener">
@@ -1551,7 +1575,7 @@ Chat-এ উভয়মুখী instant যোগাযোগ দরকার 
    Trip DB (durable — completed trip, fare, receipt)
 </pre></div>
 <div class="callout why"><span class="tag">Location Service কেন আলাদা service, Matching Service-এর ভেতরে নয়</span>
-Location update-এর volume এত বেশি (আগের হিসাবে প্রতি সেকেন্ডে ৫০ হাজার+) যে এটাকে একটা আলাদা, স্বাধীনভাবে scale করা service-এ রাখা হয় — এর storage ও access pattern সম্পূর্ণ ভিন্ন (write-heavy, ephemeral, geospatial query) matching logic-এর তুলনায় (যেটা মূলত candidate list থেকে ranking-এর সিদ্ধান্ত নেয়)। দুটোকে আলাদা রাখলে প্রতিটাকে তার নিজের bottleneck অনুযায়ী independently scale করা যায় — এটা এই কোর্সের ১ নম্বর অধ্যায়ে দেখা "প্রতিটা service-এর দায়িত্ব একটামাত্র হওয়া উচিত" নীতির সরাসরি প্রয়োগ।
+Location update-এর volume এত বেশি (আগের হিসাবে প্রতি সেকেন্ডে ৫০ হাজার+) যে এটাকে একটা আলাদা, স্বাধীনভাবে scale করা service-এ রাখা হয় — এর storage ও access pattern সম্পূর্ণ ভিন্ন (write-heavy, ephemeral, geospatial query) matching logic-এর তুলনায় (যেটা মূলত candidate list থেকে ranking-এর সিদ্ধান্ত নেয়)। দুটোকে আলাদা রাখলে প্রতিটাকে তার নিজের bottleneck অনুযায়ী independently scale করা যায় — এটা "প্রতিটা service-এর দায়িত্ব একটামাত্র ও তার নিজস্ব scaling profile থাকা উচিত" নীতির একটা সরাসরি বাস্তব উদাহরণ।
 </div>
 
 <h3>Deep Dive — Geospatial Indexing</h3>
@@ -1571,7 +1595,7 @@ Geohash cell-গুলো grid-এর মতো নির্দিষ্ট স�
 <p>Geohash string যত লম্বা হয়, cell তত ছোট (তত নির্দিষ্ট এলাকা) হয় — matching query-তে কতটা lookup precision লাগবে তা string-এর length বেছে নেওয়ার মাধ্যমে নিয়ন্ত্রণ করা যায়।</p>
 <table>
 <tr><th>Geohash Length</th><th>আনুমানিক Cell আকার</th><th>ব্যবহারিক প্রাসঙ্গিকতা</th></tr>
-<tr><td>৪ character</td><td>≈ ২০ কিমি × ২০ কিমি</td><td>খুব বড় এলাকা — পুরো শহরের একটা অংশ, matching-এর জন্য অনেক কম নির্দিষ্ট</td></tr>
+<tr><td>৪ character</td><td>≈ ৩৯ কিমি × ২০ কিমি</td><td>খুব বড় এলাকা — পুরো শহরের একটা অংশ, matching-এর জন্য অনেক কম নির্দিষ্ট</td></tr>
 <tr><td>৬ character</td><td>≈ ১.২ কিমি × ০.৬ কিমি</td><td>একটা এলাকা/মহল্লার আকার — ride-matching-এর জন্য বাস্তবসম্মত শুরুর বিন্দু</td></tr>
 <tr><td>৮ character</td><td>≈ ৩৮ মি × ১৯ মি</td><td>একটা বিল্ডিং ব্লকের আকার — pickup point নির্দিষ্ট করতে যথেষ্ট নির্দিষ্ট</td></tr>
 </table>

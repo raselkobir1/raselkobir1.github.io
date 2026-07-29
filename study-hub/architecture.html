@@ -295,6 +295,9 @@ Layer আলাদা থাকা মানেই কোড decoupled, এই �
 <div class="callout why"><span class="tag">কেন "Layer Skipping" একটা বিপজ্জনক শর্টকাট</span>
 একটা সাধারণ চাপ — presentation layer সরাসরি data access layer-কে কল করে ফেলা, business logic layer বাইপাস করে, "এটা তো শুধু একটা সহজ read" যুক্তিতে। সমস্যা হলো এই শর্টকাট একবার নেওয়া শুরু হলে থামানো কঠিন — ধীরে ধীরে ব্যবসায়িক নিয়ম (যেমন authorization check, soft-delete filter) কিছু path-এ থাকে, কিছু path-এ থাকে না, আর কোন read কোন rule মেনে চলছে তা ট্র্যাক করা অসম্ভব হয়ে যায়। প্রতিটা read/write একইভাবে business logic layer দিয়ে যাওয়া উচিত, ব্যতিক্রম ছাড়া।</div>
 
+<div class="callout best"><span class="tag">Best practice — dependency direction automated tooling দিয়ে বলবৎ করা</span>
+"Layer skipping" ঠেকানোর সবচেয়ে নির্ভরযোগ্য উপায় শুধু কোড রিভিউয়ে মনে রাখা না, বরং static analysis টুল (যেমন ArchUnit, NetArchTest, dependency-cruiser — এই কোর্সের Modular Monolith অধ্যায়ে বিস্তারিত) দিয়ে একটা নিয়ম লিখে রাখা: "presentation package সরাসরি data-access package-এর ক্লাস ইমপোর্ট করতে পারবে না, শুধু business-logic package-এর মাধ্যমে যেতে হবে"। এই নিয়ম CI pipeline-এ চেক হলে একটা শর্টকাট merge হওয়ার আগেই আটকে যায়, ডেভেলপারের স্মৃতির ওপর নির্ভর না করে।</div>
+
 <div class="callout behind"><span class="tag">বাস্তবতা — Layered Architecture-ই বেশিরভাগ অন্য স্টাইলের ভিত্তি</span>
 Layering কোনো "পুরনো" বা "সরল" কৌশল না যা আধুনিক আর্কিটেকচার প্রতিস্থাপন করে ফেলেছে — বরং প্রায় প্রতিটা আধুনিক স্টাইল (Hexagonal/Clean/Onion Architecture, এমনকি একটা একক Microservice-এর ভেতরের গঠনও) কোনো না কোনোভাবে layering-এর ধারণাকেই আরও কঠোর নিয়মে (dependency শুধু কেন্দ্রের দিকে যেতে হবে) প্রয়োগ করে। এই কোর্সের পরের একটা অধ্যায়ে (Hexagonal/Clean/Onion) দেখা যাবে কীভাবে সেই কঠোরতা layering-এর সাধারণ দুর্বলতাগুলো (layer skipping, leak হওয়া business logic) কাঠামোগতভাবেই ঠেকিয়ে দেয়।</div>
 </template>
@@ -392,6 +395,9 @@ SOA — কেন্দ্রীভূত ESB ("smart pipes")
 
 <div class="callout mistake"><span class="tag">Common mistake — SOA-র ধারণাকেই সেকেলে ভাবা</span>
 "SOA মৃত, microservices-ই ভবিষ্যৎ" — এটা একটা ভুল সরলীকরণ। SOA-র মূল ধারণা — একটা সার্ভিস একটা বিজনেস ক্যাপাবিলিটি একটা ভালোভাবে-সংজ্ঞায়িত contract-এর মাধ্যমে উন্মুক্ত করবে — ঠিক সেটাই microservices-ও করে। microservices-কে বরং SOA-র ধারণার একটা বিবর্তন হিসেবে দেখা উচিত, যেখানে গভর্নেন্স কেন্দ্রীভূত থেকে বিকেন্দ্রীভূত হয়েছে, প্রোটোকল ভারী SOAP/XML থেকে হালকা REST/gRPC/event-এ নেমে এসেছে, আর সার্ভিসের আকার এক গোটা ডোমেইন থেকে ছোট হয়ে একটা টিম/একটা bounded context-এর সমান হয়ে এসেছে।</div>
+
+<div class="callout best"><span class="tag">Best practice — legacy ইন্টিগ্রেশনে ESB ব্যবহার করলেও এটাকে "dumb" রাখুন</span>
+যদি legacy সিস্টেম ইন্টিগ্রেশনের জন্য সত্যিই একটা ESB-স্টাইল কেন্দ্রীয় ইন্টিগ্রেশন লেয়ার দরকার হয়, তবু সেই লেয়ারকে যতটা সম্ভব হালকা রাখা উচিত — শুধু routing ও protocol translation, কোনো ব্যবসায়িক সিদ্ধান্ত বা orchestration logic সেখানে না রাখা। ব্যবসায়িক নিয়ম যত বেশি ESB-এর ভেতরে জমা হবে, ততই এটা একটা কেন্দ্রীয় বটলনেকে পরিণত হওয়ার ঝুঁকি বাড়বে — dumb pipe রাখলে অন্তত সেই ঝুঁকিটা সীমিত থাকে।</div>
 
 <div class="callout behind"><span class="tag">বাস্তবতা — বড় এন্টারপ্রাইজে SOA/ESB এখনও পুরোপুরি প্রাসঙ্গিক</span>
 অনেক বড় ব্যাংক, ইন্স্যুরেন্স, বা টেলিকম প্রতিষ্ঠান আজও সফলভাবে SOA-স্টাইল আর্কিটেকচার চালায় — বিশেষত legacy সিস্টেম ইন্টিগ্রেশনের জন্য। যখন প্রতিষ্ঠানে ২০ বছরের পুরনো mainframe সিস্টেম, একাধিক ভেন্ডর-সাপ্লাইড প্যাকেজ, আর নতুন ক্লাউড-নেটিভ সার্ভিস একসাথে থাকতে হয় — যেগুলো পুনর্লিখন করা বাস্তবসম্মত নয় — তখন একটা ESB প্রোটোকল অনুবাদ ও মেসেজ রূপান্তরের জন্য প্রকৃতপক্ষেই সবচেয়ে বাস্তবসম্মত পছন্দ হতে পারে। সমস্যাটা SOA প্যাটার্ন নিজে নয় — সমস্যা হয় যখন এই একই কেন্দ্রীভূত মডেল নতুন, দ্রুত-বিকশিত গ্রিনফিল্ড সিস্টেমে চাপিয়ে দেওয়া হয়।</div>
@@ -605,6 +611,15 @@ Client ──▶    │  Orders Module ──call──▶ Inventory Module ─�
 
 <div class="callout mistake"><span class="tag">Common mistake — Deployment ইউনিট একটাই মানে Scaling ইউনিটও একটাই ধরে নেওয়া</span>
 অনেকে ভাবেন monolith মানেই পুরো সিস্টেম সবসময় একই horizontal scale-এ থাকতে বাধ্য। বাস্তবে একটা monolith-এর একাধিক identical instance চালানো (সবগুলো পুরো কোডবেস চালাচ্ছে) সম্পূর্ণ সম্ভব এবং সাধারণ — Load Balancer-এর পেছনে stateless monolith instance যোগ করে horizontal scale করা যায় ঠিক যেভাবে একটা individual microservice করত। সীমাবদ্ধতা হলো <i>granular</i> scaling সম্ভব না — আপনি শুধু "Inventory module"-কে বেশি instance দিতে পারবেন না, পুরো অ্যাপ্লিকেশনের আরেকটা কপি চালাতে হবে, যেখানে বাকি মডিউলের capacity ব্যবহারই হবে না।</div>
+
+<h3>উদাহরণ — একটা ছোট ই-কমার্স স্টার্টআপ</h3>
+<p>ধরা যাক একটা ৮ জন ইঞ্জিনিয়ারের স্টার্টআপ একটা ই-কমার্স প্ল্যাটফর্ম বানাচ্ছে — Orders, Inventory, Payments, Notifications এই চারটা কার্যকারিতা লাগবে বলে ধারণা করা হচ্ছে, কিন্তু প্রথম কয়েক মাসে ঠিক কোন ফিচারগুলো ইউজার আসলে ব্যবহার করবে তা এখনো অনিশ্চিত। একটা monolith এখানে সঠিক পছন্দ — পুরো টিম একটা কোডবেসে কাজ করে, একটা `docker-compose up` দিয়েই পুরো অ্যাপ্লিকেশন লোকালি চালানো যায়, আর requirement বদলালে (যেমন Payments-এর পুরো ফ্লো বদলে ফেলা) একটা মাত্র deploy দিয়েই বদল প্রয়োগ হয়ে যায়। যদি তারা এই পর্যায়ে microservices দিয়ে শুরু করত, প্রতিটা পরিবর্তনে একাধিক সার্ভিস কো-অর্ডিনেট করতে হতো, অথচ boundary গুলোই তখনো ভুল হওয়ার সমূহ সম্ভাবনা থাকত।</p>
+
+<div class="callout best"><span class="tag">Best practice — Deployment risk কমাতে Feature Flag ও Staged Rollout ব্যবহার করুন</span>
+Monolith-এর সবচেয়ে বড় ঝুঁকি হলো একটা ছোট মডিউলের বাগ পুরো deploy আটকে দিতে পারে বা পুরো অ্যাপ্লিকেশন ক্র্যাশ করাতে পারে। এই ঝুঁকি সম্পূর্ণ দূর করা না গেলেও কমানো যায় — নতুন কোড একটা <span class="kw">feature flag</span>-এর পেছনে merge করে প্রথমে সব ইউজারের জন্য off রাখা, তারপর ধীরে ধীরে (১%, ১০%, ১০০%) চালু করা, আর কোনো সমস্যা দেখা দিলে কোড rollback না করে শুধু flag off করে সাথে সাথেই বন্ধ করে দেওয়া। এভাবে একটা monolith-ও অনেকটা microservices-এর মতো ক্রমান্বয়িক, নিয়ন্ত্রিত rollout পেতে পারে, পুরোপুরি "সব-অথবা-কিছু-না" deploy ছাড়াই।</div>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — বিশ্বের অনেক বৃহত্তম ওয়েবসাইট আজও মূলত Monolith</span>
+Shopify তাদের core commerce platform আজও একটা বিশাল Ruby on Rails monolith হিসেবে চালায় (যদিও নির্দিষ্ট কিছু high-scale অংশ আলাদা সার্ভিসে extract করা হয়েছে), আর Stack Overflow বহু বছর ধরে মাত্র কয়েকটা সার্ভারে চলা একটা .NET monolith দিয়ে বিশাল ট্র্যাফিক সামলেছে ন্যূনতম অপারেশনাল টিম দিয়ে। এই উদাহরণগুলো দেখায় যে "monolith মানেই স্কেল করে না" ধারণাটা ভুল — একটা ভালোভাবে অপ্টিমাইজড monolith বিশাল স্কেলেও টিকে থাকতে পারে, বিশেষ করে যখন সেই স্কেলের জন্য দরকারি নির্দিষ্ট কয়েকটা bottleneck আলাদাভাবে সমাধান করা হয়, পুরো সিস্টেম না ভেঙে।</div>
 </template>
 
 <template data-page="microservices">
@@ -635,6 +650,8 @@ Client ──▶    │  Orders Module ──call──▶ Inventory Module ─�
 <tr><td>Team autonomy</td><td>বড় টিমে সমন্বয়ের ঘর্ষণ বাড়ে</td><td>প্রতিটা টিম নিজের service স্বাধীনভাবে owner হিসেবে চালাতে পারে</td></tr>
 </table>
 
+<p>"Database-per-service" নীতিটা আসলে একটা বহুল-পরিচিত সাধারণ নীতির একটা প্রয়োগ, যাকে বলা হয় <span class="kw">Shared-Nothing Architecture</span> — প্রতিটা নোড (এখানে প্রতিটা service) সম্পূর্ণ স্বাধীন, নিজের CPU/মেমরি/স্টোরেজ নিজে রাখে, আর কোনো নোডের সাথে অন্য নোডের কোনো shared, centrally-locked resource (একটা কমন ডেটাবেস, একটা কমন disk) থাকে না। এই স্বাধীনতাই horizontal scaling-কে সহজ করে — যেহেতু কোনো shared resource-এর জন্য নোডগুলোকে প্রতিযোগিতা করতে হয় না, নতুন নোড যোগ করলে কোনো কেন্দ্রীয় contention বাড়ে না। এই কোর্সের Space-Based Architecture অধ্যায়েও একই নীতি দেখা যায় — সেখানে প্রতিটা Processing Unit নিজের ডেটা slice নিজে রাখে, ঠিক যেমন এখানে প্রতিটা microservice নিজের database রাখে।</p>
+
 <h3>যোগাযোগের দুটো মূল ধরন</h3>
 <p>Microservices-এর মধ্যে যোগাযোগ মূলত দুই ধরনের — <span class="kw">Synchronous</span> (একটা service সরাসরি REST/gRPC কল করে অন্য service-কে, response-এর জন্য অপেক্ষা করে) এবং <span class="kw">Asynchronous</span> (একটা service একটা event/message পাঠিয়ে দেয়, response-এর জন্য অপেক্ষা করে না)। কোনটা কখন ব্যবহার হবে তার বিস্তারিত এই কোর্সের Event-Driven Architecture অধ্যায়ে এবং dedicated Microservices কোর্সে আলোচনা করা হয়েছে — সংক্ষেপে, synchronous ব্যবহার হয় যখন caller-এর অবিলম্বে একটা উত্তর দরকার (যেমন "এই ইউজারের balance কত"), asynchronous ব্যবহার হয় যখন কাজটা eventual ভাবে সম্পন্ন হলেই চলে (যেমন "email পাঠাও")।</p>
 
@@ -643,6 +660,9 @@ Conway's Law বলে, একটা সংগঠন যে সিস্টে�
 
 <div class="callout mistake"><span class="tag">Common mistake — "Resume-driven" microservices adoption</span>
 একটা ৫ জনের ইঞ্জিনিয়ারিং টিম প্রথম দিনেই ৩০টা microservice ডিজাইন করে ফেলা একটা সাধারণ ভুল — প্রায়ই আসল ব্যবসায়িক প্রয়োজনের চেয়ে resume-এ "microservices experience" লেখার আকাঙ্ক্ষা থেকে। ফলাফল — টিমের বেশিরভাগ সময় চলে যায় infrastructure বানাতে (প্রতিটা service-এর জন্য আলাদা CI/CD pipeline, service discovery, distributed tracing setup) product feature বানানোর বদলে। এর চেয়েও খারাপ, যদি সব service একটা shared database ব্যবহার করে বা একসাথেই deploy করা হয়, তাহলে microservices-এর network overhead সহ্য করেও monolith-এর কোনো সুবিধাই (সহজ transaction, সহজ deploy) অবশিষ্ট থাকে না — এটাই distributed monolith।</div>
+
+<div class="callout best"><span class="tag">Best practice — কোড লেখার আগে team/service boundary পরিকল্পনা করুন</span>
+Conway's Law-কে আকস্মিক ঘটনা হিসেবে না দেখে, ইচ্ছাকৃতভাবে ব্যবহার করা উচিত — service split করার আগে প্রথমে ঠিক করা উচিত টিম কীভাবে সংগঠিত হবে (কোন টিম কোন business domain-এর মালিক), তারপর সেই টিম-বিভাজন অনুযায়ী service boundary টানা। উল্টো ক্রমে (আগে সার্ভিস split করে পরে টিম মেলানোর চেষ্টা) করলে প্রায়ই টিম-কাঠামো আর সার্ভিস-কাঠামোর মধ্যে ক্রমাগত ঘর্ষণ তৈরি হয়।</div>
 
 <div class="callout behind"><span class="tag">বাস্তবতা — এখানে যা দেখানো হলো তার চেয়ে অনেক বেশি গভীরতা আছে</span>
 Service decomposition strategy (DDD bounded context দিয়ে boundary টানা), Saga pattern দিয়ে distributed transaction সামলানো, API Gateway/BFF, service discovery, service mesh, resilience pattern (circuit breaker, retry, bulkhead), আর একটা monolith থেকে migration roadmap — এই সবকিছুই dedicated Microservices কোর্সে ১৮টা অধ্যায় জুড়ে বিস্তারিত কভার করা হয়েছে। এই অধ্যায়ের লক্ষ্য শুধু architecture-survey-এর প্রসঙ্গে Monolith-এর তুলনায় trade-off-টা স্পষ্ট করা।</div>
@@ -662,6 +682,8 @@ Service decomposition strategy (DDD bounded context দিয়ে boundary ট
                                           (subscribers — একে অপরের সম্পর্কে অজ্ঞ)
 </pre></div>
 
+<p>Event-Driven Architecture আসলে একটা আরও সাধারণ স্থাপত্য-ধারণার একটা নির্দিষ্ট রূপ, যাকে বলা হয় <span class="kw">Broker Pattern</span> (বা Message-Bus Pattern) — যেকোনো স্থাপত্য যেখানে component-গুলো সরাসরি একে অপরকে কল না করে একটা মধ্যস্থ broker component-এর মাধ্যমে কথা বলে। broker-টা ঠিক কীভাবে সেই যোগাযোগ পরিচালনা করছে তার ওপর ভিত্তি করে এই সাধারণ ধারণাটা ভিন্ন ভিন্ন রূপ নেয় — যদি broker শুধু event পাস করে দেয়, কোনো business logic জানে না (এখানে যা দেখানো হলো), সেটাই Event-Driven Architecture। কিন্তু যদি broker নিজেই routing, transformation, ও orchestration-এর মতো ভারী business logic বহন করে, সেটা ৭ নম্বর অধ্যায়ে দেখা SOA-র Enterprise Service Bus-এ পরিণত হয় — একই "broker" ধারণার একটা কেন্দ্রীভূত, heavyweight রূপ। এই সম্পর্কটা বোঝা গুরুত্বপূর্ণ কারণ ইন্টারভিউতে প্রায়ই এই দুটোকে ভিন্ন প্রশ্ন মনে হয়, অথচ দুটোই আসলে একই মৌলিক ট্রেড-অফ (broker কতটা "smart" হবে, কতটা কেন্দ্রীভূত হবে) নিয়ে আলোচনা করে।</p>
+
 <h3>Request-Response বনাম Event-Driven</h3>
 <table>
 <tr><th>মাত্রা</th><th>Request-Response (Synchronous)</th><th>Event-Driven (Asynchronous)</th></tr>
@@ -678,7 +700,10 @@ Service decomposition strategy (DDD bounded context দিয়ে boundary ট
 Synchronous call chain-এ একটা request কোন পথে গিয়েছে তা একটামাত্র stack trace থেকেই বোঝা যায়। কিন্তু event-driven সিস্টেমে event publish হওয়ার পর producer জানেও না কোন consumer কখন সেটা প্রসেস করবে — একটা bug রিপোর্ট এলে একাধিক service-এর আলাদা log একসাথে মেলাতে হয়, যা manually প্রায় অসম্ভব। সমাধান একটা <code>correlation ID</code>/<code>trace ID</code> প্রতিটা event-এর সাথে propagate করা এবং centralized distributed tracing tool (Jaeger, Zipkin) ব্যবহার করা।</div>
 
 <div class="callout mistake"><span class="tag">Common mistake — Event-এ শুধু একটা ID পাঠানো, দরকারি data না</span>
-কিছু টিম event-কে অতিরিক্ত হালকা রাখতে গিয়ে শুধু <code>{"orderId": 123}</code> পাঠায়, ধরে নিয়ে consumer প্রয়োজনে producer-এর API কল করে বাকি data নিয়ে নেবে। এতে event-driven-এর মূল সুবিধা (decoupling) নষ্ট হয়ে যায় — consumer এখন producer-এর availability-র উপর নির্ভরশীল হয়ে পড়ে ঠিক synchronous call-এর মতোই। Best practice হলো event-এর ভেতরেই যথেষ্ট data (একটা "fat event") রাখা যাতে বেশিরভাগ consumer সরাসরি event থেকেই কাজ চালাতে পারে, producer-কে আবার কল না করে।</div>
+কিছু টিম event-কে অতিরিক্ত হালকা রাখতে গিয়ে শুধু <code>{"orderId": 123}</code> পাঠায়, ধরে নিয়ে consumer প্রয়োজনে producer-এর API কল করে বাকি data নিয়ে নেবে। এতে event-driven-এর মূল সুবিধা (decoupling) নষ্ট হয়ে যায় — consumer এখন producer-এর availability-র উপর নির্ভরশীল হয়ে পড়ে ঠিক synchronous call-এর মতোই।</div>
+
+<div class="callout best"><span class="tag">Best practice — "Fat Event" ও versioned schema ব্যবহার করুন</span>
+Event-এর ভেতরেই যথেষ্ট data রাখা উচিত (একটা "fat event") যাতে বেশিরভাগ consumer সরাসরি event থেকেই কাজ চালাতে পারে, producer-কে আবার কল না করে। পাশাপাশি প্রতিটা event-এর একটা explicit, versioned schema (একটা schema registry-তে রেজিস্টার করা) থাকা উচিত — যাতে producer ভবিষ্যতে event-এর গঠন বদলালে পুরনো consumer হঠাৎ ভেঙে না পড়ে, নতুন field ঐচ্ছিক (optional/backward-compatible) হিসেবে যোগ হয়।</div>
 
 <div class="callout behind"><span class="tag">বাস্তবতা — CQRS ও Event Sourcing এই ধারণারই গভীরতর প্রয়োগ</span>
 Event-Driven Architecture-এর একটা advanced প্রয়োগ হলো <span class="kw">Event Sourcing</span> (state-কে সরাসরি না রেখে state-পরিবর্তনকারী event-গুলোর একটা append-only log হিসেবে রাখা, বর্তমান state সেই log replay করে derive করা হয়) এবং <span class="kw">CQRS</span> (Command ও Query-র জন্য আলাদা মডেল/স্টোর ব্যবহার করা)। এই দুটো প্যাটার্ন যথেষ্ট গভীর যে এই কোর্সের scope-এর বাইরে — dedicated Microservices ও Domain-Driven Design কোর্সে এগুলো বিস্তারিত আলোচনা করা হয়েছে।</div>
@@ -720,6 +745,9 @@ Event-Driven Architecture-এর একটা advanced প্রয়োগ হ
 
 <div class="callout mistake"><span class="tag">Common mistake — সব ধরনের workload-এর জন্য Serverless বেছে নেওয়া</span>
 Serverless-এর হাইপ দেখে একটা ক্রমাগত উচ্চ-ট্রাফিক, latency-critical API-কেও পুরোপুরি FaaS-এ সরিয়ে ফেলা একটা ভুল হতে পারে — একটা সবসময়-ব্যস্ত সার্ভিসে cold start-এর সুবিধা নেই (instance প্রায় সবসময় warm), অথচ per-invocation pricing model traditional always-on সার্ভারের চেয়ে বেশি খরচ করাতে পারে উচ্চ, স্থির ট্রাফিকে। Serverless সবচেয়ে বেশি মূল্য দেয় যখন ট্রাফিক প্যাটার্ন সত্যিই spiky বা বিরল, স্থির-উচ্চ না।</div>
+
+<div class="callout best"><span class="tag">Best practice — ফাংশনকে সবসময় stateless ও idempotent রাখুন</span>
+যেকোনো execution environment যেকোনো মুহূর্তে destroy হয়ে যেতে পারে (নতুন invocation নতুন instance-এ যেতে পারে) — তাই কোনো function-এর ভেতরে in-memory state রাখা নির্ভরযোগ্য না, প্রয়োজনীয় state একটা external store-এ (ডেটাবেস, cache) রাখা উচিত, ঠিক System Design কোর্সে দেখা stateless-service নীতির মতোই। এছাড়া যেহেতু বেশিরভাগ event trigger at-least-once ডেলিভারি গ্যারান্টি দেয় (একই event একাধিকবার আসতে পারে), প্রতিটা function-কে idempotent বানানো উচিত — একই event দুইবার প্রসেস হলেও ফলাফল একবার প্রসেসের সমান থাকা উচিত।</div>
 
 <div class="callout behind"><span class="tag">বাস্তবতা — প্ল্যাটফর্ম-নির্দিষ্ট বিস্তারিত অন্য কোর্সে</span>
 AWS Lambda ও Azure Functions-এর নির্দিষ্ট configuration, trigger type, cost model, ও production best practice এই সাইটের AWS ও Azure কোর্সে বিস্তারিত আলোচনা করা হয়েছে — এই অধ্যায়ের লক্ষ্য শুধু Serverless-কে architecture-style হিসেবে বাকি স্টাইলগুলোর পাশে রেখে তুলনা করা।</div>
@@ -828,6 +856,9 @@ DHT lookup (conceptual, n peer, O(log n) hops):
 <div class="callout mistake"><span class="tag">Common mistake — P2P মানেই "কোনো সার্ভার লাগে না" ভাবা</span>
 বাস্তবে প্রায় সব P2P সিস্টেমেই কিছু হালকা কেন্দ্রীয় উপাদান থেকে যায় — BitTorrent-এ bootstrap-এর জন্য tracker বা DHT bootstrap নোড, WebRTC-তে signaling সার্ভার আর প্রায়ই একটা TURN relay। P2P কেন্দ্রীয় ডেটা-পাথ বাদ দেয়, কিন্তু নোড আবিষ্কার ও সংযোগ স্থাপনের জন্য প্রায়শই এখনও ছোট আকারের কোনো coordination প্রয়োজন হয়।</div>
 
+<div class="callout best"><span class="tag">Best practice — জনপ্রিয়/গুরুত্বপূর্ণ ডেটা একাধিক peer-এ replicate রাখুন</span>
+যেহেতু যেকোনো peer যেকোনো সময় churn-এর কারণে অফলাইন হয়ে যেতে পারে, একটা নির্দিষ্ট ডেটার একমাত্র কপি একটা মাত্র peer-এর কাছে থাকা উচিত না — সেই peer চলে গেলেই ডেটা হারিয়ে যাবে। ব্যবহারিক P2P সিস্টেম তাই একটা নির্দিষ্ট replication factor বজায় রাখে (যেমন প্রতিটা ডেটা টুকরা অন্তত ৩-৫টা ভিন্ন peer-এ থাকা), আর একটা peer churn-এর কারণে চলে গেলে সেই ডেটা স্বয়ংক্রিয়ভাবে অন্য কোনো peer-এ re-replicate করা হয় যাতে replication factor বজায় থাকে।</div>
+
 <div class="callout behind"><span class="tag">বাস্তবতা — consensus-এর দাম</span>
 Proof-of-Work-এর বিশাল বিদ্যুৎ খরচ বা Proof-of-Stake-এর জটিল স্টেকিং প্রোটোকল কোনো accident নয় — এগুলো ঠিক সেই দামটা, যেটা দিতে হয় যখন কোনো বিশ্বস্ত কেন্দ্র ছাড়াই হাজার হাজার অপরিচিত, সম্ভাব্য অসৎ নোডের মধ্যে agreement আদায় করতে হয়। যেখানে কিছুটা কেন্দ্রীয় বিশ্বাস মেনে নেওয়া যায়, সেখানে অনেক সস্তা replication কৌশল ব্যবহার করা যায় — সেটাই বেশিরভাগ ডিস্ট্রিবিউটেড ডেটাবেজ করে।</div>
 </template>
@@ -852,6 +883,24 @@ Proof-of-Work-এর বিশাল বিদ্যুৎ খরচ বা Proo
 <tr><td><span class="kw">3. Component</span></td><td>একটা মাত্র container-এর ভেতরে zoom করে তার প্রধান internal component/module ও তাদের দায়িত্ব</td><td>যে ইঞ্জিনিয়াররা সেই নির্দিষ্ট container নিয়ে কাজ করেন</td><td>এই container-টা ভেতরে কীভাবে গঠিত?</td></tr>
 <tr><td><span class="kw">4. Code</span></td><td>একটা component-এর ভেতরে class/interface লেভেল পর্যন্ত — যেমন UML class diagram</td><td>সেই code অংশে সরাসরি কাজ করা ডেভেলপার</td><td>এই component-এর ভেতরের class-গুলো কীভাবে সম্পর্কিত?</td></tr>
 </table>
+
+<div class="diagram"><pre>
+Level ১: Context           Level ২: Container          Level ৩: Component
+┌─────────────────┐        ┌───────────────────┐       ┌─────────────────────┐
+│  [User]          │        │ ┌───────┐ ┌──────┐ │       │ ┌─────┐ ┌─────────┐ │
+│     │            │        │ │Web App│ │ API  │ │       │ │Ctrl │ │ Service │ │
+│     ▼            │  zoom  │ └───┬───┘ └──┬───┘ │  zoom │ └──┬──┘ └────┬────┘ │
+│  ┌───────────┐    │ ───▶  │     │        │     │ ───▶  │    │         │      │
+│  │  System   │◀───┼────   │     ▼        ▼     │────   │    ▼         ▼      │
+│  │  (এক বক্স) │    │        │ ┌────────────────┐│       │ ┌──────────────┐   │
+│  └───────────┘    │        │ │   Database     ││       │ │ Repository   │   │
+│     │             │        │ └────────────────┘│       │ └──────────────┘   │
+│     ▼             │        └───────────────────┘       └─────────────────────┘
+│ [External System] │        (container = deployable      (component = একটা
+└─────────────────┘         ইউনিট)                        container-এর ভেতরের
+                                                            module)
+                     Level ৪: Code (ঐচ্ছিক, সাধারণত IDE-তে on-demand generate করা হয়)
+</pre></div>
 
 <p>এই মডেলের আসল discipline লুকিয়ে আছে একটা সরল নিয়মে — কখনোই একই ডায়াগ্রামে দুইটা ভিন্ন লেভেল মেশানো যাবে না। Context diagram-এ কোনো individual class দেখানো হবে না, Container diagram-এ পুরো external system-কে যেমন একটা মাত্র বক্স হিসেবে দেখানো হয় তেমনি ভেতরের method-level detail দেখানো হবে না। ঠিক এই কড়াকড়িটাই প্রতিটা ডায়াগ্রামকে ছোট, পাঠযোগ্য, আর সৎভাবে maintain করার মতো রাখে।</p>
 
@@ -907,7 +956,7 @@ stock আপডেট করবে।
 
 <template data-page="decision">
 <h2 class="title">১৬. সঠিক Architecture বেছে নেওয়া — Decision Framework, Case Study ও Anti-patterns</h2>
-<p class="lead">এই কোর্স জুড়ে চোদ্দটা আলাদা আর্কিটেকচার স্টাইল দেখা হয়েছে — এই শেষ অধ্যায়ের কাজ সেগুলোকে আলাদা আলাদা তথ্য হিসেবে না রেখে একটা একক, ব্যবহারযোগ্য সিদ্ধান্ত-গ্রহণ প্রক্রিয়ায় একত্র করা।</p>
+<p class="lead">এই কোর্স জুড়ে বারোটা আলাদা আর্কিটেকচার স্টাইল দেখা হয়েছে — এই শেষ অধ্যায়ের কাজ সেগুলোকে আলাদা আলাদা তথ্য হিসেবে না রেখে একটা একক, ব্যবহারযোগ্য সিদ্ধান্ত-গ্রহণ প্রক্রিয়ায় একত্র করা।</p>
 
 <h3>সিদ্ধান্তটা সবসময় Quality Attribute থেকে শুরু হয়, Style থেকে না</h3>
 <p>দ্বিতীয় অধ্যায়ে যে ATAM চিন্তাভাবনা দেখা হয়েছিল তা এই পুরো কোর্সের কেন্দ্রীয় সুতো — কোনো আর্কিটেকচার style বেছে নেওয়ার আগে প্রশ্ন করতে হয় "এই সিস্টেমের জন্য কোন quality attribute সবচেয়ে গুরুত্বপূর্ণ, আর কোনটাতে ছাড় দেওয়া যাবে?" একটা টিম যদি উল্টো ক্রমে চলে — আগে "আমরা microservices করব" ঠিক করে ফেলে, তারপর সেই সিদ্ধান্তকে justify করার চেষ্টা করে — তাহলে তারা সমাধান দিয়ে সমস্যা খুঁজছে। সঠিক ক্রম সবসময় একই: প্রথমে প্রেক্ষাপট (টিমের আকার, ট্র্যাফিক প্যাটার্ন, consistency প্রয়োজন, দলের সাংগঠনিক গঠন) বোঝা, তারপর নিচের টেবিল থেকে কোন style সেই প্রেক্ষাপটের সাথে সবচেয়ে ভালো মেলে তা বেছে নেওয়া।</p>
@@ -943,6 +992,9 @@ Module boundary       আলাদা DB প্রস্তুত,       ট্�
 
 <div class="callout why"><span class="tag">কেন "প্রমাণিত প্রয়োজন" ছাড়া extract করা বিপজ্জনক</span>
 একটা module extract করার আগে যদি সত্যিকারের মেট্রিক (আলাদা scaling দরকার, আলাদা deployment cadence দরকার, আলাদা টিম দরকার) না থাকে, তাহলে পুরো এক্সট্র্যাকশন প্রক্রিয়ার খরচ (network latency, distributed transaction, আলাদা monitoring) কোনো প্রকৃত সুবিধার বিনিময়ে আসে না — এটাই আগের অধ্যায়গুলোতে আলোচিত "resume-driven microservices" আর "distributed monolith" সমস্যার মূল উৎস। Extract করার সিদ্ধান্ত সবসময় একটা নির্দিষ্ট, পরিমাপযোগ্য pain point থেকে আসা উচিত, "এটা তো industry best practice" থেকে না।</div>
+
+<h3>Big Design Up Front বনাম Evolutionary Architecture</h3>
+<p>উপরের পুরো migration path আসলে একটা বৃহত্তর দার্শনিক অবস্থানের বাস্তব প্রয়োগ, যাকে বলা হয় <span class="kw">Evolutionary Architecture</span> — এই ধারণা অনুযায়ী আর্কিটেকচার একটা এককালীন, সামনে থেকে সম্পূর্ণভাবে পরিকল্পিত সিদ্ধান্ত না (একে বলা হয় <span class="kw">Big Design Up Front (BDUF)</span> — শুরুতেই প্রতিটা module boundary, প্রতিটা service, প্রতিটা ডেটা মডেল বিস্তারিতভাবে ডিজাইন করে ফেলার প্রচেষ্টা), বরং সময়ের সাথে সাথে প্রকৃত ব্যবহার ও প্রকৃত bottleneck দেখে ক্রমান্বয়ে বদলাতে থাকা একটা জীবন্ত কাঠামো। BDUF-এর সমস্যা হলো — একটা সিস্টেমের শুরুতে ভবিষ্যতের সব requirement, সব scale bottleneck নির্ভুলভাবে অনুমান করা প্রায় অসম্ভব; ভুল অনুমানের ওপর আগে থেকে তৈরি করা জটিল কাঠামো (যেমন অপ্রয়োজনীয় microservices split) পরে বাতিল করা তার তৈরি করার চেয়েও বেশি ব্যয়বহুল হয়ে দাঁড়ায়। Evolutionary Architecture এর বিপরীতে বলে — একটা simple, কিন্তু পরিবর্তনযোগ্য কাঠামো (Modular Monolith) দিয়ে শুরু করো, আর architectural fitness function (৬ নম্বর অধ্যায়ে দেখা module boundary enforcement-এর মতো automated চেক) ব্যবহার করে নিশ্চিত করো যে প্রতিটা পরিবর্তনের পরও সিস্টেমের গুরুত্বপূর্ণ বৈশিষ্ট্য (module boundary, quality attribute) অক্ষত থাকছে। এই পুরো কোর্সের সুপারিশ — Modular Monolith দিয়ে শুরু, প্রমাণিত প্রয়োজনে Strangler Fig দিয়ে ক্রমান্বয়ে extract — Evolutionary Architecture-এর একটা প্রত্যক্ষ উদাহরণ, BDUF-এর বিপরীত।</p>
 
 <div class="callout mistake"><span class="tag">Common mistake — একই সিদ্ধান্ত প্রতিটা module-এর জন্য একইভাবে প্রয়োগ করা</span>
 একটা সাধারণ ভুল হলো, একবার microservices-এ migrate করার সিদ্ধান্ত নিলে প্রতিটা module-কেই সমান আগ্রহে ভেঙে ফেলা — এমনকি যেগুলোর কোনো স্বাধীন স্কেলিং দরকার নেই। বাস্তবে সিদ্ধান্তটা module-বাই-module ভিত্তিতে নেওয়া উচিত — কিছু module (core billing) হয়তো চিরকালই monolith-এর ভেতরে থাকা ভালো, আর শুধু নির্দিষ্ট hot-spot module (notification, image processing) আলাদা করা হয়। "সব-অথবা-কিছু-না" চিন্তা এখানে ক্ষতিকর।</div>
