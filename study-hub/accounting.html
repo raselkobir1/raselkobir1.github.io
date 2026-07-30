@@ -1,0 +1,1167 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Financial Accounting Mastery — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#16a34a; --accent2:#eab308;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --pink:#f472b6;
+    --code-bg:#0b0f14; --kw:#93c5fd;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(22,163,74,.24),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#0b0d1f}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent2); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--accent2)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--accent2)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#93c5fd}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  .search-wrap{padding:0 10px 14px}
+  .search-box{
+    width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    border-radius:9px; padding:9px 12px; font-size:13.5px; font-family:inherit;
+    outline:none; transition:border-color .15s;
+  }
+  .search-box:focus{border-color:var(--accent2)}
+  .search-box::placeholder{color:var(--muted)}
+  .search-meta{font-size:11.5px; color:var(--muted); padding:6px 2px 0; min-height:14px}
+  .navbtn.hide{display:none}
+  mark.hl{background:#fde047; color:#1a1a1a; padding:0 1px; border-radius:3px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1117">
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>📒 Financial Accounting Mastery</h1>
+      <p>Beginner → Advanced • বাংলায় (keyword ইংরেজিতে)</p>
+      <div class="search-wrap">
+        <input type="text" id="courseSearch" class="search-box" placeholder="🔍 এই কোর্সে সার্চ করুন..." autocomplete="off">
+        <div class="search-meta" id="searchMeta"></div>
+      </div>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",           icon:"📒", title:"Accounting কী, কেন গুরুত্বপূর্ণ এবং এর শাখা"},
+  {id:"equation",             icon:"⚖️", title:"Accounting Equation — Assets = Liabilities + Equity"},
+  {id:"double-entry",         icon:"🔁", title:"Double-Entry Bookkeeping System"},
+  {id:"debit-credit",         icon:"↔️", title:"Debit ও Credit গভীরভাবে — T-Account ও Normal Balance"},
+  {id:"account-types",        icon:"🗂️", title:"Account-এর প্রকারভেদ ও Golden Rules — কীভাবে বুঝবেন Debit না Credit"},
+  {id:"chart-of-accounts",    icon:"📊", title:"Chart of Accounts — প্রকারভেদ, Numbering ও Design"},
+  {id:"journal",              icon:"📝", title:"Journal Entries — Journalizing Transactions"},
+  {id:"ledger",               icon:"📖", title:"Ledger ও Posting — General Ledger, T-Account Balancing"},
+  {id:"trial-balance",        icon:"🧮", title:"Trial Balance — প্রস্তুতি, Error Detection ও Suspense Account"},
+  {id:"adjusting-entries",    icon:"🛠️", title:"Adjusting Entries — Accrual, Prepayment, Depreciation ও Bad Debt"},
+  {id:"financial-statements-overview", icon:"📑", title:"Financial Statements ভূমিকা — চারটা Statement-এর সম্পর্ক"},
+  {id:"income-statement",     icon:"💹", title:"Income Statement (Profit & Loss) — Income ও Expense Report গভীরভাবে"},
+  {id:"balance-sheet",        icon:"🏦", title:"Balance Sheet গভীরভাবে — Classified Format"},
+  {id:"cash-flow",            icon:"💵", title:"Cash Flow Statement — Operating, Investing ও Financing"},
+  {id:"accounting-cycle",     icon:"🔄", title:"Complete Accounting Cycle ও Closing Entries"},
+  {id:"ratio-analysis",       icon:"📉", title:"Financial Ratio Analysis (Advanced)"},
+  {id:"interview",            icon:"🎯", title:"Interview প্রশ্নোত্তর"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Accounting কী, কেন গুরুত্বপূর্ণ এবং এর শাখা</h2>
+<p class="lead">Accounting হলো ব্যবসার ভাষা — একটা কোম্পানি কতটা ভালো করছে তা বোঝার একমাত্র নির্ভরযোগ্য উপায় হলো তার সংখ্যাগুলো পড়তে জানা।</p>
+
+<h3>Accounting কী</h3>
+<p><span class="kw">Accounting</span> হলো একটা ব্যবসার আর্থিক লেনদেন সনাক্ত করা (identify), পরিমাপ করা (measure), লিপিবদ্ধ করা (record), এবং সেই তথ্য stakeholder-দের কাছে যোগাযোগ (communicate) করার একটা সুশৃঙ্খল প্রক্রিয়া। এটা শুধু সংখ্যা লেখা না — এটা একটা গল্প বলে: ব্যবসা টাকা কোথা থেকে পেল, কোথায় খরচ করল, এবং এখন তার আর্থিক অবস্থান কী।</p>
+
+<h3>Bookkeeping বনাম Accounting</h3>
+<p><span class="kw">Bookkeeping</span> হলো লেনদেন লিপিবদ্ধ করার যান্ত্রিক (mechanical) কাজ — প্রতিদিনের বিক্রয়, ক্রয়, খরচ এন্ট্রি করা। <span class="kw">Accounting</span> এর চেয়ে বিস্তৃত — এতে bookkeeping-এর ডেটা বিশ্লেষণ করা, রিপোর্ট তৈরি করা, এবং সেই তথ্য থেকে সিদ্ধান্ত নেওয়ার জন্য insight বের করা অন্তর্ভুক্ত। Bookkeeping হলো raw data সংগ্রহ, Accounting হলো সেই ডেটাকে অর্থবহ তথ্যে রূপান্তর।</p>
+
+<h3>Accounting তথ্যের ব্যবহারকারী কারা</h3>
+<table>
+<tr><th>ব্যবহারকারী</th><th>কেন আগ্রহী</th></tr>
+<tr><td>মালিক/Investor</td><td>ব্যবসা লাভজনক কি না, বিনিয়োগ চালিয়ে যাওয়া উচিত কি না</td></tr>
+<tr><td>Management</td><td>দৈনন্দিন সিদ্ধান্ত নেওয়া, বাজেট পরিকল্পনা, খরচ নিয়ন্ত্রণ</td></tr>
+<tr><td>Bank/Lender</td><td>ঋণ দেওয়ার আগে ব্যবসা ঋণ শোধ করতে পারবে কি না যাচাই করা</td></tr>
+<tr><td>Government/Tax Authority</td><td>সঠিক কর নির্ধারণ ও আইন মেনে চলা যাচাই করা</td></tr>
+<tr><td>Supplier</td><td>বাকিতে মাল দেওয়ার আগে পেমেন্ট ক্ষমতা যাচাই করা</td></tr>
+<tr><td>Employee</td><td>চাকরির নিরাপত্তা, bonus/salary বৃদ্ধির সম্ভাবনা বোঝা</td></tr>
+</table>
+
+<h3>Accounting-এর প্রধান শাখা</h3>
+<ul>
+<li><b>Financial Accounting:</b> বাহ্যিক ব্যবহারকারীদের (investor, bank, tax authority) জন্য standardized রিপোর্ট (Income Statement, Balance Sheet) তৈরি করা — এই কোর্সের মূল ফোকাস।</li>
+<li><b>Management/Cost Accounting:</b> অভ্যন্তরীণ ব্যবহারের জন্য (বাজেট, cost analysis, সিদ্ধান্ত সহায়তা), বাহ্যিক রিপোর্টিং স্ট্যান্ডার্ড মানার বাধ্যবাধকতা নেই।</li>
+<li><b>Tax Accounting:</b> কর আইন অনুযায়ী রিপোর্ট প্রস্তুত করা।</li>
+<li><b>Auditing:</b> আর্থিক রিপোর্ট সঠিক ও নিয়ম মেনে তৈরি হয়েছে কি না স্বাধীনভাবে যাচাই করা।</li>
+</ul>
+
+<h3>Accrual বনাম Cash Basis Accounting</h3>
+<p>দুইটা মৌলিক পদ্ধতি আছে লেনদেন কখন রেকর্ড করা হবে তা ঠিক করার জন্য। <span class="kw">Cash Basis</span>-এ শুধু টাকা হাতে-হাতে আদান-প্রদান হলেই এন্ট্রি হয় — সহজ কিন্তু ছোট ব্যবসার জন্য উপযুক্ত। <span class="kw">Accrual Basis</span>-এ লেনদেন ঘটার সাথে সাথেই রেকর্ড হয়, টাকা হাতে আসুক বা না আসুক (যেমন বাকিতে বিক্রি করলেও সাথে সাথে revenue রেকর্ড হয়)। বেশিরভাগ মাঝারি-বড় ব্যবসা এবং সব আন্তর্জাতিক অ্যাকাউন্টিং স্ট্যান্ডার্ড (IFRS, GAAP) accrual basis বাধ্যতামূলক করে, কারণ এটা একটা নির্দিষ্ট সময়ে ব্যবসার প্রকৃত আর্থিক অবস্থা অনেক বেশি নির্ভুলভাবে প্রতিফলিত করে — এই কোর্সের বাকি অংশ accrual basis ধরে নিয়েই এগোবে।</p>
+
+<div class="callout why"><span class="tag">কেন Accrual Basis বেশি নির্ভরযোগ্য</span>
+একটা কোম্পানি ডিসেম্বরে ১ কোটি টাকার মাল বাকিতে বিক্রি করলে, Cash Basis-এ সেই মাসে কোনো revenue দেখাবে না (টাকা এখনও আসেনি), যদিও ব্যবসা প্রকৃতপক্ষে সেই মাসে সফল বিক্রয় করেছে। Accrual Basis সেই বিক্রয়কে ঠিক যে মাসে ঘটেছে সেই মাসেই রেকর্ড করে, ফলে প্রতিটা সময়কালের প্রকৃত performance-এর একটা নির্ভুল চিত্র পাওয়া যায় — এটাকেই <span class="kw">Matching Principle</span> বলা হয় (revenue তার সাথে সম্পর্কিত সময়কালের সাথে মেলানো)।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Accounting মানে শুধু "ট্যাক্সের জন্য দরকার" ভাবা</span>
+অনেকে মনে করেন accounting শুধু সরকারকে কর দেওয়ার জন্য প্রয়োজনীয় একটা বাধ্যবাধকতা। বাস্তবে ভালো accounting একটা ব্যবসার সবচেয়ে গুরুত্বপূর্ণ সিদ্ধান্ত সহায়ক টুল — কোন প্রোডাক্ট লাভজনক, কোথায় খরচ বেশি হচ্ছে, ব্যবসা সম্প্রসারণের জন্য প্রস্তুত কি না — এসব প্রশ্নের উত্তর accounting রেকর্ড ছাড়া অনুমান মাত্র।</div>
+
+<div class="callout best"><span class="tag">Best practice — এই কোর্সটা ক্রমানুসারে পড়ুন</span>
+Accounting একটা বিল্ডিং ব্লকের মতো বিষয় — Accounting Equation না বুঝে Debit/Credit বোঝা কঠিন, Debit/Credit না বুঝে Trial Balance বোঝা অসম্ভব। প্রতিটা অধ্যায় আগেরটার ওপর ভিত্তি করে তৈরি, তাই ক্রমানুসারে পড়া সবচেয়ে কার্যকর।</div>
+</template>
+
+<template data-page="equation">
+<h2 class="title">২. Accounting Equation — Assets = Liabilities + Equity</h2>
+<p class="lead">পুরো ডাবল-এন্ট্রি অ্যাকাউন্টিং সিস্টেম একটা মাত্র সমীকরণের ওপর দাঁড়িয়ে আছে — এবং এই সমীকরণ কখনও ভাঙে না।</p>
+
+<h3>মৌলিক সমীকরণ</h3>
+<div class="diagram"><pre>
+        Assets    =    Liabilities    +    Equity
+      (সম্পদ)          (দায়/ঋণ)          (মালিকানা/মূলধন)
+
+  ব্যবসার যা কিছু আছে  =  বাইরের মানুষের পাওনা  +  মালিকের পাওনা
+</pre></div>
+<p><span class="kw">Assets</span> হলো ব্যবসার মালিকানাধীন যেকোনো মূল্যবান সম্পদ (নগদ, ইনভেন্টরি, মেশিন, ভবন, প্রাপ্য টাকা)। <span class="kw">Liabilities</span> হলো ব্যবসার বাইরের পক্ষের কাছে দায় (ব্যাংক ঋণ, সরবরাহকারীর পাওনা, বেতন বকেয়া)। <span class="kw">Equity</span> (মালিকানা/মূলধন) হলো সেই অংশ যা মালিকের প্রকৃত প্রাপ্য — যদি সব দায় শোধ করে দেওয়া হয়, যা বাকি থাকে সেটাই equity। এই সমীকরণ সবসময় সমান থাকতে হবে — এটাই ডাবল-এন্ট্রি সিস্টেমের ভিত্তি (৩য় অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>Equity-এর ভেতরের উপাদান — Expanded Equation</h3>
+<p>Equity নিজেই আরও কয়েকটা উপাদানে ভাগ হয়, যা সময়ের সাথে বাড়ে-কমে —</p>
+<div class="diagram"><pre>
+  Equity = Capital (মালিকের বিনিয়োগ) + Revenue − Expenses − Drawings
+
+  Capital     → মালিক ব্যবসায় যা বিনিয়োগ করেছেন
+  Revenue     → বিক্রয়/সেবা থেকে আয় (Equity বাড়ায়)
+  Expenses    → ব্যবসা চালাতে খরচ (Equity কমায়)
+  Drawings    → মালিক ব্যক্তিগত ব্যবহারের জন্য যা তুলে নেন (Equity কমায়)
+</pre></div>
+<p>তাই সম্পূর্ণ expanded equation হয় — <b>Assets = Liabilities + Capital + Revenue − Expenses − Drawings</b>। এই সম্পর্কটাই পরবর্তীতে Income Statement (Revenue − Expenses) এবং Balance Sheet (Assets, Liabilities, Equity)-কে একে অপরের সাথে যুক্ত করে (১১শ অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>প্রতিটা লেনদেন সমীকরণকে কীভাবে প্রভাবিত করে</h3>
+<table>
+<tr><th>লেনদেন</th><th>প্রভাব</th></tr>
+<tr><td>মালিক নগদ ৫০,০০০ টাকা বিনিয়োগ করলেন</td><td>Assets (Cash) +৫০,০০০ ; Equity (Capital) +৫০,০০০</td></tr>
+<tr><td>ব্যাংক থেকে ২০,০০০ টাকা ঋণ নেওয়া হলো</td><td>Assets (Cash) +২০,০০০ ; Liabilities (Loan) +২০,০০০</td></tr>
+<tr><td>নগদে ৫,০০০ টাকার আসবাবপত্র কেনা হলো</td><td>Assets (Furniture) +৫,০০০ ; Assets (Cash) −৫,০০০ (মোট Assets অপরিবর্তিত)</td></tr>
+<tr><td>বাকিতে ১০,০০০ টাকার মাল বিক্রি হলো</td><td>Assets (Accounts Receivable) +১০,০০০ ; Equity (Revenue) +১০,০০০</td></tr>
+<tr><td>দোকান ভাড়া ৩,০০০ টাকা নগদে পরিশোধ</td><td>Assets (Cash) −৩,০০০ ; Equity (Expense) −৩,০০০</td></tr>
+</table>
+<p>লক্ষ্য করুন — প্রতিটা লেনদেনের পরেও সমীকরণের দুই পাশ সমান থাকে। এটাই যাচাই করার একটা উপায় যে একটা লেনদেন সঠিকভাবে রেকর্ড হয়েছে কি না।</p>
+
+<div class="callout why"><span class="tag">কেন এই সমীকরণ কখনও ভাঙে না</span>
+প্রতিটা লেনদেনে একই মূল্যের দুইটা প্রভাব থাকে — একটা সম্পদ বাড়লে হয় আরেকটা সম্পদ কমে, নয়তো একটা দায়/মূলধন বাড়ে। এটা কোনো accounting নিয়ম না, এটা বাস্তবতার একটা প্রতিফলন — টাকা কোনো না কোনো উৎস থেকে আসে (liability বা equity) এবং কোনো না কোনো রূপে থাকে (asset)। এই ভারসাম্যই ৯ম অধ্যায়ে আলোচিত Trial Balance-এর ভিত্তি।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Profit আর Cash-কে গুলিয়ে ফেলা</span>
+বাকিতে বিক্রি বাড়ালে Revenue (এবং তাই Profit/Equity) বাড়ে, কিন্তু Cash বাড়ে না যতক্ষণ না টাকা আদায় হয়। একটা ব্যবসা লাভজনক (profitable) হয়েও নগদ সংকটে (cash crisis) পড়তে পারে — এই পার্থক্য বোঝা ১৪শ অধ্যায়ের Cash Flow Statement-এর মূল কারণ।</div>
+
+<div class="callout best"><span class="tag">Best practice — প্রতিটা লেনদেনে "এই সমীকরণ কীভাবে বদলাচ্ছে" প্রশ্ন করুন</span>
+নতুন কোনো লেনদেন বুঝতে অসুবিধা হলে সবসময় ফিরে যান এই মৌলিক প্রশ্নে — কোন Asset/Liability/Equity বাড়ল বা কমল, এবং দুই পাশ কি সমান থাকল? এই অভ্যাসই আগামী অধ্যায়গুলোর জটিল নিয়ম মনে রাখা সহজ করে দেবে।</div>
+</template>
+
+<template data-page="double-entry">
+<h2 class="title">৩. Double-Entry Bookkeeping System</h2>
+<p class="lead">প্রতিটা আর্থিক লেনদেনের অন্তত দুইটা দিক থাকে — কিছু একটা "থেকে" আসে, কিছু একটা "থেকে" যায়। Double-Entry System শুধু এই বাস্তবতাকেই লিপিবদ্ধ করার একটা সুশৃঙ্খল পদ্ধতি।</p>
+
+<h3>Double-Entry System কী</h3>
+<p><span class="kw">Double-Entry Bookkeeping</span>-এ প্রতিটা লেনদেন কমপক্ষে দুইটা অ্যাকাউন্টে প্রভাব ফেলে — একটাতে <b>Debit</b> এন্ট্রি, আরেকটাতে সমান পরিমাণের <b>Credit</b> এন্ট্রি। যেমন, নগদে ফার্নিচার কেনা মানে "Furniture" অ্যাকাউন্ট বাড়ল (Debit) এবং "Cash" অ্যাকাউন্ট কমল (Credit) — একই লেনদেনের দুইটা দিক, দুই জায়গায় লেখা।</p>
+
+<h3>Single-Entry বনাম Double-Entry</h3>
+<table>
+<tr><th>দিক</th><th>Single-Entry</th><th>Double-Entry</th></tr>
+<tr><td>পদ্ধতি</td><td>শুধু একটা দিক রেকর্ড করা (যেমন শুধু cash book)</td><td>প্রতিটা লেনদেনের দুইটা দিকই রেকর্ড করা</td></tr>
+<tr><td>নির্ভুলতা যাচাই</td><td>সম্ভব না, ভুল সহজে ধরা পড়ে না</td><td>Trial Balance দিয়ে গাণিতিক নির্ভুলতা যাচাই করা যায়</td></tr>
+<tr><td>সম্পূর্ণ আর্থিক চিত্র</td><td>অসম্পূর্ণ (শুধু নগদের হিসাব, সম্পদ/দায়ের পূর্ণ চিত্র নেই)</td><td>সম্পূর্ণ Balance Sheet ও Income Statement তৈরি করা যায়</td></tr>
+<tr><td>ব্যবহার</td><td>খুব ছোট, সরল ব্যবসায় (মুদি দোকান)</td><td>প্রায় সব প্রাতিষ্ঠানিক ব্যবসা, আইনত বাধ্যতামূলক (কোম্পানির ক্ষেত্রে)</td></tr>
+</table>
+
+<h3>কেন প্রতিটা লেনদেনে দুইটা এন্ট্রি লাগে</h3>
+<p>এটা ২য় অধ্যায়ের Accounting Equation-এর সরাসরি ফলাফল — যেহেতু Assets = Liabilities + Equity সবসময় সমান থাকতে হবে, তাই একপাশে কিছু পরিবর্তন হলে হয় সেই একই পাশে আরেকটা বিপরীত পরিবর্তন হতে হবে (ভারসাম্য রক্ষায়), অথবা অন্য পাশেও সমান পরিমাণ পরিবর্তন হতে হবে। Double-Entry System এই যুক্তিটাকেই formalize করে — প্রতিটা লেনদেনের জন্য "কোন অ্যাকাউন্ট Debit হবে, কোনটা Credit হবে" নির্ধারণ করা।</p>
+
+<div class="diagram"><pre>
+  লেনদেন: নগদে ২০,০০০ টাকার একটা কম্পিউটার কেনা হলো
+
+  ┌─────────────────────┐         ┌─────────────────────┐
+  │  Computer (Asset)   │         │   Cash (Asset)      │
+  │  Debit  ২০,০০০      │  ◀────  │   Credit ২০,০০০      │
+  └─────────────────────┘         └─────────────────────┘
+
+  একটা সম্পদ বাড়ল (Computer), সমান পরিমাণে আরেকটা সম্পদ কমল (Cash) —
+  মোট Assets অপরিবর্তিত, কিন্তু গঠন বদলে গেল।
+</pre></div>
+
+<h3>Double-Entry System-এর ইতিহাস ও গুরুত্ব</h3>
+<p>এই পদ্ধতি প্রায় ৫০০ বছরের পুরনো (Luca Pacioli, ১৪৯৪ সালে formalize করেন), এবং আজও বিশ্বব্যাপী প্রতিটা আধুনিক accounting software (এমনকি এই কোর্সের পরবর্তী প্রতিটা অধ্যায়) এই একই ভিত্তির ওপর তৈরি। এর প্রধান সুবিধা হলো এটা স্বয়ংক্রিয়ভাবে একটা <b>self-checking mechanism</b> তৈরি করে — যদি Debit ও Credit-এর মোট মিলে না যায়, নিশ্চিতভাবে কোথাও একটা ভুল হয়েছে (৯ম অধ্যায়ে Trial Balance-এ বিস্তারিত)।</p>
+
+<div class="callout why"><span class="tag">কেন সফটওয়্যার ইঞ্জিনিয়ারদের এটা পরিচিত মনে হতে পারে</span>
+Double-Entry System অনেকটা একটা distributed ledger-এর মতো, যেখানে প্রতিটা "transaction" atomic (হয় সম্পূর্ণ ঘটে, নয়তো কিছুই ঘটে না) এবং একটা invariant বজায় রাখে (Debit = Credit)। এই ধারণাটাই আধুনিক blockchain এবং double-entry-ভিত্তিক financial software-এর ভিত্তি — একটা লেনদেন কখনও শুধু একদিকে "ভাসমান" থাকতে পারে না।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — মনে করা Double-Entry মানে "একই জিনিস দুইবার লেখা"</span>
+Double-Entry মানে একই এন্ট্রি দুইবার কপি করা না — এটা মানে একটা লেনদেনের দুইটা ভিন্ন কিন্তু সম্পর্কিত প্রভাব দুইটা ভিন্ন অ্যাকাউন্টে রেকর্ড করা, সমান পরিমাণে কিন্তু বিপরীত দিকে (একটা Debit, একটা Credit)।</div>
+
+<div class="callout best"><span class="tag">Best practice — প্রতিটা লেনদেনে "কোন দুইটা অ্যাকাউন্ট প্রভাবিত হলো" জিজ্ঞেস করুন</span>
+নতুন কোনো লেনদেন এন্ট্রি করার আগে সবসময় দুইটা প্রশ্ন করুন — কোন অ্যাকাউন্ট বাড়ল/কমল, এবং তার বিপরীতে কোন অ্যাকাউন্ট বিপরীতভাবে প্রভাবিত হলো। এই দুই-অ্যাকাউন্ট চিন্তাভাবনাই পরবর্তী Journal Entry অধ্যায়ের ভিত্তি।</div>
+</template>
+
+<template data-page="debit-credit">
+<h2 class="title">৪. Debit ও Credit গভীরভাবে — T-Account ও Normal Balance</h2>
+<p class="lead">Debit আর Credit মানে "ভালো" বা "খারাপ", "বাড়া" বা "কমা" না — এগুলো নিছক দুইটা দিক, বাম আর ডান। কোনটা কী করে তা নির্ভর করে অ্যাকাউন্টের ধরনের ওপর।</p>
+
+<h3>Debit ও Credit আসলে কী</h3>
+<p>সবচেয়ে গুরুত্বপূর্ণ ভুল ধারণা ভাঙা দরকার — <span class="kw">Debit (Dr)</span> মানে শুধু "বাম পাশ", এবং <span class="kw">Credit (Cr)</span> মানে শুধু "ডান পাশ"। এর নিজস্ব কোনো "ভালো/খারাপ" বা সার্বজনীন "বাড়া/কমা" অর্থ নেই। Debit একটা অ্যাকাউন্টকে বাড়াতেও পারে, কমাতেও পারে — সেটা নির্ভর করে সেই অ্যাকাউন্টটা কোন ধরনের (Asset, Liability, Equity, Revenue, বা Expense)।</p>
+
+<h3>T-Account — ভিজ্যুয়াল টুল</h3>
+<p>প্রতিটা অ্যাকাউন্টকে একটা <span class="kw">T-Account</span> দিয়ে কল্পনা করা যায় — একটা ইংরেজি "T" অক্ষরের মতো আকৃতি, বাম পাশে Debit এন্ট্রি, ডান পাশে Credit এন্ট্রি।</p>
+<div class="diagram"><pre>
+                    Cash (Asset Account)
+        ┌───────────────────┬───────────────────┐
+        │   Debit (Dr)       │   Credit (Cr)      │
+        ├───────────────────┼───────────────────┤
+        │  ৫০,০০০ (বিনিয়োগ)   │   ৫,০০০ (ভাড়া)      │
+        │  ১০,০০০ (বিক্রয়)     │   ৩,০০০ (বেতন)      │
+        ├───────────────────┼───────────────────┤
+        │   মোট ৬০,০০০        │   মোট ৮,০০০         │
+        └───────────────────┴───────────────────┘
+              Balance = ৬০,০০০ − ৮,০০০ = ৫২,০০০ (Debit পাশে, কারণ Asset)
+</pre></div>
+
+<h3>Normal Balance — প্রতিটা অ্যাকাউন্টের "স্বাভাবিক" দিক</h3>
+<p>প্রতিটা অ্যাকাউন্ট টাইপের একটা <span class="kw">Normal Balance</span> আছে — অর্থাৎ, সেই অ্যাকাউন্ট সাধারণত কোন পাশে বাড়ে। এটাই সবচেয়ে গুরুত্বপূর্ণ টেবিল এই পুরো কোর্সে — এটা মুখস্থ না করে, যুক্তি দিয়ে বোঝা উচিত (৫ম অধ্যায়ে "কীভাবে বুঝবেন" বিস্তারিত)।</p>
+<table>
+<tr><th>Account Type</th><th>বাড়লে (Increase)</th><th>কমলে (Decrease)</th><th>Normal Balance</th></tr>
+<tr><td>Asset (সম্পদ)</td><td>Debit</td><td>Credit</td><td>Debit</td></tr>
+<tr><td>Liability (দায়)</td><td>Credit</td><td>Debit</td><td>Credit</td></tr>
+<tr><td>Equity/Capital (মূলধন)</td><td>Credit</td><td>Debit</td><td>Credit</td></tr>
+<tr><td>Revenue/Income (আয়)</td><td>Credit</td><td>Debit</td><td>Credit</td></tr>
+<tr><td>Expense (ব্যয়)</td><td>Debit</td><td>Credit</td><td>Debit</td></tr>
+<tr><td>Drawings (উত্তোলন)</td><td>Debit</td><td>Credit</td><td>Debit</td></tr>
+</table>
+
+<h3>মনে রাখার মনেমনিক — DEAD CLIC</h3>
+<div class="diagram"><pre>
+  DEBIT বাড়ায়:                    CREDIT বাড়ায়:
+  D — Drawings (উত্তোলন)            C — Capital (মূলধন)
+  E — Expenses (ব্যয়)               L — Liabilities (দায়)
+  A — Assets (সম্পদ)                I — Income/Revenue (আয়)
+  D — (repeat pattern)             C — (repeat pattern)
+
+       "DEAD" বাড়ে Debit-এ  ═══  "CLIC" বাড়ে Credit-এ
+</pre></div>
+
+<h3>একটা লেনদেনে Debit-Credit নির্ধারণের ৩-ধাপ পদ্ধতি</h3>
+<ol>
+<li><b>কোন দুইটা অ্যাকাউন্ট প্রভাবিত হচ্ছে</b> তা চিহ্নিত করুন (৩য় অধ্যায়ের অভ্যাস)।</li>
+<li><b>প্রতিটা অ্যাকাউন্টের ধরন</b> চিহ্নিত করুন — Asset, Liability, Equity, Revenue, নাকি Expense।</li>
+<li>উপরের টেবিল অনুযায়ী <b>সেই অ্যাকাউন্ট বাড়ছে না কমছে</b> তা দেখে Debit/Credit ঠিক করুন।</li>
+</ol>
+<p>উদাহরণ — "বাকিতে ১৫,০০০ টাকার সেবা প্রদান করা হলো": (১) প্রভাবিত অ্যাকাউন্ট — Accounts Receivable এবং Service Revenue। (২) ধরন — Receivable একটা Asset, Revenue একটা Revenue অ্যাকাউন্ট। (৩) দুটোই বাড়ছে — Asset বাড়লে Debit, Revenue বাড়লে Credit। তাই: <b>Debit Accounts Receivable ১৫,০০০ / Credit Service Revenue ১৫,০০০</b>।</p>
+
+<div class="callout why"><span class="tag">কেন Revenue বাড়লে Credit হয়, অথচ এটা কোনো "দায়" না</span>
+২য় অধ্যায়ের expanded equation মনে করুন — Equity = Capital + Revenue − Expenses − Drawings। যেহেতু Equity-এর normal balance Credit, এবং Revenue Equity বাড়ায়, তাই Revenue-ও Credit-এ বাড়ে। একইভাবে, Expense ও Drawings Equity কমায় বলেই তাদের normal balance Equity-এর বিপরীত — অর্থাৎ Debit। পুরো টেবিলটাই আসলে একটামাত্র মূলনীতি (Accounting Equation) থেকে যুক্তিসঙ্গতভাবে বের করা যায়, আলাদা করে মুখস্থ করার দরকার নেই।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — "Debit মানে খরচ, Credit মানে আয়" ভেবে নেওয়া</span>
+এটা আংশিক সত্য (Expense সত্যিই Debit-এ বাড়ে) কিন্তু সার্বজনীন নিয়ম না — Asset-ও Debit-এ বাড়ে, এবং সেটা "খরচ" না। Debit/Credit-এর অর্থ সবসময় অ্যাকাউন্টের ধরনের সাপেক্ষে বুঝতে হবে, একটা ইউনিভার্সাল "ভালো/খারাপ" লেবেল হিসেবে না।</div>
+
+<div class="callout best"><span class="tag">Best practice — টেবিল মুখস্থ না করে, Accounting Equation থেকে derive করতে শিখুন</span>
+পরীক্ষার আগের রাতে মুখস্থ করা টেবিল ভুলে যাওয়া সহজ, কিন্তু "Assets = Liabilities + Equity, আর Equity = Capital + Revenue − Expense − Drawings" — এই একটা সমীকরণ থেকে পুরো Debit/Credit টেবিল আবার তৈরি করতে পারা একটা স্থায়ী দক্ষতা।</div>
+</template>
+
+<template data-page="account-types">
+<h2 class="title">৫. Account-এর প্রকারভেদ ও Golden Rules — কীভাবে বুঝবেন Debit না Credit</h2>
+<p class="lead">Debit-Credit ঠিক করার দুইটা জনপ্রিয় মানসিক মডেল আছে — ঐতিহ্যবাহী "Golden Rules" (Personal/Real/Nominal) এবং আধুনিক Accounting Equation-ভিত্তিক পদ্ধতি। দুটোই একই উত্তরে পৌঁছায়, শুধু ভিন্ন পথে।</p>
+
+<h3>ঐতিহ্যবাহী পদ্ধতি — তিন ধরনের Account</h3>
+<table>
+<tr><th>Account Type</th><th>সংজ্ঞা</th><th>উদাহরণ</th></tr>
+<tr><td>Personal Account</td><td>ব্যক্তি, প্রতিষ্ঠান, বা সংস্থার নামে অ্যাকাউন্ট</td><td>রহিম (Debtor), করিম Traders (Creditor), ব্যাংক অ্যাকাউন্ট</td></tr>
+<tr><td>Real Account</td><td>সম্পদ (Asset)-এর অ্যাকাউন্ট — tangible বা intangible</td><td>Cash, Furniture, Machinery, Goodwill</td></tr>
+<tr><td>Nominal Account</td><td>আয়, ব্যয়, লাভ, ক্ষতির অ্যাকাউন্ট</td><td>Salary Expense, Rent Expense, Sales Revenue, Commission Received</td></tr>
+</table>
+
+<h3>Golden Rules of Accounting</h3>
+<table>
+<tr><th>Account Type</th><th>Rule</th></tr>
+<tr><td>Personal Account</td><td><b>Debit the Receiver, Credit the Giver</b> — যে ব্যক্তি/প্রতিষ্ঠান পাচ্ছে তাকে Debit করুন, যে দিচ্ছে তাকে Credit করুন</td></tr>
+<tr><td>Real Account</td><td><b>Debit what comes in, Credit what goes out</b> — যা ব্যবসায় প্রবেশ করছে তা Debit, যা বের হয়ে যাচ্ছে তা Credit</td></tr>
+<tr><td>Nominal Account</td><td><b>Debit all expenses and losses, Credit all incomes and gains</b></td></tr>
+</table>
+
+<h3>Golden Rules প্রয়োগের উদাহরণ</h3>
+<p><b>উদাহরণ ১ — "রহিমের কাছ থেকে ১০,০০০ টাকা নগদ পাওয়া গেল":</b> এখানে দুইটা অ্যাকাউন্ট — Cash (Real Account, ব্যবসায় প্রবেশ করছে → Debit) এবং রহিম (Personal Account, তিনি টাকা দিচ্ছেন, তিনি "Giver" → Credit)। এন্ট্রি: <b>Debit Cash ১০,০০০ / Credit রহিম ১০,০০০</b>।</p>
+<p><b>উদাহরণ ২ — "বেতন বাবদ ৮,০০০ টাকা নগদে পরিশোধ":</b> Salary Expense (Nominal Account, এটা একটা expense → Debit) এবং Cash (Real Account, টাকা বের হয়ে যাচ্ছে → Credit)। এন্ট্রি: <b>Debit Salary Expense ৮,০০০ / Credit Cash ৮,০০০</b>।</p>
+
+<h3>আধুনিক পদ্ধতি — Accounting Equation থেকে সরাসরি</h3>
+<p>৪র্থ অধ্যায়ের Normal Balance টেবিল ব্যবহার করে একই সিদ্ধান্তে পৌঁছানো যায় — প্রতিটা অ্যাকাউন্টকে পাঁচটা ক্যাটাগরির একটাতে ফেলুন (Asset, Liability, Equity, Revenue, Expense), তারপর সেটা বাড়ছে না কমছে দেখুন। উদাহরণ ২-এর ক্ষেত্রে — Salary Expense একটা Expense, এটা বাড়ছে → Debit; Cash একটা Asset, এটা কমছে → Credit। একই উত্তর, ভিন্ন পথ।</p>
+
+<table>
+<tr><th>ঐতিহ্যবাহী ক্যাটাগরি</th><th>আধুনিক ক্যাটাগরি</th></tr>
+<tr><td>Real Account</td><td>Asset</td></tr>
+<tr><td>Personal Account (Creditor/Payable)</td><td>Liability</td></tr>
+<tr><td>Personal Account (মালিকের নিজস্ব মূলধন হিসাব)</td><td>Equity</td></tr>
+<tr><td>Nominal Account (আয়/লাভ)</td><td>Revenue</td></tr>
+<tr><td>Nominal Account (ব্যয়/ক্ষতি)</td><td>Expense</td></tr>
+</table>
+
+<h3>একটা লেনদেন দেখে কীভাবে দ্রুত সিদ্ধান্ত নেবেন — Checklist</h3>
+<ol>
+<li>এই অ্যাকাউন্ট কি ব্যবসার <b>মালিকানাধীন কিছু</b> (সম্পদ)? → Asset।</li>
+<li>এই অ্যাকাউন্ট কি ব্যবসার <b>বাইরের কারো প্রতি দায়</b>? → Liability।</li>
+<li>এই অ্যাকাউন্ট কি <b>মালিকের প্রাপ্য/বিনিয়োগ</b>? → Equity।</li>
+<li>এই অ্যাকাউন্ট কি <b>বিক্রয়/সেবা থেকে আয়</b>? → Revenue।</li>
+<li>এই অ্যাকাউন্ট কি <b>ব্যবসা চালাতে খরচ</b>? → Expense।</li>
+<li>এরপর, এই অ্যাকাউন্ট <b>বাড়ছে না কমছে</b> তা দেখে Normal Balance টেবিল থেকে Debit/Credit বসিয়ে দিন।</li>
+</ol>
+
+<div class="callout why"><span class="tag">কেন দুইটা পদ্ধতিই শেখা মূল্যবান</span>
+বাংলাদেশ ও ভারতীয় উপমহাদেশের বাণিজ্য শিক্ষায় Golden Rules (Personal/Real/Nominal) ঐতিহ্যগতভাবে বেশি প্রচলিত, যেখানে আন্তর্জাতিক (US/UK-ভিত্তিক) পাঠ্যক্রম ও বেশিরভাগ আধুনিক accounting software সরাসরি পাঁচ-ক্যাটাগরি (Asset/Liability/Equity/Revenue/Expense) পদ্ধতি ব্যবহার করে। দুটো পদ্ধতিই সম্পূর্ণ সামঞ্জস্যপূর্ণ এবং একই উত্তর দেয় — দুটো জানা থাকলে যেকোনো পাঠ্যবই, চাকরির পরীক্ষা, বা software-এর ডকুমেন্টেশন সহজে বোঝা যায়।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Personal Account-এর "Receiver/Giver" নিয়ে বিভ্রান্তি</span>
+"Receiver" মানে টাকা/মাল যে গ্রহণ করছে, "Giver" মানে যে দিচ্ছে — এটা ব্যক্তির দৃষ্টিকোণ থেকে না, বরং লেনদেনের প্রবাহ থেকে বিচার করতে হয়। যেমন ব্যাংকে টাকা জমা দিলে ব্যাংক "Receiver" (Debit), কারণ ব্যাংক অ্যাকাউন্ট থেকে টাকা তোলার সময় ব্যাংক "Giver" (Credit) হয়ে যায় — প্রেক্ষাপট অনুযায়ী পরিবর্তিত হয়।</div>
+
+<div class="callout best"><span class="tag">Best practice — Modern পদ্ধতি দিয়ে যাচাই করুন</span>
+Golden Rules প্রয়োগ করার পর Modern (Asset/Liability/Equity/Revenue/Expense) পদ্ধতি দিয়ে ক্রস-চেক করা একটা ভালো অভ্যাস, বিশেষ করে জটিল লেনদেনে যেখানে Personal Account-এর Receiver/Giver নির্ধারণ বিভ্রান্তিকর মনে হতে পারে।</div>
+</template>
+
+<template data-page="chart-of-accounts">
+<h2 class="title">৬. Chart of Accounts — প্রকারভেদ, Numbering ও Design</h2>
+<p class="lead">একটা ব্যবসার সব অ্যাকাউন্টের তালিকা এলোমেলোভাবে রাখলে খুঁজে পাওয়া অসম্ভব হয়ে যায় — Chart of Accounts সেই তালিকাকে একটা সুসংগঠিত কাঠামো দেয়।</p>
+
+<h3>Chart of Accounts (COA) কী</h3>
+<p><span class="kw">Chart of Accounts</span> হলো একটা ব্যবসার ব্যবহৃত সব অ্যাকাউন্টের একটা সুসংগঠিত, numbered তালিকা — প্রতিটা অ্যাকাউন্টের একটা নাম, একটা কোড/নম্বর, এবং একটা ক্যাটাগরি (Asset/Liability/Equity/Revenue/Expense) থাকে। এটা মূলত একটা "index" যা General Ledger (৮ম অধ্যায়ে) সংগঠিত রাখে এবং প্রতিটা লেনদেন সঠিক অ্যাকাউন্টে পোস্ট করা নিশ্চিত করে।</p>
+
+<h3>প্রচলিত Numbering Convention</h3>
+<table>
+<tr><th>Number Range</th><th>Category</th><th>উদাহরণ</th></tr>
+<tr><td>1000-1999</td><td>Assets</td><td>1010 Cash, 1020 Accounts Receivable, 1500 Furniture</td></tr>
+<tr><td>2000-2999</td><td>Liabilities</td><td>2010 Accounts Payable, 2500 Bank Loan</td></tr>
+<tr><td>3000-3999</td><td>Equity</td><td>3010 Owner's Capital, 3020 Retained Earnings, 3900 Drawings</td></tr>
+<tr><td>4000-4999</td><td>Revenue</td><td>4010 Sales Revenue, 4020 Service Revenue</td></tr>
+<tr><td>5000-5999</td><td>Expenses</td><td>5010 Salary Expense, 5020 Rent Expense, 5030 Depreciation Expense</td></tr>
+</table>
+<p>এই numbering পদ্ধতি universal আইন না, কিন্তু একটা ব্যাপকভাবে গৃহীত convention যা রিপোর্ট তৈরি সহজ করে — Trial Balance বা Balance Sheet-এ অ্যাকাউন্ট নম্বর অনুযায়ী সাজালে সবসময় Asset আগে, তারপর Liability, এই ক্রম বজায় থাকে।</p>
+
+<h3>Hierarchical Structure — Main Account ও Sub-account</h3>
+<p>বড় ব্যবসায় প্রতিটা ক্যাটাগরির ভেতরে আরও বিস্তারিত sub-account থাকে। যেমন "1000 Assets" এর ভেতরে "1100 Current Assets" (Cash, Receivable, Inventory) এবং "1500 Non-Current Assets" (Furniture, Machinery, Building) আলাদা করে ভাগ করা থাকে — এই hierarchy পরবর্তীতে Classified Balance Sheet (১৩শ অধ্যায়ে) তৈরিতে সরাসরি ব্যবহৃত হয়।</p>
+
+<h3>ব্যবসার ধরন অনুযায়ী COA-এর পার্থক্য</h3>
+<ul>
+<li><b>Service Business:</b> ইনভেন্টরি নেই বললেই চলে, প্রধান Revenue account "Service Revenue", কোনো "Cost of Goods Sold" নেই।</li>
+<li><b>Retail/Merchandising Business:</b> "Inventory" (Asset), "Sales Revenue", "Cost of Goods Sold (COGS)" — গুরুত্বপূর্ণ অ্যাকাউন্ট।</li>
+<li><b>Manufacturing Business:</b> আরও জটিল — "Raw Materials Inventory", "Work-in-Process Inventory", "Finished Goods Inventory", "Factory Overhead" এর মতো অতিরিক্ত অ্যাকাউন্ট।</li>
+</ul>
+
+<h3>একটা ভালো Chart of Accounts ডিজাইন করার নীতি</h3>
+<ul>
+<li><b>Scalability:</b> ভবিষ্যতে নতুন অ্যাকাউন্ট যোগ করার জন্য প্রতিটা রেঞ্জে ফাঁকা নম্বর রাখা (যেমন 1010, 1020, 1030 — মাঝে 1015 যোগ করার সুযোগ রেখে)।</li>
+<li><b>Consistency:</b> নামকরণে একটা সুসংগত প্যাটার্ন মেনে চলা, যাতে যেকেউ নাম দেখেই বুঝতে পারে অ্যাকাউন্টটা কোন ক্যাটাগরির।</li>
+<li><b>রিপোর্টিং প্রয়োজনের সাথে সামঞ্জস্য:</b> COA এমনভাবে ডিজাইন করা উচিত যাতে সরাসরি Income Statement ও Balance Sheet তৈরি করা সহজ হয়, অতিরিক্ত ম্যানুয়াল পুনর্বিন্যাসের প্রয়োজন না পড়ে।</li>
+<li><b>প্রয়োজনের অতিরিক্ত জটিল না করা:</b> ছোট ব্যবসার জন্য কর্পোরেট-স্তরের হাজারো sub-account অপ্রয়োজনীয় জটিলতা তৈরি করে।</li>
+</ul>
+
+<div class="callout why"><span class="tag">কেন Chart of Accounts একটা সফটওয়্যার ডাটাবেস স্কিমার মতো</span>
+COA অনেকটা একটা ডাটাবেসের schema design-এর মতো — একবার ভুলভাবে ডিজাইন করলে, ব্যবসা বড় হওয়ার পর সেটা পুনর্গঠন করা (migration) অত্যন্ত ব্যয়বহুল ও ঝুঁকিপূর্ণ, কারণ বছরের পর বছরের ঐতিহাসিক ডেটা তার ওপর নির্ভরশীল। তাই শুরুতেই ভবিষ্যতের প্রয়োজন মাথায় রেখে ডিজাইন করা গুরুত্বপূর্ণ।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — প্রতিটা ছোট খরচের জন্য নতুন অ্যাকাউন্ট তৈরি করা</span>
+"Office Tea Expense", "Office Coffee Expense" এর মতো অতিরিক্ত বিস্তারিত অ্যাকাউন্ট Chart of Accounts-কে অপ্রয়োজনীয়ভাবে ফুলিয়ে ফেলে এবং রিপোর্ট পড়া কঠিন করে তোলে। এই ধরনের ছোট খরচ সাধারণত একটা সাধারণ "Miscellaneous/Office Supplies Expense" অ্যাকাউন্টের আওতায় রাখাই ভালো।</div>
+
+<div class="callout best"><span class="tag">Best practice — Industry-standard Template দিয়ে শুরু করুন</span>
+শূন্য থেকে একটা COA ডিজাইন করার বদলে, নিজের ব্যবসার ধরনের (retail, service, manufacturing) একটা প্রমাণিত standard template দিয়ে শুরু করে প্রয়োজন অনুযায়ী customize করা অনেক বেশি কার্যকর এবং common mistake এড়াতে সাহায্য করে।</div>
+</template>
+
+<template data-page="journal">
+<h2 class="title">৭. Journal Entries — Journalizing Transactions</h2>
+<p class="lead">Journal হলো accounting-এর "প্রথম রেকর্ড" — প্রতিটা লেনদেন প্রথমে এখানেই সময়ানুক্রমে লিপিবদ্ধ হয়, তারপরই তা Ledger-এ পোস্ট হয়।</p>
+
+<h3>Journal কী এবং কেন এটাই প্রথম ধাপ</h3>
+<p><span class="kw">Journal</span> (বা "Book of Original Entry") হলো একটা কালানুক্রমিক (chronological) রেকর্ড, যেখানে প্রতিটা লেনদেন ঘটার সাথে সাথে তার Debit ও Credit অংশ লেখা হয়। Ledger-এ সরাসরি এন্ট্রি না করে আগে Journal-এ লেখার সুবিধা হলো — এটা একটা সম্পূর্ণ, তারিখ-ভিত্তিক audit trail তৈরি করে, যা পরে ভুল খুঁজতে বা লেনদেনের ইতিহাস দেখতে ব্যবহার করা যায়।</p>
+
+<h3>Journal Entry-এর ফরম্যাট</h3>
+<div class="diagram"><pre>
+  তারিখ        হিসাবের বিবরণ                    Debit         Credit
+  ──────────────────────────────────────────────────────────────────
+  ০৫-জানু      Cash                             ৫০,০০০
+                    Owner's Capital                            ৫০,০০০
+               (মালিকের নগদ বিনিয়োগ)
+
+  ১০-জানু      Furniture                         ৫,০০০
+                    Cash                                        ৫,০০০
+               (নগদে আসবাবপত্র ক্রয়)
+</pre></div>
+<p>প্রচলিত নিয়ম হলো — Debit অ্যাকাউন্টের নাম আগে, বাম দিকে সংখ্যা; Credit অ্যাকাউন্টের নাম একটু ডানে সরিয়ে (indented) লেখা, ডান দিকে সংখ্যা। প্রতিটা এন্ট্রির নিচে একটা সংক্ষিপ্ত "narration" (ব্যাখ্যা) থাকে, যা বলে দেয় লেনদেনটা আসলে কী ছিল।</p>
+
+<h3>Simple বনাম Compound Journal Entry</h3>
+<p>একটা <span class="kw">Simple Entry</span>-তে ঠিক একটা Debit ও একটা Credit থাকে। একটা <span class="kw">Compound Entry</span>-তে একাধিক Debit বা একাধিক Credit থাকতে পারে, যতক্ষণ মোট Debit = মোট Credit থাকে। যেমন — "নগদে ২০,০০০ টাকার মাল বিক্রি হলো, যার মধ্যে ১৫,০০০ টাকা নগদে এবং ৫,০০০ টাকা বাকিতে": এখানে Debit-এ দুইটা লাইন (Cash ১৫,০০০ এবং Accounts Receivable ৫,০০০), Credit-এ একটা লাইন (Sales Revenue ২০,০০০)।</p>
+
+<h3>ধাপে ধাপে Journal Entry তৈরির উদাহরণ</h3>
+<table>
+<tr><th>লেনদেন</th><th>Journal Entry</th></tr>
+<tr><td>মালিক ব্যবসায় ১,০০,০০০ টাকা নগদ বিনিয়োগ করলেন</td><td>Debit Cash ১,০০,০০০ / Credit Owner's Capital ১,০০,০০০</td></tr>
+<tr><td>ব্যাংক থেকে ৩০,০০০ টাকা ঋণ নেওয়া হলো</td><td>Debit Cash ৩০,০০০ / Credit Bank Loan ৩০,০০০</td></tr>
+<tr><td>বাকিতে ২৫,০০০ টাকার মাল ক্রয় করা হলো</td><td>Debit Inventory/Purchases ২৫,০০০ / Credit Accounts Payable ২৫,০০০</td></tr>
+<tr><td>নগদে ৪০,০০০ টাকার মাল বিক্রি হলো</td><td>Debit Cash ৪০,০০০ / Credit Sales Revenue ৪০,০০০</td></tr>
+<tr><td>মাসিক ভাড়া বাবদ ৬,০০০ টাকা নগদে পরিশোধ</td><td>Debit Rent Expense ৬,০০০ / Credit Cash ৬,০০০</td></tr>
+<tr><td>সরবরাহকারীকে বাকির ১০,০০০ টাকা নগদে পরিশোধ</td><td>Debit Accounts Payable ১০,০০০ / Credit Cash ১০,০০০</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">কেন narration লেখা গুরুত্বপূর্ণ</span>
+কয়েক মাস পরে হাজার হাজার এন্ট্রির মধ্যে থেকে একটা নির্দিষ্ট লেনদেন খুঁজে বের করতে বা audit-এর সময় একটা এন্ট্রির যৌক্তিকতা বোঝাতে narration অপরিহার্য। শুধু সংখ্যা দেখে ৬ মাস পরে মনে করা প্রায় অসম্ভব ঠিক কী কারণে একটা নির্দিষ্ট এন্ট্রি করা হয়েছিল।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Debit ও Credit-এর মোট না মিলিয়ে এন্ট্রি করা</span>
+প্রতিটা Journal Entry-তে মোট Debit অবশ্যই মোট Credit-এর সমান হতে হবে, এমনকি Compound Entry-তেও। এই ভারসাম্য না মিললে সেই এন্ট্রিটাই ভুল — এবং এই ভুল Trial Balance-এ ধরা পড়বে (৯ম অধ্যায়ে বিস্তারিত), কিন্তু তখন root cause খুঁজে বের করা আরও কঠিন হয়ে যায়।</div>
+
+<div class="callout best"><span class="tag">Best practice — এন্ট্রি করার আগে ৫ম অধ্যায়ের checklist ব্যবহার করুন</span>
+প্রতিটা লেনদেনে দ্রুত এন্ট্রি লেখার আগে "কোন দুইটা অ্যাকাউন্ট, কোন ক্যাটাগরি, বাড়ছে না কমছে" — এই ছোট checklist মনে মনে চালিয়ে নেওয়া ভুল Debit/Credit বসানো প্রতিরোধ করে।</div>
+</template>
+
+<template data-page="ledger">
+<h2 class="title">৮. Ledger ও Posting — General Ledger, T-Account Balancing</h2>
+<p class="lead">Journal বলে দেয় "কী ঘটেছিল, কখন" — Ledger বলে দেয় "একটা নির্দিষ্ট অ্যাকাউন্টের এখন পর্যন্ত মোট অবস্থা কী।"</p>
+
+<h3>General Ledger কী</h3>
+<p><span class="kw">General Ledger (GL)</span> হলো ব্যবসার সব অ্যাকাউন্টের একটা সংকলন, যেখানে প্রতিটা অ্যাকাউন্টের নিজস্ব একটা পৃষ্ঠা বা T-Account আছে। Journal-এ লেনদেন কালানুক্রমে (তারিখ অনুযায়ী) থাকে, কিন্তু Ledger-এ একই তথ্য অ্যাকাউন্ট-ভিত্তিক পুনর্বিন্যস্ত থাকে — যাতে যেকোনো মুহূর্তে একটা নির্দিষ্ট অ্যাকাউন্টের (যেমন Cash) সামগ্রিক অবস্থা এক নজরে দেখা যায়।</p>
+
+<h3>Posting — Journal থেকে Ledger-এ স্থানান্তর</h3>
+<p><span class="kw">Posting</span> হলো Journal-এ লেখা প্রতিটা এন্ট্রি তার সংশ্লিষ্ট Ledger অ্যাকাউন্টে (T-Account-এ) কপি করার প্রক্রিয়া। একটা Journal Entry-তে Cash Debit হলে, Cash T-Account-এর Debit পাশে সেই সংখ্যা বসবে; Credit হলে Credit পাশে।</p>
+
+<div class="diagram"><pre>
+Journal:
+  ০৫-জানু  Debit Cash ৫০,০০০ / Credit Capital ৫০,০০০
+  ১০-জানু  Debit Furniture ৫,০০০ / Credit Cash ৫,০০০
+
+Posting করার পর Ledger:
+
+           Cash                              Furniture
+  ┌──────────┬──────────┐          ┌──────────┬──────────┐
+  │  Debit   │  Credit  │          │  Debit   │  Credit  │
+  ├──────────┼──────────┤          ├──────────┼──────────┤
+  │ ৫০,০০০    │  ৫,০০০    │          │  ৫,০০০    │           │
+  ├──────────┼──────────┤          ├──────────┼──────────┤
+  │ মোট ৫০,০০০ │ মোট ৫,০০০  │          │ মোট ৫,০০০  │           │
+  └──────────┴──────────┘          └──────────┴──────────┘
+    Balance = ৪৫,০০০ (Debit)          Balance = ৫,০০০ (Debit)
+</pre></div>
+
+<h3>একটা অ্যাকাউন্ট Balance করা</h3>
+<p>একটা T-Account-এর <span class="kw">Balance</span> বের করতে — প্রথমে Debit পাশের সব সংখ্যা যোগ করুন, তারপর Credit পাশের সব সংখ্যা যোগ করুন। যে পাশের যোগফল বেশি, সেই পাশেই balance থাকবে, এবং সংখ্যাটা হবে দুই যোগফলের পার্থক্য। যেমন Cash-এ Debit মোট ৫০,০০০, Credit মোট ৫,০০০ হলে, Balance = ৪৫,০০০, এবং যেহেতু Debit পাশ বেশি, এটা একটা <b>Debit Balance</b> — যা Asset অ্যাকাউন্টের জন্য প্রত্যাশিত (৪র্থ অধ্যায়ের Normal Balance অনুযায়ী)।</p>
+
+<h3>Ledger অ্যাকাউন্টের একটা বাস্তব ফরম্যাট (Running Balance সহ)</h3>
+<table>
+<tr><th>তারিখ</th><th>বিবরণ</th><th>Debit</th><th>Credit</th><th>Balance</th></tr>
+<tr><td>০৫-জানু</td><td>Capital বিনিয়োগ</td><td>৫০,০০০</td><td></td><td>৫০,০০০ Dr</td></tr>
+<tr><td>১০-জানু</td><td>Furniture ক্রয়</td><td></td><td>৫,০০০</td><td>৪৫,০০০ Dr</td></tr>
+<tr><td>১৫-জানু</td><td>বিক্রয় থেকে নগদ</td><td>২০,০০০</td><td></td><td>৬৫,০০০ Dr</td></tr>
+</table>
+<p>Software-based accounting system-এ (এবং আধুনিক bookkeeping-এ) প্রতিটা এন্ট্রির পর একটা "running balance" কলাম রাখা হয়, যাতে প্রতিটা লেনদেনের পরপরই বর্তমান Balance দেখা যায় — এটা একটা running total maintain করার মতোই, যেখানে প্রতিটা নতুন এন্ট্রি আগের balance-এর সাথে যোগ/বিয়োগ হয়।</p>
+
+<div class="callout why"><span class="tag">কেন Journal এবং Ledger দুটোই আলাদাভাবে দরকার</span>
+শুধু Ledger থাকলে একটা নির্দিষ্ট তারিখে ঠিক কী কী লেনদেন ঘটেছিল তা বোঝা কঠিন (কারণ Ledger অ্যাকাউন্ট-ভিত্তিক সংগঠিত, তারিখ-ভিত্তিক না)। শুধু Journal থাকলে একটা নির্দিষ্ট অ্যাকাউন্টের (যেমন Cash) সামগ্রিক বর্তমান অবস্থা জানতে পুরো Journal ঘেঁটে সব Cash-সংক্রান্ত এন্ট্রি খুঁজে বের করতে হবে। দুটো একসাথে দুইটা ভিন্ন প্রশ্নের উত্তর দেয় — "কখন কী ঘটল" এবং "এখন একটা নির্দিষ্ট অ্যাকাউন্টের কী অবস্থা"।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Posting করার সময় Debit/Credit পাশ উল্টে ফেলা</span>
+Journal-এ Debit হিসেবে লেখা একটা এন্ট্রি ভুলবশত Ledger-এ Credit পাশে পোস্ট করা একটা অত্যন্ত সাধারণ manual bookkeeping ভুল, যা Trial Balance-এ ধরা পড়বে কিন্তু debug করা সময়সাপেক্ষ। প্রতিটা posting-এর পর Journal-এর সাথে মিলিয়ে দেখা ভালো অভ্যাস।</div>
+
+<div class="callout best"><span class="tag">Best practice — নিয়মিত Ledger আপডেট রাখুন, জমিয়ে রাখবেন না</span>
+মাস শেষে একসাথে শত শত এন্ট্রি Post করার বদলে, নিয়মিত (দৈনিক/সাপ্তাহিক) posting করলে ভুল দ্রুত ধরা পড়ে এবং সংশোধন সহজ হয় — জমিয়ে রাখলে ভুলের উৎস খুঁজে বের করা exponentially কঠিন হয়ে ওঠে।</div>
+</template>
+
+<template data-page="trial-balance">
+<h2 class="title">৯. Trial Balance — প্রস্তুতি, Error Detection ও Suspense Account</h2>
+<p class="lead">Trial Balance হলো Double-Entry System-এর "sanity check" — একটা দ্রুত পরীক্ষা যা বলে দেয় Debit ও Credit সমান আছে কি না, তবে এটা কোনোভাবেই সম্পূর্ণ নির্ভুলতার প্রমাণ না।</p>
+
+<h3>Trial Balance কী</h3>
+<p><span class="kw">Trial Balance</span> হলো একটা নির্দিষ্ট তারিখে সব Ledger অ্যাকাউন্টের balance-এর একটা তালিকা, যেখানে Debit balance-গুলো একটা কলামে, Credit balance-গুলো আরেকটা কলামে বসানো হয়। যদি Double-Entry সঠিকভাবে অনুসরণ করা হয়ে থাকে, দুই কলামের মোট সমান হবে।</p>
+
+<div class="diagram"><pre>
+                    Trial Balance (৩১ জানুয়ারি)
+  ─────────────────────────────────────────────────
+  Account                        Debit        Credit
+  ─────────────────────────────────────────────────
+  Cash                          ৬৫,০০০
+  Furniture                      ৫,০০০
+  Accounts Payable                            ২৫,০০০
+  Owner's Capital                             ৫০,০০০
+  Sales Revenue                               ৪০,০০০
+  Rent Expense                    ৬,০০০
+  Salary Expense                  ৮,০০০
+  Accounts Receivable            ৩১,০০০
+  ─────────────────────────────────────────────────
+  Total                        ১,১৫,০০০      ১,১৫,০০০
+  ─────────────────────────────────────────────────
+                    ✅ দুই পাশ সমান — Trial Balance মিলেছে
+</pre></div>
+
+<h3>Trial Balance কী প্রমাণ করে, কী প্রমাণ করে না</h3>
+<p>Trial Balance মিলে যাওয়া মানে শুধু এটাই যে <b>প্রতিটা Journal Entry-তে Debit = Credit ছিল, এবং Posting সঠিকভাবে হয়েছে</b> — গাণিতিক দিক থেকে। কিন্তু এটা কিছু গুরুত্বপূর্ণ ভুল ধরতে পারে না, যেগুলো "Errors Not Disclosed by Trial Balance" নামে পরিচিত।</p>
+<table>
+<tr><th>Trial Balance ধরে ফেলে</th><th>Trial Balance ধরতে পারে না</th></tr>
+<tr><td>একটা এন্ট্রির শুধু একপাশ (Debit বা Credit) Post করা হয়েছে</td><td>Error of Omission — একটা পুরো লেনদেনই কখনও রেকর্ড করা হয়নি</td></tr>
+<tr><td>ভুল সংখ্যা Post করা হয়েছে (একপাশ ভুল অঙ্কে)</td><td>Error of Commission — সঠিক ক্যাটাগরির ভুল অ্যাকাউন্টে Post করা (যেমন সঠিক Asset, ভুল ব্যক্তির Personal Account)</td></tr>
+<tr><td>Trial Balance-এ যোগফলে ভুল</td><td>Error of Principle — ভুল ক্যাটাগরিতে Post করা (যেমন একটা Expense-কে Asset হিসেবে রেকর্ড করা)</td></tr>
+<tr><td></td><td>Compensating Error — দুইটা ভুল একে অপরকে কাকতালীয়ভাবে ভারসাম্যপূর্ণ করে ফেলে</td></tr>
+</table>
+
+<h3>Suspense Account — সাময়িক সমাধান</h3>
+<p>Trial Balance মিলছে না, কিন্তু ভুলটা এখনই খুঁজে বের করা সম্ভব হচ্ছে না — এই পরিস্থিতিতে পার্থক্যের সমপরিমাণ একটা <span class="kw">Suspense Account</span>-এ সাময়িকভাবে বসিয়ে রাখা হয়, যাতে Trial Balance আপাতত মিলে যায় এবং বাকি accounting প্রক্রিয়া (যেমন প্রাথমিক Financial Statement তৈরি) এগিয়ে নেওয়া যায়। ভুলটা খুঁজে বের করার পর, Suspense Account বন্ধ (clear) করে সঠিক অ্যাকাউন্টে সংশোধনী এন্ট্রি দেওয়া হয়।</p>
+
+<h3>Trial Balance-এর প্রকারভেদ</h3>
+<ul>
+<li><b>Unadjusted Trial Balance:</b> Adjusting Entries (১০ম অধ্যায়ে) দেওয়ার আগে প্রস্তুত করা প্রাথমিক Trial Balance।</li>
+<li><b>Adjusted Trial Balance:</b> সব Adjusting Entry Post করার পর প্রস্তুত করা Trial Balance — সরাসরি Financial Statement তৈরির ভিত্তি (১৫শ অধ্যায়ের Accounting Cycle-এ বিস্তারিত)।</li>
+<li><b>Post-Closing Trial Balance:</b> Closing Entries (১৫শ অধ্যায়ে) দেওয়ার পর প্রস্তুত করা চূড়ান্ত Trial Balance, যেখানে শুধু Permanent Account (Asset/Liability/Equity) থাকে।</li>
+</ul>
+
+<div class="callout why"><span class="tag">কেন Trial Balance "সঠিক" না হয়েও "মিলতে" পারে</span>
+Compensating Error-এর মতো পরিস্থিতিতে দুইটা সম্পূর্ণ ভিন্ন ভুল কাকতালীয়ভাবে একে অপরকে বাতিল করে দিতে পারে (যেমন Cash Account-এ ১,০০০ কম Debit, এবং Furniture Account-এ ১,০০০ কম Credit) — Trial Balance ঠিকঠাক মিলে যাবে, অথচ দুইটা অ্যাকাউন্টেই ভুল তথ্য থাকবে। এই কারণেই Trial Balance মেলা মানেই "সব ঠিক আছে" এর নিশ্চয়তা না, শুধু গাণিতিক ভারসাম্যের যাচাই।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Trial Balance মিলে গেলেই নিশ্চিন্ত হয়ে যাওয়া</span>
+অনেক শিক্ষার্থী/নতুন bookkeeper মনে করেন Trial Balance মিলে গেলে accounting সম্পূর্ণ নির্ভুল। বাস্তবে এটা শুধু একটা প্রাথমিক গাণিতিক যাচাই — Error of Principle বা Omission-এর মতো ভুল সম্পূর্ণ অদৃশ্য থেকে যেতে পারে, তাই প্রতিটা এন্ট্রি নিজে থেকেও পর্যালোচনা করা জরুরি।</div>
+
+<div class="callout best"><span class="tag">Best practice — পার্থক্যের সংখ্যা দেখে ভুলের ধরন অনুমান করুন</span>
+Trial Balance না মিললে পার্থক্যের সংখ্যাটা প্রায়ই সূত্র দেয় — পার্থক্য ৯ দিয়ে বিভাজ্য হলে প্রায়ই "transposition error" (যেমন ৫৪ এর বদলে ৪৫ লেখা); পার্থক্য ঠিক একটা নির্দিষ্ট এন্ট্রির সমান হলে সেই এন্ট্রিটা হয়তো সম্পূর্ণ Post করা হয়নি। এই ধরনের প্যাটার্ন চেনা ভুল খোঁজার সময় সাশ্রয় করে।</div>
+</template>
+
+<template data-page="adjusting-entries">
+<h2 class="title">১০. Adjusting Entries — Accrual, Prepayment, Depreciation ও Bad Debt</h2>
+<p class="lead">অনেক লেনদেনের প্রভাব একটা নির্দিষ্ট দিনে "ঘটে" না, বরং সময়ের সাথে ছড়িয়ে থাকে — Adjusting Entries নিশ্চিত করে প্রতিটা হিসাবের সময়কাল তার প্রকৃত আয়-ব্যয় প্রতিফলিত করছে।</p>
+
+<h3>কেন Adjusting Entries দরকার — Matching Principle</h3>
+<p>১ম অধ্যায়ে আলোচিত <span class="kw">Matching Principle</span> অনুযায়ী, একটা সময়কালের Revenue তার সাথে সম্পর্কিত Expense-এর সাথে মেলানো উচিত, নগদ কখন হাতবদল হলো তা নির্বিশেষে। কিন্তু কিছু লেনদেন period-end-এ এখনও "cash movement" হয়নি অথচ ইতিমধ্যে অর্থনৈতিকভাবে ঘটে গেছে — এই ফাঁক পূরণ করে Adjusting Entries।</p>
+
+<h3>চারটা প্রধান ধরনের Adjusting Entry</h3>
+<table>
+<tr><th>ধরন</th><th>পরিস্থিতি</th><th>Adjusting Entry</th></tr>
+<tr><td>Accrued Expense</td><td>খরচ হয়ে গেছে, কিন্তু এখনও পরিশোধ/রেকর্ড হয়নি (যেমন ডিসেম্বরের বেতন জানুয়ারিতে দেওয়া হবে)</td><td>Debit Expense / Credit Liability (Payable)</td></tr>
+<tr><td>Accrued Revenue</td><td>আয় অর্জিত হয়ে গেছে, কিন্তু এখনও নগদ/বিল করা হয়নি</td><td>Debit Asset (Receivable) / Credit Revenue</td></tr>
+<tr><td>Prepaid Expense</td><td>আগে থেকে খরচ পরিশোধ করা হয়েছে, কিন্তু পুরোটা এখনও "ব্যবহৃত" হয়নি (যেমন ৬ মাসের বীমা প্রিমিয়াম একসাথে দেওয়া)</td><td>Debit Expense / Credit Asset (Prepaid Expense কমানো)</td></tr>
+<tr><td>Unearned Revenue</td><td>আগে থেকে টাকা নেওয়া হয়েছে, কিন্তু সেবা/মাল এখনও পুরোপুরি দেওয়া হয়নি</td><td>Debit Liability (Unearned Revenue কমানো) / Credit Revenue</td></tr>
+</table>
+
+<h3>Depreciation — সম্পদের মূল্য সময়ের সাথে ব্যয়িত করা</h3>
+<p><span class="kw">Depreciation</span> হলো একটা fixed asset-এর (যেমন মেশিন, গাড়ি, আসবাবপত্র) খরচকে তার useful life জুড়ে ছড়িয়ে দেওয়ার প্রক্রিয়া — কারণ একটা মেশিন একবারে পুরো খরচ হিসেবে না লিখে, যতদিন সেটা ব্যবহার হচ্ছে ততদিন ধরে ব্যয় হিসেবে দেখানো উচিত (Matching Principle)। সবচেয়ে সহজ পদ্ধতি <span class="kw">Straight-Line Depreciation</span> — <code>(Cost − Salvage Value) ÷ Useful Life = বার্ষিক Depreciation</code>। যেমন ১,০০,০০০ টাকার একটা মেশিন, ৫ বছর useful life, ১০,০০০ টাকা salvage value হলে — বার্ষিক depreciation = (১,০০,০০০ − ১০,০০০) ÷ ৫ = ১৮,০০০ টাকা।</p>
+<div class="diagram"><pre>
+  Adjusting Entry (প্রতি বছরের শেষে):
+  Debit  Depreciation Expense       ১৮,০০০
+      Credit  Accumulated Depreciation           ১৮,০০০
+
+  Accumulated Depreciation একটা "Contra-Asset" — এটা মূল Asset-এর
+  বিপরীতে জমা হতে থাকে, Balance Sheet-এ Asset-এর মূল্য থেকে বিয়োগ হয়।
+</pre></div>
+
+<h3>Bad Debt / Allowance for Doubtful Accounts</h3>
+<p>বাকিতে বিক্রি করা সব টাকা সবসময় আদায় হয় না — কিছু গ্রাহক টাকা দিতে ব্যর্থ হতে পারে। <span class="kw">Matching Principle</span> অনুযায়ী, যে বছর বিক্রয় হয়েছে সেই বছরই আনুমানিক "সন্দেহজনক" (doubtful) অংশ একটা expense হিসেবে ধরে নেওয়া উচিত, শুধু আসলেই টাকা না পাওয়া নিশ্চিত হওয়ার অপেক্ষা না করে। এই adjusting entry: <b>Debit Bad Debt Expense / Credit Allowance for Doubtful Accounts</b> (এটাও Accounts Receivable-এর বিপরীতে একটা Contra-Asset)।</p>
+
+<div class="callout why"><span class="tag">কেন Adjusting Entries ছাড়া Financial Statement বিভ্রান্তিকর হয়</span>
+Adjusting Entries ছাড়া একটা কোম্পানি হয়তো ডিসেম্বরের বেতন খরচ হিসাবেই না দেখিয়ে সেই মাসের প্রকৃত মুনাফা অতিরিক্ত দেখাবে, অথবা একটা মেশিনের পুরো খরচ প্রথম বছরেই দেখিয়ে সেই বছরের মুনাফা ব্যাপকভাবে কমিয়ে দেখাবে, পরের বছরগুলোতে কোনো খরচ না দেখিয়ে। Adjusting Entries এই বিকৃতি সংশোধন করে প্রতিটা সময়কালের একটা সত্যিকারের চিত্র তৈরি করে।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — শুধু নগদ লেনদেনের কথা মনে রাখা, Adjusting Entries ভুলে যাওয়া</span>
+নতুন bookkeeper প্রায়ই শুধু "টাকা হাতবদল হয়েছে" এমন লেনদেনই মনে রাখেন, কিন্তু period-end-এ depreciation, accrued expense, prepaid expense-এর মতো non-cash adjustment ভুলে যান — যার ফলে Financial Statement সেই সময়কালের প্রকৃত পরিস্থিতি ভুলভাবে উপস্থাপন করে।</div>
+
+<div class="callout best"><span class="tag">Best practice — প্রতিটা রিপোর্টিং পিরিয়ডের শেষে একটা checklist অনুসরণ করুন</span>
+মাস/বছর শেষে Adjusting Entry ভুলে না যাওয়ার জন্য একটা স্ট্যান্ডার্ড checklist ব্যবহার করুন — Depreciation হিসাব হয়েছে কি, Prepaid expense-এর ব্যবহৃত অংশ সরানো হয়েছে কি, Accrued expense/revenue ধরা হয়েছে কি, Bad debt estimate আপডেট হয়েছে কি।</div>
+</template>
+
+<template data-page="financial-statements-overview">
+<h2 class="title">১১. Financial Statements ভূমিকা — চারটা Statement-এর সম্পর্ক</h2>
+<p class="lead">এতদিন যা কিছু রেকর্ড করা হলো (Journal, Ledger, Trial Balance, Adjustment) — সেই সবকিছুর চূড়ান্ত ফলাফল হলো Financial Statements, যা একটা ব্যবসার আর্থিক গল্প বাইরের পৃথিবীর কাছে বলে।</p>
+
+<h3>চারটা মূল Financial Statement</h3>
+<table>
+<tr><th>Statement</th><th>উত্তর দেয়</th><th>সময়কাল</th></tr>
+<tr><td>Income Statement (P&L)</td><td>একটা নির্দিষ্ট সময়ে ব্যবসা লাভ করল না ক্ষতি করল</td><td>একটা সময়কাল জুড়ে (যেমন এক মাস/বছর)</td></tr>
+<tr><td>Balance Sheet</td><td>একটা নির্দিষ্ট মুহূর্তে ব্যবসার কী আছে, কী পাওনা</td><td>একটা নির্দিষ্ট তারিখে (snapshot)</td></tr>
+<tr><td>Statement of Changes in Equity</td><td>মালিকানার মূল্য কেন বাড়ল বা কমল</td><td>একটা সময়কাল জুড়ে</td></tr>
+<tr><td>Cash Flow Statement</td><td>নগদ টাকা কোথা থেকে এলো, কোথায় গেল</td><td>একটা সময়কাল জুড়ে</td></tr>
+</table>
+
+<h3>চারটা Statement কীভাবে একে অপরের সাথে যুক্ত</h3>
+<div class="diagram"><pre>
+  Income Statement                Statement of Changes in Equity
+  Revenue − Expense                Opening Equity + Net Income
+       = Net Income  ──────────▶       − Drawings = Closing Equity
+                                              │
+                                              ▼
+  Cash Flow Statement              Balance Sheet (তারিখ-ভিত্তিক)
+  Operating + Investing +         Assets = Liabilities + Equity
+  Financing = Net Change in Cash  (Closing Equity এখানেই বসে,
+       │                            Closing Cash-ও এখানে Asset হিসেবে)
+       └──────────────────────────────────▶
+</pre></div>
+<p>Income Statement-এর <b>Net Income</b> Statement of Changes in Equity-তে প্রবেশ করে, যা Equity-এর সমাপনী ব্যালেন্স হিসাব করে। সেই সমাপনী Equity Balance Sheet-এ বসে। Cash Flow Statement-এর সমাপনী Cash Balance Sheet-এর Cash Asset-এর সাথে মিলে যায়। এই আন্তঃসংযোগ বোঝাই Financial Statement বিশ্লেষণের প্রথম ধাপ — একটা statement আলাদাভাবে পড়া বিভ্রান্তিকর, চারটা একসাথে একটা সম্পূর্ণ চিত্র তৈরি করে।</p>
+
+<h3>কেন এই ক্রমে তৈরি করা হয়</h3>
+<p>Financial Statement সবসময় একটা নির্দিষ্ট ক্রমে প্রস্তুত করা হয় কারণ প্রতিটা পরের statement আগেরটার ফলাফলের ওপর নির্ভর করে — প্রথমে <b>Income Statement</b> (Net Income বের করতে), তারপর <b>Statement of Changes in Equity</b> (Net Income ব্যবহার করে সমাপনী Equity বের করতে), তারপর <b>Balance Sheet</b> (সমাপনী Equity ব্যবহার করে), এবং সবশেষে <b>Cash Flow Statement</b> (প্রায়ই Income Statement ও দুইটা Balance Sheet — শুরু ও শেষ — তুলনা করে তৈরি হয়)।</p>
+
+<div class="callout why"><span class="tag">কেন একটা মাত্র Statement যথেষ্ট না</span>
+শুধু Income Statement দেখে একটা কোম্পানি লাভজনক মনে হতে পারে, কিন্তু Balance Sheet দেখলে বোঝা যেতে পারে তার ঋণ বিপজ্জনকভাবে বেশি। শুধু Balance Sheet দেখে সম্পদ বেশি মনে হতে পারে, কিন্তু Cash Flow Statement দেখলে বোঝা যেতে পারে ব্যবসা নগদ সংকটে ভুগছে (২য় অধ্যায়ে আলোচিত Profit বনাম Cash পার্থক্য)। একটা সম্পূর্ণ চিত্রের জন্য চারটা Statement-ই একসাথে পড়া প্রয়োজন।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — শুধু Net Income (Bottom Line) দেখে সিদ্ধান্ত নেওয়া</span>
+একটা কোম্পানির Net Income ভালো দেখালেও তার Cash Flow negative হতে পারে (যেমন বিক্রয় বেশি কিন্তু আদায় কম), অথবা Balance Sheet-এ লুকানো ঝুঁকি (অতিরিক্ত ঋণ) থাকতে পারে। একটা দায়িত্বশীল সিদ্ধান্ত নিতে সবসময় চারটা Statement-ই দেখা উচিত, শুধু একটা সংখ্যায় নির্ভর করা উচিত না।</div>
+
+<div class="callout best"><span class="tag">Best practice — পরবর্তী তিনটা অধ্যায়কে "একটা গল্পের তিনটা অধ্যায়" হিসেবে পড়ুন</span>
+পরের তিনটা অধ্যায়ে (Income Statement, Balance Sheet, Cash Flow) প্রতিটাকে আলাদা বিষয় হিসেবে না দেখে, একই ব্যবসার তিনটা ভিন্ন কোণ থেকে দেখা হিসেবে পড়ুন — এতে প্রতিটার প্রকৃত উদ্দেশ্য বোঝা সহজ হবে।</div>
+</template>
+
+<template data-page="income-statement">
+<h2 class="title">১২. Income Statement (Profit & Loss) — Income ও Expense Report গভীরভাবে</h2>
+<p class="lead">প্রতিদিনের ব্যবসায়িক ভাষায় যাকে বলা হয় "income-expense report" বা "profit-loss report" — accounting-এ এটাই আনুষ্ঠানিকভাবে Income Statement নামে পরিচিত।</p>
+
+<h3>Income Statement কী পরিমাপ করে</h3>
+<p><span class="kw">Income Statement</span> (বা Profit & Loss Statement) একটা নির্দিষ্ট সময়কালে (মাস, প্রান্তিক, বছর) ব্যবসার সব Revenue এবং Expense একসাথে দেখায়, এবং শেষে Net Income (বা Net Loss) বের করে। এটা ২য় অধ্যায়ের expanded equation-এর "Revenue − Expenses" অংশের বিস্তারিত রূপ।</p>
+
+<h3>Multi-Step Income Statement — একটা সম্পূর্ণ উদাহরণ</h3>
+<div class="diagram"><pre>
+              ABC Trading — Income Statement
+              জানুয়ারি ১ – ডিসেম্বর ৩১, ২০২৫
+
+  Sales Revenue                                    ৫,০০,০০০
+  Less: Cost of Goods Sold (COGS)                 (৩,০০,০০০)
+  ──────────────────────────────────────────────────────────
+  Gross Profit                                     ২,০০,০০০
+
+  Operating Expenses:
+    Salary Expense                    ৬০,০০০
+    Rent Expense                      ৩৬,০০০
+    Depreciation Expense               ১৮,০০০
+    Utilities Expense                  ১২,০০০
+  Total Operating Expenses                        (১,২৬,০০০)
+  ──────────────────────────────────────────────────────────
+  Operating Income                                    ৭৪,০০০
+
+  Other Income/Expense:
+    Interest Expense                                 (৪,০০০)
+  ──────────────────────────────────────────────────────────
+  Net Income Before Tax                               ৭০,০০০
+  Less: Income Tax Expense                           (৭,০০০)
+  ──────────────────────────────────────────────────────────
+  Net Income                                          ৬৩,০০০
+</pre></div>
+
+<h3>মূল উপাদানগুলোর সংজ্ঞা</h3>
+<table>
+<tr><th>উপাদান</th><th>সংজ্ঞা</th></tr>
+<tr><td>Revenue/Sales</td><td>মূল ব্যবসায়িক কার্যক্রম থেকে আয় (বিক্রয়, সেবা)</td></tr>
+<tr><td>Cost of Goods Sold (COGS)</td><td>যে মাল বিক্রি হয়েছে তার সরাসরি খরচ (retail/manufacturing ব্যবসায় প্রযোজ্য)</td></tr>
+<tr><td>Gross Profit</td><td>Revenue − COGS — মূল পণ্যের মুনাফা, অপারেটিং খরচের আগে</td></tr>
+<tr><td>Operating Expenses</td><td>ব্যবসা চালাতে দৈনন্দিন খরচ (বেতন, ভাড়া, utility, depreciation)</td></tr>
+<tr><td>Operating Income</td><td>Gross Profit − Operating Expenses — মূল ব্যবসার প্রকৃত কার্যকারিতা</td></tr>
+<tr><td>Net Income</td><td>সব আয়-ব্যয়, সুদ, কর বাদ দেওয়ার পর চূড়ান্ত মুনাফা — "Bottom Line"</td></tr>
+</table>
+
+<h3>Single-Step বনাম Multi-Step Format</h3>
+<p><span class="kw">Single-Step Format</span>-এ সব Revenue একসাথে যোগ করা হয়, সব Expense একসাথে যোগ করা হয়, এবং সরাসরি বিয়োগ করে Net Income বের করা হয় — সহজ কিন্তু Gross Profit বা Operating Income আলাদাভাবে দেখা যায় না। <span class="kw">Multi-Step Format</span> (উপরের উদাহরণ) ধাপে ধাপে subtotal দেখায় (Gross Profit, Operating Income), যা বিশ্লেষণের জন্য অনেক বেশি তথ্যবহুল — একটা ব্যবসা তার মূল পণ্যে কতটা লাভবান, এবং overhead খরচ কতটা প্রভাব ফেলছে তা আলাদা করে বোঝা যায়।</p>
+
+<h3>"Income-Expense Report" ব্যবসায়িক ভাষায় কী বোঝায়</h3>
+<p>ছোট ব্যবসা বা non-accounting প্রেক্ষাপটে "income-expense report" শব্দটা সাধারণত এই Income Statement-কেই বোঝায়, প্রায়ই একটা সরলীকৃত রূপে — শুধু মোট আয়, মোট খরচ, এবং নিট ফলাফল। এই কোর্সে শেখা Multi-Step ফরম্যাট সেই সরলীকৃত রিপোর্টেরই একটা বিস্তারিত, প্রাতিষ্ঠানিক-মানের সংস্করণ।</p>
+
+<div class="callout why"><span class="tag">কেন Gross Profit Margin একটা গুরুত্বপূর্ণ সংকেত</span>
+Gross Profit-কে Revenue দিয়ে ভাগ করলে (Gross Profit Margin) বোঝা যায় একটা ব্যবসা তার মূল পণ্যে কতটা দক্ষ — এই margin কমতে থাকলে বোঝা যায় হয় উৎপাদন খরচ বাড়ছে, নয়তো বিক্রয়মূল্যে প্রতিযোগিতার চাপে ছাড় দিতে হচ্ছে। এটা প্রায়ই একটা ব্যবসার স্বাস্থ্যের প্রথম সংকেত, Net Income-এর চেয়েও আগে সমস্যা ধরিয়ে দেয় (১৬শ অধ্যায়ে ratio হিসেবে বিস্তারিত)।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Revenue আর Cash Received-কে গুলিয়ে ফেলা</span>
+Income Statement Accrual Basis-এ (১ম অধ্যায়ে আলোচিত) তৈরি হয় — তাই একটা মাসে "Revenue" দেখানো মানে এই না যে সেই টাকা নগদে হাতে এসেছে। বাকিতে বিক্রি হলেও তা Revenue হিসেবে গণনা হয়। প্রকৃত নগদ প্রবাহ জানতে Cash Flow Statement (১৪শ অধ্যায়ে) দেখতে হবে।</div>
+
+<div class="callout best"><span class="tag">Best practice — Percentage-এ (Common-Size Statement) তুলনা করুন</span>
+প্রতিটা লাইন আইটেমকে Revenue-এর শতাংশ হিসেবে দেখানো (যেমন "COGS হলো Revenue-এর ৬০%") বিভিন্ন সময়কাল বা প্রতিযোগীর সাথে তুলনা করা সহজ করে তোলে, শুধু কাঁচা সংখ্যার চেয়ে — এটাকে <span class="kw">Common-Size Income Statement</span> বলা হয়।</div>
+</template>
+
+<template data-page="balance-sheet">
+<h2 class="title">১৩. Balance Sheet গভীরভাবে — Classified Format</h2>
+<p class="lead">Balance Sheet একটা camera-এর snapshot-এর মতো — এটা ব্যবসার একটা নির্দিষ্ট মুহূর্তের আর্থিক অবস্থান দেখায়, পুরো বছরের কার্যক্রম না।</p>
+
+<h3>Classified Balance Sheet — গঠন</h3>
+<p>একটা <span class="kw">Classified Balance Sheet</span> Asset ও Liability-কে তাদের liquidity (কত দ্রুত নগদে রূপান্তরিত/পরিশোধযোগ্য) অনুযায়ী উপ-শ্রেণীতে ভাগ করে — এতে একটা ব্যবসার স্বল্পমেয়াদী আর্থিক স্বাস্থ্য দ্রুত মূল্যায়ন করা যায়।</p>
+
+<div class="diagram"><pre>
+              ABC Trading — Balance Sheet
+                   ৩১ ডিসেম্বর, ২০২৫
+
+  Current Assets:
+    Cash                              ৬৫,০০০
+    Accounts Receivable                ৩১,০০০
+    Inventory                          ৮০,০০০
+    Prepaid Insurance                   ৫,০০০
+  Total Current Assets                            ১,৮১,০০০
+
+  Non-Current Assets:
+    Furniture                    ৫০,০০০
+    Less: Accumulated Depreciation (১৮,০০০)
+                                                      ৩২,০০০
+  ──────────────────────────────────────────────────────────
+  Total Assets                                     ২,১৩,০০০
+
+  Current Liabilities:
+    Accounts Payable                   ২৫,০০০
+    Salary Payable                       ৮,০০০
+  Total Current Liabilities                          ৩৩,০০০
+
+  Non-Current Liabilities:
+    Bank Loan (দীর্ঘমেয়াদী)                            ৩০,০০০
+  ──────────────────────────────────────────────────────────
+  Total Liabilities                                   ৬৩,০০০
+
+  Equity:
+    Owner's Capital                  ৮৭,০০০
+    Retained Earnings/Net Income     ৬৩,০০০
+  Total Equity                                       ১,৫০,০০০
+  ──────────────────────────────────────────────────────────
+  Total Liabilities + Equity                       ২,১৩,০০০
+                    ✅ Assets = Liabilities + Equity মিলেছে
+</pre></div>
+
+<h3>Current বনাম Non-Current — সীমারেখা কোথায়</h3>
+<table>
+<tr><th>ক্যাটাগরি</th><th>সংজ্ঞা</th><th>উদাহরণ</th></tr>
+<tr><td>Current Asset</td><td>১ বছরের মধ্যে নগদে রূপান্তরযোগ্য বা ব্যবহৃত হবে এমন সম্পদ</td><td>Cash, Accounts Receivable, Inventory, Prepaid Expense</td></tr>
+<tr><td>Non-Current (Fixed) Asset</td><td>১ বছরের বেশি সময় ব্যবসায় ব্যবহৃত হবে এমন সম্পদ</td><td>Furniture, Machinery, Building, Land, Intangibles</td></tr>
+<tr><td>Current Liability</td><td>১ বছরের মধ্যে পরিশোধযোগ্য দায়</td><td>Accounts Payable, Salary Payable, স্বল্পমেয়াদী ঋণের কিস্তি</td></tr>
+<tr><td>Non-Current Liability</td><td>১ বছরের বেশি সময়ে পরিশোধযোগ্য দায়</td><td>দীর্ঘমেয়াদী Bank Loan, Bond Payable</td></tr>
+</table>
+
+<h3>Balance Sheet কেন সবসময় "Balance" করে</h3>
+<p>এটা ২য় অধ্যায়ের Accounting Equation-এরই একটা সরাসরি প্রয়োগ — Balance Sheet আসলে সেই সমীকরণটাকেই একটা প্রাতিষ্ঠানিক রিপোর্ট ফরম্যাটে উপস্থাপন করে। যদি Assets ≠ Liabilities + Equity হয়, তার মানে কোথাও একটা ভুল আছে (একটা ভুলভাবে পোস্ট করা এন্ট্রি, বা Trial Balance-এর কোনো ভুল যা ধরা পড়েনি)।</p>
+
+<div class="callout why"><span class="tag">কেন Liquidity-অনুযায়ী শ্রেণীবিভাগ গুরুত্বপূর্ণ</span>
+শুধু "Total Assets" আর "Total Liabilities" দেখলে বোঝা যায় না একটা ব্যবসা স্বল্পমেয়াদে তার বিল পরিশোধ করতে পারবে কি না। Current Asset এবং Current Liability আলাদা করে দেখানো হলে একটা ব্যাংক বা বিনিয়োগকারী সহজেই মূল্যায়ন করতে পারেন ব্যবসার short-term liquidity কেমন (১৬শ অধ্যায়ের Current Ratio-এর ভিত্তি)।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Balance Sheet-কে "সময়কালের" রিপোর্ট ভাবা</span>
+Income Statement একটা সময়কাল জুড়ে (যেমন পুরো বছর) তৈরি হয়, কিন্তু Balance Sheet একটা নির্দিষ্ট তারিখের snapshot — "৩১ ডিসেম্বর, ২০২৫ পর্যন্ত" বলা ঠিক, "২০২৫ সালের জন্য Balance Sheet" বলা ভুল প্রকাশভঙ্গি।</div>
+
+<div class="callout best"><span class="tag">Best practice — Balance Sheet-কে Income Statement-এর সাথে একসাথে পড়ুন</span>
+শুধু একটা তারিখের Balance Sheet দেখে সিদ্ধান্ত না নিয়ে, একাধিক সময়কালের Balance Sheet তুলনা করে (যেমন গত বছর বনাম এই বছর) দেখুন ঋণ বাড়ছে না কমছে, Equity বাড়ছে না কমছে — এই trend সংখ্যার চেয়েও বেশি তথ্য দেয়।</div>
+</template>
+
+<template data-page="cash-flow">
+<h2 class="title">১৪. Cash Flow Statement — Operating, Investing ও Financing</h2>
+<p class="lead">একটা ব্যবসা কাগজে-কলমে লাভজনক হয়েও ব্যাংক অ্যাকাউন্টে টাকা না থাকার কারণে বন্ধ হয়ে যেতে পারে — Cash Flow Statement ঠিক এই বাস্তবতাটাই তুলে ধরে।</p>
+
+<h3>Cash Flow Statement কেন আলাদা করে দরকার</h3>
+<p>Income Statement Accrual Basis-এ তৈরি (১ম অধ্যায়ে আলোচিত), তাই এটা "profit" দেখায় কিন্তু নগদের প্রকৃত গতিবিধি না। <span class="kw">Cash Flow Statement</span> শুধুমাত্র প্রকৃত নগদ (এবং cash equivalent) প্রবাহ ট্র্যাক করে, এবং তিনটা ভাগে ভাগ করে দেখায় — নগদ কোথা থেকে এলো, কোথায় গেল।</p>
+
+<h3>তিনটা কার্যক্রম বিভাগ</h3>
+<table>
+<tr><th>বিভাগ</th><th>কী অন্তর্ভুক্ত</th><th>উদাহরণ</th></tr>
+<tr><td>Operating Activities</td><td>মূল ব্যবসায়িক কার্যক্রম থেকে নগদ প্রবাহ</td><td>গ্রাহকের কাছ থেকে নগদ আদায়, সরবরাহকারীকে নগদ পরিশোধ, বেতন প্রদান</td></tr>
+<tr><td>Investing Activities</td><td>দীর্ঘমেয়াদী সম্পদ ক্রয়/বিক্রয়</td><td>মেশিন ক্রয়, জমি বিক্রয়, অন্য কোম্পানিতে বিনিয়োগ</td></tr>
+<tr><td>Financing Activities</td><td>মালিক ও ঋণদাতাদের সাথে লেনদেন</td><td>ব্যাংক ঋণ গ্রহণ/পরিশোধ, মালিকের নতুন বিনিয়োগ, Dividend প্রদান</td></tr>
+</table>
+
+<h3>Direct বনাম Indirect Method</h3>
+<p><span class="kw">Direct Method</span>-এ Operating Activities সরাসরি প্রকৃত নগদ প্রাপ্তি ও প্রদান তালিকাভুক্ত করে (যেমন "গ্রাহকদের কাছ থেকে নগদ প্রাপ্তি ৪,৮০,০০০")। <span class="kw">Indirect Method</span> (বহুল ব্যবহৃত) Net Income থেকে শুরু করে, এবং non-cash আইটেম (Depreciation) ও working capital পরিবর্তন (Receivable/Payable বৃদ্ধি-হ্রাস) সমন্বয় করে Operating Cash Flow বের করে।</p>
+
+<div class="diagram"><pre>
+        Cash Flow Statement (Indirect Method) — সংক্ষিপ্ত উদাহরণ
+
+  Operating Activities:
+    Net Income                                    ৬৩,০০০
+    Add: Depreciation Expense (non-cash)           ১৮,০০০
+    Less: Increase in Accounts Receivable         (৩১,০০০)
+    Add: Increase in Accounts Payable               ২৫,০০০
+  ──────────────────────────────────────────────────────────
+  Net Cash from Operating Activities                ৭৫,০০০
+
+  Investing Activities:
+    Purchase of Furniture                         (৫০,০০০)
+  ──────────────────────────────────────────────────────────
+  Net Cash from Investing Activities               (৫০,০০০)
+
+  Financing Activities:
+    Owner's Capital Investment                      ৮৭,০০০
+    Bank Loan Received                              ৩০,০০০
+    Owner's Drawings                               (২৭,০০০)
+  ──────────────────────────────────────────────────────────
+  Net Cash from Financing Activities                ৯০,০০০
+
+  Net Increase in Cash                             ১,১৫,০০০
+  Add: Beginning Cash Balance                            ০
+  ──────────────────────────────────────────────────────────
+  Ending Cash Balance                              ১,১৫,০০০
+</pre></div>
+<p>লক্ষ্য করুন কেন Depreciation Net Income-এ যোগ করা হয় — এটা Income Statement-এ একটা Expense হিসেবে বিয়োগ হয়েছিল, কিন্তু এটা কোনো প্রকৃত নগদ বহির্গমন না (কোনো চেক কাটা হয়নি), তাই Cash Flow বের করতে সেটা আবার যোগ করে ফেরত আনতে হয়। একইভাবে, Accounts Receivable বাড়া মানে সেই বিক্রয় Revenue-তে গণনা হয়েছে কিন্তু নগদ এখনও আসেনি, তাই সেটা বিয়োগ করতে হয়।</p>
+
+<div class="callout why"><span class="tag">কেন Depreciation-এর মতো "non-cash" আইটেম Cash Flow-তে ফেরত যোগ হয়</span>
+Indirect Method Net Income থেকে শুরু করে, যা ইতিমধ্যে সব Expense (Depreciation সহ) বিয়োগ করা হয়ে গেছে। কিন্তু যেহেতু লক্ষ্য শুধু প্রকৃত নগদ প্রবাহ বের করা, এবং Depreciation-এ কোনো নগদ বের হয়নি, তাই সেই "কাল্পনিক বিয়োগ" বাতিল করতে Net Income-এ আবার যোগ করে দেওয়া হয় — এটা Depreciation-কে "positive" বানানো না, এটা শুধু non-cash প্রভাব সরিয়ে নেওয়া।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Profitable ব্যবসাকে সবসময় "নগদ-সমৃদ্ধ" ভাবা</span>
+দ্রুত বর্ধনশীল একটা ব্যবসা প্রায়ই Income Statement-এ ভালো মুনাফা দেখায়, কিন্তু ইনভেন্টরি ও Receivable-এ ব্যাপক বিনিয়োগের কারণে Operating Cash Flow negative হতে পারে — একে "profitable but cash-poor" পরিস্থিতি বলে, এবং এটা ছোট ব্যবসা বন্ধ হয়ে যাওয়ার একটা প্রধান কারণ।</div>
+
+<div class="callout best"><span class="tag">Best practice — Operating Cash Flow-কে Net Income-এর সাথে তুলনা করুন</span>
+দীর্ঘমেয়াদে Operating Cash Flow এবং Net Income একে অপরের কাছাকাছি থাকা উচিত। যদি বছরের পর বছর Net Income বেশি কিন্তু Operating Cash Flow উল্লেখযোগ্যভাবে কম থাকে, এটা একটা সতর্কতা সংকেত — হয়তো Receivable আদায়ে সমস্যা হচ্ছে, বা Revenue recognition নিয়ে প্রশ্ন থাকতে পারে।</div>
+</template>
+
+<template data-page="accounting-cycle">
+<h2 class="title">১৫. Complete Accounting Cycle ও Closing Entries</h2>
+<p class="lead">এতদিন যা শেখা হলো তার প্রতিটা অংশ আসলে একটা বড়, পুনরাবৃত্তিমূলক প্রক্রিয়ার একেকটা ধাপ — একে বলা হয় Accounting Cycle।</p>
+
+<h3>সম্পূর্ণ Accounting Cycle — ৯টা ধাপ</h3>
+<div class="diagram"><pre>
+  ১. লেনদেন সনাক্ত করা (Identify Transactions)
+              │
+  ২. Journal Entry লেখা (Journalizing) ── ৭ম অধ্যায়
+              │
+  ৩. Ledger-এ Posting ── ৮ম অধ্যায়
+              │
+  ৪. Unadjusted Trial Balance প্রস্তুত ── ৯ম অধ্যায়
+              │
+  ৫. Adjusting Entries পাস করা ── ১০ম অধ্যায়
+              │
+  ৬. Adjusted Trial Balance প্রস্তুত
+              │
+  ৭. Financial Statements তৈরি ── ১১শ-১৪শ অধ্যায়
+              │
+  ৮. Closing Entries পাস করা (নিচে বিস্তারিত)
+              │
+  ৯. Post-Closing Trial Balance প্রস্তুত
+              │
+              ▼
+       (পরবর্তী period-এ আবার ১ থেকে শুরু)
+</pre></div>
+
+<h3>Temporary বনাম Permanent Account</h3>
+<p><span class="kw">Permanent (Real) Account</span> — Asset, Liability, Equity — এদের balance একটা period থেকে পরের period-এ carry forward হয় (কখনও শূন্য হয় না, শুধু চলতে থাকে)। <span class="kw">Temporary (Nominal) Account</span> — Revenue, Expense, Drawings — এদের balance শুধু একটা নির্দিষ্ট period-এর জন্য, এবং period শেষে "শূন্য" করে দিতে হয় যাতে পরের period নতুন করে শুরু করা যায়। এই শূন্য করার প্রক্রিয়াই Closing Entries।</p>
+
+<h3>Closing Entries — চারটা ধাপ</h3>
+<ol>
+<li><b>Revenue বন্ধ করা:</b> সব Revenue অ্যাকাউন্ট Debit করে (তাদের balance শূন্য করে), Credit করা হয় একটা সাময়িক অ্যাকাউন্ট "Income Summary"-তে।</li>
+<li><b>Expense বন্ধ করা:</b> "Income Summary" Debit করে, সব Expense অ্যাকাউন্ট Credit করে তাদের balance শূন্য করা হয়।</li>
+<li><b>Income Summary বন্ধ করা:</b> Income Summary-এর balance (যা এখন Net Income বা Net Loss প্রতিনিধিত্ব করে) Capital/Retained Earnings-এ স্থানান্তর করা হয়।</li>
+<li><b>Drawings বন্ধ করা:</b> Drawings অ্যাকাউন্ট Credit করে শূন্য করা হয়, Capital অ্যাকাউন্ট Debit করা হয়।</li>
+</ol>
+
+<div class="diagram"><pre>
+উদাহরণ — Sales Revenue ৪০,০০০; Rent Expense ৬,০০০; Salary Expense ৮,০০০; Drawings ৫,০০০
+
+ধাপ ১:  Debit Sales Revenue ৪০,০০০ / Credit Income Summary ৪০,০০০
+ধাপ ২:  Debit Income Summary ১৪,০০০ / Credit Rent Expense ৬,০০০, Salary Expense ৮,০০০
+ধাপ ৩:  Debit Income Summary ২৬,০০০ / Credit Owner's Capital ২৬,০০০   (Net Income = ৪০,০০০−১৪,০০০)
+ধাপ ৪:  Debit Owner's Capital ৫,০০০ / Credit Drawings ৫,০০০
+</pre></div>
+
+<h3>Post-Closing Trial Balance</h3>
+<p>Closing Entries পাস করার পর যে Trial Balance তৈরি করা হয়, তাতে শুধু Permanent Account (Asset, Liability, Equity) থাকে — সব Revenue, Expense, Drawings অ্যাকাউন্ট শূন্য হয়ে গেছে ততক্ষণে। এই Post-Closing Trial Balance পরবর্তী period-এর জন্য একটা পরিষ্কার সূচনা বিন্দু নিশ্চিত করে।</p>
+
+<div class="callout why"><span class="tag">কেন Temporary Account শূন্য করা আবশ্যক</span>
+যদি Revenue/Expense অ্যাকাউন্ট প্রতি বছর শূন্য না করে চলতে দেওয়া হতো, প্রতিটা বছরের Income Statement আসলে "শুরু থেকে আজ পর্যন্ত সব বছরের সমষ্টি" দেখাত, একটা নির্দিষ্ট বছরের কার্যক্রম না। Closing Entries নিশ্চিত করে প্রতিটা নতুন period একটা পরিষ্কার স্লেট দিয়ে শুরু হয়, এবং প্রতিটা Income Statement শুধু সেই নির্দিষ্ট period-এর ফলাফল দেখায়।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Balance Sheet Account-ও বন্ধ করার চেষ্টা করা</span>
+নতুন শিক্ষার্থীরা প্রায়ই ভুল করে Asset/Liability/Equity অ্যাকাউন্টও close করার চেষ্টা করেন। এগুলো Permanent Account — এদের balance কখনও শূন্য করা হয় না, শুধু পরের period-এ carry forward হয়। শুধু Revenue, Expense, এবং Drawings (Temporary Account) বন্ধ করা হয়।</div>
+
+<div class="callout best"><span class="tag">Best practice — Accounting Cycle-কে একটা checklist হিসেবে ব্যবহার করুন</span>
+প্রতিটা মাস/বছর শেষে এই ৯-ধাপের cycle একটা checklist হিসেবে অনুসরণ করলে কোনো ধাপ (বিশেষ করে Adjusting Entries বা Closing Entries) বাদ পড়ে যাওয়ার ঝুঁকি কমে যায় — বেশিরভাগ accounting software আজকাল এই cycle স্বয়ংক্রিয়ভাবে সম্পন্ন করে, কিন্তু ভিত্তিটা বোঝা যেকোনো software-এর আউটপুট যাচাই করার জন্য অপরিহার্য।</div>
+</template>
+
+<template data-page="ratio-analysis">
+<h2 class="title">১৬. Financial Ratio Analysis (Advanced)</h2>
+<p class="lead">কাঁচা সংখ্যা (যেমন "Net Income ৬৩,০০০ টাকা") একা তেমন কিছু বলে না — Ratio Analysis সেই সংখ্যাগুলোকে একে অপরের সাথে তুলনা করে অর্থবহ সিদ্ধান্তে পৌঁছাতে সাহায্য করে।</p>
+
+<h3>Liquidity Ratios — স্বল্পমেয়াদী পরিশোধ ক্ষমতা</h3>
+<table>
+<tr><th>Ratio</th><th>সূত্র</th><th>ব্যাখ্যা</th></tr>
+<tr><td>Current Ratio</td><td>Current Assets ÷ Current Liabilities</td><td>১.৫–২.০ সাধারণত স্বাস্থ্যকর ধরা হয়; খুব কম মানে স্বল্পমেয়াদী বিল পরিশোধে ঝুঁকি, খুব বেশি মানে সম্পদ অলসভাবে বসে থাকতে পারে</td></tr>
+<tr><td>Quick Ratio (Acid-Test)</td><td>(Current Assets − Inventory) ÷ Current Liabilities</td><td>Inventory বাদ দিয়ে হিসাব করে, কারণ Inventory দ্রুত নগদে রূপান্তর নাও হতে পারে — একটা কঠোরতর liquidity পরীক্ষা</td></tr>
+</table>
+
+<h3>Profitability Ratios — লাভের গুণমান</h3>
+<table>
+<tr><th>Ratio</th><th>সূত্র</th><th>ব্যাখ্যা</th></tr>
+<tr><td>Gross Profit Margin</td><td>Gross Profit ÷ Revenue</td><td>মূল পণ্যের লাভজনকতা — ১২শ অধ্যায়ে আলোচিত</td></tr>
+<tr><td>Net Profit Margin</td><td>Net Income ÷ Revenue</td><td>প্রতি টাকা বিক্রয় থেকে সামগ্রিকভাবে কত মুনাফা থাকছে</td></tr>
+<tr><td>Return on Equity (ROE)</td><td>Net Income ÷ Total Equity</td><td>মালিকের বিনিয়োগের ওপর কত রিটার্ন পাওয়া যাচ্ছে</td></tr>
+<tr><td>Return on Assets (ROA)</td><td>Net Income ÷ Total Assets</td><td>ব্যবসার মোট সম্পদ কতটা দক্ষভাবে মুনাফা তৈরি করছে</td></tr>
+</table>
+
+<h3>Solvency/Leverage Ratios — দীর্ঘমেয়াদী আর্থিক স্থিতিশীলতা</h3>
+<table>
+<tr><th>Ratio</th><th>সূত্র</th><th>ব্যাখ্যা</th></tr>
+<tr><td>Debt-to-Equity Ratio</td><td>Total Liabilities ÷ Total Equity</td><td>ব্যবসা ঋণ বনাম মালিকানার ওপর কতটা নির্ভরশীল — বেশি অনুপাত মানে বেশি আর্থিক ঝুঁকি</td></tr>
+<tr><td>Interest Coverage Ratio</td><td>Operating Income ÷ Interest Expense</td><td>ব্যবসা তার সুদের খরচ কতবার পরিশোধ করতে সক্ষম — কম হলে সুদ পরিশোধে ঝুঁকি</td></tr>
+</table>
+
+<h3>Efficiency Ratios — সম্পদ ব্যবহারের দক্ষতা</h3>
+<table>
+<tr><th>Ratio</th><th>সূত্র</th><th>ব্যাখ্যা</th></tr>
+<tr><td>Inventory Turnover</td><td>COGS ÷ Average Inventory</td><td>বছরে কতবার Inventory বিক্রি হয়ে পুনরায় পূরণ হয় — কম হলে পণ্য অলসভাবে গুদামে পড়ে থাকছে</td></tr>
+<tr><td>Accounts Receivable Turnover</td><td>Net Credit Sales ÷ Average Accounts Receivable</td><td>বাকিতে বিক্রি করা টাকা কত দ্রুত আদায় হচ্ছে — কম হলে collection প্রক্রিয়া দুর্বল</td></tr>
+</table>
+
+<h3>একটা Ratio এককভাবে না, প্রেক্ষাপটে বিশ্লেষণ করুন</h3>
+<p>একটা একক ratio বিচ্ছিন্নভাবে খুব বেশি অর্থবহ না — এটা অর্থবহ হয়ে ওঠে যখন তুলনা করা হয় (১) সময়ের সাথে (এই বছর বনাম গত বছর — trend), (২) একই শিল্পের প্রতিযোগীর সাথে (industry benchmark), এবং (৩) কোম্পানির নিজস্ব লক্ষ্যমাত্রার সাথে। যেমন একটা ২.৫ Current Ratio retail ব্যবসার জন্য চমৎকার মনে হলেও, একটা ভিন্ন ব্যবসায়িক মডেলে ভিন্ন অর্থ বহন করতে পারে।</p>
+
+<div class="callout why"><span class="tag">কেন Ratio Analysis-কে "Advanced" ধাপ হিসেবে রাখা হয়েছে</span>
+Ratio Analysis অর্থবহ হতে হলে আগে Debit/Credit, Financial Statement-এর গঠন, এবং প্রতিটা লাইন আইটেম কী প্রতিনিধিত্ব করে তা গভীরভাবে বোঝা প্রয়োজন — নাহলে একটা ratio শুধু একটা সংখ্যা, কোনো insight না। এই কোর্সের আগের ১৫টা অধ্যায় ঠিক এই ভিত্তিটাই তৈরি করেছে।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — একটা ratio-কে সার্বজনীন "ভালো/খারাপ" মানদণ্ড ভাবা</span>
+"Current Ratio ২.০-এর কম মানেই খারাপ" — এই ধরনের সরলীকৃত নিয়ম বিভ্রান্তিকর। শিল্পভেদে (retail বনাম software company) স্বাভাবিক ratio ব্যাপকভাবে ভিন্ন হতে পারে — প্রতিটা ratio-কে তার নিজস্ব শিল্প ও ব্যবসায়িক মডেলের প্রেক্ষাপটে বিচার করতে হবে।</div>
+
+<div class="callout best"><span class="tag">Best practice — একাধিক Ratio একসাথে দেখুন, একটাতে নির্ভর করবেন না</span>
+শুধু Net Profit Margin ভালো দেখে সন্তুষ্ট না হয়ে, Current Ratio এবং Debt-to-Equity-ও একসাথে পরীক্ষা করুন — একটা ব্যবসা লাভজনক হয়েও উচ্চ ঋণ বা দুর্বল liquidity-এর কারণে ঝুঁকিপূর্ণ থাকতে পারে। একসাথে কয়েকটা ভিন্ন dimension-এর ratio দেখাই একটা সুষম আর্থিক চিত্র দেয়।</div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৭. Interview প্রশ্নোত্তর</h2>
+<p class="lead">এই কোর্সের বিষয়বস্তু নিয়ে সাধারণ প্রশ্ন — সংক্ষিপ্ত, সরাসরি উত্তরসহ।</p>
+
+<h3>১) Accounting Equation কী, এবং এটা কেন সবসময় সমান থাকে?</h3>
+<p>Assets = Liabilities + Equity। এটা সমান থাকে কারণ প্রতিটা লেনদেনের দুইটা সমান-মূল্যের প্রভাব থাকে — একটা সম্পদ বাড়লে হয় আরেকটা সম্পদ কমে, নয়তো একটা দায়/মূলধন বাড়ে, ফলে দুই পাশ সবসময় ভারসাম্যপূর্ণ থাকে।</p>
+
+<h3>২) Debit ও Credit-এর প্রকৃত অর্থ কী — এগুলো কি "বাড়া/কমা" বোঝায়?</h3>
+<p>Debit মানে শুধু "বাম পাশ", Credit মানে "ডান পাশ" — এদের কোনো সার্বজনীন "বাড়া/কমা" অর্থ নেই। Asset ও Expense Debit-এ বাড়ে, Credit-এ কমে; Liability, Equity, ও Revenue Credit-এ বাড়ে, Debit-এ কমে। অর্থ নির্ভর করে অ্যাকাউন্টের ধরনের ওপর।</p>
+
+<h3>৩) Double-Entry Bookkeeping System কী?</h3>
+<p>প্রতিটা লেনদেন কমপক্ষে দুইটা অ্যাকাউন্টে প্রভাব ফেলে — একটাতে Debit, আরেকটাতে সমান পরিমাণে Credit। এটা Accounting Equation-এর ভারসাম্য বজায় রাখার একটা formalized পদ্ধতি।</p>
+
+<h3>৪) Golden Rules of Accounting কী কী?</h3>
+<p>Personal Account: Debit the Receiver, Credit the Giver। Real Account: Debit what comes in, Credit what goes out। Nominal Account: Debit all expenses and losses, Credit all incomes and gains।</p>
+
+<h3>৫) একটা লেনদেন দেখে কীভাবে দ্রুত বুঝবেন এটা Debit না Credit হবে?</h3>
+<p>প্রথমে অ্যাকাউন্টটা কোন ক্যাটাগরির (Asset/Liability/Equity/Revenue/Expense) তা চিহ্নিত করুন, তারপর সেটা বাড়ছে না কমছে দেখুন। Asset/Expense বাড়লে Debit; Liability/Equity/Revenue বাড়লে Credit — বিপরীতে কমলে উল্টো দিক।</p>
+
+<h3>৬) Chart of Accounts কী, এবং এর numbering convention কেমন হয়?</h3>
+<p>Chart of Accounts হলো একটা ব্যবসার সব অ্যাকাউন্টের সুসংগঠিত, numbered তালিকা। প্রচলিত convention: 1000s Assets, 2000s Liabilities, 3000s Equity, 4000s Revenue, 5000s Expenses।</p>
+
+<h3>৭) Journal ও Ledger-এর মধ্যে পার্থক্য কী?</h3>
+<p>Journal কালানুক্রমিক রেকর্ড (কখন কী ঘটেছিল), Ledger অ্যাকাউন্ট-ভিত্তিক সংকলন (একটা নির্দিষ্ট অ্যাকাউন্টের সামগ্রিক অবস্থা)। Journal-এর এন্ট্রি Posting প্রক্রিয়ার মাধ্যমে Ledger-এ স্থানান্তরিত হয়।</p>
+
+<h3>৮) Trial Balance কী প্রমাণ করে, কী প্রমাণ করে না?</h3>
+<p>এটা প্রমাণ করে মোট Debit = মোট Credit (গাণিতিক ভারসাম্য)। এটা Error of Omission, Error of Principle, Error of Commission, বা Compensating Error ধরতে পারে না — এই ভুলগুলো Trial Balance মিলে যাওয়ার পরেও থেকে যেতে পারে।</p>
+
+<h3>৯) Adjusting Entries কেন দরকার?</h3>
+<p>Matching Principle অনুযায়ী প্রতিটা period-এর Revenue তার সংশ্লিষ্ট Expense-এর সাথে মেলাতে হয়, নগদ হাতবদল না হলেও। Accrued/Prepaid Expense, Accrued/Unearned Revenue, Depreciation, ও Bad Debt-এর মতো non-cash বা সময়-বিস্তৃত আইটেম Adjusting Entries দিয়ে সঠিক period-এ রেকর্ড করা হয়।</p>
+
+<h3>১০) Depreciation কী, এবং Straight-Line পদ্ধতিতে কীভাবে হিসাব করা হয়?</h3>
+<p>Depreciation হলো একটা fixed asset-এর খরচ তার useful life জুড়ে ছড়িয়ে দেওয়া। Straight-Line পদ্ধতি: (Cost − Salvage Value) ÷ Useful Life = বার্ষিক Depreciation Expense।</p>
+
+<h3>১১) চারটা মূল Financial Statement কী কী, এবং এরা কীভাবে যুক্ত?</h3>
+<p>Income Statement, Statement of Changes in Equity, Balance Sheet, এবং Cash Flow Statement। Income Statement-এর Net Income Equity-তে যোগ হয়, যা Balance Sheet-এ বসে; Cash Flow Statement-এর সমাপনী Cash Balance Sheet-এর Cash Asset-এর সাথে মেলে।</p>
+
+<h3>১২) Income Statement-এ Gross Profit ও Operating Income-এর পার্থক্য কী?</h3>
+<p>Gross Profit = Revenue − COGS (মূল পণ্যের লাভ)। Operating Income = Gross Profit − Operating Expenses (দৈনন্দিন পরিচালন খরচ বাদ দেওয়ার পর)।</p>
+
+<h3>১৩) Balance Sheet-এ Current ও Non-Current-এর সীমারেখা কী?</h3>
+<p>যা ১ বছরের মধ্যে নগদে রূপান্তরযোগ্য বা পরিশোধযোগ্য তা Current; যা ১ বছরের বেশি সময় জুড়ে থাকে তা Non-Current।</p>
+
+<h3>১৪) Cash Flow Statement-এর তিনটা বিভাগ কী কী?</h3>
+<p>Operating Activities (মূল ব্যবসায়িক কার্যক্রম), Investing Activities (দীর্ঘমেয়াদী সম্পদ ক্রয়/বিক্রয়), এবং Financing Activities (মালিক ও ঋণদাতাদের সাথে লেনদেন)।</p>
+
+<h3>১৫) Indirect Method-এ Net Income থেকে শুরু করে Depreciation কেন আবার যোগ করা হয়?</h3>
+<p>Depreciation একটা non-cash expense — Income Statement-এ বিয়োগ হয়েছিল কিন্তু কোনো প্রকৃত নগদ বের হয়নি। তাই Cash Flow বের করতে সেই "কাল্পনিক বিয়োগ" Net Income-এ ফেরত যোগ করে বাতিল করে দেওয়া হয়।</p>
+
+<h3>১৬) Temporary আর Permanent Account-এর পার্থক্য কী, এবং কোনগুলো Close করা হয়?</h3>
+<p>Permanent Account (Asset, Liability, Equity) কখনও close হয় না, balance carry forward হয়। Temporary Account (Revenue, Expense, Drawings) প্রতিটা period শেষে Closing Entries দিয়ে শূন্য করে দেওয়া হয়, যাতে পরের period পরিষ্কারভাবে শুরু হয়।</p>
+
+<h3>১৭) Current Ratio কী, এবং এটা কী বোঝায়?</h3>
+<p>Current Ratio = Current Assets ÷ Current Liabilities। এটা একটা ব্যবসার স্বল্পমেয়াদী দায় পরিশোধের ক্ষমতা পরিমাপ করে — সাধারণত ১.৫–২.০ স্বাস্থ্যকর ধরা হয়, তবে শিল্পভেদে ভিন্ন হতে পারে।</p>
+
+<h3>১৮) একটা ব্যবসা লাভজনক (Net Income বেশি) হয়েও কেন নগদ সংকটে পড়তে পারে?</h3>
+<p>Income Statement Accrual Basis-এ Revenue রেকর্ড করে, যা নগদে রূপান্তরিত না হতে পারে যদি বাকিতে বিক্রি বেশি হয় বা Receivable আদায়ে দেরি হয়। ফলে Net Income বেশি দেখালেও Operating Cash Flow কম বা negative হতে পারে — এটাই Income Statement আর Cash Flow Statement আলাদাভাবে দেখার গুরুত্ব প্রমাণ করে।</p>
+</template>
+
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  const searchIndex = {};
+  (function buildIndex(){
+    const tmp = document.createElement('div');
+    pages.forEach(p=>{
+      tmp.innerHTML = templates[p.id] || '';
+      searchIndex[p.id] = ((p.title||'') + ' ' + tmp.textContent).toLowerCase();
+    });
+  })();
+
+  let currentQuery = '';
+
+  function clearHighlights(root){
+    root.querySelectorAll('mark.hl').forEach(m=>{ m.replaceWith(document.createTextNode(m.textContent)); });
+    root.normalize();
+  }
+
+  function highlightIn(root, q){
+    if(!q) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        const p = node.parentNode;
+        if(!node.nodeValue || !p || p.tagName==='SCRIPT' || p.tagName==='STYLE' || p.tagName==='MARK') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes=[]; let n; while((n=walker.nextNode())) nodes.push(n);
+    const ql = q.toLowerCase();
+    nodes.forEach(node=>{
+      const text = node.nodeValue, lower = text.toLowerCase();
+      if(!lower.includes(ql)) return;
+      const frag = document.createDocumentFragment();
+      let idx=0, pos;
+      while((pos = lower.indexOf(ql, idx)) !== -1){
+        if(pos>idx) frag.appendChild(document.createTextNode(text.slice(idx,pos)));
+        const mark = document.createElement('mark');
+        mark.className='hl';
+        mark.textContent = text.slice(pos, pos+ql.length);
+        frag.appendChild(mark);
+        idx = pos+ql.length;
+      }
+      if(idx<text.length) frag.appendChild(document.createTextNode(text.slice(idx)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  function applyHighlight(){
+    const active = main.querySelector('.page.active');
+    if(!active) return;
+    clearHighlights(active);
+    if(currentQuery) highlightIn(active, currentQuery);
+  }
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    applyHighlight();
+    const active = main.querySelector('.page.active');
+    const firstMark = active ? active.querySelector('mark.hl') : null;
+    if(firstMark && firstMark.scrollIntoView) firstMark.scrollIntoView({block:'center'});
+    else window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const searchInput = document.getElementById('courseSearch');
+  const searchMeta = document.getElementById('searchMeta');
+  if(searchInput){
+    searchInput.addEventListener('input', ()=>{
+      const q = searchInput.value.trim();
+      currentQuery = q;
+      const ql = q.toLowerCase();
+      let matchCount = 0, firstMatch = null;
+      pages.forEach(p=>{
+        const btn = sidebar.querySelector('.navbtn[data-target="'+p.id+'"]');
+        const matches = !ql || searchIndex[p.id].includes(ql);
+        if(matches){ matchCount++; if(!firstMatch) firstMatch = p; }
+        if(btn) btn.classList.toggle('hide', !matches);
+      });
+      if(!ql) searchMeta.textContent = '';
+      else if(matchCount===0) searchMeta.textContent = 'কোনো ফলাফল নেই';
+      else searchMeta.textContent = matchCount + 'টা অধ্যায়ে ফলাফল পাওয়া গেছে';
+
+      const active = main.querySelector('.page.active');
+      const activeId = active ? active.id.replace('page-','') : null;
+      const activeMatches = !!(ql && activeId && searchIndex[activeId] && searchIndex[activeId].includes(ql));
+      if(ql && !activeMatches && firstMatch){
+        show(firstMatch.id);
+      } else {
+        applyHighlight();
+        const mark = active ? active.querySelector('mark.hl') : null;
+        if(ql && mark && mark.scrollIntoView) mark.scrollIntoView({block:'center'});
+      }
+    });
+    searchInput.addEventListener('keydown', e=>{
+      if(e.key==='Escape'){ searchInput.value=''; searchInput.dispatchEvent(new Event('input')); searchInput.blur(); }
+    });
+  }
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+<script src="global-search.js"></script>
+</body>
+</html>
