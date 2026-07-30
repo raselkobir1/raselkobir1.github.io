@@ -1,0 +1,1017 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>System Design Case Studies — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#4f46e5; --accent2:#22d3ee;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --pink:#f472b6;
+    --code-bg:#0b0f14; --kw:#93c5fd;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(79,70,229,.24),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#0b0d1f}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent2); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--accent2)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--accent2)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#93c5fd}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  .search-wrap{padding:0 10px 14px}
+  .search-box{
+    width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    border-radius:9px; padding:9px 12px; font-size:13.5px; font-family:inherit;
+    outline:none; transition:border-color .15s;
+  }
+  .search-box:focus{border-color:var(--accent2)}
+  .search-box::placeholder{color:var(--muted)}
+  .search-meta{font-size:11.5px; color:var(--muted); padding:6px 2px 0; min-height:14px}
+  .navbtn.hide{display:none}
+  mark.hl{background:#fde047; color:#1a1a1a; padding:0 1px; border-radius:3px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1117">
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🏗️ System Design Case Studies</h1>
+      <p>Beginner → Advanced • বাংলায় (keyword ইংরেজিতে)</p>
+      <div class="search-wrap">
+        <input type="text" id="courseSearch" class="search-box" placeholder="🔍 এই কোর্সে সার্চ করুন..." autocomplete="off">
+        <div class="search-meta" id="searchMeta"></div>
+      </div>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",           icon:"🧭", title:"Case Study Framework — যেকোনো System Design প্রশ্নে কীভাবে এগোবেন"},
+  {id:"ecommerce",            icon:"🛒", title:"Case Study — E-commerce ও Flash Sale Inventory System"},
+  {id:"payment",              icon:"💳", title:"Case Study — Payment Processing System"},
+  {id:"booking",              icon:"🏨", title:"Case Study — Hotel/Ticket Booking ও Reservation System"},
+  {id:"search-engine",        icon:"🔍", title:"Case Study — Search Engine (Full-Text Search)"},
+  {id:"collaborative-editing",icon:"📝", title:"Case Study — Real-time Collaborative Document Editor (Google Docs)"},
+  {id:"file-storage",         icon:"📁", title:"Case Study — Distributed File Storage ও Sync (Dropbox)"},
+  {id:"leaderboard",          icon:"🏆", title:"Case Study — Real-time Leaderboard System"},
+  {id:"analytics-pipeline",   icon:"📊", title:"Case Study — Ad Click Aggregation ও Analytics Pipeline"},
+  {id:"proximity-service",    icon:"📍", title:"Case Study — Proximity-Based Service (Nearby Search)"},
+  {id:"task-scheduler",       icon:"⏰", title:"Case Study — Distributed Task Scheduler ও Delayed Job Queue"},
+  {id:"monitoring",           icon:"📟", title:"Case Study — Metrics Monitoring ও Alerting System"},
+  {id:"mock-interview",       icon:"🎬", title:"Full Mock Interview Walkthrough — Design a Parking Lot System"},
+  {id:"common-patterns",      icon:"🧩", title:"Recurring Design Patterns — সব Case Study-এর সারাংশ"},
+  {id:"interview",            icon:"🎯", title:"Interview প্রশ্নোত্তর"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Case Study Framework — যেকোনো System Design প্রশ্নে কীভাবে এগোবেন</h2>
+<p class="lead">"Design Instagram" বা "Design a Parking Lot" — এই প্রশ্নের কোনো একক "সঠিক উত্তর" নেই। যা মূল্যায়ন করা হয় তা হলো আপনার চিন্তা করার পদ্ধতি — আর একটা পদ্ধতিগত framework সেই বিশৃঙ্খল মনে হওয়া প্রশ্নকে একটা পরিচালনাযোগ্য প্রক্রিয়ায় রূপান্তরিত করে।</p>
+
+<h3>কেন Case Study Foundational System Design থেকে আলাদা</h3>
+<p>এই সাইটের System Design কোর্স Scalability, Caching, Database, Message Queue-এর মতো individual building block শেখায়। একটা <span class="kw">Case Study</span> সেই ব্লকগুলো একসাথে জোড়া লাগিয়ে একটা সম্পূর্ণ, বাস্তব সিস্টেম তৈরি করার অনুশীলন — ঠিক যেমন individual accounting entry শেখার পর একটা সম্পূর্ণ Financial Statement তৈরি করা শেখা হয়। এই কোর্স ধরে নেয় আপনি building block-গুলো ইতিমধ্যে জানেন, এবং ফোকাস করে সেগুলো কখন-কীভাবে একসাথে ব্যবহার করবেন তার ওপর।</p>
+
+<h3>সাত-ধাপের Framework</h3>
+<table>
+<tr><th>ধাপ</th><th>কী করবেন</th><th>৪৫ মিনিট ইন্টারভিউতে সময়</th></tr>
+<tr><td>১. Requirement Clarification</td><td>Functional (কী কী feature) ও Non-functional (scale, latency, consistency) প্রশ্ন করা</td><td>~৫ মিনিট</td></tr>
+<tr><td>২. Estimation</td><td>Back-of-envelope হিসাব — QPS, storage, bandwidth (এই সাইটের System Design কোর্সের Estimation চ্যাপ্টার দেখুন)</td><td>~৫ মিনিট</td></tr>
+<tr><td>৩. API/Interface Design</td><td>প্রধান endpoint/interface সংজ্ঞায়িত করা</td><td>~৫ মিনিট</td></tr>
+<tr><td>৪. High-Level Design</td><td>বড় বড় component (client, LB, service, DB, cache) এবং তাদের মধ্যে ডেটা প্রবাহ আঁকা</td><td>~১০ মিনিট</td></tr>
+<tr><td>৫. Deep Dive</td><td>১-২টা সবচেয়ে গুরুত্বপূর্ণ/জটিল component-এ বিস্তারিত যাওয়া (ইন্টারভিউয়ার সাধারণত এখানে গাইড করেন)</td><td>~১৫ মিনিট</td></tr>
+<tr><td>৬. Bottleneck ও Scaling</td><td>Single point of failure, hot partition, bottleneck চিহ্নিত করে সমাধান প্রস্তাব করা</td><td>~৩ মিনিট</td></tr>
+<tr><td>৭. Trade-off ও Wrap-up</td><td>কী সিদ্ধান্তে কী ছাড় দেওয়া হয়েছে, ১০x স্কেলে কী পাল্টাতে হবে তা সংক্ষেপে বলা</td><td>~২ মিনিট</td></tr>
+</table>
+
+<h3>ধাপ ১ — Requirement Clarification: প্রশ্ন না করে শুরু করাই সবচেয়ে বড় ভুল</h3>
+<p>সরাসরি সমাধান ডিজাইন শুরু করার আগে স্পষ্ট করে নিন —</p>
+<ul>
+<li><b>Functional:</b> কোন কোন feature আসলে দরকার? (যেমন "News Feed" ডিজাইন করতে বললে — শুধু পোস্ট দেখানো, নাকি like/comment/share-ও অন্তর্ভুক্ত?)</li>
+<li><b>Scale:</b> কত ইউজার, দৈনিক active user সংখ্যা, read/write অনুপাত কেমন?</li>
+<li><b>Consistency প্রয়োজনীয়তা:</b> Strong consistency দরকার (payment), নাকি eventual consistency যথেষ্ট (social feed)?</li>
+<li><b>Latency প্রত্যাশা:</b> real-time হতে হবে, নাকি কয়েক সেকেন্ড দেরি গ্রহণযোগ্য?</li>
+</ul>
+
+<h3>ধাপ ৫ — Deep Dive: এখানেই আসল মূল্যায়ন হয়</h3>
+<p>High-Level Design সাধারণত প্রত্যেকেরই মোটামুটি একই রকম দেখায় (client → LB → service → DB)। যা একজন প্রার্থীকে আলাদা করে তা হলো Deep Dive ধাপে trade-off নিয়ে চিন্তাভাবনার গভীরতা — কেন SQL না NoSQL, কীভাবে একটা hot key সামলাবেন, একটা নির্দিষ্ট component fail করলে কী হবে। ইন্টারভিউয়ার প্রায়ই ইঙ্গিত দেন কোন দিকে গভীরে যেতে হবে — সেই ইঙ্গিত লক্ষ্য করা এবং অনুসরণ করা গুরুত্বপূর্ণ।</p>
+
+<div class="diagram"><pre>
+  Clarify Requirements ──▶ Estimate ──▶ Define API ──▶ High-Level Design
+                                                              │
+                                                              ▼
+  Trade-offs ◀── Bottlenecks/Scaling ◀── Deep Dive (১-২টা component)
+
+  প্রতিটা ধাপ আগেরটার ওপর ভিত্তি করে তৈরি — ধাপ এড়িয়ে সরাসরি
+  "সমাধানে" ঝাঁপ দেওয়া একটা সাধারণ এবং ব্যয়বহুল ভুল।
+</pre></div>
+
+<div class="callout why"><span class="tag">কেন Communication এই ফ্রেমওয়ার্কের একটা অবিচ্ছেদ্য অংশ</span>
+Case Study শুধু টেকনিক্যাল জ্ঞান পরীক্ষা করে না — এটা পরীক্ষা করে আপনি অস্পষ্ট, open-ended সমস্যা কীভাবে পদ্ধতিগতভাবে সামলান। জোরে জোরে চিন্তা প্রকাশ করা (thinking aloud), প্রতিটা সিদ্ধান্তের কারণ ব্যাখ্যা করা — এই দক্ষতাগুলো এই সাইটের Scalability কোর্সের "Technical Interview Strategy" চ্যাপ্টারে বিস্তারিত আলোচিত হয়েছে, এবং প্রতিটা Case Study-তে সরাসরি প্রযোজ্য।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Requirement স্পষ্ট না করেই ডিজাইন শুরু করা</span>
+"Design Twitter" শুনেই সরাসরি database schema আঁকা শুরু করা একটা মারাত্মক ভুল — কারণ Twitter-এর জন্য ডিজাইন সম্পূর্ণ ভিন্ন হবে যদি scale ১০ লাখ ইউজার হয় বনাম ১০০ কোটি ইউজার, বা যদি শুধু text post হয় বনাম video-ও অন্তর্ভুক্ত থাকে। ৫ মিনিট স্পষ্টীকরণ প্রশ্নে ব্যয় করা পরবর্তী ৪০ মিনিট ভুল দিকে যাওয়া থেকে বাঁচায়।</div>
+
+<div class="callout best"><span class="tag">Best practice — MVP দিয়ে শুরু করুন, তারপর ধাপে ধাপে scale করুন</span>
+প্রথমেই একটা নিখুঁত, সম্পূর্ণ distributed সমাধান আঁকার চেষ্টা করার বদলে, একটা সহজ single-server সমাধান দিয়ে শুরু করুন ("if this were a small startup..."), তারপর explicitly বলুন কোন bottleneck-এ কী স্কেল করতে হবে। এই পদ্ধতি দেখায় আপনি complexity ন্যায্যতা ছাড়া যোগ করেন না — প্রতিটা Case Study চ্যাপ্টারে এই প্যাটার্নই অনুসরণ করা হয়েছে।</div>
+</template>
+
+<template data-page="ecommerce">
+<h2 class="title">২. Case Study — E-commerce ও Flash Sale Inventory System</h2>
+<p class="lead">একটা সাধারণ দিনে ইনভেন্টরি ম্যানেজমেন্ট সহজ মনে হয় — কিন্তু একটা ফ্ল্যাশ সেলে যখন ১০,০০০ জন একই সাথে শেষ ১০০টা প্রোডাক্টের জন্য চেকআউট করার চেষ্টা করে, তখনই আসল ইঞ্জিনিয়ারিং চ্যালেঞ্জ শুরু হয়।</p>
+
+<h3>Requirement Clarification</h3>
+<ul>
+<li><b>Functional:</b> প্রোডাক্ট ব্রাউজ করা, কার্টে যোগ করা, অর্ডার প্লেস করা, পেমেন্ট (৩য় অধ্যায়ে বিস্তারিত)।</li>
+<li><b>Non-functional:</b> ইনভেন্টরি কখনও negative হতে পারবে না (oversell নিষিদ্ধ), ফ্ল্যাশ সেলে হঠাৎ ট্র্যাফিক spike সামলাতে হবে, চেকআউট latency কম রাখতে হবে।</li>
+</ul>
+
+<h3>High-Level Architecture</h3>
+<div class="diagram"><pre>
+[Client] ──▶ [API Gateway] ──▶ [Product Service] ──▶ [Product Cache (Redis)]
+                  │
+                  ├──▶ [Order Service] ──▶ [Order DB]
+                  │
+                  ├──▶ [Inventory Service] ──▶ [Inventory DB]
+                  │
+                  └──▶ [Payment Service] (৩য় অধ্যায়ে বিস্তারিত)
+</pre></div>
+
+<h3>Deep Dive — Oversell সমস্যা সমাধান</h3>
+<p>মূল চ্যালেঞ্জ হলো দুইজন গ্রাহক একই সাথে শেষ একটা আইটেম কিনতে চাইলে race condition তৈরি হয় (এই সাইটের Scalability কোর্সের Concurrency Advanced চ্যাপ্টারে বিস্তারিত আলোচিত)। দুইটা প্রধান সমাধান —</p>
+<table>
+<tr><th>পদ্ধতি</th><th>কীভাবে কাজ করে</th><th>Trade-off</th></tr>
+<tr><td>Atomic DB Decrement</td><td><code>UPDATE inventory SET stock = stock - 1 WHERE product_id = X AND stock > 0</code> — একটা atomic SQL statement, affected row 0 হলে বুঝবেন stock শেষ</td><td>সহজ, নির্ভরযোগ্য, কিন্তু high-contention-এ একটা row-তে সব request সিরিয়ালাইজড হয়ে bottleneck তৈরি করতে পারে</td></tr>
+<tr><td>Reserve-then-Confirm</td><td>চেকআউট শুরু হলে একটা সাময়িক "reservation" (TTL সহ) তৈরি হয়, পেমেন্ট সফল হলে reservation স্থায়ী order-এ রূপান্তরিত হয়, ব্যর্থ/timeout হলে reservation বাতিল হয়ে stock ফেরত আসে</td><td>User experience ভালো (checkout করার সময় item হারানোর ভয় থাকে না), কিন্তু জটিলতা বেশি — একটা background job দরকার হয় expired reservation পরিষ্কার করতে</td></tr>
+</table>
+
+<h3>Flash Sale-এর জন্য বিশেষ স্কেলিং কৌশল</h3>
+<ul>
+<li><b>Virtual Waiting Room:</b> সেলের ঠিক আগে/সময় ট্র্যাফিক একটা queue-তে রাখা এবং ধাপে ধাপে backend-এ ছেড়ে দেওয়া, যাতে backend কখনও তার ক্যাপাসিটির বাইরে চাপ না পায় (এই সাইটের Scalability কোর্সের Rate Limiting চ্যাপ্টারের admission control ধারণার সরাসরি প্রয়োগ)।</li>
+<li><b>Aggressive Caching:</b> প্রোডাক্টের তথ্য (নাম, দাম, ছবি) heavily cache করা, কারণ এগুলো ফ্ল্যাশ সেলের সময় বারবার পড়া হয় কিন্তু পরিবর্তন হয় না — শুধু stock count টাই dynamic।</li>
+<li><b>Checkout Queue Isolation:</b> Checkout/Payment flow-কে Browse flow থেকে আলাদা সার্ভিস/resource pool-এ রাখা, যাতে browsing traffic checkout-কে প্রভাবিত না করে, বা উল্টোটা।</li>
+</ul>
+
+<div class="callout why"><span class="tag">কেন এখানে Idempotency অত্যন্ত গুরুত্বপূর্ণ</span>
+ফ্ল্যাশ সেলের সময় নেটওয়ার্ক timeout-এর কারণে client প্রায়ই "Place Order" রিকোয়েস্ট retry করে। যদি Order Service idempotency key (এই সাইটের Scalability কোর্সের Idempotency চ্যাপ্টারে বিস্তারিত) ব্যবহার না করে, একই গ্রাহক দুর্ঘটনাক্রমে দুইবার অর্ডার করে ফেলতে পারেন, বা দুইবার শেষ stock-টা claim করার চেষ্টা করতে পারেন।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — শুধু Application-লেভেল লজিক দিয়ে Oversell ঠেকানোর চেষ্টা</span>
+"প্রথমে stock চেক করো, তারপর order করো" — এই দুই-ধাপের লজিক application কোডে লিখলে দুইটা concurrent request-ই "stock আছে" দেখতে পারে এবং দুইটাই order সফল করে ফেলতে পারে। Stock decrement অবশ্যই database-লেভেলে atomic হতে হবে, application-লেভেল check-then-act যথেষ্ট না।</div>
+
+<div class="callout best"><span class="tag">Best practice — Reservation TTL যথেষ্ট ছোট রাখুন</span>
+Reserve-then-Confirm পদ্ধতিতে reservation TTL (যেমন ১০ মিনিট) খুব বড় রাখলে ফ্ল্যাশ সেলে stock দীর্ঘক্ষণ "আটকে" থাকে (checkout শুরু করে ছেড়ে দেওয়া গ্রাহকদের কারণে), অথচ প্রকৃত ক্রেতারা "out of stock" দেখেন। TTL-কে বাস্তবসম্মত checkout সময়ের (২-৫ মিনিট) কাছাকাছি রাখা এই সমস্যা কমায়।</div>
+</template>
+
+<template data-page="payment">
+<h2 class="title">৩. Case Study — Payment Processing System</h2>
+<p class="lead">একটা পেমেন্ট সিস্টেমে ভুল মানে সরাসরি টাকার ক্ষতি — তাই এখানে "প্রায় সঠিক" যথেষ্ট না, প্রতিটা টাকা হিসাব নিখুঁতভাবে মিলতে হবে।</p>
+
+<h3>Requirement Clarification</h3>
+<ul>
+<li><b>Functional:</b> কার্ড/ওয়ালেট দিয়ে চার্জ করা, রিফান্ড দেওয়া, লেনদেনের ইতিহাস দেখা।</li>
+<li><b>Non-functional:</b> Strong consistency (কোনো টাকা "হারিয়ে" যেতে পারবে না বা দুইবার চার্জ হতে পারবে না), auditability (প্রতিটা টাকার গতিবিধি ট্র্যাক করা যেতে হবে), এবং high availability।</li>
+</ul>
+
+<h3>High-Level Architecture</h3>
+<div class="diagram"><pre>
+[Client] ──▶ [Payment API] ──▶ [Idempotency Check (Redis/DB)]
+                   │
+                   ▼
+          [Payment State Machine] ──▶ [External Gateway (Stripe/PayPal)]
+                   │                          │
+                   ▼                          ▼
+          [Ledger Service]            [Webhook Listener]
+          (Double-Entry বইকিপিং —
+           এই সাইটের Accounting
+           কোর্সে বিস্তারিত)
+</pre></div>
+
+<h3>Deep Dive — Idempotency এবং Payment State Machine</h3>
+<p>একটা পেমেন্ট রিকোয়েস্ট নেটওয়ার্ক timeout-এর কারণে retry হতে পারে — এই সাইটের Scalability কোর্সের Idempotency Key Pattern চ্যাপ্টারে আলোচিত পদ্ধতি এখানে সরাসরি প্রযোজ্য, প্রতিটা চার্জ রিকোয়েস্টে একটা client-generated idempotency key থাকতে হবে।</p>
+<p>প্রতিটা পেমেন্ট একটা <span class="kw">State Machine</span> অনুসরণ করে, কারণ external gateway (Stripe/PayPal)-এর সাথে যোগাযোগ asynchronous এবং ব্যর্থ হতে পারে —</p>
+<div class="diagram"><pre>
+  Created ──▶ Processing ──▶ Succeeded
+                  │
+                  └──────────▶ Failed ──▶ (retry বা refund flow)
+</pre></div>
+<p>Webhook-এর মাধ্যমে gateway থেকে আসা asynchronous status update state machine-কে আপডেট করে। যদি webhook দেরিতে আসে বা হারিয়ে যায়, একটা periodic <b>reconciliation job</b> gateway-এর সাথে ledger মিলিয়ে দেখে কোনো discrepancy আছে কি না।</p>
+
+<h3>Deep Dive — Double-Entry Ledger</h3>
+<p>প্রতিটা লেনদেন একটা double-entry bookkeeping পদ্ধতিতে রেকর্ড করা হয় (এই সাইটের Financial Accounting কোর্সে বিস্তারিত ব্যাখ্যা করা হয়েছে) — একটা কাস্টমারের পেমেন্ট মানে একদিকে Cash/Receivable বাড়ছে, আরেকদিকে Revenue বাড়ছে, একই সাথে একটা "processing fee" liability তৈরি হচ্ছে। এই পদ্ধতির সুবিধা হলো প্রতিটা মুহূর্তে ledger-এর দুইপাশ (debit/credit) মিলে যাওয়া উচিত — না মিললে সাথে সাথেই বোঝা যায় কোথাও একটা bug বা discrepancy আছে (Trial Balance-এর মতো একটা built-in sanity check)।</p>
+
+<h3>Security বিবেচনা</h3>
+<p>প্রকৃত কার্ড নম্বর কখনও নিজের ডাটাবেসে সংরক্ষণ করা হয় না (PCI-DSS compliance প্রয়োজনীয়তা) — এর বদলে <span class="kw">Tokenization</span> ব্যবহার করা হয়, যেখানে gateway একটা token ফেরত দেয় যা ভবিষ্যতের চার্জের জন্য ব্যবহার করা যায়, কিন্তু আসল কার্ড তথ্য কখনও নিজের সিস্টেমে স্পর্শ করে না।</p>
+
+<div class="callout why"><span class="tag">কেন Payment System-এ Eventual Consistency গ্রহণযোগ্য না</span>
+একটা social media like count কয়েক সেকেন্ড দেরিতে আপডেট হলে কেউ খেয়াল করে না, কিন্তু একটা account balance ভুল দেখালে সেটা সরাসরি আর্থিক ক্ষতি বা প্রতারণার সুযোগ তৈরি করে। এই কারণেই payment system-এর core ledger অপারেশন strong consistency এবং ACID transaction দাবি করে, যেখানে অন্য অনেক system (নিউজ ফিড, নোটিফিকেশন) eventual consistency মেনে নেয়।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Payment Gateway Response-কেই একমাত্র সত্য ধরে নেওয়া</span>
+যদি সিস্টেম শুধু gateway-এর সরাসরি response-এর ওপর নির্ভর করে (এবং webhook/reconciliation না রাখে), নেটওয়ার্ক সমস্যায় gateway আসলে চার্জ সফল করলেও client timeout-এর কারণে সিস্টেম মনে করতে পারে ব্যর্থ হয়েছে — ফলে গ্রাহক দুইবার চার্জ হতে পারেন যদি তিনি আবার চেষ্টা করেন। Webhook ও reconciliation job এই ফাঁক পূরণ করে।</div>
+
+<div class="callout best"><span class="tag">Best practice — সব State Transition Append-Only Log-এ রাখুন</span>
+একটা পেমেন্টের status সরাসরি overwrite করার বদলে, প্রতিটা state transition একটা append-only event log-এ রেকর্ড করুন (Created → Processing → Succeeded)। এতে যেকোনো সমস্যার audit trail সম্পূর্ণ থাকে, এবং "এই পেমেন্ট ঠিক কখন, কেন failed হয়েছিল" — এই প্রশ্নের উত্তর সবসময় খুঁজে বের করা যায়।</div>
+</template>
+
+<template data-page="booking">
+<h2 class="title">৪. Case Study — Hotel/Ticket Booking ও Reservation System</h2>
+<p class="lead">একটা হোটেল রুম বা সিনেমার সিট একসাথে দুইজনকে বিক্রি করা — এটাই বুকিং সিস্টেমের সবচেয়ে ক্লাসিক এবং সবচেয়ে ব্যয়বহুল ভুল।</p>
+
+<h3>Requirement Clarification</h3>
+<ul>
+<li><b>Functional:</b> availability সার্চ করা, একটা নির্দিষ্ট রুম/সিট নির্দিষ্ট তারিখের জন্য বুক করা, বাতিল করা।</li>
+<li><b>Non-functional:</b> Double-booking সম্পূর্ণ নিষিদ্ধ (E-commerce Case Study-এর oversell সমস্যার মতোই, কিন্তু এখানে "date range"-এর জটিলতা যোগ হয়), high-read (search) কিন্তু low-write (actual booking) ট্র্যাফিক প্যাটার্ন।</li>
+</ul>
+
+<h3>Data Model — মূল চ্যালেঞ্জ</h3>
+<p>একটা room "date range"-এর জন্য বুক হয়, একটা single row না — তাই সরল একটা <code>is_booked</code> boolean যথেষ্ট না। সাধারণ পদ্ধতি হলো প্রতিটা রুমের প্রতিটা তারিখের জন্য আলাদা একটা inventory row রাখা।</p>
+<table>
+<tr><th>Table</th><th>মূল কলাম</th></tr>
+<tr><td>rooms</td><td>room_id, hotel_id, room_type, base_price</td></tr>
+<tr><td>room_inventory</td><td>room_id, date, is_available (প্রতিটা রুম-তারিখ কম্বিনেশনের জন্য একটা row)</td></tr>
+<tr><td>bookings</td><td>booking_id, room_id, check_in, check_out, user_id, status, payment_id</td></tr>
+</table>
+
+<h3>Deep Dive — Double-Booking রোধ করা</h3>
+<p>যখন একজন ব্যবহারকারী একটা তারিখ রেঞ্জ বুক করতে চান, সিস্টেমকে সেই রেঞ্জের প্রতিটা তারিখের <code>room_inventory</code> row atomic ভাবে "available" থেকে "booked"-এ পরিবর্তন করতে হবে — একইসাথে দুইজন ব্যবহারকারী একই রেঞ্জের জন্য চেষ্টা করলে একজনই সফল হবেন।</p>
+<table>
+<tr><th>পদ্ধতি</th><th>বাস্তবায়ন</th><th>Trade-off</th></tr>
+<tr><td>Pessimistic Locking</td><td><code>SELECT ... FOR UPDATE</code> দিয়ে সংশ্লিষ্ট তারিখের row-গুলো lock করে, availability যাচাই করে, তারপর update করা</td><td>নির্ভরযোগ্য, কিন্তু high-demand তারিখে (holiday season) lock contention বাড়তে পারে</td></tr>
+<tr><td>Optimistic Locking + Retry</td><td>একটা version কলাম দিয়ে conflict শুধু commit-এর সময় যাচাই করা, conflict হলে ব্যবহারকারীকে আবার চেষ্টা করতে বলা</td><td>কম contention-এ ভালো throughput, কিন্তু high-demand তারিখে বারবার retry-এর কারণে ব্যবহারকারীর অভিজ্ঞতা খারাপ হতে পারে</td></tr>
+<tr><td>Distributed Lock (Redis)</td><td>room_id + date range-এর ওপর একটা সাময়িক distributed lock নেওয়া, বুকিং সম্পন্ন হলে ছেড়ে দেওয়া</td><td>Microservices আর্কিটেকচারে (যেখানে booking logic ডাটাবেস transaction-এর বাইরে ছড়িয়ে থাকতে পারে) কার্যকর, কিন্তু lock expiry/fencing token সঠিকভাবে সামলাতে হয় (Scalability কোর্সের Concurrency Advanced চ্যাপ্টারে বিস্তারিত)</td></tr>
+</table>
+<p>এই সাইটের Scalability কোর্সের Concurrency Advanced চ্যাপ্টারে আলোচিত Pessimistic/Optimistic Locking-এর একই মূলনীতি এখানে প্রযোজ্য — পার্থক্য শুধু এই যে এখানে একটা single row না, একটা তারিখ-রেঞ্জ জুড়ে একাধিক row-এর ওপর ভারসাম্য বজায় রাখতে হয়।</p>
+
+<h3>Booking Hold Pattern</h3>
+<p>E-commerce Case Study-এর মতোই, বুকিং সিস্টেম প্রায়ই একটা সাময়িক "hold" তৈরি করে (যেমন ১০ মিনিট) যখন ব্যবহারকারী পেমেন্ট সম্পন্ন করছেন — এই সময়ে সেই রুম অন্য কাউকে দেখানো হয় না, কিন্তু hold expire হলে (পেমেন্ট সম্পন্ন না হলে) স্বয়ংক্রিয়ভাবে আবার available হয়ে যায়।</p>
+
+<div class="callout why"><span class="tag">কেন Search আর Booking-এর জন্য আলাদা কৌশল দরকার</span>
+Availability search অত্যন্ত read-heavy (হাজার হাজার ব্যবহারকারী একই তারিখের জন্য দাম-availability দেখছেন), তাই এটা heavily cache করা যায় (কয়েক সেকেন্ডের stale data গ্রহণযোগ্য)। কিন্তু আসল বুকিং কনফার্ম করার মুহূর্তে strong consistency লাগে — তাই স্মার্ট আর্কিটেকচার এই দুই ধাপকে আলাদা consistency guarantee সহ আলাদাভাবে সামলায়।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Cache করা Availability সরাসরি বুকিং কনফার্ম করতে ব্যবহার করা</span>
+Search result-এর cache করা availability দেখে সরাসরি বুকিং "সফল" ধরে নেওয়া বিপজ্জনক — cache stale হতে পারে। চূড়ান্ত বুকিং সবসময় সরাসরি ডাটাবেসের বিপরীতে (cache বাদ দিয়ে) একটা atomic check-and-update দিয়ে কনফার্ম করতে হবে।</div>
+
+<div class="callout best"><span class="tag">Best practice — তারিখ-রেঞ্জের বদলে প্রতিদিনের Inventory Row ব্যবহার করুন</span>
+একটা booking-কে "date_range" হিসেবে সরাসরি স্টোর করার বদলে প্রতিটা রুম-তারিখ কম্বিনেশনের জন্য আলাদা row রাখা (row-per-day) লক করা, query করা এবং overlap detect করা অনেক সহজ করে তোলে — যদিও এতে সামান্য বেশি storage লাগে, এই trade-off সাধারণত value করার মতো।</div>
+</template>
+
+<template data-page="search-engine">
+<h2 class="title">৫. Case Study — Search Engine (Full-Text Search)</h2>
+<p class="lead">"লক্ষ লক্ষ ডকুমেন্টের মধ্যে একটা শব্দ খুঁজে বের করো" — এই সমস্যার নিষ্পাপ সমাধান (প্রতিটা ডকুমেন্ট স্ক্যান করা) কাজ করবে না; দরকার একটা সম্পূর্ণ ভিন্ন ডেটা স্ট্রাকচার।</p>
+
+<h3>Requirement Clarification</h3>
+<ul>
+<li><b>Functional:</b> কীওয়ার্ড দিয়ে ডকুমেন্ট খুঁজে বের করা, সবচেয়ে প্রাসঙ্গিক ফলাফল আগে দেখানো (ranking)।</li>
+<li><b>Non-functional:</b> লক্ষ লক্ষ ডকুমেন্ট, milliseconds-এ ফলাফল, ক্রমাগত নতুন ডকুমেন্ট যোগ হতে থাকা।</li>
+</ul>
+
+<h3>মূল ধারণা — Inverted Index</h3>
+<p>একটা সাধারণ ("forward") index ডকুমেন্ট থেকে শব্দে ম্যাপ করে (Doc 1 → ["cat", "sat", "mat"])। <span class="kw">Inverted Index</span> ঠিক তার উল্টো — প্রতিটা শব্দ থেকে সেই শব্দ ধারণকারী ডকুমেন্টের তালিকায় ম্যাপ করে।</p>
+<div class="diagram"><pre>
+  Documents:
+  Doc 1: "the cat sat"
+  Doc 2: "the cat ran"
+  Doc 3: "the dog sat"
+
+  Inverted Index:
+  "cat"  → [Doc 1, Doc 2]
+  "sat"  → [Doc 1, Doc 3]
+  "ran"  → [Doc 2]
+  "dog"  → [Doc 3]
+  "the"  → [Doc 1, Doc 2, Doc 3]   ← এত সাধারণ শব্দ (stopword) প্রায়ই বাদ দেওয়া হয়
+
+  "cat" AND "sat" খুঁজতে → [Doc 1, Doc 2] ∩ [Doc 1, Doc 3] = [Doc 1]
+</pre></div>
+<p>"cat sat" খুঁজতে সিস্টেম শুধু "cat" আর "sat"-এর তালিকা বের করে সেগুলোর intersection নেয় — লক্ষ লক্ষ ডকুমেন্ট স্ক্যান করার বদলে সরাসরি প্রাসঙ্গিক ডকুমেন্টে পৌঁছে যায়।</p>
+
+<h3>Indexing Pipeline</h3>
+<div class="diagram"><pre>
+  Raw Document ──▶ Tokenize ──▶ Normalize ──▶ Remove Stopwords ──▶ Build Index
+                 (শব্দে ভাঙা)   (lowercase,     ("the", "a"
+                                stemming:       বাদ দেওয়া)
+                                "running"→"run")
+</pre></div>
+
+<h3>Query Pipeline ও Ranking</h3>
+<p>একটা সার্চ query একই tokenize/normalize প্রক্রিয়ার মধ্য দিয়ে যায়, তারপর inverted index থেকে candidate ডকুমেন্ট বের করা হয়। এরপর <span class="kw">Ranking</span> ধাপে প্রতিটা candidate-কে একটা relevance স্কোর দেওয়া হয় — সবচেয়ে সাধারণ পদ্ধতি <b>TF-IDF</b> (Term Frequency − Inverse Document Frequency): একটা শব্দ একটা নির্দিষ্ট ডকুমেন্টে যত বেশি বার আসে (TF বেশি) কিন্তু সামগ্রিকভাবে যত কম ডকুমেন্টে দেখা যায় (IDF বেশি), সেই ডকুমেন্ট তত বেশি প্রাসঙ্গিক ধরা হয়।</p>
+
+<h3>স্কেলিং — Index Sharding</h3>
+<p>একটা মাত্র মেশিনে পুরো inverted index রাখা সম্ভব না হলে, index-কে ভাগ করতে হয় — <b>Term-based Sharding</b> (প্রতিটা shard কিছু নির্দিষ্ট শব্দের দায়িত্বে) অথবা <b>Document-based Sharding</b> (প্রতিটা shard কিছু নির্দিষ্ট ডকুমেন্টের দায়িত্বে, প্রতিটা query সব shard-এ পাঠাতে হয় এবং ফলাফল merge করতে হয় — একে <span class="kw">Scatter-Gather</span> বলা হয়)। বেশিরভাগ বাস্তব সিস্টেম (Elasticsearch) document-based sharding ব্যবহার করে কারণ এটা সমানভাবে load বিতরণ করা সহজ।</p>
+
+<div class="callout why"><span class="tag">কেন Elasticsearch-এর মতো Tool "reinvent the wheel" করা এড়ায়</span>
+Inverted index, tokenization, ranking — এই সবকিছু বাস্তবায়ন করা যথেষ্ট জটিল এবং বহু বছরের optimization-এর ফলাফল। তাই বাস্তব প্রোডাকশন সিস্টেমে খুব কম কোম্পানিই নিজস্ব সার্চ ইঞ্জিন লেখে — বরং Elasticsearch বা Solr-এর মতো প্রমাণিত টুল ব্যবহার করে, এবং নিজেদের ইঞ্জিনিয়ারিং সময় ব্যবসায়িক লজিকে ব্যয় করে।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — প্রতিটা সার্চে সরাসরি Database Query চালানো</span>
+<code>LIKE '%keyword%'</code>-এর মতো SQL query দিয়ে full-text search বাস্তবায়ন করার চেষ্টা করলে ডেটার আকার বাড়ার সাথে সাথে ভয়াবহভাবে ধীর হয়ে যায় (কারণ index ছাড়া প্রতিটা row স্ক্যান করতে হয়)। Full-text search-এর জন্য সবসময় একটা উদ্দেশ্য-নির্মিত inverted index ব্যবহার করা উচিত।</div>
+
+<div class="callout best"><span class="tag">Best practice — Indexing ও Serving আলাদা রাখুন</span>
+নতুন ডকুমেন্ট index করা (write-heavy, ব্যাচে করা যায়) এবং সার্চ query সার্ভ করা (read-heavy, low-latency দরকার) — এই দুই কাজের রিসোর্স প্রয়োজন সম্পূর্ণ ভিন্ন। এগুলোকে আলাদা pipeline/component-এ আলাদা রাখলে indexing-এর ভারী কাজ query serving-এর latency-কে প্রভাবিত করে না।</div>
+</template>
+
+<template data-page="collaborative-editing">
+<h2 class="title">৬. Case Study — Real-time Collaborative Document Editor (Google Docs)</h2>
+<p class="lead">দুইজন মানুষ একই paragraph-এ একই সময়ে টাইপ করছেন — কার পরিবর্তন আগে যাবে, আর কীভাবে দুইজনের স্ক্রিনেই একই চূড়ান্ত ফলাফল দেখা যাবে?</p>
+
+<h3>Requirement Clarification</h3>
+<ul>
+<li><b>Functional:</b> একাধিক ব্যবহারকারী একই ডকুমেন্ট একসাথে edit করতে পারবেন, প্রতিটা পরিবর্তন প্রায় তাৎক্ষণিকভাবে সবার স্ক্রিনে দেখা যাবে।</li>
+<li><b>Non-functional:</b> কোনো edit হারানো যাবে না, সব ব্যবহারকারীর ডকুমেন্ট চূড়ান্তভাবে একই অবস্থায় converge করবে (eventual consistency যথেষ্ট, কিন্তু "সঠিক" হতে হবে)।</li>
+</ul>
+
+<h3>মূল চ্যালেঞ্জ — Concurrent Edit Conflict</h3>
+<p>ধরুন ডকুমেন্টে টেক্সট "Hello World" আছে। User A "Hello" মুছে ফেলছেন, ঠিক একই সময়ে User B "World"-এর পরে "!" যোগ করছেন। দুইটা operation স্বাধীনভাবে পাঠানো হলে, প্রতিটা ব্যবহারকারীর client-এ সেগুলো প্রয়োগের ক্রম ভিন্ন হতে পারে — যদি সাবধানে না সামলানো হয়, দুইজনের ডকুমেন্ট চূড়ান্তভাবে ভিন্ন হয়ে যেতে পারে।</p>
+
+<h3>সমাধান ১ — Operational Transformation (OT)</h3>
+<p><span class="kw">Operational Transformation</span> প্রতিটা operation-কে (insert/delete at position X) অন্য operation-এর সাপেক্ষে "transform" করে, যাতে ক্রম নির্বিশেষে একই চূড়ান্ত ফলাফল আসে। যেমন, যদি User B "position 11-এ ! insert করো" পাঠান, কিন্তু ততক্ষণে User A ইতিমধ্যে position 0-5 মুছে ফেলেছেন, তাহলে সার্ভার B-এর operation-কে transform করে "position 6-এ ! insert করো"-তে রূপান্তরিত করে (কারণ টেক্সট shift হয়ে গেছে)। Google Docs ঐতিহাসিকভাবে এই পদ্ধতি ব্যবহার করেছে।</p>
+
+<h3>সমাধান ২ — CRDT (Conflict-free Replicated Data Type)</h3>
+<p><span class="kw">CRDT</span> একটা ভিন্ন দর্শন নেয় — ডেটা স্ট্রাকচারকে এমনভাবে ডিজাইন করা হয় যাতে যেকোনো ক্রমে operation প্রয়োগ করলেও mathematically গ্যারান্টিড একই ফলাফল আসে (commutative merge), কোনো central transformation logic ছাড়াই। এটা peer-to-peer আর্কিটেকচারে (কোনো central server ছাড়া sync) OT-এর চেয়ে সহজ, এবং আধুনিক collaborative tool (Figma-এর মতো) প্রায়ই CRDT পছন্দ করে।</p>
+<table>
+<tr><th>দিক</th><th>Operational Transformation (OT)</th><th>CRDT</th></tr>
+<tr><td>Central Server প্রয়োজন</td><td>সাধারণত হ্যাঁ (transformation logic সার্ভারে)</td><td>না, peer-to-peer-এও কাজ করে</td></tr>
+<tr><td>জটিলতা</td><td>Transformation function সঠিকভাবে লেখা কঠিন, edge case অনেক</td><td>ডেটা স্ট্রাকচার ডিজাইন জটিল, কিন্তু merge logic simpler</td></tr>
+<tr><td>ব্যবহার</td><td>Google Docs (ঐতিহাসিকভাবে)</td><td>Figma, Notion-এর মতো আধুনিক collaborative tool</td></tr>
+</table>
+
+<h3>High-Level Architecture</h3>
+<div class="diagram"><pre>
+  [User A Browser] ──WebSocket──┐
+                                 ▼
+  [User B Browser] ──WebSocket──▶ [Collaboration Server] ──▶ [Document Store]
+                                 ▲                              (periodic snapshot)
+  [User C Browser] ──WebSocket──┘
+
+  প্রতিটা client একটা WebSocket connection বজায় রাখে; সার্ভার
+  operation broadcast করে, প্রয়োজনে transform করে, এবং periodic
+  snapshot ডাটাবেসে persist করে (প্রতিটা keystroke persist করা অপ্রয়োজনীয়)।
+</pre></div>
+
+<div class="callout why"><span class="tag">কেন WebSocket, HTTP Polling না</span>
+এই সিস্টেমে প্রতিটা keystroke-এর প্রভাব সবার কাছে প্রায় তাৎক্ষণিকভাবে পৌঁছাতে হবে। বারবার HTTP request পাঠিয়ে আপডেট চেক করা (polling) উল্লেখযোগ্য latency যোগ করে এবং অপ্রয়োজনীয় request দিয়ে সার্ভারে চাপ বাড়ায়। WebSocket একটা persistent, bidirectional connection বজায় রাখে যাতে সার্ভার সাথে সাথে client-দের push করতে পারে।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — শেষ Write জেতে (Last-Write-Wins) পদ্ধতি ব্যবহার করা</span>
+সহজ সমাধান মনে হতে পারে — শুধু শেষ যে ব্যবহারকারী সেভ করলেন তার ভার্সন রাখা। কিন্তু এতে অন্য ব্যবহারকারীর সব পরিবর্তন নীরবে হারিয়ে যায়, যা একটা collaborative editor-এর জন্য সম্পূর্ণ অগ্রহণযোগ্য — ব্যবহারকারীরা কখনও বুঝতেও পারবেন না তাদের কাজ হারিয়ে গেছে।</div>
+
+<div class="callout best"><span class="tag">Best practice — প্রতিটা Keystroke না, Periodic Snapshot Persist করুন</span>
+প্রতিটা ছোট operation তাৎক্ষণিকভাবে persistent storage-এ লেখা ব্যয়বহুল এবং অপ্রয়োজনীয়। বরং in-memory-তে operation প্রয়োগ করে ব্যবহারকারীদের মধ্যে broadcast করুন, এবং একটা নির্দিষ্ট বিরতিতে (বা নির্দিষ্ট সংখ্যক operation পরে) পুরো ডকুমেন্টের একটা snapshot ডাটাবেসে persist করুন।</div>
+</template>
+
+<template data-page="file-storage">
+<h2 class="title">৭. Case Study — Distributed File Storage ও Sync (Dropbox)</h2>
+<p class="lead">একটা ১ GB ফাইলের একটা লাইন বদলালে পুরো ফাইল আবার আপলোড করা অপ্রয়োজনীয় — আসল চ্যালেঞ্জ শুধু কী পরিবর্তন হয়েছে তা বের করা এবং শুধু সেটুকুই sync করা।</p>
+
+<h3>Requirement Clarification</h3>
+<ul>
+<li><b>Functional:</b> ফাইল আপলোড/ডাউনলোড, একাধিক ডিভাইসে sync, ফাইল শেয়ার করা।</li>
+<li><b>Non-functional:</b> বড় ফাইল efficient ভাবে সামলানো, ব্যান্ডউইথ কম ব্যবহার করা, একাধিক ডিভাইসে consistency বজায় রাখা।</li>
+</ul>
+
+<h3>মূল কৌশল ১ — File Chunking</h3>
+<p>একটা ফাইলকে সম্পূর্ণ একক (single blob) হিসেবে না রেখে, ছোট ছোট নির্দিষ্ট-আকারের <span class="kw">Chunk/Block</span>-এ (যেমন ৪ MB) ভাগ করা হয়। প্রতিটা chunk-এর একটা hash (যেমন SHA-256) বের করা হয়, এবং chunk-গুলো সেই hash অনুযায়ী block storage-এ রাখা হয়।</p>
+<div class="diagram"><pre>
+  বড় ফাইল (১০০ MB)
+        │
+        ▼
+  Chunk 1 (৪ MB) → hash: a1b2...   Chunk 2 (৪ MB) → hash: c3d4...  ...
+
+  File Metadata = [hash: a1b2..., hash: c3d4..., ...] (chunk hash-এর একটা ক্রমিক তালিকা)
+</pre></div>
+
+<h3>মূল কৌশল ২ — Deduplication ও Delta Sync</h3>
+<p>একটা ফাইলের একটা অংশ পরিবর্তন হলে, শুধু সেই অংশের সাথে সম্পর্কিত chunk(গুলো)-এর hash পরিবর্তিত হয় — বাকি chunk অপরিবর্তিত থাকে। তাই sync করার সময় client শুধু <b>পরিবর্তিত chunk</b> আপলোড করে, পুরো ফাইল না — একে <span class="kw">Delta Sync</span> বলে। এছাড়াও, যদি একই chunk (একই hash) ইতিমধ্যে storage-এ থাকে (হয়তো অন্য ব্যবহারকারীর একটা ফাইলে), সেটা আবার আপলোড/সংরক্ষণ করার দরকার নেই — এটাই <span class="kw">Deduplication</span>, যা storage খরচ উল্লেখযোগ্যভাবে কমায়।</p>
+
+<h3>High-Level Architecture</h3>
+<div class="diagram"><pre>
+  [Client (watches local FS changes)]
+       │  diff করে শুধু পরিবর্তিত chunk পাঠায়
+       ▼
+  [Sync Service] ──▶ [Metadata Service] ──▶ (কোন ফাইলের কোন chunk, কোন ভার্সনে)
+       │
+       ▼
+  [Block Storage (S3-এর মতো)] ──▶ chunk hash অনুযায়ী সংরক্ষিত
+
+  অন্য ডিভাইসে notify পাঠানো হয় → সেই ডিভাইস শুধু পরিবর্তিত/নতুন chunk ডাউনলোড করে
+</pre></div>
+<p>লক্ষ্য করুন — <b>Metadata Service</b> (কোন ফাইল, কোন chunk-এর সমষ্টি) এবং <b>Block Storage</b> (আসল chunk ডেটা) ইচ্ছাকৃতভাবে আলাদা রাখা হয়েছে, কারণ তাদের স্কেলিং প্রয়োজন সম্পূর্ণ ভিন্ন — metadata ছোট কিন্তু frequently query হয়, block storage বিশাল কিন্তু relatively কম access হয়।</p>
+
+<h3>Conflict Handling — একাধিক ডিভাইসে একই ফাইল Edit</h3>
+<p>যদি একজন ব্যবহারকারী একই ফাইল দুইটা ডিভাইসে অফলাইনে edit করেন এবং পরে দুটোই sync হতে চেষ্টা করে, সিস্টেম একটা conflict দেখে — সাধারণ সমাধান হলো উভয় ভার্সন রাখা ("filename (conflicted copy).txt") এবং ব্যবহারকারীকে ম্যানুয়ালি মেলাতে দেওয়া, কারণ ফাইল কনটেন্ট automatically merge করা (Google Docs-এর মতো OT/CRDT ছাড়া) সাধারণত সম্ভব না।</p>
+
+<div class="callout why"><span class="tag">কেন Chunking-এর আকার একটা গুরুত্বপূর্ণ Trade-off</span>
+ছোট chunk (যেমন ৪ KB) মানে বেশি precise deduplication এবং delta sync (কম ডেটা re-upload), কিন্তু metadata-এর পরিমাণ (chunk হ্যাশের তালিকা) অনেক বেড়ে যায়। বড় chunk (যেমন ৬৪ MB) মানে কম metadata overhead, কিন্তু ছোট একটা পরিবর্তনেও পুরো একটা বড় chunk পুনরায় আপলোড করতে হতে পারে। বাস্তব সিস্টেম সাধারণত একটা মাঝামাঝি (৪-৮ MB) মান বেছে নেয়।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — প্রতিটা পরিবর্তনে পুরো ফাইল Re-upload করা</span>
+Chunking ছাড়া একটা সিস্টেম একটা বড় ফাইলের ছোট পরিবর্তনেও পুরো ফাইল আবার আপলোড করতে বাধ্য হয় — বড় ফাইল এবং ধীর নেটওয়ার্কে এটা অত্যন্ত অদক্ষ এবং ব্যবহারকারীর অভিজ্ঞতা খারাপ করে।</div>
+
+<div class="callout best"><span class="tag">Best practice — Content-based Hash ব্যবহার করুন, Filename না</span>
+Chunk-কে তার filename বা position দিয়ে না, বরং তার কনটেন্টের hash দিয়ে চিহ্নিত করুন (content-addressable storage)। এতে দুইটা সম্পূর্ণ ভিন্ন ফাইলেও যদি একই chunk থাকে (যেমন একই বয়লারপ্লেট টেক্সট), সেটা স্বয়ংক্রিয়ভাবে deduplicate হয়ে যায়, আলাদা করে চিহ্নিত করার দরকার হয় না।</div>
+</template>
+
+<template data-page="leaderboard">
+<h2 class="title">৮. Case Study — Real-time Leaderboard System</h2>
+<p class="lead">লক্ষ লক্ষ খেলোয়াড়ের মধ্যে "আমি এখন কত নম্বরে আছি" এই প্রশ্নের উত্তর মিলিসেকেন্ডে দিতে হবে, এবং স্কোর প্রতি মুহূর্তে বদলাচ্ছে — একটা সাধারণ SQL <code>ORDER BY</code> এখানে যথেষ্ট দ্রুত না।</p>
+
+<h3>Requirement Clarification</h3>
+<ul>
+<li><b>Functional:</b> একজন খেলোয়াড়ের স্কোর আপডেট করা, Top-N খেলোয়াড় দেখানো, একজন নির্দিষ্ট খেলোয়াড়ের rank ও তার আশেপাশের খেলোয়াড় দেখানো।</li>
+<li><b>Non-functional:</b> লক্ষ লক্ষ খেলোয়াড়, স্কোর ঘন ঘন আপডেট হওয়া, rank query প্রায় real-time হতে হবে।</li>
+</ul>
+
+<h3>মূল সমাধান — Sorted Set (Redis ZSET)</h3>
+<p>একটা relational database-এ প্রতিটা স্কোর আপডেটে পুরো টেবিল <code>ORDER BY score</code> দিয়ে সাজানো ব্যয়বহুল। <span class="kw">Redis Sorted Set (ZSET)</span> একটা ডেটা স্ট্রাকচার যা প্রতিটা member-কে একটা score-এর সাথে সবসময় sorted অবস্থায় রাখে (internally একটা skip list ব্যবহার করে), এবং —</p>
+<ul>
+<li>স্কোর আপডেট করা: <code>ZADD leaderboard 1500 "user123"</code> — O(log N)।</li>
+<li>Top-N বের করা: <code>ZREVRANGE leaderboard 0 9</code> (সেরা ১০ জন) — O(log N + 10)।</li>
+<li>একজনের rank বের করা: <code>ZREVRANK leaderboard "user123"</code> — O(log N)।</li>
+<li>কারো আশেপাশের rank বের করা: rank বের করে তার আশেপাশের index range query করা।</li>
+</ul>
+
+<h3>High-Level Architecture</h3>
+<div class="diagram"><pre>
+  [Game Server] ──score update──▶ [Redis ZSET (in-memory, sorted)]
+                                          │
+                                          ├──▶ [Periodic Snapshot] ──▶ [Durable DB]
+                                          │      (durability-এর জন্য, Redis crash করলেও ডেটা হারানো এড়াতে)
+                                          │
+                                   [Read API] ──▶ Top-N, My Rank, Nearby Ranks
+</pre></div>
+
+<h3>একক Redis Instance-এর বাইরে স্কেলিং</h3>
+<p>একটা একক Redis instance-এর মেমোরিতে সব খেলোয়াড় না ধরলে, বা write throughput একটা instance-এর ক্ষমতা ছাড়িয়ে গেলে —</p>
+<ul>
+<li><b>Sharding by Game/Region:</b> প্রতিটা আলাদা game বা region-এর জন্য আলাদা Redis instance/leaderboard রাখা (প্রায়ই স্বাভাবিকভাবেই আলাদা থাকে — একটা গ্লোবাল leaderboard কম প্রয়োজনীয়)।</li>
+<li><b>Periodic Aggregation:</b> সময়ভিত্তিক leaderboard (দৈনিক, সাপ্তাহিক) হলে প্রতিটা সময়সীমার জন্য আলাদা ZSET রাখা এবং পুরনোগুলো archive/expire করা।</li>
+</ul>
+
+<div class="callout why"><span class="tag">কেন In-Memory Sorted Structure দরকার, ডাটাবেস Index না</span>
+একটা relational database-এ একটা কলামে index থাকলেও, প্রতিটা লেখা (write) সেই index আপডেট করার খরচ বহন করে এবং disk I/O জড়িত। Redis-এর মতো in-memory ডেটা স্ট্রাকচার সরাসরি RAM-এ কাজ করে, disk I/O ছাড়াই, যা এই ধরনের অত্যন্ত ঘন ঘন write ও read উভয়ের জন্যই প্রয়োজনীয় গতি দেয়।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Durability সম্পূর্ণ উপেক্ষা করা</span>
+শুধু Redis-এ ডেটা রাখলে, Redis crash করলে (বা restart হলে) পুরো leaderboard হারিয়ে যেতে পারে যদি persistence configure করা না থাকে। Redis-এর নিজস্ব persistence (RDB/AOF) সক্রিয় রাখা, এবং/অথবা একটা periodic snapshot durable storage-এ (যেমন PostgreSQL) নেওয়া — দুটোই গুরুত্বপূর্ণ।</div>
+
+<div class="callout best"><span class="tag">Best practice — "My Rank" ফিচারকে বিশেষভাবে অপ্টিমাইজ করুন</span>
+বেশিরভাগ ব্যবহারকারী Top-10 কখনও দেখবেন না, কিন্তু "আমি কত নম্বরে" এবং "আমার আশেপাশে কারা" — এই তথ্য প্রায় সবাই চাইবেন। তাই এই নির্দিষ্ট query pattern-টা দ্রুত ও নির্ভরযোগ্য রাখাই সবচেয়ে বেশি ব্যবহারকারীর অভিজ্ঞতা প্রভাবিত করে, শুধু Top-N optimize করার চেয়ে।</div>
+</template>
+
+<template data-page="analytics-pipeline">
+<h2 class="title">৯. Case Study — Ad Click Aggregation ও Analytics Pipeline</h2>
+<p class="lead">প্রতি সেকেন্ডে লক্ষ লক্ষ ক্লিক ইভেন্ট আসছে — প্রতিটা ক্লিক আলাদাভাবে ডাটাবেসে লেখা এবং প্রতিটা ড্যাশবোর্ড রিফ্রেশে সেগুলো গণনা করা কখনোই স্কেল করবে না।</p>
+
+<h3>Requirement Clarification</h3>
+<ul>
+<li><b>Functional:</b> প্রতিটা বিজ্ঞাপনে ক্লিক ট্র্যাক করা, প্রতি মিনিট/ঘণ্টায় aggregate count দেখানো, একটা ড্যাশবোর্ডে near-real-time রিপোর্ট।</li>
+<li><b>Non-functional:</b> প্রচুর পরিমাণ ইভেন্ট (high write throughput), duplicate ইভেন্ট সামলানো, দেরিতে আসা (late) ইভেন্ট সামলানো।</li>
+</ul>
+
+<h3>High-Level Architecture — Stream Processing Pipeline</h3>
+<div class="diagram"><pre>
+  [Ad Click Event] ──▶ [Kafka (Event Ingestion)] ──▶ [Stream Processor]
+                                                            │
+                                              (windowed aggregation:
+                                               প্রতি ১ মিনিটের ক্লিক গণনা)
+                                                            │
+                                                            ▼
+                                                  [OLAP Store / Time-series DB]
+                                                            │
+                                                            ▼
+                                                  [Dashboard Query Layer]
+</pre></div>
+<p>প্রতিটা raw click event সরাসরি ডাটাবেসে না লিখে, প্রথমে একটা message queue (Kafka)-তে ingest করা হয় — এটা producer (ক্লিক জেনারেট করা সিস্টেম) এবং consumer (aggregation logic)-এর মধ্যে decoupling তৈরি করে, যাতে হঠাৎ ট্র্যাফিক spike-এ producer কখনও consumer-এর গতির জন্য block না হয়।</p>
+
+<h3>Windowed Aggregation</h3>
+<p>Stream Processor ইভেন্টগুলোকে সময়ের "window"-এ ভাগ করে (যেমন প্রতি ১ মিনিট) এবং প্রতিটা window-এর জন্য একটা aggregate (মোট ক্লিক সংখ্যা) গণনা করে। এই aggregate ফলাফল একটা <span class="kw">OLAP (Online Analytical Processing)</span> স্টোরে সংরক্ষণ করা হয়, যা raw event না, বরং pre-aggregated সংখ্যার ওপর দ্রুত query চালানোর জন্য অপ্টিমাইজড।</p>
+
+<h3>Deep Dive — Duplicate ও Late Event সামলানো</h3>
+<table>
+<tr><th>সমস্যা</th><th>সমাধান</th></tr>
+<tr><td>Duplicate Event (একই ক্লিক দুইবার ingest হওয়া, network retry-এর কারণে)</td><td>প্রতিটা ইভেন্টে একটা unique event ID দেওয়া, aggregation-এর আগে idempotent deduplication করা (Scalability কোর্সের Idempotency চ্যাপ্টারের নীতি প্রযোজ্য)</td></tr>
+<tr><td>Late Event (৫ মিনিট আগের একটা ক্লিক নেটওয়ার্ক বিলম্বে এখন এসে পৌঁছালো)</td><td><span class="kw">Watermarking</span> — একটা নির্দিষ্ট সময় (grace period) পর্যন্ত দেরিতে আসা ইভেন্ট গ্রহণ করা এবং সংশ্লিষ্ট window-এর aggregate আপডেট করা, তারপর window "চূড়ান্ত" ঘোষণা করা</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">কেন Raw Event সরাসরি Query না করে Pre-aggregate করা হয়</span>
+লক্ষ লক্ষ raw click event-এর ওপর প্রতিবার ড্যাশবোর্ড রিফ্রেশে "COUNT" চালানো ব্যয়বহুল এবং ধীর। এর বদলে stream processing ধাপে ধাপে pre-aggregate করে রাখলে (প্রতি মিনিটের সংখ্যা আগে থেকেই গণনা করা), ড্যাশবোর্ড query শুধু ছোট, already-summarized ডেটার ওপর কাজ করে — যা orders of magnitude দ্রুত।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Exactly-once Processing-এর অতিরিক্ত প্রতিশ্রুতি দেওয়া</span>
+Distributed system-এ সত্যিকারের "exactly-once" guarantee অর্জন করা ব্যয়বহুল এবং প্রায়ই অপ্রয়োজনীয়। বেশিরভাগ analytics ব্যবহারে "at-least-once delivery + idempotent deduplication" (যা কার্যকরভাবে exactly-once-এর মতো ফলাফল দেয়) একটা অনেক বেশি ব্যবহারিক এবং সাশ্রয়ী পদ্ধতি।</div>
+
+<div class="callout best"><span class="tag">Best practice — Raw Event আলাদাভাবেও সংরক্ষণ করুন</span>
+Aggregated ডেটার পাশাপাশি raw event একটা সস্তা, দীর্ঘমেয়াদী storage-এও (যেমন data lake) সংরক্ষণ করে রাখুন — ভবিষ্যতে aggregation logic বদলাতে হলে, বা একটা নতুন ধরনের বিশ্লেষণ দরকার হলে, raw ডেটা থেকে আবার reprocess করা সম্ভব হয়।</div>
+</template>
+
+<template data-page="proximity-service">
+<h2 class="title">১০. Case Study — Proximity-Based Service (Nearby Search)</h2>
+<p class="lead">"আমার আশেপাশের ৫ কিলোমিটারের মধ্যে রেস্টুরেন্ট দেখাও" — এই প্রশ্নের উত্তর দ্রুত দিতে ল্যাটিটিউড-লঙ্গিচিউড-এর ওপর সাধারণ index যথেষ্ট না।</p>
+
+<h3>Requirement Clarification</h3>
+<ul>
+<li><b>Functional:</b> ব্যবহারকারীর বর্তমান অবস্থান থেকে একটা নির্দিষ্ট radius-এর মধ্যে ব্যবসা/স্থান খুঁজে বের করা, দূরত্ব অনুযায়ী সাজানো।</li>
+<li><b>Non-functional:</b> লক্ষ লক্ষ location, milliseconds-এ ফলাফল, ঘন ঘন query (কম ঘন ঘন location আপডেট)।</li>
+</ul>
+
+<h3>কেন সাধারণ Index যথেষ্ট না</h3>
+<p>Latitude আর Longitude-এর ওপর আলাদা আলাদা B-Tree index থাকলেও, "এই দুই কো-অর্ডিনেটের কাছাকাছি সব পয়েন্ট" — এই ধরনের 2D proximity query efficient ভাবে করা যায় না, কারণ একটা 1D index একসাথে দুইটা dimension-এ "কাছাকাছি" থাকা বোঝাতে পারে না। এর জন্য দরকার একটা <span class="kw">Geospatial Index</span>।</p>
+
+<h3>মূল কৌশল — Geohashing</h3>
+<p><span class="kw">Geohash</span> একটা পদ্ধতি যা 2D (latitude, longitude) কো-অর্ডিনেটকে একটা 1D string-এ রূপান্তর করে, এমনভাবে যে কাছাকাছি অবস্থানের geohash-এর শুরুর অংশও (prefix) প্রায়ই একই থাকে। পৃথিবীকে বারবার ছোট ছোট grid-এ ভাগ করে এই string তৈরি হয়।</p>
+<div class="diagram"><pre>
+  পৃথিবীকে grid-এ ভাগ করা (প্রতিটা ধাপে ৪ ভাগ):
+
+  ┌─────────┬─────────┐        Geohash "9q8yy" এর মানে —
+  │    0    │    1    │        গ্রিড 9 → q → 8 → y → y
+  ├─────────┼─────────┤        (প্রতিটা অক্ষর আরও ছোট এলাকায়
+  │    2    │    3    │         জুম করে)
+  └─────────┴─────────┘
+
+  একই prefix ("9q8yy") থাকা মানে দুইটা location কাছাকাছি —
+  তাই geohash-কে string হিসেবে index করে prefix match দিয়ে
+  "কাছাকাছি" location দ্রুত খুঁজে পাওয়া যায়।
+</pre></div>
+<p>একবার প্রতিটা ব্যবসার geohash গণনা করে একটা সাধারণ sorted index-এ (বা database column-এ) রাখা হলে, "আশেপাশের" ব্যবসা খুঁজতে user-এর অবস্থানের geohash prefix দিয়ে একটা range query চালানো যায় — এটা 2D সমস্যাকে কার্যকরভাবে একটা 1D string-prefix সমস্যায় রূপান্তরিত করে।</p>
+
+<h3>বিকল্প — Quadtree</h3>
+<p><span class="kw">Quadtree</span> পৃথিবীকে (বা একটা 2D স্পেসকে) recursively চারটা quadrant-এ ভাগ করে, যতক্ষণ না প্রতিটা leaf node-এ একটা নির্দিষ্ট সংখ্যার কম পয়েন্ট থাকে — ঘনবসতিপূর্ণ এলাকায় (শহরের কেন্দ্র) গাছ গভীর হয়, ফাঁকা এলাকায় (গ্রামাঞ্চল) অগভীর থাকে। এটা geohash-এর চেয়ে অসম ঘনত্বের ডেটার জন্য বেশি মানানসই, যদিও বাস্তবায়ন কিছুটা জটিল।</p>
+
+<h3>High-Level Architecture</h3>
+<div class="diagram"><pre>
+  [Business Location Data] ──▶ [Geohash Index / Quadtree] ──▶ [Location Service]
+                                                                     │
+  [User Location] ──▶ query geohash prefix ──────────────────────────┤
+                                                                     ▼
+                                                          [Ranked Result by Distance]
+</pre></div>
+
+<div class="callout why"><span class="tag">কেন Business Location Data প্রায় Static, তাই Read-Optimized Index মানানসই</span>
+রেস্টুরেন্ট/দোকানের অবস্থান খুব কম পরিবর্তন হয় (write খুব কম), কিন্তু "আশেপাশে কী আছে" প্রশ্ন অত্যন্ত ঘন ঘন আসে (read অনেক বেশি)। এই read-heavy প্যাটার্নের জন্য geohash-এর মতো একটা read-optimized, precomputed index তৈরি করা অত্যন্ত কার্যকর — প্রতিটা query-তে জটিল গণনার দরকার হয় না।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — প্রতিটা Query-তে সব Location-এর সাথে দূরত্ব গণনা করা</span>
+Naive পদ্ধতিতে প্রতিটা "আশেপাশে খোঁজো" query-তে ডাটাবেসের সব লক্ষ লক্ষ location-এর সাথে Haversine distance ফর্মুলা দিয়ে গণনা করা O(N) সময় নেয়, যা স্কেল হয় না। Geohash/Quadtree দিয়ে প্রথমে candidate-দের একটা ছোট সেটে সীমাবদ্ধ করে, তারপর শুধু সেই ছোট সেটের ওপর নির্ভুল দূরত্ব গণনা করা উচিত।</div>
+
+<div class="callout best"><span class="tag">Best practice — Geohash Precision সঠিকভাবে বেছে নিন</span>
+Geohash-এর length (precision) নির্ধারণ করে grid cell কত ছোট — খুব বড় cell (কম precision) মানে অনেক অপ্রাসঙ্গিক candidate আসবে, খুব ছোট cell (বেশি precision) মানে সীমানার কাছাকাছি থাকা প্রকৃত প্রাসঙ্গিক location মিস হতে পারে (adjacent cell চেক করতে হবে)। ব্যবহারিক সিস্টেম সাধারণত radius অনুযায়ী কয়েকটা adjacent geohash cell-ও চেক করে এই সীমানা সমস্যা সামলায়।</div>
+</template>
+
+<template data-page="task-scheduler">
+<h2 class="title">১১. Case Study — Distributed Task Scheduler ও Delayed Job Queue</h2>
+<p class="lead">"৩ ঘণ্টা পরে এই ইমেইল পাঠাও" বা "প্রতি রাত ২টায় এই রিপোর্ট তৈরি করো" — সময়ের সাথে কাজ সম্পাদন করা সহজ শোনায়, কিন্তু worker crash, duplicate execution, আর মিলিয়ন মিলিয়ন pending task সামলানো জটিল করে তোলে।</p>
+
+<h3>Requirement Clarification</h3>
+<ul>
+<li><b>Functional:</b> একটা task নির্দিষ্ট সময়ে বা recurring schedule (cron)-এ চালানোর জন্য নির্ধারণ করা।</li>
+<li><b>Non-functional:</b> at-least-once execution guarantee (task মিস হওয়া চলবে না), worker fail করলেও task হারানো যাবে না, একই task দুইবার (duplicate) না চালানো।</li>
+</ul>
+
+<h3>High-Level Architecture</h3>
+<div class="diagram"><pre>
+  [Task Submission API] ──▶ [Task Store (due_time সহ)]
+                                    │
+                                    ▼
+                          [Scheduler — due task পোল করে]
+                                    │
+                                    ▼
+                          [Task Queue (Kafka/SQS)]
+                                    │
+                    ┌───────────────┼───────────────┐
+                    ▼               ▼               ▼
+              [Worker 1]      [Worker 2]      [Worker 3]
+</pre></div>
+
+<h3>Deep Dive — Lease-Based Task Claiming (Duplicate Execution রোধ)</h3>
+<p>একটা worker একটা task তুলে নেওয়ার পর যদি সাথে সাথেই সেটাকে "done" চিহ্নিত না করে ধীরে ধীরে process করে, এবং worker crash করে, তাহলে সেই task চিরকাল "in-progress" অবস্থায় আটকে থাকতে পারে। সমাধান হলো <span class="kw">Lease/Visibility Timeout</span> — একটা worker task তোলার সময় একটা সাময়িক "lease" পায় (যেমন ৩০ সেকেন্ড), এই সময়ের মধ্যে task সম্পন্ন করে "acknowledge" করতে হয়। Acknowledge না এলে (worker crash ধরে নিয়ে), lease expire হয়ে task আবার queue-তে ফিরে আসে অন্য worker তোলার জন্য।</p>
+<div class="diagram"><pre>
+  Worker A task তুলল ──▶ Lease (৩০ সেকেন্ড) শুরু
+        │
+        ├── Task সম্পন্ন, Acknowledge পাঠাল ──▶ Task সম্পূর্ণ, মুছে ফেলা হলো
+        │
+        └── Worker A crash করল, Acknowledge এলো না
+                   │
+                   ▼
+            Lease Expire ──▶ Task আবার Queue-তে ফিরে এলো ──▶ Worker B তুলে নিল
+</pre></div>
+<p>এই পদ্ধতি <b>at-least-once</b> execution guarantee দেয় (task মিস হবে না), কিন্তু এতে একটা task দুইবার চলার সম্ভাব্যতা থেকে যায় (যদি Worker A আসলে কাজ শেষ করে ফেলেছিল কিন্তু acknowledge পাঠানোর আগেই crash করে) — তাই প্রতিটা task-এর নিজস্ব business logic-কে idempotent (Scalability কোর্সের Idempotency চ্যাপ্টার) হতে হবে।</p>
+
+<h3>Recurring Task (Cron) সামলানো</h3>
+<p>একটা recurring task (যেমন "প্রতি রাত ২টায়") একটা একক entry হিসেবে না রেখে, প্রতিটা execution-এর জন্য পরবর্তী due_time গণনা করে একটা নতুন one-time task entry তৈরি করা হয় — Scheduler সবসময় "due_time ≤ এখন" এমন task-ই খুঁজে বের করে।</p>
+
+<h3>Dead Letter Queue — বারবার ব্যর্থ Task সামলানো</h3>
+<p>একটা task যদি বারবার (যেমন ৩ বার) ব্যর্থ হয় (হয়তো downstream সার্ভিস ডাউন), সেটা চিরকাল retry করতে থাকা bandwidth নষ্ট করে। এর বদলে নির্দিষ্ট সংখ্যক ব্যর্থতার পর task-টা একটা <span class="kw">Dead Letter Queue (DLQ)</span>-তে সরিয়ে রাখা হয়, যেখানে পরে ম্যানুয়ালি পর্যালোচনা করা যায় — normal queue প্রতিনিয়ত ব্যর্থ task দিয়ে আটকে থাকে না।</p>
+
+<div class="callout why"><span class="tag">কেন At-least-once, Exactly-once-এর চেয়ে বাস্তবসম্মত</span>
+Distributed system-এ সত্যিকারের exactly-once execution guarantee করা তাত্ত্বিকভাবে অত্যন্ত ব্যয়বহুল (worker আর task store-এর মধ্যে distributed transaction লাগবে)। At-least-once + idempotent task logic একটা অনেক সহজ, ব্যবহারিক পদ্ধতি যা কার্যকরভাবে একই ফলাফল দেয়, অনেক কম জটিলতায়।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Task সম্পন্ন হওয়ার আগেই "Done" চিহ্নিত করা</span>
+যদি একটা worker task তোলার সাথে সাথেই সেটাকে "completed" চিহ্নিত করে, তারপর process করতে গিয়ে crash করে, সেই task চিরকাল হারিয়ে যায় (queue-তে ফিরে আসে না কারণ ইতিমধ্যে "done" মার্ক করা)। Task সম্পূর্ণ সফলভাবে শেষ হওয়ার পরেই acknowledge করা উচিত, তোলার সময় না।</div>
+
+<div class="callout best"><span class="tag">Best practice — Exponential Backoff দিয়ে Retry করুন</span>
+একটা ব্যর্থ task সাথে সাথেই বারবার retry করলে downstream সার্ভিসের ওপর চাপ আরও বাড়িয়ে দিতে পারে (বিশেষ করে যদি সেই সার্ভিস সাময়িকভাবে overload হয়ে থাকে)। Scalability কোর্সের Concurrency Advanced চ্যাপ্টারে আলোচিত Exponential Backoff with Jitter এখানেও প্রযোজ্য — প্রতিটা retry-এর মধ্যে ক্রমবর্ধমান বিরতি রাখা।</div>
+</template>
+
+<template data-page="monitoring">
+<h2 class="title">১২. Case Study — Metrics Monitoring ও Alerting System</h2>
+<p class="lead">হাজার হাজার সার্ভার প্রতি সেকেন্ডে CPU, মেমোরি, latency ডেটা পাঠাচ্ছে — এই বিপুল time-series ডেটা efficient ভাবে সংরক্ষণ করা এবং সমস্যা হলে দ্রুত alert পাঠানোই এই সিস্টেমের মূল কাজ।</p>
+
+<h3>Requirement Clarification</h3>
+<ul>
+<li><b>Functional:</b> প্রতিটা সার্ভার/সার্ভিস থেকে metric সংগ্রহ করা, গ্রাফে দেখানো, একটা threshold ছাড়ালে alert পাঠানো।</li>
+<li><b>Non-functional:</b> উচ্চ-cardinality (লক্ষ লক্ষ ভিন্ন metric series), সময়ের সাথে ডেটা efficient ভাবে সংরক্ষণ (storage বৃদ্ধি নিয়ন্ত্রণ), alert দ্রুত (কয়েক সেকেন্ডের মধ্যে) পাঠানো।</li>
+</ul>
+
+<h3>High-Level Architecture</h3>
+<div class="diagram"><pre>
+  [Host/Service + Metrics Agent] ──▶ [Ingestion Layer] ──▶ [Time-Series Database]
+                                                                    │
+                                                                    ▼
+                                                          [Alerting Rule Engine]
+                                                                    │
+                                                    threshold ছাড়ালে ──▶ [Notification Dispatch]
+                                                                              (Slack, Email, SMS,
+                                                                               Scalability কোর্সের
+                                                                               Communication চ্যাপ্টারে
+                                                                               আলোচিত channel-এ)
+</pre></div>
+
+<h3>Time-Series Database — কেন সাধারণ Database যথেষ্ট না</h3>
+<p>Metrics ডেটার একটা বিশেষ প্যাটার্ন আছে — প্রায় সবসময় শুধু নতুন ডেটা যোগ হয় (append-only), প্রায় কখনও পুরনো ডেটা আপডেট হয় না, এবং query প্রায় সবসময় সময়-রেঞ্জ ভিত্তিক ("গত ১ ঘণ্টার CPU usage")। <span class="kw">Time-Series Database</span> (Prometheus, InfluxDB) এই প্যাটার্নের জন্য বিশেষভাবে অপ্টিমাইজড — সময়-ক্রমিক ডেটা compress করে সংরক্ষণ করে এবং time-range query দ্রুত সার্ভ করে।</p>
+
+<h3>Deep Dive — Downsampling ও Retention</h3>
+<p>সব metric ডেটা চিরকাল পূর্ণ resolution-এ (প্রতি সেকেন্ডে একটা পয়েন্ট) রাখা storage-কে অসীমভাবে বাড়িয়ে দেবে। বাস্তব সিস্টেম <span class="kw">Downsampling</span> ব্যবহার করে — সাম্প্রতিক ডেটা (গত ২৪ ঘণ্টা) পূর্ণ resolution-এ রাখা হয়, কিন্তু পুরনো ডেটা ধীরে ধীরে কম resolution-এ (১ মিনিটের গড়, তারপর ১ ঘণ্টার গড়) সংকুচিত করা হয় — কারণ ৬ মাস আগের প্রতি-সেকেন্ড ডেটার বিস্তারিত সাধারণত আর প্রয়োজন হয় না, শুধু trend দেখাই যথেষ্ট।</p>
+<table>
+<tr><th>ডেটার বয়স</th><th>Resolution</th></tr>
+<tr><td>গত ২৪ ঘণ্টা</td><td>প্রতি ১০ সেকেন্ডে একটা পয়েন্ট (পূর্ণ resolution)</td></tr>
+<tr><td>গত ৭ দিন</td><td>প্রতি ১ মিনিটে একটা পয়েন্ট (গড়)</td></tr>
+<tr><td>৭ দিনের বেশি পুরনো</td><td>প্রতি ১ ঘণ্টায় একটা পয়েন্ট (গড়)</td></tr>
+</table>
+
+<h3>Alerting — কখন এবং কীভাবে Notify করবেন</h3>
+<p>একটা নিয়ম শুধু "CPU > ৯০%" চেক করলে যথেষ্ট না — একটা ক্ষণস্থায়ী spike (২ সেকেন্ডের জন্য) সত্যিকারের সমস্যা না-ও হতে পারে। কার্যকর alerting rule সাধারণত একটা সময়-উইন্ডো যোগ করে ("CPU > ৯০% বিগত ৫ মিনিট ধরে"), এবং <span class="kw">Alert Fatigue</span> এড়াতে একই সমস্যার জন্য বারবার নোটিফিকেশন না পাঠিয়ে একটা "cooldown period" রাখে।</p>
+
+<div class="callout why"><span class="tag">কেন Alert Fatigue একটা বাস্তব ঝুঁকি</span>
+যদি একটা সিস্টেম প্রতিটা ছোট anomaly-তেও alert পাঠায়, on-call ইঞ্জিনিয়াররা ধীরে ধীরে notification উপেক্ষা করতে শুরু করেন ("boy who cried wolf" প্রভাব) — এবং একটা প্রকৃত গুরুত্বপূর্ণ incident-ও উপেক্ষিত হয়ে যেতে পারে। সঠিকভাবে calibrated threshold এবং cooldown period, এই সাইটের Soft Skills কোর্সের Time Management চ্যাপ্টারে আলোচিত "সবকিছু জরুরি মানে কোনো কিছুই জরুরি না" নীতির একটা প্রযুক্তিগত প্রতিফলন।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Monitoring System-কেই Single Point of Failure বানিয়ে ফেলা</span>
+যদি monitoring system নিজেই ক্র্যাশ করে, এবং সেই মুহূর্তেই মূল production সিস্টেমেও সমস্যা হয়, কেউ জানতেই পারবে না। Monitoring/Alerting infrastructure-কে প্রধান production সিস্টেম থেকে independent এবং নিজে থেকেও redundant রাখা জরুরি — "who monitors the monitor" প্রশ্নের উত্তর থাকা দরকার।</div>
+
+<div class="callout best"><span class="tag">Best practice — Symptom-based Alert, Cause-based না</span>
+"ডাটাবেস CPU বেশি" এর বদলে "ব্যবহারকারীরা ধীর response পাচ্ছেন" (latency/error rate-ভিত্তিক) — এই ধরনের symptom-based alert বেশি কার্যকর, কারণ এটা সরাসরি ব্যবহারকারীর অভিজ্ঞতার সাথে যুক্ত। একটা root cause ছাড়াও অনেক কারণে symptom দেখা দিতে পারে, তাই symptom-ভিত্তিক alert সব root cause-ই ধরে ফেলে।</div>
+</template>
+
+<template data-page="mock-interview">
+<h2 class="title">১৩. Full Mock Interview Walkthrough — Design a Parking Lot System</h2>
+<p class="lead">এতদিন যা শেখা হলো তার প্রতিটা ধাপ এখন একসাথে প্রয়োগ করে দেখা যাক — একটা তুলনামূলক সহজ, distributed-system জটিলতা ছাড়া একটা System, যাতে Framework-টাই স্পষ্টভাবে দেখা যায়।</p>
+
+<h3>কেন "Parking Lot" একটা ভালো অনুশীলন উদাহরণ</h3>
+<p>এই সাইটের অন্য Case Study-গুলো ব্যাপক distributed system জটিলতা (sharding, replication, caching) নিয়ে কাজ করে। কিন্তু অনেক ইন্টারভিউ (বিশেষত junior/mid-level এবং Object-Oriented Design রাউন্ডে) সহজ, single-system সমস্যা দিয়ে শুরু হয় — "Design a Parking Lot", "Design an Elevator System", "Design a Vending Machine"। এখানে ১ম অধ্যায়ের Framework পুরোপুরি প্রযোজ্য, শুধু "scale" এর বদলে "সঠিক component ও edge case চিহ্নিত করা" বেশি গুরুত্বপূর্ণ হয়ে ওঠে।</p>
+
+<h3>ধাপ ১-২ — Requirement ও Estimation (সংলাপ আকারে)</h3>
+<pre><span class="c"># Interviewer বনাম Candidate — সংক্ষিপ্ত ট্রান্সক্রিপ্ট</span>
+Interviewer: Design a parking lot system.
+Candidate:   কয়েকটা প্রশ্ন করতে চাই। এখানে কি একাধিক
+             ধরনের vehicle (car, bike, truck) সামলাতে হবে?
+Interviewer: হ্যাঁ, তিন ধরনের vehicle, এবং প্রতিটার জন্য
+             আলাদা স্পট সাইজ।
+Candidate:   পেমেন্ট কি অন্তর্ভুক্ত? একাধিক entry/exit
+             পয়েন্ট থাকবে কি?
+Interviewer: হ্যাঁ, পেমেন্ট আছে (ঘণ্টাভিত্তিক), এবং একাধিক
+             entry/exit পয়েন্ট থাকতে পারে।
+Candidate:   ঠিক আছে। ধরে নিচ্ছি এটা একটা মাঝারি সাইজের লট —
+             ৫০০টা স্পট, ৩টা ফ্লোর, ৩টা entry gate।</pre>
+
+<h3>ধাপ ৩-৪ — Interface ও High-Level (Component) Design</h3>
+<p>যেহেতু এটা distributed system না, "API endpoint"-এর বদলে মূল ক্লাস/কম্পোনেন্ট এবং তাদের দায়িত্ব চিহ্নিত করা হয়।</p>
+<table>
+<tr><th>Component</th><th>দায়িত্ব</th></tr>
+<tr><td>ParkingLot</td><td>সব floor ও entry/exit gate-এর সমন্বয়, overall availability ট্র্যাক করা</td></tr>
+<tr><td>ParkingSpot</td><td>একটা নির্দিষ্ট স্পট, তার সাইজ, এবং বর্তমানে occupied কি না</td></tr>
+<tr><td>Ticket</td><td>একটা vehicle এন্ট্রির সময় ইস্যু হওয়া রেকর্ড — entry time, assigned spot</td></tr>
+<tr><td>PaymentService</td><td>exit-এর সময় duration হিসাব করে ভাড়া গণনা ও পেমেন্ট প্রসেস করা</td></tr>
+<tr><td>DisplayBoard</td><td>প্রতিটা floor-এ কতগুলো স্পট খালি আছে তা দেখানো</td></tr>
+</table>
+
+<h3>ধাপ ৫ — Deep Dive: স্পট Assignment ও Concurrency</h3>
+<pre><span class="c"># সংলাপ চলছে</span>
+Interviewer: একই সময়ে দুইটা গাড়ি একই ফাঁকা স্পটের দিকে
+             গেলে কী হবে?
+Candidate:   ভালো প্রশ্ন — এটা আসলে একটা concurrency সমস্যা,
+             যেমনটা E-commerce Case Study-তে oversell
+             সমস্যায় দেখেছি। একটা স্পট "assign" করার সময়
+             আমরা atomic ভাবে সেটাকে reserved করব — একটা
+             ডাটাবেস row-level lock বা atomic compare-and-set
+             অপারেশন দিয়ে, যাতে দুইটা গাড়ি কখনও একই স্পট
+             না পায়।
+Interviewer: আর যদি লট পুরো ভরে যায়?
+Candidate:   ParkingLot একটা real-time available-count
+             বজায় রাখবে; সেটা শূন্য হলে entry gate-এ "FULL"
+             signal পাঠানো হবে, এবং নতুন গাড়ি ঢুকতে পারবে না।</pre>
+
+<h3>ধাপ ৬-৭ — Bottleneck ও Trade-off (সংক্ষিপ্ত)</h3>
+<ul>
+<li><b>Bottleneck:</b> একটা কেন্দ্রীয় "available count" যদি একটা single database row হয়, ব্যস্ত সময়ে (rush hour) সেটা contention পয়েন্ট হতে পারে — সমাধান হিসেবে per-floor counter রাখা এবং periodically aggregate করা যেতে পারে।</li>
+<li><b>Trade-off:</b> "নির্দিষ্ট স্পট" আগে থেকে assign করা (deterministic, কিন্তু কম flexible) বনাম "প্রথম খালি স্পট" (flexible, কিন্তু ড্রাইভারকে খুঁজতে হতে পারে) — ব্যবসায়িক প্রয়োজন অনুযায়ী বেছে নিতে হবে।</li>
+</ul>
+
+<div class="callout why"><span class="tag">কেন সহজ Case Study-তেও একই Framework কাজ করে</span>
+Parking Lot System-এ কোনো sharding, replication, বা caching লাগে না, তবুও Requirement Clarification → Component Design → Deep Dive → Trade-off — এই একই কাঠামো প্রযোজ্য। এটাই প্রমাণ করে যে ১ম অধ্যায়ের Framework শুধু "বড় distributed system"-এর জন্য না, যেকোনো আকারের case study-র জন্য একটা সার্বজনীন চিন্তা-পদ্ধতি।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Object-Oriented Design প্রশ্নে সরাসরি কোড লেখা শুরু করা</span>
+"Design a Parking Lot" শুনে সরাসরি class syntax লেখা শুরু করলে বড় ছবিটা (কোন কোন entity আছে, তাদের মধ্যে সম্পর্ক কী, edge case কী কী) উপেক্ষিত থেকে যায়। আগে entity ও তাদের দায়িত্ব একটা উচ্চ-স্তরে আলোচনা করে, তারপর প্রয়োজনে নির্দিষ্ট একটা ক্লাসের বিস্তারিত (attribute, method) নিয়ে গভীরে যাওয়া উচিত।</div>
+
+<div class="callout best"><span class="tag">Best practice — Edge Case নিজে থেকেই তুলে ধরুন</span>
+"লট পূর্ণ হলে কী হবে", "পেমেন্ট ব্যর্থ হলে গাড়ি কীভাবে বের হবে" — এই ধরনের edge case ইন্টারভিউয়ার জিজ্ঞেস করার আগেই নিজে থেকে উত্থাপন করা একজন প্রার্থীকে আলাদা করে দেখায়। এটা প্রমাণ করে আপনি শুধু "happy path" না, বাস্তব-জগতের অসম্পূর্ণতাও চিন্তা করছেন।</div>
+</template>
+
+<template data-page="common-patterns">
+<h2 class="title">১৪. Recurring Design Patterns — সব Case Study-এর সারাংশ</h2>
+<p class="lead">এই কোর্সের ১২টা ভিন্ন Case Study লক্ষ্য করলে দেখা যায় — মাত্র কয়েকটা প্যাটার্নই বারবার বিভিন্ন ছদ্মবেশে ফিরে আসছে। এই প্যাটার্নগুলো চিনতে পারাই একজন প্রার্থীকে একটা সম্পূর্ণ নতুন system design প্রশ্নেও দ্রুত আত্মবিশ্বাসী করে তোলে।</p>
+
+<h3>প্যাটার্ন-ভিত্তিক সারাংশ টেবিল</h3>
+<table>
+<tr><th>প্যাটার্ন</th><th>সমাধান করে</th><th>কোন কোন Case Study-তে দেখা গেছে</th></tr>
+<tr><td>Atomic Check-and-Update</td><td>Race condition-এ দুইটা concurrent request একই সীমিত রিসোর্স claim করা রোধ করা</td><td>E-commerce (oversell), Booking (double-booking), Mock Interview (parking spot)</td></tr>
+<tr><td>Reservation/Hold with TTL</td><td>Checkout/payment সম্পন্ন হওয়া পর্যন্ত সাময়িকভাবে একটা রিসোর্স আটকে রাখা</td><td>E-commerce, Booking, Payment</td></tr>
+<tr><td>Idempotency Key</td><td>Network retry-তে একই operation দুইবার সম্পন্ন হওয়া রোধ করা</td><td>E-commerce, Payment, Task Scheduler, Analytics Pipeline</td></tr>
+<tr><td>Event-driven Decoupling (Queue)</td><td>Producer আর Consumer-কে আলাদা করে হঠাৎ ট্র্যাফিক spike সামলানো</td><td>Analytics Pipeline, Task Scheduler, E-commerce</td></tr>
+<tr><td>Specialized Index (Inverted, Geohash, Sorted Set)</td><td>একটা নির্দিষ্ট query pattern-কে সাধারণ index-এর চেয়ে অনেক দ্রুত করা</td><td>Search Engine (inverted index), Proximity Service (geohash), Leaderboard (sorted set)</td></tr>
+<tr><td>Precompute/Pre-aggregate</td><td>প্রতিটা read-এ ব্যয়বহুল গণনা এড়িয়ে আগে থেকেই ফলাফল প্রস্তুত রাখা</td><td>Analytics Pipeline (windowed aggregation), Monitoring (downsampling)</td></tr>
+<tr><td>Lease/Visibility Timeout</td><td>একটা worker crash করলেও task/message হারিয়ে না যাওয়া নিশ্চিত করা</td><td>Task Scheduler</td></tr>
+<tr><td>Content-based Chunking/Dedup</td><td>বড় ডেটার পুনরাবৃত্ত অংশ আবার sync/store না করা</td><td>File Storage</td></tr>
+<tr><td>Conflict-free Merge (OT/CRDT)</td><td>একাধিক concurrent writer-এর পরিবর্তন একটা সুসংগত ফলাফলে মেলানো</td><td>Collaborative Editing</td></tr>
+<tr><td>Metadata/Data Separation</td><td>ছোট, ঘন ঘন-query হওয়া তথ্য এবং বিশাল, কম-query হওয়া তথ্যকে আলাদা স্কেল করা</td><td>File Storage (metadata vs block), Search Engine (index vs raw doc)</td></tr>
+</table>
+
+<h3>কীভাবে এই টেবিলটা ইন্টারভিউতে ব্যবহার করবেন</h3>
+<p>একটা সম্পূর্ণ নতুন system design প্রশ্ন পেলে (যা এই কোর্সে সরাসরি কভার করা হয়নি), প্রথমেই নিজেকে জিজ্ঞেস করুন — "এই সমস্যাটা উপরের কোন পরিচিত প্যাটার্নের সাথে মিলে যায়?" যেমন "Design a Movie Ticket Booking System" আসলে Booking Case Study-এর একটা variant (Atomic Check-and-Update + Reservation Hold), আর "Design a Voting System" আসলে Rate Limiter + Idempotency-এর সমন্বয় (একজন ব্যবহারকারী একবারই ভোট দিতে পারবেন)। পরিচিত প্যাটার্ন চেনা একটা সম্পূর্ণ অপরিচিত সমস্যাকেও পরিচিত মনে করাতে সাহায্য করে।</p>
+
+<div class="callout why"><span class="tag">কেন প্যাটার্ন-ভিত্তিক চিন্তা মুখস্থ Case Study-এর চেয়ে ভালো</span>
+ইন্টারভিউয়াররা প্রায়ই ইচ্ছাকৃতভাবে এমন প্রশ্ন করেন যা জনপ্রিয় "মুখস্থ করা" Case Study-এর সাথে হুবহু মেলে না (যাতে rote memorization ধরা পড়ে)। কিন্তু যদি আপনি নির্দিষ্ট সিস্টেমের বদলে অন্তর্নিহিত প্যাটার্ন (কোন সমস্যায় কোন সমাধান প্রযোজ্য) বোঝেন, তাহলে একটা সম্পূর্ণ নতুন প্রশ্নেও আপনি দ্রুত প্রাসঙ্গিক সমাধান চিনতে পারবেন।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — একটা Case Study-এর সমাধান হুবহু মুখস্থ করা</span>
+"URL Shortener মানেই base62 encoding" — এভাবে মুখস্থ করলে ইন্টারভিউয়ার একটু ভিন্নভাবে প্রশ্ন করলে (যেমন "যদি custom alias-ও সাপোর্ট করতে হয়") প্রার্থী আটকে যান। প্রতিটা সমাধানের পেছনের "কেন" (কোন সমস্যা এটা সমাধান করে) বোঝা, শুধু সমাধানটা মুখস্থ করার চেয়ে অনেক বেশি স্থানান্তরযোগ্য (transferable) জ্ঞান তৈরি করে।</div>
+
+<div class="callout best"><span class="tag">Best practice — নিজের একটা Pattern Cheat-Sheet তৈরি করুন</span>
+এই টেবিলটাকে ভিত্তি ধরে, নিজের প্র্যাকটিস করা প্রতিটা নতুন case study থেকে কোন প্যাটার্ন ব্যবহৃত হলো তা নোট করে নিজের একটা ব্যক্তিগত cheat-sheet তৈরি করুন। সময়ের সাথে এই তালিকা আপনার নিজের "মানসিক টুলবক্স" হয়ে উঠবে, যেকোনো নতুন case study-তে দ্রুত প্রাসঙ্গিক প্যাটার্ন বেছে নিতে সাহায্য করবে।</div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৫. Interview প্রশ্নোত্তর</h2>
+<p class="lead">Case Study ইন্টারভিউতে বারবার আসা প্রশ্ন — সংক্ষিপ্ত, সরাসরি উত্তরসহ।</p>
+
+<h3>১) একটা System Design Case Study-তে সবচেয়ে গুরুত্বপূর্ণ প্রথম পদক্ষেপ কী?</h3>
+<p>Requirement Clarification — functional (কী কী feature) এবং non-functional (scale, latency, consistency) প্রশ্ন করে সমস্যাটা স্পষ্টভাবে সংজ্ঞায়িত করা। সরাসরি ডিজাইনে ঝাঁপ দেওয়া একটা সাধারণ ও ব্যয়বহুল ভুল।</p>
+
+<h3>২) একটা E-commerce সিস্টেমে "Oversell" সমস্যা কীভাবে সমাধান করবেন?</h3>
+<p>Atomic database decrement (<code>UPDATE ... WHERE stock > 0</code>) দিয়ে, অথবা একটা TTL-সহ Reservation/Hold তৈরি করে যা পেমেন্ট সফল হলে স্থায়ী order-এ রূপান্তরিত হয় এবং ব্যর্থ/expire হলে stock ফেরত আসে।</p>
+
+<h3>৩) Payment System-এ Idempotency কেন অপরিহার্য?</h3>
+<p>নেটওয়ার্ক timeout-এর কারণে client প্রায়ই পেমেন্ট রিকোয়েস্ট retry করে। Idempotency key ছাড়া একই চার্জ দুইবার প্রসেস হয়ে যেতে পারে — যা সরাসরি আর্থিক ক্ষতি তৈরি করে।</p>
+
+<h3>৪) Booking System-এ Double-Booking কীভাবে রোধ করবেন?</h3>
+<p>প্রতিটা রুম-তারিখ কম্বিনেশনকে আলাদা inventory row হিসেবে রেখে, বুকিং কনফার্ম করার সময় Pessimistic Locking (<code>SELECT FOR UPDATE</code>) বা Optimistic Locking + retry দিয়ে atomic ভাবে availability check ও update করা।</p>
+
+<h3>৫) Inverted Index কী, এবং এটা কোন সমস্যা সমাধান করে?</h3>
+<p>Inverted Index প্রতিটা শব্দকে সেই শব্দ ধারণকারী ডকুমেন্টের তালিকায় ম্যাপ করে (forward index-এর বিপরীত)। এটা full-text search-কে লক্ষ লক্ষ ডকুমেন্টের মধ্যেও দ্রুত করে তোলে, কারণ প্রতিটা ডকুমেন্ট স্ক্যান করার বদলে সরাসরি প্রাসঙ্গিক ডকুমেন্টের তালিকায় পৌঁছানো যায়।</p>
+
+<h3>৬) Operational Transformation (OT) আর CRDT-এর মধ্যে পার্থক্য কী?</h3>
+<p>OT একটা central server-এ operation-গুলোকে একে অপরের সাপেক্ষে "transform" করে সঠিক ক্রম নিশ্চিত করে। CRDT ডেটা স্ট্রাকচারকে এমনভাবে ডিজাইন করে যাতে যেকোনো ক্রমে merge করলেও mathematically একই ফলাফল আসে, কোনো central transformation ছাড়াই — তাই peer-to-peer সিস্টেমেও কাজ করে।</p>
+
+<h3>৭) Dropbox-এর মতো File Storage System-এ Chunking কেন ব্যবহার করা হয়?</h3>
+<p>একটা ফাইলকে ছোট chunk-এ ভাগ করলে, ফাইলের একটা ছোট অংশ পরিবর্তন হলে শুধু সেই সংশ্লিষ্ট chunk আবার আপলোড করতে হয় (Delta Sync), পুরো ফাইল না — এবং একই chunk একাধিক জায়গায় থাকলে তা deduplicate করা যায়, storage খরচ কমে।</p>
+
+<h3>৮) Real-time Leaderboard-এ Redis Sorted Set (ZSET) কেন ব্যবহার করা হয়?</h3>
+<p>ZSET সবসময় sorted অবস্থায় ডেটা রাখে (internally skip list ব্যবহার করে), তাই স্কোর আপডেট, Top-N বের করা, এবং একজনের rank বের করা — সবগুলোই O(log N) সময়ে সম্ভব, in-memory হওয়ায় disk I/O ছাড়াই দ্রুত।</p>
+
+<h3>৯) Analytics Pipeline-এ Duplicate এবং Late Event কীভাবে সামলানো হয়?</h3>
+<p>Duplicate Event: প্রতিটা ইভেন্টে unique ID দিয়ে idempotent deduplication। Late Event: Watermarking-এর মাধ্যমে একটা নির্দিষ্ট grace period পর্যন্ত দেরিতে আসা ইভেন্ট গ্রহণ করে সংশ্লিষ্ট window আপডেট করা, তারপর window চূড়ান্ত করা।</p>
+
+<h3>১০) Geohashing কীভাবে কাজ করে?</h3>
+<p>Geohash পৃথিবীকে recursively grid-এ ভাগ করে প্রতিটা (latitude, longitude) কো-অর্ডিনেটকে একটা string-এ এনকোড করে, এমনভাবে যে কাছাকাছি অবস্থানের geohash-এর prefix-ও একই থাকে। এতে 2D proximity সমস্যাকে 1D string-prefix matching সমস্যায় রূপান্তরিত করা যায়।</p>
+
+<h3>১১) Distributed Task Scheduler-এ Lease/Visibility Timeout কী সমস্যা সমাধান করে?</h3>
+<p>একটা worker task তোলার পর crash করলে, lease/visibility timeout নিশ্চিত করে যে একটা নির্দিষ্ট সময় পরও acknowledge না এলে task আবার queue-তে ফিরে আসবে অন্য worker তোলার জন্য — task চিরকাল "in-progress" আটকে থাকবে না।</p>
+
+<h3>১২) Time-Series Database-এ Downsampling কেন প্রয়োজন?</h3>
+<p>সব metric ডেটা চিরকাল পূর্ণ resolution-এ রাখলে storage অসীমভাবে বাড়ে। Downsampling পুরনো ডেটাকে ধীরে ধীরে কম resolution-এ (গড় করে) সংকুচিত করে, কারণ পুরনো ডেটার সূক্ষ্ম বিস্তারিতের চেয়ে সাধারণ trend-ই যথেষ্ট গুরুত্বপূর্ণ।</p>
+
+<h3>১৩) Alert Fatigue কী, এবং কীভাবে এড়ানো যায়?</h3>
+<p>অতিরিক্ত, অপ্রাসঙ্গিক alert-এর কারণে on-call ইঞ্জিনিয়াররা ধীরে ধীরে notification উপেক্ষা করতে শুরু করেন, এবং প্রকৃত গুরুত্বপূর্ণ alert-ও মিস হয়ে যেতে পারে। সময়-উইন্ডো ভিত্তিক threshold এবং cooldown period ব্যবহার করে অপ্রয়োজনীয় alert কমানো যায়।</p>
+
+<h3>১৪) একটা সহজ Case Study (যেমন Parking Lot) কেন একই Framework দিয়ে সমাধান করা উচিত যা বড় distributed system-এ ব্যবহৃত হয়?</h3>
+<p>Framework (Requirement Clarification → Estimation → API/Component Design → High-Level Design → Deep Dive → Bottleneck → Trade-off) সিস্টেমের আকার নির্বিশেষে একটা পদ্ধতিগত চিন্তা-প্রক্রিয়া প্রদান করে। Parking Lot-এর মতো ছোট সিস্টেমেও Requirement স্পষ্ট না করে বা edge case চিন্তা না করে সরাসরি সমাধানে ঝাঁপ দেওয়া একই রকম ভুল, স্কেল যাই হোক না কেন।</p>
+
+<h3>১৫) একটা সম্পূর্ণ নতুন, অপরিচিত Case Study পেলে কীভাবে এগোবেন?</h3>
+<p>নির্দিষ্ট সমাধান মুখস্থ করার বদলে, সমস্যাটাকে পরিচিত প্যাটার্নে ভেঙে ফেলুন (Atomic Check-and-Update, Reservation Hold, Idempotency, Specialized Index, ইত্যাদি — ১৪শ অধ্যায়ের সারাংশ টেবিল দেখুন)। বেশিরভাগ নতুন case study আসলে পরিচিত কয়েকটা প্যাটার্নের নতুন সমন্বয় মাত্র।</p>
+</template>
+
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  const searchIndex = {};
+  (function buildIndex(){
+    const tmp = document.createElement('div');
+    pages.forEach(p=>{
+      tmp.innerHTML = templates[p.id] || '';
+      searchIndex[p.id] = ((p.title||'') + ' ' + tmp.textContent).toLowerCase();
+    });
+  })();
+
+  let currentQuery = '';
+
+  function clearHighlights(root){
+    root.querySelectorAll('mark.hl').forEach(m=>{ m.replaceWith(document.createTextNode(m.textContent)); });
+    root.normalize();
+  }
+
+  function highlightIn(root, q){
+    if(!q) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        const p = node.parentNode;
+        if(!node.nodeValue || !p || p.tagName==='SCRIPT' || p.tagName==='STYLE' || p.tagName==='MARK') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes=[]; let n; while((n=walker.nextNode())) nodes.push(n);
+    const ql = q.toLowerCase();
+    nodes.forEach(node=>{
+      const text = node.nodeValue, lower = text.toLowerCase();
+      if(!lower.includes(ql)) return;
+      const frag = document.createDocumentFragment();
+      let idx=0, pos;
+      while((pos = lower.indexOf(ql, idx)) !== -1){
+        if(pos>idx) frag.appendChild(document.createTextNode(text.slice(idx,pos)));
+        const mark = document.createElement('mark');
+        mark.className='hl';
+        mark.textContent = text.slice(pos, pos+ql.length);
+        frag.appendChild(mark);
+        idx = pos+ql.length;
+      }
+      if(idx<text.length) frag.appendChild(document.createTextNode(text.slice(idx)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  function applyHighlight(){
+    const active = main.querySelector('.page.active');
+    if(!active) return;
+    clearHighlights(active);
+    if(currentQuery) highlightIn(active, currentQuery);
+  }
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    applyHighlight();
+    const active = main.querySelector('.page.active');
+    const firstMark = active ? active.querySelector('mark.hl') : null;
+    if(firstMark && firstMark.scrollIntoView) firstMark.scrollIntoView({block:'center'});
+    else window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const searchInput = document.getElementById('courseSearch');
+  const searchMeta = document.getElementById('searchMeta');
+  if(searchInput){
+    searchInput.addEventListener('input', ()=>{
+      const q = searchInput.value.trim();
+      currentQuery = q;
+      const ql = q.toLowerCase();
+      let matchCount = 0, firstMatch = null;
+      pages.forEach(p=>{
+        const btn = sidebar.querySelector('.navbtn[data-target="'+p.id+'"]');
+        const matches = !ql || searchIndex[p.id].includes(ql);
+        if(matches){ matchCount++; if(!firstMatch) firstMatch = p; }
+        if(btn) btn.classList.toggle('hide', !matches);
+      });
+      if(!ql) searchMeta.textContent = '';
+      else if(matchCount===0) searchMeta.textContent = 'কোনো ফলাফল নেই';
+      else searchMeta.textContent = matchCount + 'টা অধ্যায়ে ফলাফল পাওয়া গেছে';
+
+      const active = main.querySelector('.page.active');
+      const activeId = active ? active.id.replace('page-','') : null;
+      const activeMatches = !!(ql && activeId && searchIndex[activeId] && searchIndex[activeId].includes(ql));
+      if(ql && !activeMatches && firstMatch){
+        show(firstMatch.id);
+      } else {
+        applyHighlight();
+        const mark = active ? active.querySelector('mark.hl') : null;
+        if(ql && mark && mark.scrollIntoView) mark.scrollIntoView({block:'center'});
+      }
+    });
+    searchInput.addEventListener('keydown', e=>{
+      if(e.key==='Escape'){ searchInput.value=''; searchInput.dispatchEvent(new Event('input')); searchInput.blur(); }
+    });
+  }
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+<script src="global-search.js"></script>
+</body>
+</html>
