@@ -126,6 +126,8 @@ const pages = [
   {id:"lb-advanced",          icon:"🔀", title:"Load Balancer Algorithms, Health Check ও Global Load Balancing"},
   {id:"gateway-basics",       icon:"🚪", title:"API Gateway Fundamentals — কী, কেন এবং দায়িত্ব"},
   {id:"gateway-advanced",     icon:"🛠️", title:"API Gateway Advanced Patterns, Tools ও Service Mesh তুলনা"},
+  {id:"api-design",           icon:"🧬", title:"API Design Fundamentals — REST Principles, HTTP Semantics, Pagination ও Error Handling"},
+  {id:"api-versioning",       icon:"🏷️", title:"API Versioning — Strategies, Semantic Versioning ও Deprecation Policy"},
   {id:"idempotency-basics",   icon:"🔁", title:"Idempotency Fundamentals — কী, কেন এবং HTTP Method Semantics"},
   {id:"idempotency-advanced", icon:"🔑", title:"Idempotency Key Pattern — Implementation ও Race Condition হ্যান্ডলিং"},
   {id:"concurrency-basics",   icon:"🧵", title:"Concurrent Request Handling — Thread, Process ও Event Loop"},
@@ -470,7 +472,7 @@ API Gateway-কে routing ও cross-cutting concern-এর জায়গা �
 </ul>
 
 <h3>API Versioning Gateway-তে</h3>
-<p>API-এর নতুন ভার্সন পুরনো client না ভেঙে রোল আউট করতে Gateway-তে সাধারণত দুইভাবে versioning হয় — <b>URL-based</b> (<code>/v1/orders</code> বনাম <code>/v2/orders</code>, স্পষ্ট কিন্তু URL প্রোলিফারেট করে) এবং <b>Header-based</b> (<code>Accept: application/vnd.api.v2+json</code>, URL পরিষ্কার থাকে কিন্তু ডিবাগ করা একটু কঠিন)।</p>
+<p>API-এর নতুন ভার্সন পুরনো client না ভেঙে রোল আউট করতে Gateway-তে সাধারণত দুইভাবে versioning হয় — <b>URL-based</b> (<code>/v1/orders</code> বনাম <code>/v2/orders</code>, স্পষ্ট কিন্তু URL প্রোলিফারেট করে) এবং <b>Header-based</b> (<code>Accept: application/vnd.api.v2+json</code>, URL পরিষ্কার থাকে কিন্তু ডিবাগ করা একটু কঠিন)। Gateway physically সিদ্ধান্ত নেয় <code>v1</code> request কোন সার্ভিস instance-এ যাবে আর <code>v2</code> request কোন instance-এ — versioning strategy-এর পূর্ণ তুলনা এবং deprecation policy পরের দুইটা অধ্যায়ে বিস্তারিত আলোচনা করা হয়েছে।</p>
 
 <div class="callout behind"><span class="tag">বাস্তবতা — Gateway একটা bottleneck ও SPOF হতে পারে</span>
 সব ট্র্যাফিক একটা কেন্দ্রীয় Gateway দিয়ে যাওয়ার মানে হলো, এই লেয়ারটা যদি ধীর হয়ে যায় বা ডাউন হয়, পুরো সিস্টেম প্রভাবিত হয়। তাই production Gateway-কে নিজেই horizontally scaled (একাধিক instance + তার সামনে একটা LB) এবং stateless রাখতে হয়, ঠিক যেভাবে অন্য যেকোনো critical সার্ভিসকে রাখা হয়।</div>
@@ -479,8 +481,176 @@ API Gateway-কে routing ও cross-cutting concern-এর জায়গা �
 সময়ের সাথে একটা মনোলিথিক Gateway configuration ফাইল শত শত রুট, custom plugin, এবং business-নির্দিষ্ট নিয়মে ভরে যেতে পারে — যা নিজেই একটা "distributed monolith" তৈরি করে, যেখানে যেকোনো ছোট পরিবর্তনে পুরো Gateway redeploy করতে হয়। বড় সংস্থায় প্রায়ই domain অনুযায়ী একাধিক Gateway instance বা routing tier আলাদা রাখা হয়।</div>
 </template>
 
+<template data-page="api-design">
+<h2 class="title">৮. API Design Fundamentals — REST Principles, HTTP Semantics, Pagination ও Error Handling</h2>
+<p class="lead">একটা API-এর আসল মান বোঝা যায় তার consistency আর predictability-তে — একজন নতুন developer ডকুমেন্টেশন না পড়েই অনুমান করতে পারা উচিত পরবর্তী endpoint-টা দেখতে কেমন হবে।</p>
+
+<h3>API ও REST কী</h3>
+<p><span class="kw">API (Application Programming Interface)</span> হলো দুইটা সিস্টেমের মধ্যে একটা চুক্তি (contract) — client কী পাঠাতে পারবে, সার্ভার কী ফেরত দেবে, এবং কোন নিয়মে। <span class="kw">REST (Representational State Transfer)</span> একটা architectural style যা এই চুক্তিকে কয়েকটা constraint দিয়ে সংজ্ঞায়িত করে —</p>
+<ul>
+<li><b>Statelessness:</b> প্রতিটা request নিজের মধ্যেই সম্পূর্ণ, সার্ভার client-এর আগের request মনে রাখে না (২য় অধ্যায়ে বিস্তারিত আলোচিত horizontal scaling-এর পূর্বশর্ত)।</li>
+<li><b>Resource-based:</b> সবকিছুকে একটা "resource" হিসেবে দেখা হয় (user, order, product), এবং প্রতিটা resource-এর একটা URI থাকে।</li>
+<li><b>Uniform Interface:</b> একই HTTP method, status code, এবং representation format (JSON) সবখানে সামঞ্জস্যপূর্ণভাবে ব্যবহৃত হয়।</li>
+<li><b>Cacheability:</b> response স্পষ্টভাবে বলে দেয় সেটা cache করা যাবে কি না, এবং কতক্ষণ।</li>
+<li><b>Layered System:</b> client জানে না সে সরাসরি সার্ভারের সাথে কথা বলছে না মাঝে LB/Gateway/CDN আছে (৪-৭ অধ্যায়ে আলোচিত)।</li>
+</ul>
+
+<h3>Resource-Oriented URI Design</h3>
+<p>একটা ভালো URI একটা resource-কে (noun) নির্দেশ করে, একটা action (verb)-কে না — action HTTP method দিয়ে প্রকাশ করা হয়। URI-তে সাধারণত bare plural noun ব্যবহার করা হয়, এবং nesting তিন স্তরের বেশি গভীর না রাখাই ভালো (খুব গভীর nesting পড়া ও maintain করা কঠিন করে তোলে)।</p>
+<table>
+<tr><th>ভালো ডিজাইন</th><th>খারাপ ডিজাইন</th><th>কেন</th></tr>
+<tr><td><code>GET /orders/42</code></td><td><code>GET /getOrder?id=42</code></td><td>URI resource নির্দেশ করে, action না — action GET method দিয়েই বোঝা যায়</td></tr>
+<tr><td><code>POST /orders</code></td><td><code>POST /createNewOrder</code></td><td>একই resource-এ POST মানেই "নতুন তৈরি করো", আলাদা verb দরকার নেই</td></tr>
+<tr><td><code>GET /users/7/orders</code></td><td><code>GET /orders/user/7/all/list</code></td><td>স্পষ্ট, সংক্ষিপ্ত nesting; গভীর nesting এড়ানো হয়েছে</td></tr>
+<tr><td><code>GET /orders?status=shipped</code></td><td><code>GET /orders/shipped</code></td><td>Filtering-এর জন্য query parameter, আলাদা path না — নাহলে প্রতিটা filter-এর জন্য নতুন route লাগবে</td></tr>
+</table>
+
+<h3>HTTP Method-এর সঠিক ব্যবহার</h3>
+<p>প্রতিটা HTTP method-এর একটা নির্দিষ্ট semantic উদ্দেশ্য আছে, এবং সেই semantic ভাঙলে caching, retry, এবং tooling (browser, proxy, monitoring) ভুলভাবে আচরণ করতে পারে।</p>
+<table>
+<tr><th>Method</th><th>উদ্দেশ্য</th><th>Request Body</th></tr>
+<tr><td>GET</td><td>Resource পড়া (read-only)</td><td>না</td></tr>
+<tr><td>POST</td><td>নতুন resource তৈরি করা, বা একটা action ট্রিগার করা</td><td>হ্যাঁ</td></tr>
+<tr><td>PUT</td><td>পুরো resource প্রতিস্থাপন করা</td><td>হ্যাঁ (সম্পূর্ণ resource)</td></tr>
+<tr><td>PATCH</td><td>resource-এর আংশিক আপডেট</td><td>হ্যাঁ (শুধু পরিবর্তিত ফিল্ড)</td></tr>
+<tr><td>DELETE</td><td>Resource মুছে ফেলা</td><td>সাধারণত না</td></tr>
+</table>
+<p>এই method-গুলোর মধ্যে কোনটা <b>safe</b> (কোনো state বদলায় না) এবং কোনটা <b>idempotent</b> (একাধিকবার চালালেও একই ফলাফল) — এই গুরুত্বপূর্ণ পার্থক্যটা এবং এর ব্যবহারিক প্রভাব (retry-এর সময় কেন গুরুত্বপূর্ণ) পরের অংশে, Idempotency অধ্যায়ে গভীরভাবে আলোচনা করা হয়েছে।</p>
+
+<h3>HTTP Status Code — সঠিকভাবে ব্যবহার করা</h3>
+<table>
+<tr><th>Range</th><th>অর্থ</th><th>সাধারণ কোড</th></tr>
+<tr><td>2xx — Success</td><td>Request সফল হয়েছে</td><td><code>200 OK</code>, <code>201 Created</code>, <code>202 Accepted</code>, <code>204 No Content</code></td></tr>
+<tr><td>3xx — Redirection</td><td>আরও পদক্ষেপ দরকার</td><td><code>301 Moved Permanently</code>, <code>304 Not Modified</code></td></tr>
+<tr><td>4xx — Client Error</td><td>Client-এর ভুল request</td><td><code>400 Bad Request</code>, <code>401 Unauthorized</code>, <code>403 Forbidden</code>, <code>404 Not Found</code>, <code>409 Conflict</code>, <code>422 Unprocessable Entity</code>, <code>429 Too Many Requests</code></td></tr>
+<tr><td>5xx — Server Error</td><td>সার্ভারের ভুল</td><td><code>500 Internal Server Error</code>, <code>502 Bad Gateway</code>, <code>503 Service Unavailable</code>, <code>504 Gateway Timeout</code></td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — সবকিছুতে 200 ফেরত দেওয়া, error body-তে জানানো</span>
+কিছু API ডিজাইনে ভুল হলেও HTTP status <code>200</code> রাখা হয় এবং response body-তে <code>{"success": false, "error": "..."}</code> পাঠানো হয়। এতে HTTP-লেভেল tooling (monitoring, caching, retry logic, load balancer health check) ভুল বোঝে যে request সফল হয়েছে — error rate monitoring, automatic retry, এবং caching সবকিছুই ভুল আচরণ করে। Status code-কেই সত্যিকারের অর্থ বহন করতে দিতে হবে।
+</div>
+
+<h3>স্ট্যান্ডার্ডাইজড Error Response Format</h3>
+<p>প্রতিটা error response-এর গঠন সামঞ্জস্যপূর্ণ হওয়া উচিত, যাতে client একটাই error-parsing লজিক দিয়ে সব endpoint সামলাতে পারে। <span class="kw">RFC 7807 (Problem Details for HTTP APIs)</span> একটা জনপ্রিয় স্ট্যান্ডার্ড —</p>
+<div class="diagram"><pre>
+HTTP/1.1 422 Unprocessable Entity
+Content-Type: application/problem+json
+
+{
+  "type": "https://api.example.com/errors/validation-failed",
+  "title": "Validation Failed",
+  "status": 422,
+  "detail": "ফিল্ড 'email' একটা বৈধ ইমেইল ঠিকানা হতে হবে",
+  "instance": "/orders/42",
+  "errors": [
+    { "field": "email", "message": "invalid format" }
+  ]
+}
+</pre></div>
+
+<h3>Pagination Strategies</h3>
+<table>
+<tr><th>পদ্ধতি</th><th>কীভাবে কাজ করে</th><th>সীমাবদ্ধতা</th></tr>
+<tr><td>Offset-based (<code>?offset=100&limit=20</code>)</td><td>নির্দিষ্ট সংখ্যক row স্কিপ করে পরের সেট ফেরত দেওয়া</td><td>বড় offset-এ ডাটাবেস ধীর হয়ে যায় (সব স্কিপ করা row স্ক্যান করতে হয়); পেজিনেশনের মাঝে নতুন row insert হলে item দ্বৈত/অনুপস্থিত দেখাতে পারে</td></tr>
+<tr><td>Cursor/Keyset-based (<code>?after=cursor_xyz</code>)</td><td>শেষ দেখা item-এর একটা reference (cursor) দিয়ে পরের সেট চাওয়া হয়</td><td>Concurrent insert-এও স্থিতিশীল ও নির্ভরযোগ্য, ডাটাবেস index ব্যবহার করে দ্রুত — কিন্তু নির্দিষ্ট পেজ নম্বরে সরাসরি লাফ দেওয়া কঠিন</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন বড় স্কেলে Cursor-based Pagination পছন্দনীয়</span>
+Offset-based pagination-এ ডাটাবেসকে প্রতিবার শুরু থেকে <code>offset</code> সংখ্যক row গণনা করে বাদ দিতে হয় — data বাড়ার সাথে সাথে এটা ক্রমশ ধীর হয়ে যায় (O(offset) খরচ)। Cursor-based pagination একটা indexed কলাম (যেমন <code>id</code> বা <code>created_at</code>) ব্যবহার করে সরাসরি "এর পরের row" খুঁজে বের করে, যা ডেটার আকার নির্বিশেষে প্রায় constant-time থাকে — এই কারণেই বড় স্কেলের social media feed বা log API-গুলো cursor-based pagination ব্যবহার করে।
+</div>
+
+<h3>Filtering, Sorting ও Field Selection</h3>
+<p>Query parameter দিয়ে filtering (<code>?status=active</code>), sorting (<code>?sort=-created_at</code>), এবং response-এ কোন ফিল্ড আসবে তা নিয়ন্ত্রণ (<code>?fields=id,name,email</code>) করা সাধারণ conventions — এগুলো client-কে প্রয়োজনীয় ডেটাই আনতে দেয়, over-fetching কমায় এবং response payload ছোট রাখে।</p>
+
+<h3>HATEOAS ও Richardson Maturity Model</h3>
+<p><span class="kw">Richardson Maturity Model</span> একটা API কতটা "সত্যিকারের RESTful" তা ৪টা স্তরে ভাগ করে — Level 0 (একটা মাত্র endpoint, সব কিছু POST দিয়ে), Level 1 (আলাদা resource URI কিন্তু একটাই HTTP method), Level 2 (সঠিক HTTP method ও status code ব্যবহার — বেশিরভাগ production API এখানেই থাকে), এবং Level 3 — <span class="kw">HATEOAS (Hypermedia as the Engine of Application State)</span>, যেখানে response-এর ভেতরেই পরবর্তী সম্ভাব্য action-এর লিংক থাকে (যেমন একটা অর্ডার response-এ <code>"cancel": {"href": "/orders/42/cancel"}</code>), ফলে client-কে URL হার্ডকোড করতে হয় না। বাস্তবে বেশিরভাগ API Level 2-তেই থামে, কারণ HATEOAS-এর ব্যবহারিক সুবিধা প্রায়ই এর অতিরিক্ত জটিলতার তুলনায় কম মনে হয়।</p>
+
+<h3>API Contract ও Documentation</h3>
+<p><span class="kw">OpenAPI (Swagger)</span> স্পেসিফিকেশন দিয়ে একটা API-এর প্রতিটা endpoint, request/response schema, এবং error case machine-readable ভাবে ডকুমেন্ট করা হয় — এটা থেকে স্বয়ংক্রিয়ভাবে client SDK, ডকুমেন্টেশন সাইট, এবং এমনকি mock server জেনারেট করা যায়। <b>Schema-first</b> পদ্ধতিতে আগে OpenAPI স্পেক লেখা হয়, তারপর কোড; <b>code-first</b>-এ কোড থেকে স্পেক জেনারেট হয়। বড় দল যেখানে একাধিক টিম একই API নিয়ে সমান্তরালে কাজ করে, সেখানে schema-first প্রায়ই ভালো কাজ করে কারণ backend সম্পূর্ণ হওয়ার আগেই frontend টিম contract অনুযায়ী কাজ শুরু করতে পারে।</p>
+
+<div class="callout best"><span class="tag">Best practice — Contract আগে ঠিক করুন, তারপর implement করুন</span>
+একটা API endpoint লেখার আগে তার request/response schema, status code, এবং error case নিয়ে টিমের মধ্যে সম্মতি তৈরি করা উচিত (OpenAPI স্পেক দিয়ে)। এতে frontend ও backend টিম সমান্তরালে কাজ করতে পারে, এবং পরে বড় ধরনের ডিজাইন পরিবর্তনের প্রয়োজন কমে যায় — যা পরের অধ্যায়ে আলোচিত ব্যয়বহুল versioning এড়াতে সাহায্য করে।</div>
+</template>
+
+<template data-page="api-versioning">
+<h2 class="title">৯. API Versioning — Strategies, Semantic Versioning ও Deprecation Policy</h2>
+<p class="lead">একবার একটা API production-এ বাস্তব consumer পেয়ে গেলে, প্রতিটা পরিবর্তনই একটা প্রতিশ্রুতি ভঙ্গ করার ঝুঁকি বহন করে — Versioning সেই ঝুঁকি নিয়ন্ত্রিতভাবে সামলানোর কৌশল।</p>
+
+<h3>কেন Versioning দরকার — Breaking বনাম Non-breaking পরিবর্তন</h3>
+<p>একটা internal function বদলালে সব caller একসাথে আপডেট করা যায়, কিন্তু একটা পাবলিক API-এর consumer আলাদা টিম, আলাদা সংস্থা, এমনকি অচেনা third-party হতে পারে — তাদের কোড একই সময়ে আপডেট করা সম্ভব না। তাই প্রতিটা পরিবর্তনকে দুইভাগে ভাগ করে বোঝা জরুরি —</p>
+<table>
+<tr><th>পরিবর্তনের ধরন</th><th>উদাহরণ</th><th>Breaking কি না</th></tr>
+<tr><td>নতুন optional ফিল্ড যোগ করা</td><td>response-এ নতুন <code>"nickname"</code> ফিল্ড যোগ</td><td>Non-breaking — পুরনো client ফিল্ডটা উপেক্ষা করবে</td></tr>
+<tr><td>নতুন optional endpoint যোগ করা</td><td>নতুন <code>GET /orders/summary</code></td><td>Non-breaking</td></tr>
+<tr><td>বিদ্যমান ফিল্ড মুছে ফেলা</td><td>response থেকে <code>"phone"</code> ফিল্ড সরানো</td><td>Breaking — client-এর কোড crash করতে পারে</td></tr>
+<tr><td>ফিল্ডের নাম বা টাইপ বদলানো</td><td><code>"price": "10"</code> (string) থেকে <code>"price": 10</code> (number)</td><td>Breaking — parsing ব্যর্থ হবে</td></tr>
+<tr><td>একটা optional ফিল্ডকে required করা</td><td>request-এ <code>"email"</code> বাধ্যতামূলক করা</td><td>Breaking — পুরনো client সেই ফিল্ড ছাড়াই request পাঠাচ্ছিল</td></tr>
+<tr><td>কোনো endpoint সম্পূর্ণ সরিয়ে ফেলা</td><td><code>DELETE /v1/legacy-orders</code> বাদ দেওয়া</td><td>Breaking</td></tr>
+</table>
+
+<h3>Semantic Versioning (SemVer) — API-তে প্রয়োগ</h3>
+<p><span class="kw">Semantic Versioning</span> একটা <code>MAJOR.MINOR.PATCH</code> সংখ্যা প্যাটার্ন — <b>MAJOR</b> বাড়ে breaking change-এ, <b>MINOR</b> বাড়ে নতুন backward-compatible ফিচারে, <b>PATCH</b> বাড়ে backward-compatible বাগ ফিক্সে। পাবলিক REST API-তে সাধারণত শুধু MAJOR ভার্সনটাই client-facing ভাবে প্রকাশ করা হয় (<code>/v1/</code>, <code>/v2/</code>) — MINOR/PATCH পরিবর্তন non-breaking হওয়ায় client নোটিশ ছাড়াই সেগুলো গ্রহণ করে নেয়।</p>
+
+<h3>Versioning Strategies</h3>
+<table>
+<tr><th>Strategy</th><th>উদাহরণ</th><th>সুবিধা</th><th>অসুবিধা</th></tr>
+<tr><td>URI Path Versioning</td><td><code>/v2/orders/42</code></td><td>সবচেয়ে স্পষ্ট, সহজে দেখা ও ডিবাগ করা যায়, browser-এ সরাসরি টেস্ট করা যায়, Gateway routing সহজ</td><td>প্রযুক্তিগতভাবে একই resource-এর একাধিক URI তৈরি করে (REST purist-দের মতে uniform resource identifier নীতির লঙ্ঘন)</td></tr>
+<tr><td>Query Parameter Versioning</td><td><code>/orders/42?version=2</code></td><td>বাস্তবায়ন সহজ, URI path পরিষ্কার থাকে</td><td>Caching layer-এর জন্য কম স্পষ্ট, ভুলে parameter বাদ পড়লে অনিশ্চিত ভার্সন সার্ভ হতে পারে</td></tr>
+<tr><td>Custom Header Versioning</td><td><code>Api-Version: 2</code></td><td>URI সম্পূর্ণ পরিষ্কার থাকে, resource identity অপরিবর্তিত</td><td>Header চোখে সহজে দেখা যায় না, browser-এ সরাসরি টেস্ট করা কঠিন, ডকুমেন্টেশন ছাড়া বোঝা কঠিন</td></tr>
+<tr><td>Media Type (Content Negotiation) Versioning</td><td><code>Accept: application/vnd.company.v2+json</code></td><td>সবচেয়ে "খাঁটি" RESTful পদ্ধতি — resource এক থাকে, শুধু representation ভিন্ন</td><td>বাস্তবায়ন ও ডিবাগ সবচেয়ে জটিল, tooling সাপোর্ট কম</td></tr>
+</table>
+<p>বাস্তবে বেশিরভাগ পাবলিক API (Stripe, GitHub, Twitter) URI Path বা Header versioning ব্যবহার করে, কারণ simplicity এবং tooling সহজলভ্যতা প্রায়ই REST purity-এর চেয়ে বেশি গুরুত্বপূর্ণ বিবেচিত হয়।</p>
+
+<h3>API Gateway-তে Versioning বাস্তবায়ন</h3>
+<p>যেভাবে ৭ম অধ্যায়ে আলোচিত হয়েছে, Version নির্ধারণ ও routing-এর প্রকৃত কাজ সাধারণত <span class="kw">API Gateway</span>-তে হয় — Gateway request-এর path/header দেখে <code>v1</code> ট্র্যাফিক পুরনো সার্ভিস instance-এ এবং <code>v2</code> ট্র্যাফিক নতুন instance-এ (অথবা একই সার্ভিসের ভেতরে ভিন্ন কোড পাথে) রাউট করে দেয়। এতে দুইটা ভার্সন একই সাথে প্রোডাকশনে সচল থাকতে পারে, এবং client-রা নিজেদের সময়মতো নতুন ভার্সনে migrate করতে পারে।</p>
+
+<h3>Deprecation ও Sunset Policy</h3>
+<p>একটা পুরনো ভার্সন চিরকাল চালু রাখা যায় না — কিন্তু হঠাৎ বন্ধ করাও consumer-দের সাথে বিশ্বাসভঙ্গ। একটা দায়িত্বশীল deprecation প্রক্রিয়ায় —</p>
+<ul>
+<li><b>Deprecation ঘোষণা:</b> response-এ <code>Deprecation: true</code> header এবং ডকুমেন্টেশনে স্পষ্ট নোটিশ যোগ করা।</li>
+<li><b>Sunset তারিখ জানানো:</b> <code>Sunset: Sat, 31 Dec 2026 23:59:59 GMT</code> header (RFC 8594) দিয়ে ঠিক কবে endpoint বন্ধ হবে তা machine-readable ভাবে জানানো।</li>
+<li><b>যথেষ্ট migration সময় দেওয়া:</b> সাধারণত কয়েক মাস থেকে এক-দুই বছর, API-এর গুরুত্ব ও consumer সংখ্যা অনুযায়ী।</li>
+<li><b>ব্যবহার monitor করা:</b> sunset-এর আগে পুরনো ভার্সনের actual traffic দেখে বোঝা — কোন consumer এখনও migrate করেনি, এবং প্রয়োজনে সরাসরি যোগাযোগ করা।</li>
+<li><b>Migration guide দেওয়া:</b> পুরনো থেকে নতুন ভার্সনে কীভাবে যেতে হবে তার স্পষ্ট, উদাহরণসহ ডকুমেন্টেশন।</li>
+</ul>
+
+<h3>Microservices-এ Versioning-এর বাড়তি জটিলতা</h3>
+<p>একটা মনোলিথে একটা মাত্র API ভার্সন করা তুলনামূলক সহজ, কিন্তু microservices-এ প্রতিটা সার্ভিস স্বাধীনভাবে evolve করে — একটা সার্ভিসের change আরেকটা downstream সার্ভিসকে ভেঙে দিতে পারে, প্রায়ই কারো অজান্তেই। এই সমস্যা কমাতে —</p>
+<ul>
+<li><b>Consumer-Driven Contract Testing</b> (যেমন Pact): প্রতিটা consumer তাদের প্রত্যাশা একটা "contract" হিসেবে লিখে রাখে; provider সার্ভিস deploy করার আগে সব consumer-এর contract-এর বিপরীতে টেস্ট চালিয়ে নিশ্চিত হয় কোনো breaking change ঘটেনি।</li>
+<li><b>Schema Registry</b> (event-driven সিস্টেমে, Avro/Protobuf-এর সাথে): message schema-এর একটা কেন্দ্রীয় রেজিস্ট্রি রাখা হয় যা backward/forward compatibility স্বয়ংক্রিয়ভাবে যাচাই করে, একটা producer-এর schema change যাতে অজান্তে consumer-দের ভেঙে না দেয়।</li>
+</ul>
+
+<h3>Versioning এড়ানোর কৌশল — Tolerant Reader Pattern</h3>
+<p>সবচেয়ে ভালো versioning হলো যতটা সম্ভব versioning এড়ানো — এটা সম্ভব হয় যদি প্রতিটা পরিবর্তন কঠোরভাবে additive এবং backward-compatible রাখা হয় (নতুন ফিল্ড যোগ করা, পুরনো কিছু না সরানো), এবং client-দের <span class="kw">Tolerant Reader Pattern</span> মেনে চলতে উৎসাহিত করা হয় — অর্থাৎ client অচেনা নতুন ফিল্ড উপেক্ষা করবে, শুধু প্রয়োজনীয় ফিল্ড পড়বে, কড়াকড়ি schema validation দিয়ে পুরো response reject করবে না। এই নীতিকে প্রায়ই <b>Postel's Law</b> ("নিজে যা পাঠান তাতে রক্ষণশীল হোন, অন্যের কাছ থেকে যা গ্রহণ করেন তাতে উদার হোন") দিয়ে বর্ণনা করা হয়।</p>
+
+<div class="diagram"><pre>
+      v1 client                         v2 client
+          │                                 │
+          ▼                                 ▼
+   Accept: v1                        Accept: v2
+          │                                 │
+          └──────────────┬──────────────────┘
+                          ▼
+                  [API Gateway]
+                  version দেখে routing
+              ┌───────────┴───────────┐
+              ▼                       ▼
+     [Order Service v1]      [Order Service v2]
+     (Deprecation ও Sunset      (নতুন client-দের
+      header পাঠাচ্ছে)           জন্য সচল)
+</pre></div>
+
+<div class="callout why"><span class="tag">কেন পাবলিক API-এর versioning internal সার্ভিসের চেয়ে ভিন্ন গুরুত্বের</span>
+একটা internal মাইক্রোসার্ভিসের সব caller একই সংস্থার আওতায়, তাই coordination করে একসাথে আপডেট করা সম্ভব — versioning-এর প্রয়োজন কম, contract testing দিয়েই যথেষ্ট। কিন্তু একটা পাবলিক/partner-facing API-এর consumer অজানা, অসংখ্য, এবং তাদের নিজস্ব রিলিজ সময়সূচি আছে — তাই সেখানে formal versioning ও দীর্ঘ deprecation window কার্যত অপরিহার্য।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — সামান্য পরিবর্তনেও Major Version বাড়ানো, অথবা পুরনো ভার্সন কখনও বন্ধ না করা</span>
+প্রতিটা ছোট পরিবর্তনে নতুন major version তৈরি করলে দ্রুত একাধিক ভার্সন সমান্তরালে maintain করতে হয়, যা অপারেশনাল বোঝা বাড়িয়ে দেয় — তাই সত্যিকারের breaking change ছাড়া version বাড়ানো উচিত না। উল্টো দিকে, deprecated ভার্সন কখনও বন্ধ না করাও একটা সাধারণ ভুল — পুরনো ভার্সন চিরস্থায়ী রাখলে টেক-ডেট বাড়তেই থাকে, এবং প্রতিটা নতুন ফিচার একাধিক ভার্সনে বাস্তবায়ন করতে হয়।</div>
+
+<div class="callout best"><span class="tag">Best practice — যেখানে সম্ভব, versioning-এর বদলে backward-compatible evolution বেছে নিন</span>
+প্রতিটা API পরিবর্তনের আগে নিজেকে জিজ্ঞেস করুন — "এটা কি শুধু additive করে করা সম্ভব?" যদি হ্যাঁ হয়, নতুন major version না বানিয়ে existing ভার্সনেই backward-compatible পরিবর্তন যোগ করুন। নতুন major version তৈরি করা তখনই যুক্তিসঙ্গত যখন সত্যিকারের breaking change অনিবার্য, এবং তখন থেকেই deprecation timeline পরিষ্কারভাবে ঘোষণা করে দিন।</div>
+</template>
+
 <template data-page="idempotency-basics">
-<h2 class="title">৮. Idempotency Fundamentals — কী, কেন এবং HTTP Method Semantics</h2>
+<h2 class="title">১০. Idempotency Fundamentals — কী, কেন এবং HTTP Method Semantics</h2>
 <p class="lead">Distributed system-এ network কখনও ১০০% নির্ভরযোগ্য না — একটা request timeout হলে ক্লায়েন্ট জানতেই পারে না request আসলে সফল হয়েছিল কি না, আর সেই অনিশ্চয়তা থেকেই idempotency-এর প্রয়োজন জন্ম নেয়।</p>
 
 <h3>Idempotency কী</h3>
@@ -522,7 +692,7 @@ Payment, order creation, email/notification sending — এই ধরনের �
 </template>
 
 <template data-page="idempotency-advanced">
-<h2 class="title">৯. Idempotency Key Pattern — Implementation ও Race Condition হ্যান্ডলিং</h2>
+<h2 class="title">১১. Idempotency Key Pattern — Implementation ও Race Condition হ্যান্ডলিং</h2>
 <p class="lead">POST-এর মতো স্বভাবতই non-idempotent অপারেশনকে নিরাপদে retry-যোগ্য বানানোর সবচেয়ে প্রচলিত পদ্ধতি হলো Idempotency Key।</p>
 
 <h3>Idempotency-Key Header Pattern</h3>
@@ -577,7 +747,7 @@ Idempotency key-এর status আপডেট এবং প্রকৃত busin
 </template>
 
 <template data-page="concurrency-basics">
-<h2 class="title">১০. Concurrent Request Handling — Thread, Process ও Event Loop</h2>
+<h2 class="title">১২. Concurrent Request Handling — Thread, Process ও Event Loop</h2>
 <p class="lead">একটা সার্ভার একইসাথে হাজার হাজার request কীভাবে সামলায় — এই প্রশ্নের উত্তরই ঠিক করে দেয় একটা সিস্টেম কতটা efficient এবং কতটা predictable ভাবে scale করবে।</p>
 
 <h3>Concurrency বনাম Parallelism</h3>
@@ -616,7 +786,7 @@ Node.js বা async .NET কোডে যদি ভুলবশত একটা
 </template>
 
 <template data-page="concurrency-advanced">
-<h2 class="title">১১. Concurrency Advanced — Lock, Isolation Level, Distributed Lock ও Backpressure</h2>
+<h2 class="title">১৩. Concurrency Advanced — Lock, Isolation Level, Distributed Lock ও Backpressure</h2>
 <p class="lead">একাধিক request যখন একই ডেটা একসাথে পড়তে-লিখতে চায়, তখনই আসল concurrency সমস্যা শুরু হয় — আর এই অধ্যায়ে সেই সমস্যার শাস্ত্রীয় সমাধানগুলো।</p>
 
 <h3>Race Condition — একটা ক্লাসিক উদাহরণ</h3>
@@ -669,7 +839,7 @@ Node.js বা async .NET কোডে যদি ভুলবশত একটা
 </template>
 
 <template data-page="ratelimit-basics">
-<h2 class="title">১২. Rate Limiting Fundamentals — কী, কেন এবং Throttling</h2>
+<h2 class="title">১৪. Rate Limiting Fundamentals — কী, কেন এবং Throttling</h2>
 <p class="lead">Scaling infrastructure যতই শক্তিশালী হোক না কেন, একটা misbehaving client বা আক্রমণকারী যদি সীমাহীন request পাঠাতে থাকে, পুরো সিস্টেম চাপে পড়ে যাবে — Rate Limiting এই সীমা বলবৎ করার প্রথম প্রতিরক্ষা।</p>
 
 <h3>Rate Limiting কী এবং কেন দরকার</h3>
@@ -708,7 +878,7 @@ Fixed Window-এর একটা সূক্ষ্ম সমস্যা আছ
 </template>
 
 <template data-page="ratelimit-advanced">
-<h2 class="title">১৩. Rate Limiting Algorithms — Token Bucket, Sliding Window ও Distributed Rate Limiting</h2>
+<h2 class="title">১৫. Rate Limiting Algorithms — Token Bucket, Sliding Window ও Distributed Rate Limiting</h2>
 <p class="lead">Fixed Window-এর সীমাবদ্ধতা কাটিয়ে ওঠার জন্য তৈরি হয়েছে আরও কিছু পরিশীলিত অ্যালগরিদম, যেগুলো production সিস্টেমে সবচেয়ে বেশি ব্যবহৃত হয়।</p>
 
 <h3>Token Bucket</h3>
@@ -758,8 +928,8 @@ Rate limit চেক যত আগে (CDN/Edge বা API Gateway-তে) ক�
 </template>
 
 <template data-page="integration">
-<h2 class="title">১৪. সব একসাথে — Real-World Architecture Case Study</h2>
-<p class="lead">প্রতিটা টপিক আলাদাভাবে বোঝা যথেষ্ট না — আসল দক্ষতা হলো Scaling, Load Balancer, API Gateway, Idempotency, Concurrency ও Rate Limiting একসাথে কীভাবে একটা সুসংগত সিস্টেম তৈরি করে তা দেখা।</p>
+<h2 class="title">১৬. সব একসাথে — Real-World Architecture Case Study</h2>
+<p class="lead">প্রতিটা টপিক আলাদাভাবে বোঝা যথেষ্ট না — আসল দক্ষতা হলো Scaling, Load Balancer, API Gateway, API Design/Versioning, Idempotency, Concurrency ও Rate Limiting একসাথে কীভাবে একটা সুসংগত সিস্টেম তৈরি করে তা দেখা।</p>
 
 <h3>একটা সম্পূর্ণ Request-এর যাত্রা</h3>
 <div class="diagram"><pre>
@@ -795,6 +965,7 @@ Rate limit চেক যত আগে (CDN/Edge বা API Gateway-তে) ক�
 <tr><td>Horizontal Scaling + Stateless Design</td><td>ট্র্যাফিক বাড়লে instance যোগ করে ক্যাপাসিটি বাড়ানো</td></tr>
 <tr><td>Load Balancer</td><td>একাধিক instance-এর মধ্যে সমান/স্মার্ট ভাবে ট্র্যাফিক বিতরণ + failover</td></tr>
 <tr><td>API Gateway</td><td>একক entry point, auth, rate limit, routing centralize করা</td></tr>
+<tr><td>API Design ও Versioning</td><td>পরিষ্কার, predictable contract বজায় রাখা এবং নতুন mobile app ভার্সন পুরনো ভার্সনকে না ভেঙে সমান্তরালে চালানো</td></tr>
 <tr><td>Idempotency Key</td><td>একই "অর্ডার প্লেস করো" ভুলবশত দুইবার retry হলেও দুইটা অর্ডার তৈরি না হওয়া</td></tr>
 <tr><td>Concurrency Control (Optimistic Locking)</td><td>দুইজন ক্রেতা একই মুহূর্তে stock decrement করলেও সঠিক ফলাফল নিশ্চিত করা</td></tr>
 <tr><td>Rate Limiting</td><td>একজন ইউজার/বট বারবার রিকোয়েস্ট পাঠিয়ে সার্ভিস আটকে না দেওয়া</td></tr>
@@ -812,7 +983,7 @@ Rate limit চেক যত আগে (CDN/Edge বা API Gateway-তে) ক�
 </template>
 
 <template data-page="interview">
-<h2 class="title">১৫. Interview প্রশ্নোত্তর</h2>
+<h2 class="title">১৭. Interview প্রশ্নোত্তর</h2>
 <p class="lead">এই টপিকগুলো নিয়ে ইন্টারভিউতে বারবার আসা প্রশ্ন — সংক্ষিপ্ত, সরাসরি উত্তরসহ।</p>
 
 <h3>১) Vertical আর Horizontal Scaling-এর মধ্যে আপনি কীভাবে সিদ্ধান্ত নেবেন কোনটা ব্যবহার করবেন?</h3>
@@ -833,34 +1004,49 @@ Rate limit চেক যত আগে (CDN/Edge বা API Gateway-তে) ক�
 <h3>৬) API Gateway আর Service Mesh একসাথে কেন ব্যবহার করা হয়?</h3>
 <p>Gateway North-South ট্র্যাফিক (বাইরে থেকে ভেতরে) সামলায়, Service Mesh East-West ট্র্যাফিক (সার্ভিস-টু-সার্ভিস) সামলায় — mTLS, internal retry, internal load balancing, observability। দুটো ভিন্ন সমস্যার সমাধান, তাই একসাথে থাকা স্বাভাবিক, একে অপরের বিকল্প না।</p>
 
-<h3>৭) কেন POST স্বভাবতই idempotent না, কিন্তু PUT idempotent?</h3>
+<h3>৭) একটা URI ডিজাইন করার সময় কোন কোন নীতি মেনে চলা উচিত?</h3>
+<p>URI resource (noun) নির্দেশ করবে, action (verb) না — action HTTP method দিয়ে প্রকাশ হয় (<code>GET /orders/42</code>, <code>getOrder?id=42</code> না)। Plural resource নাম, সীমিত nesting depth (৩ স্তরের বেশি না), এবং filtering/sorting query parameter দিয়ে করা উচিত, আলাদা path দিয়ে না।</p>
+
+<h3>৮) Offset-based আর Cursor-based Pagination-এর মধ্যে পার্থক্য কী, এবং বড় স্কেলে কোনটা ভালো?</h3>
+<p>Offset-based pagination (<code>?offset=100&limit=20</code>) ডেটাবেসকে প্রতিবার শুরু থেকে গণনা করে বাদ দিতে হয়, তাই বড় offset-এ ধীর হয়ে যায় এবং concurrent insert-এ item দ্বৈত/অনুপস্থিত দেখাতে পারে। Cursor-based pagination একটা indexed reference থেকে পরের সেট খুঁজে বের করে, যা ডেটার আকার নির্বিশেষে দ্রুত ও স্থিতিশীল — এই কারণেই বড় স্কেলের সিস্টেমে এটা পছন্দনীয়।</p>
+
+<h3>৯) কোন পরিবর্তন একটা API-তে "breaking" হিসেবে গণ্য হয়, আর কোনটা না?</h3>
+<p>নতুন optional ফিল্ড বা endpoint যোগ করা non-breaking — পুরনো client সেটা উপেক্ষা করবে। বিদ্যমান ফিল্ড মুছে ফেলা, ফিল্ডের নাম/টাইপ বদলানো, একটা optional ফিল্ডকে required করা, বা কোনো endpoint সরিয়ে ফেলা — এগুলো breaking, কারণ পুরনো client-এর কোড এসবের ওপর নির্ভর করে থাকতে পারে এবং crash করতে পারে।</p>
+
+<h3>১০) API Versioning-এর চারটা প্রধান কৌশল কী কী, এবং বাস্তবে কোনটা সবচেয়ে বেশি ব্যবহৃত হয়?</h3>
+<p>URI Path (<code>/v2/orders</code>), Query Parameter (<code>?version=2</code>), Custom Header (<code>Api-Version: 2</code>), এবং Media Type/Content Negotiation (<code>Accept: application/vnd.company.v2+json</code>)। বাস্তবে URI Path versioning সবচেয়ে বেশি ব্যবহৃত হয় কারণ এটা স্পষ্ট, ডিবাগ করা সহজ, এবং Gateway routing-এ সরাসরি ব্যবহার করা যায় — যদিও Media Type versioning সবচেয়ে "খাঁটি" RESTful পদ্ধতি হিসেবে বিবেচিত হয়।</p>
+
+<h3>১১) একটা পুরনো API ভার্সন responsibly deprecate করার প্রক্রিয়া কী?</h3>
+<p><code>Deprecation</code> header দিয়ে ঘোষণা করা, <code>Sunset</code> header দিয়ে (RFC 8594) সুনির্দিষ্ট বন্ধ হওয়ার তারিখ জানানো, যথেষ্ট migration সময় দেওয়া, sunset-এর আগে পুরনো ভার্সনের actual ব্যবহার monitor করা, এবং একটা স্পষ্ট migration guide প্রকাশ করা — হঠাৎ বন্ধ না করে।</p>
+
+<h3>১২) কেন POST স্বভাবতই idempotent না, কিন্তু PUT idempotent?</h3>
 <p>PUT পুরো resource প্রতিস্থাপন করে — একই ডেটা দিয়ে একাধিকবার PUT করলে একই ফলাফল হয়। POST সাধারণত একটা নতুন resource তৈরি করে, প্রতিবার নতুন unique ID জেনারেট করে — তাই দুইবার একই POST চালালে দুইটা ভিন্ন resource তৈরি হয়ে যায়।</p>
 
-<h3>৮) Idempotency Key pattern কীভাবে কাজ করে, একটা duplicate request কীভাবে ধরা পড়ে?</h3>
+<h3>১৩) Idempotency Key pattern কীভাবে কাজ করে, একটা duplicate request কীভাবে ধরা পড়ে?</h3>
 <p>Client একটা unique key জেনারেট করে request-এর সাথে পাঠায়; retry হলেও একই key ব্যবহার করে। Server প্রথমবার সেই key-এর সাথে response সংরক্ষণ করে; একই key দিয়ে পরের request এলে business logic আবার না চালিয়ে সংরক্ষিত response ফেরত দেয়। Key-lookup ও reservation অবশ্যই atomic হতে হবে, নাহলে দুইটা concurrent duplicate একসাথে "key নেই" দেখে দুইবারই প্রসেস করে ফেলতে পারে।</p>
 
-<h3>৯) Optimistic আর Pessimistic Concurrency Control-এর মধ্যে পার্থক্য কী, এবং কখন কোনটা বেছে নেবেন?</h3>
+<h3>১৪) Optimistic আর Pessimistic Concurrency Control-এর মধ্যে পার্থক্য কী, এবং কখন কোনটা বেছে নেবেন?</h3>
 <p>Pessimistic locking আগে থেকেই row lock করে রাখে (<code>SELECT FOR UPDATE</code>) — high-conflict পরিস্থিতিতে নির্ভরযোগ্য কিন্তু throughput কমায়। Optimistic locking একটা version কলাম দিয়ে conflict শুধু update-এর সময় যাচাই করে, conflict কম থাকলে ভালো throughput দেয় কিন্তু high-conflict-এ বারবার retry লাগে।</p>
 
-<h3>১০) Database Isolation Level-গুলো কী কী সমস্যা প্রতিরোধ করে?</h3>
+<h3>১৫) Database Isolation Level-গুলো কী কী সমস্যা প্রতিরোধ করে?</h3>
 <p>Read Uncommitted কিছুই প্রতিরোধ করে না; Read Committed dirty read প্রতিরোধ করে; Repeatable Read এর সাথে non-repeatable read-ও প্রতিরোধ করে; Serializable সব anomaly (dirty, non-repeatable, phantom read) প্রতিরোধ করে কিন্তু সবচেয়ে বেশি concurrency খরচ করে।</p>
 
-<h3>১১) Distributed Lock-এ TTL এবং fencing token কেন দরকার?</h3>
+<h3>১৬) Distributed Lock-এ TTL এবং fencing token কেন দরকার?</h3>
 <p>TTL না থাকলে lock ধারণকারী process crash করলে lock চিরস্থায়ী আটকে থাকবে (deadlock)। Fencing token GC pause বা network delay-এর কারণে একটা "পুরনো" lock holder ভুলবশত এখনও কাজ চালিয়ে যাওয়া থেকে রক্ষা করে — resource শুধু সর্বশেষ, সবচেয়ে বড় token গ্রহণ করে।</p>
 
-<h3>১২) Event Loop (Node.js/async মডেল) কেন থ্রেড-পার-রিকোয়েস্ট মডেলের চেয়ে বেশি concurrent connection সামলাতে পারে?</h3>
+<h3>১৭) Event Loop (Node.js/async মডেল) কেন থ্রেড-পার-রিকোয়েস্ট মডেলের চেয়ে বেশি concurrent connection সামলাতে পারে?</h3>
 <p>বেশিরভাগ ওয়েব রিকোয়েস্ট I/O-bound — বেশিরভাগ সময় network/DB response-এর জন্য অপেক্ষায় কাটে। Thread-per-request মডেলে সেই অপেক্ষার সময় থ্রেড অলসভাবে ব্লক থাকে, মেমোরি নষ্ট করে। Event loop মডেলে সেই সময়ে একই থ্রেড অন্য শত শত request এগিয়ে নেয়, তাই একই হার্ডওয়্যারে অনেক বেশি concurrent connection সামলানো যায়।</p>
 
-<h3>১৩) Token Bucket আর Leaky Bucket rate limiting অ্যালগরিদমের পার্থক্য কী?</h3>
+<h3>১৮) Token Bucket আর Leaky Bucket rate limiting অ্যালগরিদমের পার্থক্য কী?</h3>
 <p>Token Bucket burst traffic সহ্য করতে পারে (বালতি ভরা থাকলে একসাথে অনেক request পাস হতে পারে), গড় হার নিয়ন্ত্রণ করে। Leaky Bucket output rate সম্পূর্ণ constant/smooth রাখে, burst সহ্য করে না — downstream-এ predictable rate পাঠানোর জন্য উপযুক্ত।</p>
 
-<h3>১৪) Fixed Window rate limiting-এর boundary burst সমস্যা কী, এবং কীভাবে সমাধান হয়?</h3>
+<h3>১৯) Fixed Window rate limiting-এর boundary burst সমস্যা কী, এবং কীভাবে সমাধান হয়?</h3>
 <p>একজন client উইন্ডোর শেষে এবং পরের উইন্ডোর শুরুতে দ্রুত পরপর রিকোয়েস্ট পাঠিয়ে কার্যত দ্বিগুণ সীমা ব্যবহার করে ফেলতে পারে। Sliding Window Log (নির্ভুল কিন্তু মেমোরি-ভারী) বা Sliding Window Counter (আনুমানিক কিন্তু হালকা) দিয়ে এই সমস্যা সমাধান করা হয়।</p>
 
-<h3>১৫) Distributed Rate Limiting-এ কেন একটা shared store (যেমন Redis) দরকার, এবং সেখানে race condition কীভাবে এড়ানো হয়?</h3>
+<h3>২০) Distributed Rate Limiting-এ কেন একটা shared store (যেমন Redis) দরকার, এবং সেখানে race condition কীভাবে এড়ানো হয়?</h3>
 <p>সার্ভিস horizontal ভাবে scaled হলে প্রতিটা instance-এর আলাদা in-memory counter দিয়ে client ভিন্ন instance-এ request পাঠিয়ে সীমা এড়িয়ে যেতে পারবে। তাই counter Redis-এর মতো shared store-এ রাখতে হয়, এবং "চেক + বৃদ্ধি" ধাপ Lua script দিয়ে atomic করে race condition এড়ানো হয়।</p>
 
-<h3>১৬) একটা "place order" API-তে scaling, load balancing, gateway, idempotency, concurrency, আর rate limiting — এই ছয়টা concept একসাথে কীভাবে কাজ করে, সংক্ষেপে বলুন।</h3>
+<h3>২১) একটা "place order" API-তে scaling, load balancing, gateway, idempotency, concurrency, আর rate limiting — এই ছয়টা concept একসাথে কীভাবে কাজ করে, সংক্ষেপে বলুন।</h3>
 <p>Gateway auth ও rate limit যাচাই করে সঠিক সার্ভিসে রুট করে; Load Balancer সেই সার্ভিসের একাধিক stateless instance-এর মধ্যে ট্র্যাফিক ভাগ করে; সার্ভিস idempotency key দিয়ে duplicate retry ঠেকায়; stock update-এর সময় optimistic locking দিয়ে concurrent request-এর race condition এড়ায়; আর পুরো সিস্টেম horizontal scaling ও caching/replication দিয়ে বাড়তে থাকা ট্র্যাফিক সামলায়।</p>
 </template>
 
