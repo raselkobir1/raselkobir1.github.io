@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Scalability, Load Balancing ও Traffic Management — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#22c55e; --accent2:#22d3ee;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --pink:#f472b6;
+    --code-bg:#0b0f14; --kw:#93c5fd;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(34,197,94,.24),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#0b0d1f}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent2); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--accent2)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--accent2)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#93c5fd}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  .search-wrap{padding:0 10px 14px}
+  .search-box{
+    width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    border-radius:9px; padding:9px 12px; font-size:13.5px; font-family:inherit;
+    outline:none; transition:border-color .15s;
+  }
+  .search-box:focus{border-color:var(--accent2)}
+  .search-box::placeholder{color:var(--muted)}
+  .search-meta{font-size:11.5px; color:var(--muted); padding:6px 2px 0; min-height:14px}
+  .navbtn.hide{display:none}
+  mark.hl{background:#fde047; color:#1a1a1a; padding:0 1px; border-radius:3px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1117">
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>📈 Scalability ও Traffic Management</h1>
+      <p>Beginner → Advanced • বাংলায় (keyword ইংরেজিতে)</p>
+      <div class="search-wrap">
+        <input type="text" id="courseSearch" class="search-box" placeholder="🔍 এই কোর্সে সার্চ করুন..." autocomplete="off">
+        <div class="search-meta" id="searchMeta"></div>
+      </div>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"scaling-basics",       icon:"📈", title:"Scaling কী, কেন এবং Vertical vs Horizontal Scaling"},
+  {id:"app-scaling",          icon:"🧩", title:"Application Layer Scaling — Statelessness, Session ও Auto-Scaling"},
+  {id:"data-scaling",         icon:"🗄️", title:"Database ও Caching Scaling — Replication, Sharding, Cache, CDN"},
+  {id:"lb-basics",            icon:"⚖️", title:"Load Balancer Fundamentals — কী, কেন, Layer 4 vs Layer 7"},
+  {id:"lb-advanced",          icon:"🔀", title:"Load Balancer Algorithms, Health Check ও Global Load Balancing"},
+  {id:"gateway-basics",       icon:"🚪", title:"API Gateway Fundamentals — কী, কেন এবং দায়িত্ব"},
+  {id:"gateway-advanced",     icon:"🛠️", title:"API Gateway Advanced Patterns, Tools ও Service Mesh তুলনা"},
+  {id:"idempotency-basics",   icon:"🔁", title:"Idempotency Fundamentals — কী, কেন এবং HTTP Method Semantics"},
+  {id:"idempotency-advanced", icon:"🔑", title:"Idempotency Key Pattern — Implementation ও Race Condition হ্যান্ডলিং"},
+  {id:"concurrency-basics",   icon:"🧵", title:"Concurrent Request Handling — Thread, Process ও Event Loop"},
+  {id:"concurrency-advanced", icon:"🔒", title:"Concurrency Advanced — Lock, Isolation Level, Distributed Lock ও Backpressure"},
+  {id:"ratelimit-basics",     icon:"🚦", title:"Rate Limiting Fundamentals — কী, কেন এবং Throttling"},
+  {id:"ratelimit-advanced",   icon:"⏱️", title:"Rate Limiting Algorithms — Token Bucket, Sliding Window ও Distributed Rate Limiting"},
+  {id:"integration",          icon:"🧭", title:"সব একসাথে — Real-World Architecture Case Study"},
+  {id:"interview",            icon:"🎯", title:"Interview প্রশ্নোত্তর"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="scaling-basics">
+<h2 class="title">১. Scaling কী, কেন এবং Vertical vs Horizontal Scaling</h2>
+<p class="lead">একটা সিস্টেম ১০০ জন ইউজারের জন্য নিখুঁতভাবে কাজ করতে পারে, আর ১০ লাখ ইউজারে গিয়ে সম্পূর্ণ ভেঙে পড়তে পারে — Scaling হলো সেই ব্যবধান ঘোচানোর বিজ্ঞান।</p>
+
+<h3>Scaling কী এবং কেন দরকার</h3>
+<p><span class="kw">Scaling</span> মানে হলো একটা সিস্টেমকে এমনভাবে তৈরি করা যাতে ট্র্যাফিক, ডেটার পরিমাণ বা কম্পিউটেশনের চাহিদা বাড়লেও সিস্টেম একই গতিতে (বা কাছাকাছি গতিতে) সাড়া দিতে পারে। প্রতিটা সার্ভারের একটা সীমা আছে — নির্দিষ্ট পরিমাণ CPU, RAM, disk I/O, এবং network bandwidth। একটা নির্দিষ্ট সংখ্যক concurrent request-এর পরে সেই সার্ভার হয় ধীর হয়ে যায় (latency বেড়ে যায়), অথবা রিকোয়েস্ট প্রত্যাখ্যান করতে শুরু করে, অথবা crash করে। Scaling স্ট্র্যাটেজি ঠিক করে এই সীমা অতিক্রম করার আগেই সিস্টেম কীভাবে অতিরিক্ত ক্যাপাসিটি যোগ করবে।</p>
+
+<h3>Vertical Scaling (Scale Up)</h3>
+<p><span class="kw">Vertical Scaling</span> মানে একটা একক সার্ভারের রিসোর্স বাড়ানো — বেশি CPU core, বেশি RAM, দ্রুত SSD। এটা সবচেয়ে সহজ scaling পদ্ধতি, কারণ কোডে কোনো পরিবর্তন লাগে না, শুধু বড় instance-এ migrate করলেই হয়।</p>
+<ul>
+<li><b>সুবিধা:</b> বাস্তবায়ন সহজ, কোনো distributed system জটিলতা নেই, data consistency নিয়ে চিন্তা করতে হয় না।</li>
+<li><b>সীমাবদ্ধতা:</b> একটা হার্ডওয়্যার ceiling আছে — যত টাকাই খরচ করুন, একটা মেশিনের ক্ষমতা অসীম না। খরচও linear না, বরং exponential — সবচেয়ে বড় instance টাইপ প্রায়ই অসামঞ্জস্যপূর্ণভাবে ব্যয়বহুল। এবং এটা <b>single point of failure</b> — সেই একটা মেশিন ডাউন হলে পুরো সার্ভিস ডাউন।</li>
+</ul>
+
+<h3>Horizontal Scaling (Scale Out)</h3>
+<p><span class="kw">Horizontal Scaling</span> মানে একটা মেশিনের ক্ষমতা না বাড়িয়ে আরও অনেকগুলো ছোট মেশিন যোগ করা, এবং তাদের মধ্যে ট্র্যাফিক ভাগ করে দেওয়া। এখানেই <span class="kw">Load Balancer</span> (পরের অধ্যায়ে বিস্তারিত) আবশ্যক হয়ে পড়ে — কারণ একাধিক সার্ভার থাকলে কেউ একজন ঠিক করে দিতে হয় কোন রিকোয়েস্ট কোন সার্ভারে যাবে।</p>
+<ul>
+<li><b>সুবিধা:</b> তাত্ত্বিকভাবে প্রায় unlimited ক্যাপাসিটি — চাহিদা বাড়লে আরও instance যোগ করা যায়। Fault tolerance ভালো — একটা instance ডাউন হলে বাকিগুলো ট্র্যাফিক সামলাতে পারে। Auto-scaling এর মাধ্যমে ট্র্যাফিক অনুযায়ী instance সংখ্যা কমানো-বাড়ানো যায়, ফলে কম ট্র্যাফিকের সময় খরচ বাঁচে।</li>
+<li><b>চ্যালেঞ্জ:</b> সার্ভিসকে <b>stateless</b> হতে হয় (পরের অধ্যায়ে বিস্তারিত), একাধিক সার্ভারে ডেটা consistency বজায় রাখা কঠিন হয়ে যায়, এবং distributed system-এর সাধারণ জটিলতাগুলো (network failure, partial failure, coordination) সামনে চলে আসে।</li>
+</ul>
+
+<table>
+<tr><th>দিক</th><th>Vertical Scaling</th><th>Horizontal Scaling</th></tr>
+<tr><td>পদ্ধতি</td><td>একটা সার্ভারে বেশি রিসোর্স</td><td>আরও সার্ভার যোগ করা</td></tr>
+<tr><td>Ceiling</td><td>হার্ডওয়্যার সীমার মধ্যে আটকে</td><td>প্রায় unlimited</td></tr>
+<tr><td>Downtime</td><td>প্রায়ই দরকার (resize/reboot)</td><td>zero-downtime সম্ভব</td></tr>
+<tr><td>Fault Tolerance</td><td>Single point of failure</td><td>একটা instance fail করলেও বাকিরা চালু থাকে</td></tr>
+<tr><td>জটিলতা</td><td>কম — কোড পরিবর্তন লাগে না</td><td>বেশি — statelessness, LB, data sync দরকার</td></tr>
+<tr><td>খরচ প্যাটার্ন</td><td>বড় instance-এ exponential খরচ</td><td>ছোট instance-এ linear খরচ, elastic</td></tr>
+</table>
+
+<div class="diagram"><pre>
+একক সার্ভার (Vertical)              বনাম          স্কেলড আউট (Horizontal)
+
+   [Client]                                          [Client]
+      │                                                  │
+      ▼                                                  ▼
+ ┌─────────┐                                       ┌─────────────┐
+ │ Server  │  ← বড় CPU/RAM                          │ Load Balancer│
+ │ (single)│     যোগ করলেও একটাই মেশিন              └──────┬──────┘
+ └─────────┘                                      ┌────────┼────────┐
+                                                   ▼        ▼        ▼
+                                              [Server1] [Server2] [Server3]
+</pre></div>
+
+<h3>Scalability-এর প্রকারভেদ</h3>
+<p>শুধু ট্র্যাফিক লোড না, স্কেলেবিলিটির আরও কিছু মাত্রা আছে যেগুলো ইন্টারভিউ ও ডিজাইনে গুরুত্বপূর্ণ — <b>Load Scalability</b> (বেশি রিকোয়েস্ট/ব্যবহারকারী সামলানো), <b>Geographic Scalability</b> (বিভিন্ন অঞ্চলের ইউজারদের কাছাকাছি low-latency service দেওয়া, multi-region deployment), এবং <b>Administrative Scalability</b> (একাধিক টিম বা সংস্থা একই সিস্টেমে নির্বিঘ্নে কাজ করতে পারা — microservices ও API Gateway এই মাত্রাতেই গুরুত্বপূর্ণ ভূমিকা রাখে)।</p>
+
+<div class="callout why"><span class="tag">কেন প্রথমে Vertical, তারপর Horizontal</span>
+বাস্তব অভিজ্ঞতা বলে, প্রথম দিকে vertical scaling দিয়েই বেশিরভাগ সমস্যার সমাধান হয়ে যায় — একটা মাঝারি ট্র্যাফিকের অ্যাপ একটা বড় instance-এই আরামে চলে। Horizontal scaling-এর জটিলতা (statelessness, distributed session, data consistency) আগেভাগে ইনভেস্ট করার মতো খরচ না, যতক্ষণ না প্রকৃত প্রয়োজন দেখা দেয়।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Day 1 থেকেই "Netflix-scale" আর্কিটেকচার বানানো</span>
+১০০ জন ইউজারের একটা স্টার্টআপ যদি শুরু থেকেই ৫০টা microservice, multi-region deployment আর জটিল sharding স্ট্র্যাটেজি নিয়ে বসে, তারা মূল প্রোডাক্ট বানানোর বদলে অপারেশনাল জটিলতায় ডুবে যায়। Scaling decision নেওয়া উচিত measured data এবং প্রকৃত bottleneck দেখে, অনুমান করে না।</div>
+
+<div class="callout best"><span class="tag">Best practice — Stateless থেকে শুরু করুন, এমনকি ছোট স্কেলেও</span>
+Vertical scaling দিয়ে শুরু করলেও, অ্যাপ্লিকেশন লজিককে stateless রাখা একটা সস্তা বিনিয়োগ যা ভবিষ্যতে horizontal scaling-এ যাওয়া সহজ করে দেয়। এটা একটা এমন সিদ্ধান্ত যা শুরুতেই নেওয়া সহজ, পরে রিফ্যাক্টর করা কঠিন।</div>
+</template>
+
+<template data-page="app-scaling">
+<h2 class="title">২. Application Layer Scaling — Statelessness, Session ও Auto-Scaling</h2>
+<p class="lead">Horizontal scaling তখনই কাজ করে যখন যেকোনো রিকোয়েস্ট যেকোনো সার্ভার সামলাতে পারে — আর সেটা নিশ্চিত করে একটাই নীতি: statelessness।</p>
+
+<h3>Stateless Design — Horizontal Scaling-এর ভিত্তি</h3>
+<p>একটা <span class="kw">stateless service</span> কোনো request-এর তথ্য পরবর্তী request-এর জন্য নিজের মেমোরিতে সংরক্ষণ করে না — প্রতিটা request নিজের মধ্যেই সম্পূর্ণ (client identity, auth token, প্রয়োজনীয় ডেটা)। এর ফলে Load Balancer যেকোনো একটা healthy instance-এ যেকোনো request পাঠাতে পারে, কারণ কোনো instance-এর ওপর নির্ভরতা নেই। বিপরীতে, একটা <span class="kw">stateful service</span> যদি একজন ইউজারের সেশন ডেটা নিজের RAM-এ রাখে, তাহলে সেই ইউজারের পরবর্তী প্রতিটা রিকোয়েস্ট ঠিক সেই একই instance-এ যেতে হবে — এটাই horizontal scaling-এর সবচেয়ে বড় বাধা।</p>
+
+<h3>Session হ্যান্ডলিং — তিনটা সমাধান</h3>
+<table>
+<tr><th>পদ্ধতি</th><th>কীভাবে কাজ করে</th><th>সমস্যা</th></tr>
+<tr><td>Sticky Session (Session Affinity)</td><td>LB একজন ইউজারের সব request একই server-এ পাঠায় (cookie/IP hash দিয়ে)</td><td>Load unevenly বিতরণ হতে পারে; সেই server ডাউন হলে ইউজার লগ-আউট হয়ে যায়</td></tr>
+<tr><td>Centralized Session Store</td><td>Session data Redis/Memcached-এর মতো shared store-এ রাখা হয়, যেকোনো server সেখান থেকে পড়ে</td><td>প্রতিটা request-এ extra network hop; session store নিজেই bottleneck/SPOF হতে পারে (তাই সেটাও redundant করতে হয়)</td></tr>
+<tr><td>Token-based (Stateless Auth)</td><td>JWT-এর মতো self-contained token client-এ থাকে, সার্ভার কোনো session state রাখে না</td><td>Token revoke করা কঠিন (blacklist দরকার হতে পারে); token বড় হলে প্রতি request-এ বাড়তি ডেটা</td></tr>
+</table>
+<p>Production সিস্টেমে সাধারণত <b>Centralized Session Store</b> অথবা <b>Token-based Auth</b> ব্যবহার হয়, কারণ দুটোই সত্যিকারের stateless horizontal scaling সাপোর্ট করে — sticky session কে সাধারণত একটা anti-pattern হিসেবে দেখা হয়, কারণ এটা মূল সমস্যাটা (statefulness) সমাধান না করে আড়াল করে রাখে।</p>
+
+<div class="diagram"><pre>
+Stateless Architecture:
+
+  [Client] ──▶ [Load Balancer] ──▶ [App Server 1] ──┐
+                     │             [App Server 2] ──┼──▶ [Redis: Session/Cache]
+                     └────────────▶ [App Server 3] ──┘         │
+                                                          [Database]
+  যেকোনো request যেকোনো App Server-এ যেতে পারে —
+  কারণ সেশন ডেটা server-এ না, shared store-এ থাকে।
+</pre></div>
+
+<h3>Auto-Scaling — চাহিদা অনুযায়ী instance বাড়ানো-কমানো</h3>
+<p><span class="kw">Auto-Scaling</span> হলো একটা পদ্ধতি যেখানে real-time মেট্রিক্স (CPU utilization, memory, request count, queue depth) দেখে স্বয়ংক্রিয়ভাবে instance সংখ্যা বাড়ানো বা কমানো হয়।</p>
+<ul>
+<li><b>Reactive/Target Tracking Scaling:</b> একটা target metric ঠিক করে দেওয়া হয় (যেমন average CPU 60%) — সিস্টেম সেই টার্গেট ধরে রাখার জন্য instance যোগ/বাদ দেয়।</li>
+<li><b>Step Scaling:</b> নির্দিষ্ট threshold ক্রস করলে ধাপে ধাপে instance বাড়ানো (৭০% CPU-তে +২টা, ৯০%-এ +৫টা)।</li>
+<li><b>Scheduled Scaling:</b> পূর্বানুমানযোগ্য ট্র্যাফিক প্যাটার্নের জন্য (যেমন প্রতিদিন সকাল ৯টায় ট্র্যাফিক বাড়ে) আগে থেকেই instance বাড়ানো।</li>
+<li><b>Predictive Scaling:</b> ঐতিহাসিক ডেটা থেকে ML মডেল দিয়ে ট্র্যাফিক পূর্বাভাস দিয়ে আগেভাগে scale করা।</li>
+</ul>
+<p>একটা গুরুত্বপূর্ণ ধারণা হলো <b>cooldown period</b> — একটা scaling action নেওয়ার পর কিছু সময় অপেক্ষা করা, যাতে নতুন instance বুট হয়ে metrics স্থিতিশীল হওয়ার আগেই আরেকটা scaling action ট্রিগার না হয়ে যায়। এই সুরক্ষা না থাকলে <b>scaling flapping</b> হতে পারে — বারবার instance বাড়ানো-কমানো, যা resource নষ্ট করে এবং সিস্টেমকে অস্থির করে তোলে।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — শুধু CPU দেখে scale করা</span>
+অনেক সার্ভিস CPU-bound না, বরং I/O-bound (ডেটাবেস কল, external API কল অপেক্ষা করা) — সেক্ষেত্রে CPU কম থাকলেও request queue জমে যেতে পারে এবং latency বেড়ে যেতে পারে। সঠিক scaling policy সেই মেট্রিক দেখা উচিত যা প্রকৃতপক্ষে bottleneck নির্দেশ করে — request latency, queue depth, বা concurrent connection সংখ্যা।</div>
+
+<div class="callout best"><span class="tag">Best practice — Scale out আগে, Scale in সাবধানে</span>
+ট্র্যাফিক বাড়লে দ্রুত scale out করা উচিত (aggressive), কিন্তু ট্র্যাফিক কমলে ধীরে scale in করা উচিত (conservative) — কারণ ভুলভাবে দ্রুত instance কমিয়ে ফেললে হঠাৎ ট্র্যাফিক spike এলে সিস্টেম overload হয়ে যেতে পারে।</div>
+</template>
+
+<template data-page="data-scaling">
+<h2 class="title">৩. Database ও Caching Scaling — Replication, Sharding, Cache, CDN</h2>
+<p class="lead">অ্যাপ্লিকেশন সার্ভার scale করা তুলনামূলক সহজ কারণ সেগুলো stateless করা যায় — কিন্তু ডেটাবেস স্বভাবতই stateful, তাই এখানেই স্কেলিং সবচেয়ে কঠিন এবং গুরুত্বপূর্ণ।</p>
+
+<h3>Read Scaling — Replication (Leader-Follower)</h3>
+<p>বেশিরভাগ সিস্টেমে read traffic write traffic-এর চেয়ে অনেক গুণ বেশি (যেমন ৯০% read, ১০% write)। <span class="kw">Read Replica</span> বা <span class="kw">Leader-Follower Replication</span>-এ একটা primary/leader ডাটাবেস সব write গ্রহণ করে, এবং সেই পরিবর্তন asynchronously একাধিক follower/replica-তে propagate হয়। সব read query replica থেকে সার্ভ করা হয়, ফলে leader-এর ওপর চাপ কমে এবং read throughput horizontal ভাবে বাড়ানো যায়।</p>
+<div class="callout why"><span class="tag">Replication Lag — একটা গুরুত্বপূর্ণ trade-off</span>
+Replica asynchronously sync হয় বলে সামান্য দেরি (lag) থাকে — একটা write করার পরপরই সেই replica থেকে read করলে পুরনো ডেটা দেখা যেতে পারে (eventual consistency)। এই কারণেই "write করার পরপরই নিজের করা write দেখতে পাওয়া" (read-your-writes) দরকার হলে সেই নির্দিষ্ট read leader থেকে করতে হয়, replica থেকে না।
+</div>
+
+<h3>Write Scaling — Sharding / Partitioning</h3>
+<p>Replication read স্কেল করে, কিন্তু write সবসময় leader-এই যায় — একটা নির্দিষ্ট পয়েন্টের পর leader একাই সব write সামলাতে পারে না। <span class="kw">Sharding</span> ডেটাকে একাধিক independent ডাটাবেসে ভাগ করে দেয়, যেখানে প্রতিটা shard ডেটার একটা অংশের মালিক।</p>
+<ul>
+<li><b>Range-based Sharding:</b> একটা key range অনুযায়ী ভাগ (যেমন user_id 1-1M shard-1, 1M-2M shard-2) — সহজ কিন্তু hotspot তৈরি হতে পারে যদি একটা range-এ বেশি activity হয়।</li>
+<li><b>Hash-based Sharding:</b> key-এর hash অনুযায়ী shard নির্ধারণ — লোড সমানভাবে ছড়ায়, কিন্তু range query কঠিন হয়ে যায়।</li>
+<li><b>Geographic/Directory-based Sharding:</b> ব্যবহারকারীর অঞ্চল বা একটা lookup table অনুযায়ী শার্ড নির্ধারণ — ভালো data locality, কিন্তু lookup layer নিজেই একটা extra dependency।</li>
+</ul>
+<div class="callout mistake"><span class="tag">Common mistake — ভুল shard key বেছে নেওয়া</span>
+একটা খারাপ shard key (যেমন এমন একটা কলাম যেখানে ৮০% ট্র্যাফিক একটা মাত্র value-তে জমা হয়) পুরো sharding-এর উদ্দেশ্যই নষ্ট করে দেয় — একটা shard hot হয়ে যায় আর বাকিগুলো অলস বসে থাকে। Resharding (পরে shard key বদলানো) production ডেটাতে করা অত্যন্ত ব্যয়বহুল এবং ঝুঁকিপূর্ণ, তাই এই সিদ্ধান্ত আগেভাগে সতর্কতার সাথে নেওয়া উচিত।
+</div>
+
+<h3>Caching — ডাটাবেসের ওপর চাপ কমানো</h3>
+<p><span class="kw">Cache</span> (Redis/Memcached) হলো একটা দ্রুত in-memory লেয়ার যা বারবার একই ডেটা পড়া থেকে ডাটাবেসকে বাঁচায়।</p>
+<table>
+<tr><th>প্যাটার্ন</th><th>কীভাবে কাজ করে</th></tr>
+<tr><td>Cache-Aside (Lazy Loading)</td><td>অ্যাপ্লিকেশন প্রথমে cache চেক করে; miss হলে DB থেকে পড়ে cache-এ বসিয়ে দেয়</td></tr>
+<tr><td>Write-Through</td><td>প্রতিটা write একই সাথে cache ও DB-তে যায় — cache সবসময় up-to-date</td></tr>
+<tr><td>Write-Behind (Write-Back)</td><td>write আগে cache-এ যায়, পরে asynchronously DB-তে flush হয় — দ্রুত কিন্তু ডেটা হারানোর ঝুঁকি</td></tr>
+</table>
+<p>Cache-এর সবচেয়ে কঠিন সমস্যা হলো <b>cache invalidation</b> — যখন আসল ডেটা বদলায়, cache-এর পুরনো কপি সরানো বা আপডেট করা। এজন্য সাধারণত একটা TTL (Time To Live) সেট করে রাখা হয়, যাতে stale ডেটা একটা নির্দিষ্ট সময় পর নিজে থেকেই মুছে যায়।</p>
+
+<h3>CDN — Origin সার্ভার থেকে দূরে সরানো</h3>
+<p><span class="kw">Content Delivery Network (CDN)</span> স্ট্যাটিক অ্যাসেট (image, CSS, JS, video) এবং কখনও কখনও API response ব্যবহারকারীর কাছাকাছি geographically distributed edge server-এ cache করে রাখে। এটা শুধু latency কমায় না, origin সার্ভারে পৌঁছানো ট্র্যাফিকের পরিমাণও নাটকীয়ভাবে কমিয়ে দেয় — স্কেলিং-এর প্রথম এবং সবচেয়ে cost-effective স্তর।</p>
+
+<div class="diagram"><pre>
+[User] ──▶ [CDN Edge (কাছের অঞ্চল)] ──cache hit──▶ ব্যবহারকারীকে সরাসরি রেসপন্স
+                    │
+                cache miss
+                    ▼
+             [Load Balancer] ──▶ [App Servers] ──▶ [Cache: Redis] ──▶ [DB Leader]
+                                                                          │
+                                                                   [Read Replicas]
+</pre></div>
+
+<div class="callout best"><span class="tag">Best practice — Cache প্রথমে, Sharding শেষে</span>
+Caching এবং read replica অপেক্ষাকৃত সহজ এবং কম ঝুঁকিপূর্ণ, তাই এগুলো আগে চেষ্টা করা উচিত। Sharding সবচেয়ে জটিল এবং সবচেয়ে বেশি অপারেশনাল ঝুঁকিপূর্ণ (resharding, cross-shard query, distributed transaction) — তাই এটা তখনই করা উচিত যখন প্রকৃতপক্ষে একটা একক ডাটাবেসের write ক্ষমতা bottleneck হয়ে দাঁড়ায়, অন্য কোনো বিকল্প না থাকলে।</div>
+</template>
+
+<template data-page="lb-basics">
+<h2 class="title">৪. Load Balancer Fundamentals — কী, কেন, Layer 4 vs Layer 7</h2>
+<p class="lead">Horizontal scaling-এ একাধিক সার্ভার তৈরি করাই যথেষ্ট না — কেউ একজন ঠিক করে দিতে হয় কোন request কোন সার্ভারে যাবে, এবং ঠিক এই কাজটাই করে Load Balancer।</p>
+
+<h3>Load Balancer কী এবং কেন দরকার</h3>
+<p><span class="kw">Load Balancer (LB)</span> হলো এমন একটা component যা incoming network traffic একাধিক backend server-এর মধ্যে বিতরণ করে দেয়। এটা চারটা মূল উদ্দেশ্য সাধন করে —</p>
+<ul>
+<li><b>Load Distribution:</b> কোনো একটা সার্ভার overload না হয়ে ট্র্যাফিক সমানভাবে ছড়িয়ে যায়।</li>
+<li><b>High Availability:</b> একটা সার্ভার ডাউন হলে LB স্বয়ংক্রিয়ভাবে সেই সার্ভারে ট্র্যাফিক পাঠানো বন্ধ করে দেয় (health check-এর মাধ্যমে), ইউজার কিছু টের পায় না।</li>
+<li><b>Scalability সক্ষম করা:</b> নতুন সার্ভার যোগ করলে LB স্বয়ংক্রিয়ভাবে সেখানে ট্র্যাফিক পাঠানো শুরু করে — এটাই horizontal scaling-এর ভিত্তি।</li>
+<li><b>একটাই entry point:</b> Client-দের একটাই ঠিকানা (single IP/domain) মনে রাখতে হয়, backend-এ কতগুলো সার্ভার আছে তা জানার দরকার হয় না।</li>
+</ul>
+
+<h3>Reverse Proxy বনাম Load Balancer</h3>
+<p>দুটো শব্দ প্রায়ই একে অপরের বদলে ব্যবহৃত হয়, কারণ প্রযুক্তিগতভাবে একই সফটওয়্যার (Nginx, HAProxy) দুটো কাজই করতে পারে। পার্থক্যটা মূলত উদ্দেশ্যে — <span class="kw">Reverse Proxy</span> একটা মাত্র backend-এর সামনে বসে client থেকে backend সরিয়ে রাখে (security, SSL termination, caching, compression-এর জন্য), যেখানে <span class="kw">Load Balancer</span>-এর মূল কাজ একাধিক backend-এর মধ্যে ট্র্যাফিক বিতরণ করা। বাস্তবে একটা LB প্রায় সবসময় reverse proxy-এর কাজও করে (client থেকে backend-এর আসল ঠিকানা আড়াল করে)।</p>
+
+<h3>Layer 4 (Transport Layer) Load Balancing</h3>
+<p><span class="kw">L4 Load Balancer</span> OSI মডেলের Transport Layer-এ কাজ করে — এটা শুধু IP address এবং TCP/UDP port দেখে সিদ্ধান্ত নেয়, request-এর ভেতরের কনটেন্ট (HTTP header, URL, cookie) দেখে না। এটা একটা TCP connection নিয়ে সরাসরি একটা backend-এ forward করে দেয় (NAT বা direct routing-এর মাধ্যমে), প্যাকেট পড়ে বা পার্স করে না।</p>
+
+<h3>Layer 7 (Application Layer) Load Balancing</h3>
+<p><span class="kw">L7 Load Balancer</span> HTTP/HTTPS request-এর ভেতরের কনটেন্ট দেখে সিদ্ধান্ত নেয় — URL path (<code>/api/users</code> বনাম <code>/api/orders</code>), HTTP header, cookie, বা এমনকি request body দেখে ভিন্ন ভিন্ন backend-এ route করতে পারে। এর জন্য LB-কে পুরো HTTP request terminate ও পার্স করতে হয়, তাই এটা L4-এর চেয়ে বেশি CPU ব্যবহার করে, কিন্তু অনেক বেশি smart routing সম্ভব।</p>
+
+<table>
+<tr><th>দিক</th><th>Layer 4 (L4)</th><th>Layer 7 (L7)</th></tr>
+<tr><td>দেখে কী</td><td>IP + Port (TCP/UDP)</td><td>HTTP header, URL, cookie, body</td></tr>
+<tr><td>গতি</td><td>দ্রুত, কম overhead</td><td>ধীর (তুলনামূলক), বেশি CPU লাগে</td></tr>
+<tr><td>Routing ক্ষমতা</td><td>শুধু IP/port ভিত্তিক</td><td>content-based routing, path-based, cookie-based</td></tr>
+<tr><td>SSL Termination</td><td>সাধারণত করে না (pass-through)</td><td>করতে পারে</td></tr>
+<tr><td>ব্যবহার</td><td>উচ্চ-throughput, low-latency প্রয়োজন (gaming, streaming)</td><td>ওয়েব API, microservices routing</td></tr>
+</table>
+
+<div class="diagram"><pre>
+                         ┌─────────────────────┐
+[Client] ──HTTPS──▶      │   Load Balancer      │
+                         │  (SSL terminate,     │
+                         │   L7 routing)        │
+                         └──────────┬───────────┘
+              /api/users            │            /api/orders
+                 ▼                  │                 ▼
+          [User Service]            │          [Order Service]
+                                    ▼
+                             [Payment Service]
+</pre></div>
+
+<div class="callout why"><span class="tag">কেন বেশিরভাগ ওয়েব সিস্টেম L7 ব্যবহার করে</span>
+আধুনিক microservices আর্কিটেকচারে একই ডোমেইনের বিভিন্ন path বিভিন্ন সার্ভিসে যেতে হয় — এটা শুধু L7-এই সম্ভব, কারণ L4 request-এর ভেতরের URL দেখতেই পারে না। L4 তখনই যথেষ্ট যখন backend homogeneous (সব সার্ভার একই কাজ করে) এবং raw throughput সবচেয়ে গুরুত্বপূর্ণ।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Load Balancer আর API Gateway গুলিয়ে ফেলা</span>
+LB মূলত traffic distribution আর health-based routing-এ ফোকাসড, কিন্তু authentication, rate limiting, request transformation-এর মতো কাজ সাধারণত এর দায়িত্ব না — সেটা API Gateway-এর কাজ (৬ষ্ঠ অধ্যায়ে বিস্তারিত)। আধুনিক আর্কিটেকচারে দুটো প্রায়ই একসাথে থাকে, একে অপরের বদলি না।</div>
+</template>
+
+<template data-page="lb-advanced">
+<h2 class="title">৫. Load Balancer Algorithms, Health Check ও Global Load Balancing</h2>
+<p class="lead">"কোন সার্ভারে পরের request যাবে" — এই সিদ্ধান্তটাই Load Balancer-এর মূল অ্যালগরিদম, আর সেই সিদ্ধান্ত ভুল হলে পুরো scaling-এর সুবিধা নষ্ট হয়ে যায়।</p>
+
+<h3>Load Balancing Algorithms</h3>
+<table>
+<tr><th>Algorithm</th><th>কীভাবে কাজ করে</th><th>কখন উপযুক্ত</th></tr>
+<tr><td>Round Robin</td><td>প্রতিটা backend-এ পালাক্রমে request পাঠানো</td><td>সব backend সমান ক্ষমতার হলে</td></tr>
+<tr><td>Weighted Round Robin</td><td>প্রতিটা backend-এর ক্ষমতা অনুযায়ী weight দিয়ে ভাগ করা</td><td>backend-গুলোর হার্ডওয়্যার ক্ষমতা ভিন্ন হলে</td></tr>
+<tr><td>Least Connections</td><td>যে backend-এ বর্তমানে সবচেয়ে কম active connection, সেখানে পাঠানো</td><td>request-এর processing time ভিন্ন ভিন্ন হলে</td></tr>
+<tr><td>Least Response Time</td><td>সবচেয়ে কম latency + কম connection থাকা backend বেছে নেওয়া</td><td>latency-sensitive সিস্টেমে</td></tr>
+<tr><td>IP Hash</td><td>client IP-এর hash অনুযায়ী নির্দিষ্ট backend fix করা</td><td>session affinity দরকার হলে</td></tr>
+<tr><td>Consistent Hashing</td><td>hash ring-এ ম্যাপ করে; backend যোগ/বাদ দিলে ন্যূনতম re-mapping হয়</td><td>caching layer বা distributed system-এ, node পরিবর্তনে minimal disruption দরকার হলে</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">কেন Consistent Hashing বিশেষভাবে গুরুত্বপূর্ণ</span>
+সাধারণ hash (<code>hash(key) % N</code>) ব্যবহার করলে backend সংখ্যা (N) পরিবর্তন হলে প্রায় সব key-ই নতুন backend-এ চলে যায় — cache-এর ক্ষেত্রে এটা প্রায় সম্পূর্ণ cache invalidation ঘটায়। Consistent Hashing একটা hash ring ব্যবহার করে যেখানে একটা node যোগ/বাদ দিলে শুধু তার আশেপাশের অংশটুকু প্রভাবিত হয়, বাকি সব key তাদের আগের backend-এই থেকে যায়।</div>
+
+<h3>Health Check — Unhealthy Backend সরিয়ে রাখা</h3>
+<p>Load Balancer নিয়মিতভাবে প্রতিটা backend-এর স্বাস্থ্য পরীক্ষা করে —</p>
+<ul>
+<li><b>Active Health Check:</b> LB নিজে থেকে একটা নির্দিষ্ট endpoint-এ (যেমন <code>/health</code>) পিরিয়ডিক request পাঠায়; সাড়া না পেলে বা error এলে সেই backend-কে রোটেশন থেকে বাদ দেয়।</li>
+<li><b>Passive Health Check:</b> স্বাভাবিক ট্র্যাফিকের response monitor করে — একটা backend থেকে ধারাবাহিকভাবে timeout বা 5xx error এলে সেটাকে unhealthy চিহ্নিত করা হয়।</li>
+</ul>
+<p>Unhealthy backend recover করলে (পরবর্তী সফল health check-এ) LB স্বয়ংক্রিয়ভাবে আবার সেখানে ট্র্যাফিক পাঠানো শুরু করে।</p>
+
+<h3>Sticky Session (Session Affinity)</h3>
+<p>কখনও কখনও একজন ইউজারের সব request একই backend-এ পাঠানো দরকার হয় (legacy in-memory session থাকলে) — LB একটা cookie সেট করে (যেমন <code>AWSALB</code>) যা দিয়ে পরবর্তী request-গুলো একই backend-এ রুট করে। যদিও ৪র্থ অধ্যায়ে আলোচিত হয়েছে stateless architecture-ই পছন্দনীয়, sticky session একটা fallback হিসেবে থাকে যখন legacy সিস্টেম রিফ্যাক্টর করা এখনও সম্ভব হয়নি।</p>
+
+<h3>SSL/TLS Termination</h3>
+<p>LB প্রায়ই client থেকে HTTPS connection গ্রহণ করে, সেটা decrypt করে, এবং backend-এর সাথে plain HTTP (বা internal network-এ সরলীকৃত TLS) ব্যবহার করে — একে <span class="kw">SSL Termination</span> বলে। এতে প্রতিটা backend সার্ভারে আলাদা করে certificate ম্যানেজ করতে হয় না, এবং backend সার্ভার শুধু plain HTTP handle করলেই চলে, ফলে কম CPU ব্যয় হয়।</p>
+
+<h3>Global Load Balancing</h3>
+<p>একটা একক অঞ্চলের LB শুধু সেই region-এর backend-এর মধ্যে ভাগ করতে পারে — বিশ্বব্যাপী ব্যবহারকারীদের জন্য <span class="kw">Global/Geo Load Balancing</span> দরকার হয়।</p>
+<ul>
+<li><b>DNS-based (GeoDNS):</b> DNS query-এর ভিত্তিতে ব্যবহারকারীর ভৌগোলিক অবস্থান অনুযায়ী কাছের region-এর IP ফেরত দেওয়া (যেমন AWS Route 53, Azure Traffic Manager)।</li>
+<li><b>Anycast:</b> একই IP address একাধিক location থেকে announce করা হয়; network routing (BGP) নিজেই ব্যবহারকারীর কাছাকাছি location-এ রুট করে দেয় — CDN ও DDoS প্রতিরোধে ব্যাপকভাবে ব্যবহৃত হয়।</li>
+<li><b>GSLB (Global Server Load Balancing):</b> একাধিক region-এর health ও latency দেখে সবচেয়ে ভালো region-এ ট্র্যাফিক পাঠানো, এবং একটা পুরো region ডাউন হলে অন্য region-এ failover করা।</li>
+</ul>
+
+<h3>Load Balancer নিজেই যাতে Single Point of Failure না হয়</h3>
+<p>একটা মজার বাস্তবতা হলো, LB নিজেই একটা single point of failure হয়ে দাঁড়াতে পারে যদি শুধু একটা LB instance থাকে। এজন্য production-এ সাধারণত <b>Active-Passive LB Pair</b> (VRRP/keepalived দিয়ে একটা floating IP শেয়ার করা, primary ডাউন হলে secondary টেক ওভার করে) অথবা cloud-managed LB (যা নিজেই internally redundant, যেমন AWS ALB/NLB) ব্যবহার করা হয়।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — LB-কে "সেট করে ভুলে যাওয়া" component ভাবা</span>
+LB নিজেই ভুল কনফিগার করা health check, ভুল timeout, বা একক instance হিসেবে থাকার কারণে পুরো সিস্টেমের bottleneck বা outage-এর কারণ হতে পারে। LB-এর নিজস্ব monitoring, redundancy এবং capacity planning ঠিক ততটাই গুরুত্বপূর্ণ যতটা backend সার্ভারের।</div>
+
+<div class="callout best"><span class="tag">Best practice — Health check timeout ও threshold সাবধানে ঠিক করুন</span>
+খুব aggressive health check (যেমন ১ সেকেন্ড interval, ১ বার ফেইল হলেই বাদ) একটা সাময়িক network glitch-এর কারণে সুস্থ সার্ভারকেও রোটেশন থেকে বাদ দিতে পারে (false positive), যা বাকি সার্ভারগুলোতে অতিরিক্ত চাপ ফেলে। সাধারণত কয়েকবার ধারাবাহিক ব্যর্থতার (consecutive failures) পরই একটা backend-কে unhealthy ঘোষণা করা হয়।</div>
+</template>
+
+<template data-page="gateway-basics">
+<h2 class="title">৬. API Gateway Fundamentals — কী, কেন এবং দায়িত্ব</h2>
+<p class="lead">একটা microservices সিস্টেমে যদি প্রতিটা client সরাসরি প্রতিটা সার্ভিসের সাথে কথা বলে, তাহলে auth, rate limiting, logging-এর মতো cross-cutting concern প্রতিটা সার্ভিসে আলাদা করে লিখতে হয় — API Gateway এই সমস্যার সমাধান।</p>
+
+<h3>API Gateway কী</h3>
+<p><span class="kw">API Gateway</span> হলো client এবং backend সার্ভিসগুলোর মধ্যে একটা single entry point — সব external request প্রথমে gateway-তে আসে, এবং gateway সিদ্ধান্ত নেয় সেটা কোন internal সার্ভিসে পাঠাতে হবে। Client-দের কাছে পুরো microservices আর্কিটেকচার একটাই coherent API হিসেবে দেখা যায়, ভেতরে কতগুলো সার্ভিস আছে তা জানার দরকার হয় না।</p>
+
+<h3>API Gateway-এর মূল দায়িত্ব</h3>
+<ul>
+<li><b>Routing:</b> URL path/header অনুযায়ী সঠিক microservice-এ request পাঠানো।</li>
+<li><b>Authentication ও Authorization:</b> প্রতিটা সার্ভিসে আলাদা করে auth লজিক না লিখে, একটা কেন্দ্রীয় জায়গায় token যাচাই করা।</li>
+<li><b>Rate Limiting ও Throttling:</b> প্রতিটা client/API key-এর জন্য request সীমা বলবৎ করা (১২-১৩ অধ্যায়ে বিস্তারিত)।</li>
+<li><b>Request/Response Transformation:</b> প্রোটোকল রূপান্তর (যেমন REST ↔ gRPC), পুরনো client-দের জন্য response reshape করা।</li>
+<li><b>Aggregation/Composition:</b> একটা client request-এর জন্য একাধিক backend সার্ভিস কল করে একত্র করে একটাই response দেওয়া।</li>
+<li><b>Logging, Monitoring, Tracing:</b> সব ট্র্যাফিকের একটা কেন্দ্রীয় দৃশ্যমানতা (visibility) দেওয়া।</li>
+<li><b>SSL Termination ও Caching:</b> LB-এর মতো একই সুবিধা।</li>
+</ul>
+
+<h3>API Gateway বনাম Load Balancer বনাম Reverse Proxy</h3>
+<p>এই তিনটা শব্দ প্রায়ই ওভারল্যাপ করে কারণ কার্যত একই ধরনের infrastructure component (Nginx, Envoy, Kong) দিয়ে তিনটাই বানানো সম্ভব — পার্থক্যটা মূলত <b>abstraction level ও intent</b>-এ।</p>
+<table>
+<tr><th>Component</th><th>মূল ফোকাস</th><th>Layer সচেতনতা</th></tr>
+<tr><td>Reverse Proxy</td><td>backend আড়াল করা, SSL/caching</td><td>backend সংখ্যা সম্পর্কে সচেতন না হলেও চলে</td></tr>
+<tr><td>Load Balancer</td><td>একাধিক identical backend-এ traffic বিতরণ</td><td>backend instance সচেতন, কিন্তু business logic সচেতন না</td></tr>
+<tr><td>API Gateway</td><td>একাধিক ভিন্ন সার্ভিসের জন্য একক entry point, cross-cutting concern</td><td>API/route/business-level সচেতন — কোন path কোন সার্ভিসের</td></tr>
+</table>
+
+<h3>BFF — Backend for Frontend Pattern</h3>
+<p>একটা বড় সিস্টেমে web, mobile, এবং third-party partner — প্রতিটা client-এর ডেটার প্রয়োজন ভিন্ন হতে পারে। <span class="kw">BFF (Backend for Frontend)</span> প্যাটার্নে একটা সাধারণ API Gateway-এর বদলে প্রতিটা client টাইপের জন্য আলাদা, উদ্দেশ্য-নির্দিষ্ট gateway/aggregation layer রাখা হয় — মোবাইল অ্যাপের জন্য কম, compact response, ওয়েব ড্যাশবোর্ডের জন্য বিস্তারিত response, ইত্যাদি। এতে প্রতিটা client টিম নিজের প্রয়োজন অনুযায়ী তাদের BFF স্বাধীনভাবে পরিবর্তন করতে পারে, মূল সার্ভিসগুলোতে হাত না দিয়ে।</p>
+
+<div class="diagram"><pre>
+   [Web Client]     [Mobile Client]    [Partner API]
+        │                  │                 │
+        ▼                  ▼                 ▼
+   [Web BFF]          [Mobile BFF]     [Partner Gateway]
+        └──────────────────┼─────────────────┘
+                            ▼
+                     [API Gateway core]
+              ┌─────────────┼─────────────┐
+              ▼             ▼             ▼
+        [User Service] [Order Service] [Payment Service]
+</pre></div>
+
+<div class="callout why"><span class="tag">কেন microservices-এ API Gateway প্রায় অবশ্যম্ভাবী</span>
+Microservices আর্কিটেকচারে সার্ভিসের সংখ্যা যত বাড়ে, প্রতিটা সার্ভিসে আলাদা করে auth/rate-limiting/logging লেখা তত বেশি ডুপ্লিকেশন তৈরি করে, আর client-দের internal service topology সম্পর্কে জানতে হয় — যা coupling বাড়ায়। API Gateway এই দুটো সমস্যাই একসাথে সমাধান করে একটা কেন্দ্রীভূত, প্রতিস্থাপনযোগ্য লেয়ারে।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Gateway-তে business logic ঢুকিয়ে দেওয়া</span>
+API Gateway-কে routing ও cross-cutting concern-এর জায়গা হিসেবে রাখা উচিত, ডোমেইন-নির্দিষ্ট business logic (যেমন "অর্ডার ভ্যালিড কি না" যাচাই) নয়। এই সীমা অতিক্রম করলে gateway ধীরে ধীরে একটা দৈত্যাকার monolith-এ পরিণত হয় যা প্রতিটা সার্ভিস পরিবর্তনের সাথে জড়িয়ে যায় — মূল উদ্দেশ্যটাই ব্যর্থ হয়ে যায়।</div>
+</template>
+
+<template data-page="gateway-advanced">
+<h2 class="title">৭. API Gateway Advanced Patterns, Tools ও Service Mesh তুলনা</h2>
+<p class="lead">API Gateway যখন শুধু routing না, বরং পুরো microservices-এর ট্রাফিক কন্ট্রোল প্লেন হয়ে ওঠে, তখন কিছু advanced pattern এবং সীমা বোঝা জরুরি হয়ে পড়ে।</p>
+
+<h3>API Composition / Aggregation Pattern</h3>
+<p>একটা mobile অ্যাপের হোমপেজ যদি user profile, recent orders, এবং notification — এই তিনটা আলাদা সার্ভিস থেকে ডেটা দরকার হয়, তাহলে client-কে তিনটা আলাদা request পাঠাতে বাধ্য করার বদলে API Gateway নিজে তিনটা backend সার্ভিস কল করে (সমান্তরালে), একত্র করে, একটাই response পাঠাতে পারে। এতে client-এর network round trip কমে, বিশেষ করে high-latency মোবাইল নেটওয়ার্কে এটা বড় পার্থক্য তৈরি করে।</p>
+
+<h3>Circuit Breaker Integration</h3>
+<p>যদি একটা downstream সার্ভিস ধীর হয়ে যায় বা fail করতে থাকে, Gateway-তে বসানো <span class="kw">Circuit Breaker</span> সেই সার্ভিসে বারবার request পাঠানো বন্ধ করে দিয়ে দ্রুত fallback response (বা error) দিতে পারে, যাতে একটা সার্ভিসের ব্যর্থতা পুরো সিস্টেমে cascading failure না ছড়ায়। এটা concurrency অধ্যায়ে আলোচিত backpressure ধারণার সাথে সরাসরি সম্পর্কিত।</p>
+
+<h3>API Gateway বনাম Service Mesh</h3>
+<p>এই দুটো প্রায়ই গুলিয়ে ফেলা হয়, কিন্তু তারা ভিন্ন ট্র্যাফিক দিক সামলায়। <span class="kw">API Gateway</span> সামলায় <b>North-South traffic</b> — বাইরের client থেকে ভেতরের সিস্টেমে আসা request। <span class="kw">Service Mesh</span> (যেমন Istio, Linkerd) সামলায় <b>East-West traffic</b> — একটা internal সার্ভিস থেকে আরেকটা internal সার্ভিসের মধ্যে যোগাযোগ (retry, mTLS, internal load balancing, observability)। বড় microservices সিস্টেমে দুটোই একসাথে থাকতে পারে — Gateway বাইরের entry point হিসেবে, Mesh ভেতরের সার্ভিস-টু-সার্ভিস যোগাযোগ পরিচালনার জন্য।</p>
+
+<table>
+<tr><th>দিক</th><th>API Gateway</th><th>Service Mesh</th></tr>
+<tr><td>ট্র্যাফিক দিক</td><td>North-South (client → system)</td><td>East-West (service → service)</td></tr>
+<tr><td>প্রধান উদ্বেগ</td><td>Auth, rate limit, routing, aggregation</td><td>mTLS, retry, internal LB, observability</td></tr>
+<tr><td>Deployment</td><td>একটা কেন্দ্রীয় (বা কয়েকটা) instance</td><td>প্রতিটা সার্ভিসের পাশে sidecar proxy</td></tr>
+</table>
+
+<h3>জনপ্রিয় API Gateway টুল</h3>
+<ul>
+<li><b>Kong / Tyk:</b> ওপেন-সোর্স, Nginx-ভিত্তিক, plugin architecture দিয়ে সহজে auth/rate-limit যোগ করা যায়।</li>
+<li><b>AWS API Gateway:</b> সম্পূর্ণ managed, Lambda/serverless-এর সাথে গভীর ইন্টিগ্রেশন।</li>
+<li><b>Envoy / Ambassador:</b> উচ্চ-পারফরম্যান্স proxy, service mesh (Istio)-এর ভেতরেও data plane হিসেবে ব্যবহৃত হয়।</li>
+<li><b>NGINX / NGINX Plus:</b> reverse proxy হিসেবে সুপরিচিত, gateway হিসেবেও ব্যাপকভাবে কনফিগার করা হয়।</li>
+<li><b>Spring Cloud Gateway / Zuul:</b> Java/Spring ইকোসিস্টেমে জনপ্রিয়।</li>
+</ul>
+
+<h3>API Versioning Gateway-তে</h3>
+<p>API-এর নতুন ভার্সন পুরনো client না ভেঙে রোল আউট করতে Gateway-তে সাধারণত দুইভাবে versioning হয় — <b>URL-based</b> (<code>/v1/orders</code> বনাম <code>/v2/orders</code>, স্পষ্ট কিন্তু URL প্রোলিফারেট করে) এবং <b>Header-based</b> (<code>Accept: application/vnd.api.v2+json</code>, URL পরিষ্কার থাকে কিন্তু ডিবাগ করা একটু কঠিন)।</p>
+
+<div class="callout behind"><span class="tag">বাস্তবতা — Gateway একটা bottleneck ও SPOF হতে পারে</span>
+সব ট্র্যাফিক একটা কেন্দ্রীয় Gateway দিয়ে যাওয়ার মানে হলো, এই লেয়ারটা যদি ধীর হয়ে যায় বা ডাউন হয়, পুরো সিস্টেম প্রভাবিত হয়। তাই production Gateway-কে নিজেই horizontally scaled (একাধিক instance + তার সামনে একটা LB) এবং stateless রাখতে হয়, ঠিক যেভাবে অন্য যেকোনো critical সার্ভিসকে রাখা হয়।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — সব microservices-এর জন্য একটাই দৈত্যাকার Gateway config</span>
+সময়ের সাথে একটা মনোলিথিক Gateway configuration ফাইল শত শত রুট, custom plugin, এবং business-নির্দিষ্ট নিয়মে ভরে যেতে পারে — যা নিজেই একটা "distributed monolith" তৈরি করে, যেখানে যেকোনো ছোট পরিবর্তনে পুরো Gateway redeploy করতে হয়। বড় সংস্থায় প্রায়ই domain অনুযায়ী একাধিক Gateway instance বা routing tier আলাদা রাখা হয়।</div>
+</template>
+
+<template data-page="idempotency-basics">
+<h2 class="title">৮. Idempotency Fundamentals — কী, কেন এবং HTTP Method Semantics</h2>
+<p class="lead">Distributed system-এ network কখনও ১০০% নির্ভরযোগ্য না — একটা request timeout হলে ক্লায়েন্ট জানতেই পারে না request আসলে সফল হয়েছিল কি না, আর সেই অনিশ্চয়তা থেকেই idempotency-এর প্রয়োজন জন্ম নেয়।</p>
+
+<h3>Idempotency কী</h3>
+<p><span class="kw">Idempotency</span> মানে হলো — একটা অপারেশন একবার করলে যে ফলাফল হয়, সেটা একাধিকবার (দুর্ঘটনাক্রমে) করলেও ঠিক একই ফলাফল হয়, কোনো অতিরিক্ত side-effect ছাড়া। গাণিতিকভাবে বলতে গেলে, <code>f(f(x)) = f(x)</code>। বাস্তব উদাহরণ — লিফটের বোতাম একাধিকবার চাপলেও লিফট একবারই ডাকা হয়; কিন্তু একটা "$100 ট্রান্সফার করো" অপারেশন দুইবার চালালে যদি $200 ট্রান্সফার হয়ে যায়, সেটা idempotent না।</p>
+
+<h3>কেন Idempotency দরকার — Network Retry-এর অনিশ্চয়তা</h3>
+<p>একটা client একটা API call করার পর যদি নির্দিষ্ট সময়ের মধ্যে response না পায় (timeout), তিনটা সম্ভাবনা থাকে — (১) request-ই সার্ভারে পৌঁছায়নি, (২) request পৌঁছেছে, প্রসেস হয়েছে, কিন্তু response client-এ ফিরে আসার আগেই connection কেটে গেছে, অথবা (৩) request এখনও প্রসেস হচ্ছে। Client-এর পক্ষে এই তিনটার মধ্যে পার্থক্য বোঝার কোনো উপায় নেই — তাই সাধারণত সবচেয়ে নিরাপদ পদক্ষেপ হলো request আবার পাঠানো (retry)। কিন্তু যদি আসল request আসলে সফল হয়ে থাকে (সম্ভাবনা ২), তাহলে retry একই অপারেশন দ্বিতীয়বার ঘটাবে — যেমন একই অর্ডার দুইবার তৈরি হওয়া, বা একই পেমেন্ট দুইবার কাটা হওয়া।</p>
+
+<div class="diagram"><pre>
+[Client]                         [Server]
+   │──POST /payment ($100)───────▶│
+   │                              │  ✅ পেমেন্ট প্রসেস হলো, DB-তে সেভ হলো
+   │◀────── (টাইমআউট, কোনো ────────│  ❌ কিন্তু response client পর্যন্ত পৌঁছায়নি
+   │         response আসেনি)       │
+   │                              │
+   │── (client retry করলো) ───────▶│
+   │──POST /payment ($100)───────▶│  ⚠️ Idempotency ছাড়া: দ্বিতীয়বার পেমেন্ট কাটা হবে!
+</pre></div>
+
+<h3>HTTP Method-এর Idempotency Semantics (স্পেসিফিকেশন অনুযায়ী)</h3>
+<table>
+<tr><th>HTTP Method</th><th>Safe (কোনো state বদলায় না)</th><th>Idempotent</th><th>মন্তব্য</th></tr>
+<tr><td>GET</td><td>হ্যাঁ</td><td>হ্যাঁ</td><td>শুধু read, কোনো side-effect নেই</td></tr>
+<tr><td>HEAD</td><td>হ্যাঁ</td><td>হ্যাঁ</td><td>GET-এর মতো, শুধু header ফেরত দেয়</td></tr>
+<tr><td>PUT</td><td>না</td><td>হ্যাঁ</td><td>পুরো resource প্রতিস্থাপন করে — একবার বা দশবার চালালে একই ফলাফল</td></tr>
+<tr><td>DELETE</td><td>না</td><td>হ্যাঁ</td><td>resource মুছে ফেলে — দ্বিতীয়বার চালালে "already deleted" (একই state)</td></tr>
+<tr><td>POST</td><td>না</td><td><b>না</b></td><td>সাধারণত নতুন resource তৈরি করে — দুইবার চালালে দুইটা resource তৈরি হয়</td></tr>
+<tr><td>PATCH</td><td>না</td><td>নির্ভর করে</td><td>partial update — যদি "field-কে X ভ্যালু সেট করো" হয় তবে idempotent, কিন্তু "counter-কে +১ করো" হলে idempotent না</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">কেন POST স্বভাবতই idempotent না</span>
+POST সাধারণত ব্যবহৃত হয় "একটা নতুন resource তৈরি করো" জাতীয় অপারেশনের জন্য — যেমন <code>POST /orders</code>। সার্ভার প্রতিবার একটা নতুন unique ID জেনারেট করে একটা নতুন resource তৈরি করে, তাই একই request দুইবার পাঠালে দুইটা ভিন্ন resource তৈরি হয়ে যায়। এই কারণেই POST-ভিত্তিক API-গুলোতে (payment, order creation) idempotency আলাদা করে ডিজাইন করে দিতে হয় — এটা এমনি এমনি আসে না।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — শুধু "GET/PUT/DELETE idempotent" মুখস্থ করা, কেন তা না বোঝা</span>
+Idempotency HTTP method-এর একটা নিয়ম না, এটা resource-এর ওপর অপারেশনের প্রভাবের একটা ফলাফল। একটা PUT endpoint যদি ভেতরে "কাউন্টার +১ করো" জাতীয় non-idempotent লজিক লিখে ফেলা হয়, সেটা HTTP method PUT হওয়া সত্ত্বেও idempotent থাকবে না। তাই প্রতিটা endpoint ডিজাইন করার সময় নিজেকে জিজ্ঞেস করতে হয় — "এই অপারেশন দুইবার চালালে কি একই ফলাফল হবে?", শুধু method নাম দেখে ধরে নেওয়া উচিত না।</div>
+
+<div class="callout best"><span class="tag">Best practice — যেকোনো state-পরিবর্তনকারী, retry-প্রবণ অপারেশনে idempotency ভাবুন</span>
+Payment, order creation, email/notification sending — এই ধরনের অপারেশন, যেখানে duplicate execution বাস্তব ক্ষতির (টাকা, স্প্যাম) কারণ হতে পারে, সবসময় idempotency-কে ডিজাইনের প্রথম দিন থেকেই বিবেচনায় রাখা উচিত, পরে প্যাচ করার বদলে। পরের অধ্যায়ে এই বাস্তবায়নের প্যাটার্ন বিস্তারিত আলোচনা করা হয়েছে।</div>
+</template>
+
+<template data-page="idempotency-advanced">
+<h2 class="title">৯. Idempotency Key Pattern — Implementation ও Race Condition হ্যান্ডলিং</h2>
+<p class="lead">POST-এর মতো স্বভাবতই non-idempotent অপারেশনকে নিরাপদে retry-যোগ্য বানানোর সবচেয়ে প্রচলিত পদ্ধতি হলো Idempotency Key।</p>
+
+<h3>Idempotency-Key Header Pattern</h3>
+<p>Client প্রতিটা state-পরিবর্তনকারী request পাঠানোর আগে একটা unique key (সাধারণত একটা UUID) জেনারেট করে, এবং সেটা <code>Idempotency-Key</code> header-এ পাঠায়। যদি network failure-এর কারণে client retry করে, সেই একই key দিয়েই retry করে (নতুন key জেনারেট করে না)। Server সেই key দেখে বুঝতে পারে এটা একটা নতুন request নাকি আগের একটা request-এর retry।</p>
+
+<div class="diagram"><pre>
+প্রথম request:
+  POST /payments
+  Idempotency-Key: 7f9c2a1e-...
+  → Server: key নতুন → প্রসেস করো → রেজাল্ট store করো (key + response) → response ফেরত দাও
+
+Retry (নেটওয়ার্ক টাইমআউটের কারণে):
+  POST /payments
+  Idempotency-Key: 7f9c2a1e-...  (একই key)
+  → Server: key আগে থেকেই আছে → দ্বিতীয়বার প্রসেস না করে
+             আগের সংরক্ষিত response-ই আবার ফেরত দাও
+</pre></div>
+
+<h3>Server-Side বাস্তবায়ন ধাপ</h3>
+<ol>
+<li>Request আসলে প্রথমে <code>Idempotency-Key</code> একটা storage-এ (ডাটাবেস টেবিল বা Redis) lookup করো।</li>
+<li>Key না থাকলে — একটা atomic operation দিয়ে key-কে "in-progress" স্ট্যাটাসে ইনসার্ট করো, তারপর প্রকৃত business logic চালাও, শেষে result key-এর সাথে সংরক্ষণ করো।</li>
+<li>Key আগে থেকেই "completed" থাকলে — সংরক্ষিত response সরাসরি ফেরত দাও, নতুন করে business logic চালিও না।</li>
+<li>Key "in-progress" অবস্থায় থাকলে (নিচে বিস্তারিত) — সাবধানে হ্যান্ডল করো।</li>
+</ol>
+
+<h3>Storage বিকল্প</h3>
+<table>
+<tr><th>পদ্ধতি</th><th>বিবরণ</th></tr>
+<tr><td>Database Unique Constraint</td><td>একটা টেবিলে <code>idempotency_key</code>-এর ওপর UNIQUE constraint — দ্বিতীয়বার একই key দিয়ে insert করলে DB নিজেই constraint violation error দেয়, যা atomic এবং নির্ভরযোগ্য</td></tr>
+<tr><td>Redis SETNX + TTL</td><td><code>SET key value NX EX ttl</code> — atomic ভাবে শুধু key না থাকলেই সেট হয়; দ্রুত, কিন্তু business result-এর জন্য আলাদা persistent storage-ও দরকার হতে পারে</td></tr>
+</table>
+<p>Key-এর সাথে একটা যুক্তিসঙ্গত <b>TTL (Time To Live)</b> রাখা হয় (সাধারণত ২৪ ঘণ্টা) — ধরে নেওয়া হয় client এর বেশি সময় পরে আর retry করবে না, তাই এরপর storage থেকে key মুছে ফেলা যায় (নাহলে storage অসীমভাবে বাড়তে থাকবে)।</p>
+
+<h3>Race Condition — দুইটা concurrent request একই Key নিয়ে</h3>
+<p>একটা সূক্ষ্ম কিন্তু গুরুত্বপূর্ণ সমস্যা — client কখনও কখনও network layer-এই দুইটা identical request পাঠিয়ে ফেলতে পারে (যেমন একটা buggy retry mechanism, বা ইউজার দ্রুত দুইবার বাটনে ক্লিক করা) যা সার্ভারে প্রায় একই সময়ে পৌঁছায়। যদি "key আছে কি না চেক করো, না থাকলে প্রসেস করো" — এই দুইটা ধাপ atomic না হয়, তাহলে দুইটা request-ই "key নেই" দেখতে পারে এবং দুইবারই business logic চালিয়ে ফেলতে পারে — idempotency ব্যর্থ হয়ে যায়।</p>
+<div class="callout why"><span class="tag">কেন এখানে atomic check-and-set আবশ্যক</span>
+এই race condition এড়াতে "চেক করা" এবং "রিজার্ভ করা" — এই দুটো একটা একক atomic অপারেশনে করতে হয়, যেমন database-এর <code>INSERT ... ON CONFLICT DO NOTHING</code> (PostgreSQL) বা <code>SETNX</code> (Redis)। যদি insert সফল হয়, এই request-ই "বিজয়ী" এবং সে প্রসেস করবে; ব্যর্থ হলে (conflict), অন্য একটা concurrent request ইতিমধ্যে দখল করে ফেলেছে বুঝে এই request-কে অপেক্ষা করতে হবে বা পুরনো result দেখাতে হবে।
+</div>
+
+<h3>"In-Progress" অবস্থার হ্যান্ডলিং</h3>
+<p>যদি একটা key "in-progress" অবস্থায় থাকে (প্রথম request এখনও প্রসেস হচ্ছে, শেষ হয়নি) এবং একই key দিয়ে দ্বিতীয় request আসে, দুটো সাধারণ কৌশল আছে — (১) <code>409 Conflict</code> বা <code>425 Too Early</code> স্ট্যাটাস ফেরত দিয়ে client-কে একটু পরে আবার জিজ্ঞেস করতে বলা, অথবা (২) সংক্ষিপ্ত সময়ের জন্য polling/wait করে প্রথম request শেষ হওয়ার জন্য অপেক্ষা করা এবং তার result ফেরত দেওয়া। কোনটা বেছে নেওয়া হবে তা নির্ভর করে ব্যবসায়িক প্রয়োজনের ওপর — কতটা latency মেনে নেওয়া যায় তার ওপর।</p>
+
+<h3>Natural Idempotency — Client-Generated ID দিয়ে ডিজাইন এড়ানো</h3>
+<p>একটা সম্পূর্ণ ভিন্ন পদ্ধতি হলো POST-এর বদলে <b>PUT with client-generated resource ID</b> ব্যবহার করা। যেমন <code>POST /orders</code> (সার্ভার নতুন ID জেনারেট করে) এর বদলে <code>PUT /orders/{client-generated-uuid}</code> ব্যবহার করলে, resource-টাই idempotency key হয়ে যায় — একই UUID দিয়ে দুইবার PUT করলে একই resource-ই তৈরি/আপডেট হবে, আলাদা করে idempotency-key স্টোরেজ দরকার হয় না। এই পদ্ধতি ডিজাইন-সময়ে idempotency অন্তর্ভুক্ত করে দেয়, retrofit করার বদলে।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — Idempotency Key-কে শুধু "logging" এর মতো ট্রিট করা</span>
+কিছু বাস্তবায়নে ডেভেলপাররা idempotency key শুধু সংরক্ষণ করেন কিন্তু duplicate request-এর সময় সংরক্ষিত response ফেরত দেওয়ার বদলে আবার পুরো business logic চালিয়ে ফেলেন, বা শুধু একটা log entry তৈরি করেন — এতে idempotency guarantee বাস্তবে কোনো কাজেই আসে না। Key শুধু track করলে চলবে না, সেটা দিয়ে duplicate execution আসলেই বন্ধ করতে হবে।</div>
+
+<div class="callout best"><span class="tag">Best practice — Idempotency-কে business logic-এর সাথে না, transaction boundary-এর সাথে জড়ান</span>
+Idempotency key-এর status আপডেট এবং প্রকৃত business operation (যেমন balance deduct করা) একটা একক database transaction-এর মধ্যে করা উচিত — যাতে business logic সফল হওয়ার পর যদি key status আপডেট করতে গিয়ে ব্যর্থ হয় (বা উল্টোটা), সিস্টেম একটা অসামঞ্জস্যপূর্ণ অবস্থায় না থাকে।</div>
+</template>
+
+<template data-page="concurrency-basics">
+<h2 class="title">১০. Concurrent Request Handling — Thread, Process ও Event Loop</h2>
+<p class="lead">একটা সার্ভার একইসাথে হাজার হাজার request কীভাবে সামলায় — এই প্রশ্নের উত্তরই ঠিক করে দেয় একটা সিস্টেম কতটা efficient এবং কতটা predictable ভাবে scale করবে।</p>
+
+<h3>Concurrency বনাম Parallelism</h3>
+<p><span class="kw">Concurrency</span> মানে একাধিক কাজ একই সময়সীমার মধ্যে অগ্রসর হওয়া (নিশ্চিতভাবে একসাথে না-ও হতে পারে, দ্রুত পালাক্রমে হতে পারে) — যেমন একজন ব্যক্তি একসাথে রান্না করা আর ফোনে কথা বলা (মাঝে মাঝে সুইচ করছেন)। <span class="kw">Parallelism</span> মানে সত্যিকারের একই মুহূর্তে একাধিক কাজ চলা, যা একাধিক CPU core দরকার হয়। একটা single-core মেশিনেও concurrency সম্ভব (context switching দিয়ে), কিন্তু true parallelism দরকার হয় একাধিক core।</p>
+
+<h3>Process-based Model</h3>
+<p>প্রতিটা request (বা connection)-এর জন্য একটা আলাদা OS process spawn করা (যেমন পুরনো Apache prefork মডেল)। প্রতিটা process-এর নিজস্ব মেমোরি স্পেস থাকে বলে একটা process crash করলে অন্যদের প্রভাবিত করে না (ভালো isolation), কিন্তু process তৈরি করা এবং মেমোরি বরাদ্দ করা ব্যয়বহুল — হাজার হাজার concurrent connection-এর জন্য হাজার হাজার process ব্যবহারিক না।</p>
+
+<h3>Thread-based Model</h3>
+<p>একটা process-এর ভেতরে একাধিক thread চালানো (Java Tomcat, .NET-এর thread pool মডেল) — thread process-এর চেয়ে হালকা (কম মেমোরি, দ্রুত তৈরি), এবং একই process-এর মেমোরি শেয়ার করে। প্রতিটা incoming request একটা thread pool থেকে একটা thread বরাদ্দ পায়, request শেষ হলে thread pool-এ ফিরে যায়। সমস্যা হলো, threads শেয়ার্ড মেমোরি ব্যবহার করে বলে race condition-এর ঝুঁকি থাকে (পরের অধ্যায়ে বিস্তারিত), এবং প্রতিটা blocking I/O operation (যেমন ডাটাবেস কল) একটা পুরো thread-কে আটকে রাখে যতক্ষণ না response আসে।</p>
+
+<h3>Event Loop / Non-blocking I/O Model</h3>
+<p>Node.js, Nginx, বা .NET-এর async/await মডেল একটা সীমিত সংখ্যক thread (প্রায়ই একটা মাত্র মূল thread) দিয়ে হাজার হাজার connection সামলায়। যখন একটা operation I/O-এর জন্য অপেক্ষা করে (ডাটাবেস, ফাইল, নেটওয়ার্ক), thread ব্লক না হয়ে সেই কাজটাকে "pending" রেখে অন্য request প্রসেস করতে চলে যায়; I/O সম্পন্ন হলে একটা callback/continuation ট্রিগার হয়ে বাকি কাজ শেষ হয়।</p>
+
+<table>
+<tr><th>মডেল</th><th>Concurrency ইউনিট</th><th>মেমোরি খরচ</th><th>উপযুক্ত</th></tr>
+<tr><td>Process per request</td><td>OS Process</td><td>বেশি</td><td>ভালো isolation দরকার হলে, কম connection সংখ্যায়</td></tr>
+<tr><td>Thread per request</td><td>OS/managed Thread</td><td>মাঝারি</td><td>CPU-bound কাজ, traditional web app</td></tr>
+<tr><td>Event Loop (non-blocking)</td><td>Callback/Coroutine</td><td>কম</td><td>I/O-bound কাজ, উচ্চ concurrent connection (C10K+)</td></tr>
+</table>
+
+<h3>Blocking বনাম Non-blocking I/O</h3>
+<p><span class="kw">Blocking I/O</span>-তে একটা thread একটা I/O operation শুরু করার পর সেই operation শেষ না হওয়া পর্যন্ত থেমে থাকে, অন্য কোনো কাজ করতে পারে না। <span class="kw">Non-blocking I/O</span>-তে thread operation শুরু করে সাথে সাথেই ফিরে আসে (বা একটা future/promise ফেরত দেয়), এবং I/O সম্পন্ন হলে আলাদাভাবে notify করা হয় — এই সময়ে thread অন্য কাজ করতে পারে। এই পার্থক্যটাই ঠিক করে দেয় একটা সীমিত সংখ্যক thread দিয়ে কতগুলো concurrent connection সামলানো সম্ভব।</p>
+
+<h3>Thread Pool ও Connection Pool Sizing</h3>
+<p>Thread তৈরি করা এবং ধ্বংস করা ব্যয়বহুল, তাই প্রতিটা request-এ নতুন thread তৈরি না করে একটা <span class="kw">Thread Pool</span> থেকে পুনরায় ব্যবহারযোগ্য thread ধার নেওয়া হয়। একইভাবে, প্রতিটা request-এ নতুন ডাটাবেস connection তৈরি করা ব্যয়বহুল বলে <span class="kw">Connection Pool</span> ব্যবহার করা হয় — একটা নির্দিষ্ট সংখ্যক connection আগে থেকেই তৈরি রেখে সেগুলো ভাগ করে ব্যবহার করা হয়। Pool-এর আকার ভুল হলে সমস্যা হয় — খুব ছোট হলে request queue জমে যায় (latency বাড়ে), খুব বড় হলে backend resource (যেমন ডাটাবেসের max connection limit) ছাপিয়ে যেতে পারে।</p>
+
+<h3>C10K সমস্যা</h3>
+<p>ঐতিহাসিকভাবে "একই সময়ে ১০,০০০ connection সামলানো" একটা প্রকৌশল চ্যালেঞ্জ ছিল (thread-per-connection মডেলে হাজার হাজার thread মেমোরি ও context-switching খরচে সিস্টেমকে ধীর করে দিত) — এটাকেই <span class="kw">C10K Problem</span> বলা হয়। Event-driven, non-blocking I/O মডেল (epoll/kqueue-এর মতো OS primitive ব্যবহার করে) এই সমস্যার মূল সমাধান, এবং এখন আধুনিক সার্ভারগুলো লাখ লাখ concurrent connection সামলাতে পারে।</p>
+
+<div class="callout why"><span class="tag">কেন I/O-bound সার্ভিসে Event Loop প্রায়ই thread-per-request-এর চেয়ে ভালো</span>
+বেশিরভাগ ওয়েব API মূলত I/O-bound — বেশিরভাগ সময় ডাটাবেস বা external service-এর response-এর জন্য অপেক্ষা করে কাটে, CPU সক্রিয়ভাবে কাজ করে না। এই সময়ে thread-per-request মডেলে thread টা অলসভাবে ব্লক হয়ে বসে থাকে, মেমোরি নষ্ট করে। Event loop মডেলে সেই একই সময়ে thread অন্য শত শত request-এর কাজ এগিয়ে নিতে পারে — তাই একই হার্ডওয়্যারে অনেক বেশি concurrent request সামলানো যায়।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Async/Event-loop মডেলে blocking কল করে ফেলা</span>
+Node.js বা async .NET কোডে যদি ভুলবশত একটা synchronous/blocking কল (যেমন synchronous file read বা CPU-heavy loop) ঢুকিয়ে ফেলা হয়, সেটা পুরো event loop-কেই ব্লক করে দেয় — শুধু সেই একটা request না, বরং সেই সময়ে অপেক্ষারত সব request একসাথে থেমে যায়। Event-loop মডেলে "কখনও blocking call করা যাবে না" — এই নিয়মটা কঠোরভাবে মানতে হয়।</div>
+</template>
+
+<template data-page="concurrency-advanced">
+<h2 class="title">১১. Concurrency Advanced — Lock, Isolation Level, Distributed Lock ও Backpressure</h2>
+<p class="lead">একাধিক request যখন একই ডেটা একসাথে পড়তে-লিখতে চায়, তখনই আসল concurrency সমস্যা শুরু হয় — আর এই অধ্যায়ে সেই সমস্যার শাস্ত্রীয় সমাধানগুলো।</p>
+
+<h3>Race Condition — একটা ক্লাসিক উদাহরণ</h3>
+<p>ধরা যাক দুইটা concurrent request একটা প্রোডাক্টের stock count ১ কমাতে চায় (বর্তমান stock = ৫)। দুইটা request-ই প্রায় একই সময়ে stock পড়ে (দুইটাই ৫ দেখে), দুইটাই নিজের হিসেবে ১ বিয়োগ করে (৪), এবং দুইটাই ৪ লিখে ফেলে — যদিও প্রকৃতপক্ষে দুইটা বিক্রয় হয়েছে, stock-এর ৩ হওয়া উচিত ছিল। এটাই <span class="kw">Race Condition</span> — ফলাফল নির্ভর করে অপারেশনগুলোর সময়ক্রম (timing)-এর ওপর, যা predictable না।</p>
+
+<h3>Lock, Mutex ও Semaphore — মৌলিক ধারণা</h3>
+<ul>
+<li><b>Mutex (Mutual Exclusion Lock):</b> একটা সময়ে শুধু একটা thread/process একটা critical section-এ ঢুকতে পারে — বাকিদের অপেক্ষা করতে হয়।</li>
+<li><b>Semaphore:</b> mutex-এর একটা সাধারণীকরণ — একটা নির্দিষ্ট সংখ্যক (N) thread একসাথে একটা resource ব্যবহার করতে পারে (যেমন connection pool-এর সাইজ সীমাবদ্ধ করা)।</li>
+</ul>
+
+<h3>Optimistic বনাম Pessimistic Concurrency Control</h3>
+<table>
+<tr><th>দিক</th><th>Pessimistic Locking</th><th>Optimistic Locking</th></tr>
+<tr><td>ধারণা</td><td>ধরে নেওয়া হয় conflict হবেই — তাই আগে থেকে lock নিয়ে নেওয়া হয়</td><td>ধরে নেওয়া হয় conflict কম হবে — কাজ শেষে যাচাই করা হয়</td></tr>
+<tr><td>বাস্তবায়ন</td><td><code>SELECT ... FOR UPDATE</code> — row lock করে অন্যদের অপেক্ষা করানো</td><td>প্রতিটা row-তে একটা <code>version</code>/timestamp কলাম রাখা; update করার সময় version মিলিয়ে দেখা, না মিললে retry</td></tr>
+<tr><td>সুবিধা</td><td>Conflict বেশি হলে সহজ ও নির্ভরযোগ্য</td><td>Lock-এর জন্য অপেক্ষা করতে হয় না, বেশি throughput</td></tr>
+<tr><td>সীমাবদ্ধতা</td><td>বেশি lock contention হলে throughput কমে যায়, deadlock-এর ঝুঁকি</td><td>Conflict বেশি হলে বারবার retry করতে হয়, worst-case-এ ধীর</td></tr>
+</table>
+
+<h3>Database Isolation Level ও Anomalies</h3>
+<p>একই ডাটাবেস transaction-এ একাধিক concurrent transaction চললে বিভিন্ন ধরনের অসামঞ্জস্য (anomaly) ঘটতে পারে — <b>Dirty Read</b> (এখনও commit না হওয়া ডেটা পড়ে ফেলা), <b>Non-repeatable Read</b> (একই transaction-এর মধ্যে একই row দুইবার পড়লে ভিন্ন ভ্যালু পাওয়া), এবং <b>Phantom Read</b> (একই query দুইবার চালালে ভিন্ন সংখ্যক row ফেরত আসা)। SQL Standard চারটা isolation level সংজ্ঞায়িত করে যা এই anomaly-গুলো কতটা প্রতিরোধ করে তার ভিত্তিতে —</p>
+<table>
+<tr><th>Isolation Level</th><th>Dirty Read</th><th>Non-repeatable Read</th><th>Phantom Read</th></tr>
+<tr><td>Read Uncommitted</td><td>সম্ভব</td><td>সম্ভব</td><td>সম্ভব</td></tr>
+<tr><td>Read Committed</td><td>প্রতিরোধ হয়</td><td>সম্ভব</td><td>সম্ভব</td></tr>
+<tr><td>Repeatable Read</td><td>প্রতিরোধ হয়</td><td>প্রতিরোধ হয়</td><td>সম্ভব (DB-নির্ভর)</td></tr>
+<tr><td>Serializable</td><td>প্রতিরোধ হয়</td><td>প্রতিরোধ হয়</td><td>প্রতিরোধ হয়</td></tr>
+</table>
+<p>যত উঁচু isolation level, ততই বেশি নিরাপত্তা কিন্তু ততই বেশি lock contention এবং কম concurrency throughput — এটাও একটা trade-off, absolute সঠিক উত্তর নেই।</p>
+
+<h3>Distributed Locks — একাধিক Instance-এর মধ্যে Coordination</h3>
+<p>যখন একটা সার্ভিস horizontal ভাবে scaled (একাধিক instance চলছে), সাধারণ in-memory lock কাজ করে না — কারণ প্রতিটা instance-এর নিজস্ব মেমোরি আলাদা। তখন দরকার হয় <span class="kw">Distributed Lock</span> — একটা shared, external system-এ lock রাখা যা সব instance দেখতে পায়।</p>
+<ul>
+<li><b>Redis-based (Redlock):</b> Redis-এ <code>SET key value NX EX ttl</code> দিয়ে একটা lock অর্জন করা, কাজ শেষে মুছে ফেলা। TTL থাকা জরুরি, নাহলে lock ধারণকারী process crash করলে lock চিরস্থায়ী আটকে থাকবে (deadlock)।</li>
+<li><b>ZooKeeper / etcd:</b> এগুলো consensus-ভিত্তিক (Raft/ZAB) সিস্টেম, Redis-এর চেয়ে বেশি guarantee দেয় (network partition-এও সঠিক আচরণ), কিন্তু বেশি latency ও অপারেশনাল জটিলতা।</li>
+</ul>
+<div class="callout why"><span class="tag">কেন Distributed Lock-এ TTL এবং fencing token জরুরি</span>
+একটা process lock নেওয়ার পর যদি অস্বাভাবিকভাবে ধীর হয়ে যায় (GC pause, network delay) এবং TTL শেষ হয়ে lock অন্য কাউকে দিয়ে দেওয়া হয়, তারপর প্রথম process "জেগে উঠে" মনে করে তার কাছে এখনও lock আছে — দুইটা process একই resource-এ কাজ করতে পারে। এই সমস্যা এড়াতে প্রতিটা lock acquisition-এর সাথে একটা monotonically বাড়তে থাকা <b>fencing token</b> যুক্ত করা হয়, এবং resource-কে বলা হয় শুধু সর্বশেষ token-ওয়ালা operation গ্রহণ করতে।
+</div>
+
+<h3>Backpressure ও Thundering Herd</h3>
+<p>যখন একটা সিস্টেমে incoming request-এর হার তার প্রসেসিং ক্ষমতার চেয়ে বেশি হয়ে যায়, <span class="kw">Backpressure</span> মেকানিজম দরকার হয় — queue-এর একটা সীমা রাখা, সীমা ছাড়ালে নতুন request প্রত্যাখ্যান করা (<b>load shedding</b>), অথবা upstream client-কে ধীর হতে বলা। এটা না থাকলে queue অসীমভাবে বেড়ে মেমোরি শেষ করে ফেলতে পারে, অথবা সব request এত ধীরে প্রসেস হবে যে কার্যত পুরো সিস্টেমই অকেজো হয়ে যাবে। <span class="kw">Thundering Herd</span> সমস্যা তখন ঘটে যখন একসাথে অনেক client (বা retry) হঠাৎ করে একটা সার্ভিসে ঝাঁপিয়ে পড়ে (যেমন cache expire হওয়ার পরপরই সবাই একসাথে origin-এ রিকোয়েস্ট পাঠায়) — এটা এড়াতে <b>jittered/randomized retry backoff</b>, request coalescing, এবং circuit breaker ব্যবহার করা হয়।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — Retry করার সময় সবাই একই বিলম্বে আবার চেষ্টা করা</span>
+যদি সব client ব্যর্থ request-এর পর ঠিক একই fixed delay-তে retry করে, তারা সবাই আবার একসাথে সার্ভারে আঘাত করবে — সমস্যা আরও খারাপ হবে। <b>Exponential Backoff with Jitter</b> (প্রতিটা retry-তে দেরি বাড়ানো + একটা এলোমেলো র‍্যান্ডম উপাদান যোগ করা) এই সমস্যা প্রতিরোধ করে, retry-গুলোকে সময়ে ছড়িয়ে দেয়।</div>
+
+<div class="callout best"><span class="tag">Best practice — যেখানে সম্ভব Optimistic Locking, প্রয়োজনে Pessimistic</span>
+বেশিরভাগ ওয়েব অ্যাপ্লিকেশন workload-এ conflict rate কম থাকে (দুইজন ইউজার একই সময়ে একই row edit করা বিরল), তাই optimistic locking সাধারণত ভালো throughput দেয়। শুধু উচ্চ-conflict, financial-critical অপারেশনে (যেমন একটা shared counter বা account balance) pessimistic locking বা serializable isolation বিবেচনা করা উচিত।</div>
+</template>
+
+<template data-page="ratelimit-basics">
+<h2 class="title">১২. Rate Limiting Fundamentals — কী, কেন এবং Throttling</h2>
+<p class="lead">Scaling infrastructure যতই শক্তিশালী হোক না কেন, একটা misbehaving client বা আক্রমণকারী যদি সীমাহীন request পাঠাতে থাকে, পুরো সিস্টেম চাপে পড়ে যাবে — Rate Limiting এই সীমা বলবৎ করার প্রথম প্রতিরক্ষা।</p>
+
+<h3>Rate Limiting কী এবং কেন দরকার</h3>
+<p><span class="kw">Rate Limiting</span> একটা নির্দিষ্ট সময়সীমার মধ্যে একজন client (বা IP, API key, ইউজার) কতগুলো request পাঠাতে পারবে তার একটা সীমা বলবৎ করে। এর প্রধান উদ্দেশ্যগুলো —</p>
+<ul>
+<li><b>Abuse ও DDoS প্রতিরোধ:</b> একটা malicious client পুরো সিস্টেমকে overwhelm করতে না পারে।</li>
+<li><b>Fair Usage নিশ্চিত করা:</b> একজন heavy client যাতে বাকি সবার সার্ভিস মান নষ্ট না করে।</li>
+<li><b>Downstream সার্ভিস রক্ষা করা:</b> ডাটাবেস বা external API-এর সীমিত ক্ষমতা যাতে ছাপিয়ে না যায়।</li>
+<li><b>খরচ নিয়ন্ত্রণ:</b> Pay-per-use external API বা cloud resource-এর খরচ নিয়ন্ত্রণে রাখা।</li>
+<li><b>ব্যবসায়িক নীতি বলবৎ করা:</b> Free tier বনাম Paid tier-এর জন্য ভিন্ন request quota।</li>
+</ul>
+
+<h3>Rate Limiting বনাম Throttling বনাম Quota</h3>
+<table>
+<tr><th>শব্দ</th><th>অর্থ</th></tr>
+<tr><td>Rate Limiting</td><td>একটা সময় উইন্ডোতে সর্বোচ্চ কতগুলো request গ্রহণযোগ্য — সীমা ছাড়ালে সরাসরি প্রত্যাখ্যান (৪২৯)</td></tr>
+<tr><td>Throttling</td><td>সীমা ছাড়ালে request প্রত্যাখ্যান না করে ধীর/delay করে প্রসেস করা (queue-তে রাখা)</td></tr>
+<tr><td>Quota</td><td>সাধারণত অনেক বড় সময়সীমায় (দৈনিক/মাসিক) সর্বমোট ব্যবহারের সীমা, ব্যবসায়িক প্ল্যানের সাথে যুক্ত</td></tr>
+</table>
+
+<h3>Rate Limiting কোথায় প্রয়োগ করা হয়</h3>
+<ul>
+<li><b>Client-side:</b> SDK/client লাইব্রেরিতে নিজে থেকেই request rate সীমিত রাখা (ভালো নাগরিকত্ব, কিন্তু নির্ভরযোগ্য না — client bypass করতে পারে)।</li>
+<li><b>API Gateway-তে:</b> সবচেয়ে সাধারণ জায়গা — কেন্দ্রীভূতভাবে সব ট্র্যাফিকের ওপর নীতি বলবৎ করা যায়, ৬-৭ অধ্যায়ে আলোচিত Gateway-এর একটা মূল দায়িত্ব।</li>
+<li><b>Individual Service-এ:</b> একটা নির্দিষ্ট downstream সার্ভিস (যেমন একটা external payment API) নিজেকে রক্ষা করার জন্য নিজস্ব সীমা রাখতে পারে।</li>
+</ul>
+
+<h3>প্রাথমিক অ্যালগরিদম — Fixed Window Counter</h3>
+<p>সবচেয়ে সহজ পদ্ধতি — একটা নির্দিষ্ট সময় উইন্ডো (যেমন প্রতি মিনিট) সংজ্ঞায়িত করে, সেই উইন্ডোতে একটা counter রাখা হয়, প্রতিটা request-এ counter বাড়ানো হয়, এবং সীমা ছাড়ালে request প্রত্যাখ্যান করা হয়; পরবর্তী উইন্ডো শুরু হলে counter রিসেট হয়ে যায়।</p>
+<div class="callout mistake"><span class="tag">Fixed Window-এর Boundary Burst সমস্যা</span>
+Fixed Window-এর একটা সূক্ষ্ম সমস্যা আছে — যদি সীমা "প্রতি মিনিটে ১০০ request" হয়, একজন client উইন্ডোর শেষ সেকেন্ডে ১০০টা request পাঠাতে পারে, এবং পরের উইন্ডোর প্রথম সেকেন্ডে আরও ১০০টা — অর্থাৎ মাত্র ২ সেকেন্ডে ২০০ request পাস হয়ে যায়, যদিও গড়ে "প্রতি মিনিটে ১০০" নীতি লঙ্ঘিত হয়নি বলে মনে হয়। এই সমস্যার সমাধান পরের অধ্যায়ে আলোচিত Sliding Window পদ্ধতিতে।
+</div>
+
+<div class="callout why"><span class="tag">কেন rate limit-কে ৪২৯ status code দিয়ে জানানো জরুরি</span>
+একটা client যদি বুঝতেই না পারে সে rate-limited হয়েছে (যেমন generic ৫০০ error পেলে), সে ভুলভাবে ধরে নিতে পারে সার্ভার ভেঙে গেছে, এবং আরও আক্রমণাত্মকভাবে retry করতে শুরু করতে পারে — যা সমস্যাটাকে আরও খারাপ করে। HTTP <code>429 Too Many Requests</code> status code এবং <code>Retry-After</code> header ব্যবহার করে client-কে স্পষ্টভাবে জানানো উচিত ঠিক কী ঘটেছে এবং কখন আবার চেষ্টা করা উচিত।</div>
+</template>
+
+<template data-page="ratelimit-advanced">
+<h2 class="title">১৩. Rate Limiting Algorithms — Token Bucket, Sliding Window ও Distributed Rate Limiting</h2>
+<p class="lead">Fixed Window-এর সীমাবদ্ধতা কাটিয়ে ওঠার জন্য তৈরি হয়েছে আরও কিছু পরিশীলিত অ্যালগরিদম, যেগুলো production সিস্টেমে সবচেয়ে বেশি ব্যবহৃত হয়।</p>
+
+<h3>Token Bucket</h3>
+<p>একটা "বালতি" কল্পনা করুন যাতে token থাকে, নির্দিষ্ট হারে (যেমন প্রতি সেকেন্ডে ১০টা) নতুন token যোগ হয়, এবং বালতির একটা সর্বোচ্চ ধারণক্ষমতা (capacity) আছে। প্রতিটা incoming request একটা token খরচ করে; token থাকলে request পাস, না থাকলে প্রত্যাখ্যান। এই পদ্ধতি <b>burst traffic</b> সহ্য করতে পারে — যদি বালতি ভরা থাকে, একসাথে অনেকগুলো request (বালতির ক্ষমতা পর্যন্ত) পাস হতে পারে, তারপর ধীর refill rate অনুযায়ী সীমাবদ্ধ হয়ে যায়। এটাই আজকের সবচেয়ে জনপ্রিয় rate-limiting অ্যালগরিদম, কারণ এটা গড় হার এবং burst — দুটোই নিয়ন্ত্রণ করতে দেয়।</p>
+
+<h3>Leaky Bucket</h3>
+<p>Token Bucket-এর বিপরীত ধারণা — request একটা queue (বালতি)-তে জমা হয়, এবং একটা constant, fixed rate-এ (যেমন প্রতি সেকেন্ডে ৫টা) বালতি থেকে "leak" (প্রসেস) হয়। বালতি ভর্তি হয়ে গেলে নতুন request প্রত্যাখ্যান হয়। এটা output rate-কে সম্পূর্ণ smooth এবং constant রাখে, burst-কে সহ্য করে না — downstream সার্ভিসকে predictable, ধ্রুবক rate-এ traffic পাঠানোর জন্য উপযুক্ত।</p>
+
+<h3>Sliding Window Log</h3>
+<p>প্রতিটা request-এর timestamp একটা log-এ সংরক্ষণ করা হয়। নতুন request এলে, বর্তমান সময় থেকে window size পিছিয়ে যত পুরনো timestamp আছে সব বাদ দিয়ে, বাকি entry সংখ্যা গণনা করে সীমা যাচাই করা হয়। এটা সবচেয়ে <b>accurate</b> পদ্ধতি (Fixed Window-এর boundary burst সমস্যা নেই), কিন্তু প্রতিটা client-এর জন্য প্রতিটা request-এর timestamp সংরক্ষণ করতে হয় বলে <b>মেমোরি খরচ বেশি</b>।</p>
+
+<h3>Sliding Window Counter</h3>
+<p>Fixed Window-এর সরলতা এবং Sliding Window Log-এর accuracy-এর মধ্যে একটা ব্যবহারিক ভারসাম্য — বর্তমান এবং আগের উইন্ডোর counter রাখা হয়, এবং বর্তমান সময় আগের উইন্ডোর কতটা ভেতরে আছে তার অনুপাত হিসেবে আগের counter-এর একটা weighted অংশ যোগ করে আনুমানিক (approximate) কিন্তু যথেষ্ট নির্ভুল একটা সীমা হিসাব করা হয়। মেমোরি খরচ কম (শুধু দুইটা counter), এবং boundary burst সমস্যা অনেকাংশে প্রশমিত হয়।</p>
+
+<table>
+<tr><th>অ্যালগরিদম</th><th>Burst সহ্য করে</th><th>মেমোরি খরচ</th><th>Accuracy</th></tr>
+<tr><td>Fixed Window Counter</td><td>হ্যাঁ (boundary-তে সমস্যাযুক্ত)</td><td>খুবই কম</td><td>কম</td></tr>
+<tr><td>Token Bucket</td><td>হ্যাঁ (নিয়ন্ত্রিতভাবে)</td><td>কম</td><td>ভালো</td></tr>
+<tr><td>Leaky Bucket</td><td>না (constant output rate)</td><td>কম-মাঝারি</td><td>ভালো</td></tr>
+<tr><td>Sliding Window Log</td><td>না</td><td>বেশি</td><td>সবচেয়ে নির্ভুল</td></tr>
+<tr><td>Sliding Window Counter</td><td>সীমিত</td><td>কম</td><td>প্রায় নির্ভুল</td></tr>
+</table>
+
+<h3>Distributed Rate Limiting</h3>
+<p>যখন API Gateway বা service নিজেই horizontal ভাবে scaled (একাধিক instance), rate limit counter শুধু একটা instance-এর মেমোরিতে রাখলে চলবে না — একজন client ভিন্ন ভিন্ন instance-এ request পাঠিয়ে সীমা এড়িয়ে যেতে পারবে। তাই counter একটা <b>shared, centralized store</b>-এ (সাধারণত Redis) রাখতে হয়। এখানেও concurrency অধ্যায়ে আলোচিত race condition-এর ঝুঁকি থাকে — তাই counter বৃদ্ধি এবং সীমা যাচাই একটা <b>atomic operation</b>-এ (Redis-এর <code>INCR</code> + <code>EXPIRE</code>, অথবা একটা Lua script দিয়ে পুরো check-and-increment একসাথে atomic করে) করতে হয়।</p>
+
+<div class="callout why"><span class="tag">কেন Redis Lua Script এখানে গুরুত্বপূর্ণ</span>
+"counter পড়ো, সীমার সাথে তুলনা করো, বাড়াও" — এই তিনটা ধাপ আলাদাভাবে করলে দুইটা concurrent request race condition-এ পড়ে সীমা ছাড়িয়ে যেতে পারে। Redis-এ একটা Lua script পাঠালে পুরো লজিকটা Redis সার্ভারের ভেতরে একটা atomic, single-threaded operation হিসেবে চলে — কোনো race condition সম্ভব না।</div>
+
+<h3>Response Semantics — Client-কে সঠিকভাবে জানানো</h3>
+<p>একটা ভালো rate-limited API নিচের header-গুলো response-এ পাঠায়, যাতে client নিজে থেকেই তার ব্যবহার নিয়ন্ত্রণ করতে পারে —</p>
+<ul>
+<li><code>X-RateLimit-Limit</code> — মোট অনুমোদিত সীমা।</li>
+<li><code>X-RateLimit-Remaining</code> — বর্তমান উইন্ডোতে বাকি থাকা request সংখ্যা।</li>
+<li><code>X-RateLimit-Reset</code> — কখন উইন্ডো রিসেট হবে (timestamp)।</li>
+<li><code>Retry-After</code> — সীমা ছাড়ালে, কত সেকেন্ড পর আবার চেষ্টা করা উচিত।</li>
+</ul>
+
+<h3>Per-User, Per-IP ও Per-API-Key Limiting</h3>
+<p>সীমা একক গ্লোবাল না হয়ে সাধারণত বিভিন্ন dimension-এ প্রয়োগ করা হয় — <b>Per-IP</b> (অ্যানোনিমাস traffic-এর জন্য, কিন্তু NAT-এর পেছনে একাধিক ইউজার একই IP শেয়ার করলে সমস্যা হতে পারে), <b>Per-User/Per-Account</b> (login করা ইউজারের জন্য), এবং <b>Per-API-Key/Per-Client</b> (partner/third-party integration-এর জন্য, প্রায়ই <b>tiered limit</b>-এর সাথে যুক্ত — Free tier ১০০ req/min, Paid tier ১০,০০০ req/min)।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — শুধু IP-ভিত্তিক rate limiting-এ নির্ভর করা</span>
+Corporate NAT বা mobile carrier NAT-এর পেছনে হাজার হাজার প্রকৃত ইউজার একই public IP শেয়ার করতে পারে — শুধু IP দেখে সীমা বসালে বৈধ ইউজাররা একে অপরের কারণে ব্লক হয়ে যেতে পারে। যেখানেই সম্ভব, authenticated ইউজার/API key-ভিত্তিক সীমা IP-ভিত্তিক সীমার সাথে যুক্ত করে ব্যবহার করা উচিত।</div>
+
+<div class="callout best"><span class="tag">Best practice — Rate Limit যত সম্ভব সামনের দিকে (Edge/Gateway) প্রয়োগ করুন</span>
+Rate limit চেক যত আগে (CDN/Edge বা API Gateway-তে) করা যায়, তত কম রিসোর্স নষ্ট হয় — একটা প্রত্যাখ্যাত request-এর জন্য পুরো backend সার্ভিস, ডাটাবেস কানেকশন খরচ করার দরকার নেই। "যত দ্রুত সম্ভব প্রত্যাখ্যান করো" নীতিটা সিস্টেমের সামগ্রিক resilience-এ বড় পার্থক্য তৈরি করে।</div>
+</template>
+
+<template data-page="integration">
+<h2 class="title">১৪. সব একসাথে — Real-World Architecture Case Study</h2>
+<p class="lead">প্রতিটা টপিক আলাদাভাবে বোঝা যথেষ্ট না — আসল দক্ষতা হলো Scaling, Load Balancer, API Gateway, Idempotency, Concurrency ও Rate Limiting একসাথে কীভাবে একটা সুসংগত সিস্টেম তৈরি করে তা দেখা।</p>
+
+<h3>একটা সম্পূর্ণ Request-এর যাত্রা</h3>
+<div class="diagram"><pre>
+[Client: "অর্ডার প্লেস করো" বাটনে ক্লিক]
+   │  Idempotency-Key: uuid-1234 (client জেনারেট করেছে)
+   ▼
+[CDN / Edge] ── স্ট্যাটিক অ্যাসেট cache, প্রাথমিক DDoS/rate-limit ফিল্টার
+   ▼
+[Global Load Balancer / GeoDNS] ── কাছের অঞ্চলে রুট করে
+   ▼
+[API Gateway]
+   ├─ Authentication যাচাই (token বৈধ কি না)
+   ├─ Rate Limit যাচাই (Redis-ভিত্তিক token bucket, per-user)
+   ├─ Routing (path দেখে "Order Service"-এ পাঠানো)
+   ▼
+[Load Balancer (Order Service-এর সামনে)] ── L7, least-connections
+   ▼
+[Order Service instance (stateless, event-loop/thread-pool দিয়ে concurrent request handle করছে)]
+   ├─ Idempotency-Key চেক (Redis/DB) — আগে প্রসেস হয়েছে কি না
+   ├─ Optimistic locking দিয়ে stock decrement (version column)
+   ├─ Database transaction (leader-এ write)
+   ▼
+[Database: Leader (write) ── Read Replicas (পরবর্তী read query-এর জন্য)]
+   ▼
+[Cache (Redis) ইনভ্যালিডেট/আপডেট]
+   ▼
+[Response client-এ ফিরে যায়; Idempotency-Key + response সংরক্ষিত থাকে]
+</pre></div>
+
+<h3>প্রতিটা লেয়ার কোন সমস্যা সমাধান করে</h3>
+<table>
+<tr><th>লেয়ার/কনসেপ্ট</th><th>কোন সমস্যা সমাধান করে</th></tr>
+<tr><td>Horizontal Scaling + Stateless Design</td><td>ট্র্যাফিক বাড়লে instance যোগ করে ক্যাপাসিটি বাড়ানো</td></tr>
+<tr><td>Load Balancer</td><td>একাধিক instance-এর মধ্যে সমান/স্মার্ট ভাবে ট্র্যাফিক বিতরণ + failover</td></tr>
+<tr><td>API Gateway</td><td>একক entry point, auth, rate limit, routing centralize করা</td></tr>
+<tr><td>Idempotency Key</td><td>একই "অর্ডার প্লেস করো" ভুলবশত দুইবার retry হলেও দুইটা অর্ডার তৈরি না হওয়া</td></tr>
+<tr><td>Concurrency Control (Optimistic Locking)</td><td>দুইজন ক্রেতা একই মুহূর্তে stock decrement করলেও সঠিক ফলাফল নিশ্চিত করা</td></tr>
+<tr><td>Rate Limiting</td><td>একজন ইউজার/বট বারবার রিকোয়েস্ট পাঠিয়ে সার্ভিস আটকে না দেওয়া</td></tr>
+<tr><td>Replication + Cache</td><td>Read traffic দ্রুত ও কম খরচে সার্ভ করা, ডাটাবেস leader-এর ওপর চাপ কমানো</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">কেন এই লেয়ারগুলো আলাদা থাকা জরুরি</span>
+প্রতিটা লেয়ার একটা নির্দিষ্ট concern-এর জন্য দায়িত্বশীল — Gateway জানে না ডেটাবেসে কীভাবে lock হচ্ছে, Load Balancer জানে না কোনটা idempotency key। এই আলাদা দায়িত্ব (separation of concerns) থাকার কারণেই প্রতিটা লেয়ার স্বাধীনভাবে scale, deploy এবং debug করা যায় — একটা লেয়ারের সমস্যা আরেকটার সাথে জট পাকিয়ে যায় না।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — একটা লেয়ারে সবকিছু গুঁজে দেওয়া</span>
+কিছু টিম rate limiting, idempotency check, এবং business logic — সবকিছু একটা মনোলিথিক application layer-এ ঢুকিয়ে রাখে, Gateway বা shared infrastructure ব্যবহার না করে। এতে প্রতিটা নতুন সার্ভিসে একই কোড কপি-পেস্ট করতে হয়, এবং একটা জায়গায় ভুল ঠিক করলে বাকি সার্ভিসে সেটা প্রতিফলিত হয় না — inconsistency তৈরি হয়।</div>
+
+<div class="callout best"><span class="tag">Best practice — মেট্রিক্স দিয়ে যাচাই করুন, অনুমান দিয়ে না</span>
+কোন লেয়ারে bottleneck আছে তা অনুমান না করে monitoring/observability (latency percentile, error rate, queue depth, connection pool utilization) দিয়ে প্রকৃত ডেটা দেখে সিদ্ধান্ত নেওয়া উচিত। প্রায়ই ধারণা করা bottleneck (যেমন "ডাটাবেস স্লো") আসলে অন্য কোথাও থাকে (যেমন connection pool খুব ছোট, বা N+1 query pattern)।</div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৫. Interview প্রশ্নোত্তর</h2>
+<p class="lead">এই টপিকগুলো নিয়ে ইন্টারভিউতে বারবার আসা প্রশ্ন — সংক্ষিপ্ত, সরাসরি উত্তরসহ।</p>
+
+<h3>১) Vertical আর Horizontal Scaling-এর মধ্যে আপনি কীভাবে সিদ্ধান্ত নেবেন কোনটা ব্যবহার করবেন?</h3>
+<p>প্রথমে vertical scaling দিয়ে শুরু করা উচিত কারণ এটা সহজ এবং কম জটিল। যখন হার্ডওয়্যার সীমায় পৌঁছে যাবেন, downtime এড়াতে চাইবেন, বা fault tolerance দরকার হবে, তখন horizontal scaling-এ যাওয়া উচিত — কিন্তু তার আগে সার্ভিসকে stateless বানানো একটা পূর্বশর্ত।</p>
+
+<h3>২) Sticky Session কেন সাধারণত এড়িয়ে চলা উচিত?</h3>
+<p>এটা horizontal scaling-এর মূল সুবিধা (যেকোনো request যেকোনো server-এ যেতে পারা) নষ্ট করে দেয়, load unevenly বিতরণ করতে পারে, এবং সেই নির্দিষ্ট server ডাউন হলে ইউজার সেশন হারিয়ে ফেলে। এর বদলে centralized session store (Redis) বা token-based auth (JWT) ব্যবহার করা উচিত।</p>
+
+<h3>৩) Layer 4 আর Layer 7 Load Balancing-এর মধ্যে মূল পার্থক্য কী, এবং কখন কোনটা বেছে নেবেন?</h3>
+<p>L4 শুধু IP/port দেখে রুট করে (দ্রুত, কম CPU), L7 HTTP content (URL, header, cookie) দেখে রুট করে (স্মার্ট routing, বেশি CPU)। Microservices-এ path-based routing দরকার হলে L7 আবশ্যক; উচ্চ-throughput, প্রোটোকল-অজ্ঞেয় (protocol-agnostic) ট্র্যাফিকে L4 যথেষ্ট।</p>
+
+<h3>৪) Consistent Hashing কী সমস্যা সমাধান করে?</h3>
+<p>সাধারণ modulo hashing-এ backend সংখ্যা বদলালে প্রায় সব key নতুন backend-এ চলে যায় (cache-এর ক্ষেত্রে বিপর্যয়কর)। Consistent Hashing একটা hash ring ব্যবহার করে node যোগ/বাদ দিলে শুধু আশেপাশের সামান্য অংশ প্রভাবিত হয়, বাকি সব key তাদের আগের mapping-এই থাকে।</p>
+
+<h3>৫) API Gateway আর Load Balancer-এর মধ্যে পার্থক্য কী?</h3>
+<p>Load Balancer একাধিক identical backend instance-এর মধ্যে ট্র্যাফিক বিতরণ করে — এটা backend-এর business logic সম্পর্কে সচেতন না। API Gateway একটা উঁচু স্তরের abstraction — এটা রুট, auth, rate limit, aggregation-এর মতো API-level concern সামলায়, এবং একাধিক ভিন্ন সার্ভিসের মধ্যে সিদ্ধান্ত নেয় কোনটা কোথায় যাবে।</p>
+
+<h3>৬) API Gateway আর Service Mesh একসাথে কেন ব্যবহার করা হয়?</h3>
+<p>Gateway North-South ট্র্যাফিক (বাইরে থেকে ভেতরে) সামলায়, Service Mesh East-West ট্র্যাফিক (সার্ভিস-টু-সার্ভিস) সামলায় — mTLS, internal retry, internal load balancing, observability। দুটো ভিন্ন সমস্যার সমাধান, তাই একসাথে থাকা স্বাভাবিক, একে অপরের বিকল্প না।</p>
+
+<h3>৭) কেন POST স্বভাবতই idempotent না, কিন্তু PUT idempotent?</h3>
+<p>PUT পুরো resource প্রতিস্থাপন করে — একই ডেটা দিয়ে একাধিকবার PUT করলে একই ফলাফল হয়। POST সাধারণত একটা নতুন resource তৈরি করে, প্রতিবার নতুন unique ID জেনারেট করে — তাই দুইবার একই POST চালালে দুইটা ভিন্ন resource তৈরি হয়ে যায়।</p>
+
+<h3>৮) Idempotency Key pattern কীভাবে কাজ করে, একটা duplicate request কীভাবে ধরা পড়ে?</h3>
+<p>Client একটা unique key জেনারেট করে request-এর সাথে পাঠায়; retry হলেও একই key ব্যবহার করে। Server প্রথমবার সেই key-এর সাথে response সংরক্ষণ করে; একই key দিয়ে পরের request এলে business logic আবার না চালিয়ে সংরক্ষিত response ফেরত দেয়। Key-lookup ও reservation অবশ্যই atomic হতে হবে, নাহলে দুইটা concurrent duplicate একসাথে "key নেই" দেখে দুইবারই প্রসেস করে ফেলতে পারে।</p>
+
+<h3>৯) Optimistic আর Pessimistic Concurrency Control-এর মধ্যে পার্থক্য কী, এবং কখন কোনটা বেছে নেবেন?</h3>
+<p>Pessimistic locking আগে থেকেই row lock করে রাখে (<code>SELECT FOR UPDATE</code>) — high-conflict পরিস্থিতিতে নির্ভরযোগ্য কিন্তু throughput কমায়। Optimistic locking একটা version কলাম দিয়ে conflict শুধু update-এর সময় যাচাই করে, conflict কম থাকলে ভালো throughput দেয় কিন্তু high-conflict-এ বারবার retry লাগে।</p>
+
+<h3>১০) Database Isolation Level-গুলো কী কী সমস্যা প্রতিরোধ করে?</h3>
+<p>Read Uncommitted কিছুই প্রতিরোধ করে না; Read Committed dirty read প্রতিরোধ করে; Repeatable Read এর সাথে non-repeatable read-ও প্রতিরোধ করে; Serializable সব anomaly (dirty, non-repeatable, phantom read) প্রতিরোধ করে কিন্তু সবচেয়ে বেশি concurrency খরচ করে।</p>
+
+<h3>১১) Distributed Lock-এ TTL এবং fencing token কেন দরকার?</h3>
+<p>TTL না থাকলে lock ধারণকারী process crash করলে lock চিরস্থায়ী আটকে থাকবে (deadlock)। Fencing token GC pause বা network delay-এর কারণে একটা "পুরনো" lock holder ভুলবশত এখনও কাজ চালিয়ে যাওয়া থেকে রক্ষা করে — resource শুধু সর্বশেষ, সবচেয়ে বড় token গ্রহণ করে।</p>
+
+<h3>১২) Event Loop (Node.js/async মডেল) কেন থ্রেড-পার-রিকোয়েস্ট মডেলের চেয়ে বেশি concurrent connection সামলাতে পারে?</h3>
+<p>বেশিরভাগ ওয়েব রিকোয়েস্ট I/O-bound — বেশিরভাগ সময় network/DB response-এর জন্য অপেক্ষায় কাটে। Thread-per-request মডেলে সেই অপেক্ষার সময় থ্রেড অলসভাবে ব্লক থাকে, মেমোরি নষ্ট করে। Event loop মডেলে সেই সময়ে একই থ্রেড অন্য শত শত request এগিয়ে নেয়, তাই একই হার্ডওয়্যারে অনেক বেশি concurrent connection সামলানো যায়।</p>
+
+<h3>১৩) Token Bucket আর Leaky Bucket rate limiting অ্যালগরিদমের পার্থক্য কী?</h3>
+<p>Token Bucket burst traffic সহ্য করতে পারে (বালতি ভরা থাকলে একসাথে অনেক request পাস হতে পারে), গড় হার নিয়ন্ত্রণ করে। Leaky Bucket output rate সম্পূর্ণ constant/smooth রাখে, burst সহ্য করে না — downstream-এ predictable rate পাঠানোর জন্য উপযুক্ত।</p>
+
+<h3>১৪) Fixed Window rate limiting-এর boundary burst সমস্যা কী, এবং কীভাবে সমাধান হয়?</h3>
+<p>একজন client উইন্ডোর শেষে এবং পরের উইন্ডোর শুরুতে দ্রুত পরপর রিকোয়েস্ট পাঠিয়ে কার্যত দ্বিগুণ সীমা ব্যবহার করে ফেলতে পারে। Sliding Window Log (নির্ভুল কিন্তু মেমোরি-ভারী) বা Sliding Window Counter (আনুমানিক কিন্তু হালকা) দিয়ে এই সমস্যা সমাধান করা হয়।</p>
+
+<h3>১৫) Distributed Rate Limiting-এ কেন একটা shared store (যেমন Redis) দরকার, এবং সেখানে race condition কীভাবে এড়ানো হয়?</h3>
+<p>সার্ভিস horizontal ভাবে scaled হলে প্রতিটা instance-এর আলাদা in-memory counter দিয়ে client ভিন্ন instance-এ request পাঠিয়ে সীমা এড়িয়ে যেতে পারবে। তাই counter Redis-এর মতো shared store-এ রাখতে হয়, এবং "চেক + বৃদ্ধি" ধাপ Lua script দিয়ে atomic করে race condition এড়ানো হয়।</p>
+
+<h3>১৬) একটা "place order" API-তে scaling, load balancing, gateway, idempotency, concurrency, আর rate limiting — এই ছয়টা concept একসাথে কীভাবে কাজ করে, সংক্ষেপে বলুন।</h3>
+<p>Gateway auth ও rate limit যাচাই করে সঠিক সার্ভিসে রুট করে; Load Balancer সেই সার্ভিসের একাধিক stateless instance-এর মধ্যে ট্র্যাফিক ভাগ করে; সার্ভিস idempotency key দিয়ে duplicate retry ঠেকায়; stock update-এর সময় optimistic locking দিয়ে concurrent request-এর race condition এড়ায়; আর পুরো সিস্টেম horizontal scaling ও caching/replication দিয়ে বাড়তে থাকা ট্র্যাফিক সামলায়।</p>
+</template>
+
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  const searchIndex = {};
+  (function buildIndex(){
+    const tmp = document.createElement('div');
+    pages.forEach(p=>{
+      tmp.innerHTML = templates[p.id] || '';
+      searchIndex[p.id] = ((p.title||'') + ' ' + tmp.textContent).toLowerCase();
+    });
+  })();
+
+  let currentQuery = '';
+
+  function clearHighlights(root){
+    root.querySelectorAll('mark.hl').forEach(m=>{ m.replaceWith(document.createTextNode(m.textContent)); });
+    root.normalize();
+  }
+
+  function highlightIn(root, q){
+    if(!q) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        const p = node.parentNode;
+        if(!node.nodeValue || !p || p.tagName==='SCRIPT' || p.tagName==='STYLE' || p.tagName==='MARK') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes=[]; let n; while((n=walker.nextNode())) nodes.push(n);
+    const ql = q.toLowerCase();
+    nodes.forEach(node=>{
+      const text = node.nodeValue, lower = text.toLowerCase();
+      if(!lower.includes(ql)) return;
+      const frag = document.createDocumentFragment();
+      let idx=0, pos;
+      while((pos = lower.indexOf(ql, idx)) !== -1){
+        if(pos>idx) frag.appendChild(document.createTextNode(text.slice(idx,pos)));
+        const mark = document.createElement('mark');
+        mark.className='hl';
+        mark.textContent = text.slice(pos, pos+ql.length);
+        frag.appendChild(mark);
+        idx = pos+ql.length;
+      }
+      if(idx<text.length) frag.appendChild(document.createTextNode(text.slice(idx)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  function applyHighlight(){
+    const active = main.querySelector('.page.active');
+    if(!active) return;
+    clearHighlights(active);
+    if(currentQuery) highlightIn(active, currentQuery);
+  }
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    applyHighlight();
+    const active = main.querySelector('.page.active');
+    const firstMark = active ? active.querySelector('mark.hl') : null;
+    if(firstMark && firstMark.scrollIntoView) firstMark.scrollIntoView({block:'center'});
+    else window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const searchInput = document.getElementById('courseSearch');
+  const searchMeta = document.getElementById('searchMeta');
+  if(searchInput){
+    searchInput.addEventListener('input', ()=>{
+      const q = searchInput.value.trim();
+      currentQuery = q;
+      const ql = q.toLowerCase();
+      let matchCount = 0, firstMatch = null;
+      pages.forEach(p=>{
+        const btn = sidebar.querySelector('.navbtn[data-target="'+p.id+'"]');
+        const matches = !ql || searchIndex[p.id].includes(ql);
+        if(matches){ matchCount++; if(!firstMatch) firstMatch = p; }
+        if(btn) btn.classList.toggle('hide', !matches);
+      });
+      if(!ql) searchMeta.textContent = '';
+      else if(matchCount===0) searchMeta.textContent = 'কোনো ফলাফল নেই';
+      else searchMeta.textContent = matchCount + 'টা অধ্যায়ে ফলাফল পাওয়া গেছে';
+
+      const active = main.querySelector('.page.active');
+      const activeId = active ? active.id.replace('page-','') : null;
+      const activeMatches = !!(ql && activeId && searchIndex[activeId] && searchIndex[activeId].includes(ql));
+      if(ql && !activeMatches && firstMatch){
+        show(firstMatch.id);
+      } else {
+        applyHighlight();
+        const mark = active ? active.querySelector('mark.hl') : null;
+        if(ql && mark && mark.scrollIntoView) mark.scrollIntoView({block:'center'});
+      }
+    });
+    searchInput.addEventListener('keydown', e=>{
+      if(e.key==='Escape'){ searchInput.value=''; searchInput.dispatchEvent(new Event('input')); searchInput.blur(); }
+    });
+  }
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
