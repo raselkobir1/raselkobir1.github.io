@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Soft Skills, Interview ও Negotiation Mastery — Bangla (Beginner → Advanced)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --border:#2d333b;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#ec4899; --accent2:#22d3ee;
+    --green:#3fb950; --red:#f85149; --yellow:#e3b341; --purple:#bc8cff; --pink:#f472b6;
+    --code-bg:#0b0f14; --kw:#93c5fd;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Hind Siliguri","Noto Sans Bengali",".SF Bangla","Kohinoor Bangla","Bangla MN",system-ui,-apple-system,sans-serif;
+    line-height:1.85; font-size:16.5px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{display:flex; min-height:100vh}
+  .sidebar{
+    width:300px; flex:0 0 300px; background:var(--panel);
+    border-right:1px solid var(--border); position:sticky; top:0; height:100vh;
+    overflow-y:auto; padding:22px 14px;
+  }
+  .brand{padding:6px 10px 16px}
+  .brand h1{font-size:19px; margin:0 0 4px; color:var(--accent)}
+  .brand p{font-size:12.5px; color:var(--muted); margin:0}
+  .navbtn{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    background:transparent; color:var(--text); border:none; cursor:pointer;
+    padding:10px 12px; border-radius:9px; font-size:14px; margin:2px 0;
+    font-family:inherit; transition:background .15s;
+  }
+  .navbtn:hover{background:var(--panel2)}
+  .navbtn.active{background:linear-gradient(90deg,rgba(236,72,153,.24),transparent); color:var(--accent); font-weight:600}
+  .navbtn .num{
+    flex:0 0 26px; height:26px; display:grid; place-items:center; font-size:12px;
+    background:var(--panel2); border-radius:7px; color:var(--muted);
+  }
+  .navbtn.active .num{background:var(--accent); color:#0b0d1f}
+  .main{flex:1; min-width:0; padding:38px 52px 90px; max-width:1080px; margin:0 auto}
+  .page{display:none; animation:fade .25s ease}
+  .page.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.title{font-size:30px; margin:0 0 6px; color:var(--accent); border-bottom:2px solid var(--border); padding-bottom:14px}
+  h3{font-size:22px; margin:34px 0 10px; color:var(--accent2)}
+  h4{font-size:18px; margin:24px 0 8px; color:var(--purple)}
+  p{margin:10px 0}
+  .lead{color:var(--muted); font-size:16px; margin-bottom:20px}
+  code{background:var(--code-bg); color:var(--kw); padding:2px 6px; border-radius:5px; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:14px}
+  pre{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:16px 18px; overflow-x:auto; font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace; font-size:13.5px; line-height:1.6; color:#c9d1d9}
+  pre .c{color:#6e7681}
+  .kw{color:var(--accent2); font-weight:600}
+  ul,ol{margin:10px 0; padding-left:24px}
+  li{margin:6px 0}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin:16px 0}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .box{background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+  .box b{color:var(--accent2)}
+  .callout{border-left:4px solid var(--accent); background:var(--panel); padding:12px 16px; border-radius:0 10px 10px 0; margin:16px 0}
+  .callout.why{border-color:var(--accent2)}
+  .callout.mistake{border-color:var(--red)}
+  .callout.best{border-color:var(--green)}
+  .callout.behind{border-color:var(--purple)}
+  .callout .tag{font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; display:inline-block; margin-bottom:4px}
+  .callout.why .tag{color:var(--accent2)}
+  .callout.mistake .tag{color:var(--red)}
+  .callout.best .tag{color:var(--green)}
+  .callout.behind .tag{color:var(--purple)}
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px}
+  th,td{border:1px solid var(--border); padding:9px 12px; text-align:left; vertical-align:top}
+  th{background:var(--panel2); color:var(--accent2)}
+  .diagram{background:var(--code-bg); border:1px solid var(--border); border-radius:10px; padding:18px; margin:16px 0; overflow-x:auto}
+  .diagram pre{border:none; background:transparent; padding:0; color:#93c5fd}
+  .badge{display:inline-block; font-size:12px; padding:2px 9px; border-radius:20px; background:var(--panel2); color:var(--muted); border:1px solid var(--border); margin-right:6px}
+  hr{border:none; border-top:1px solid var(--border); margin:28px 0}
+  .footer{margin-top:40px; padding-top:18px; border-top:1px solid var(--border); color:var(--muted); font-size:13px}
+  .search-wrap{padding:0 10px 14px}
+  .search-box{
+    width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    border-radius:9px; padding:9px 12px; font-size:13.5px; font-family:inherit;
+    outline:none; transition:border-color .15s;
+  }
+  .search-box:focus{border-color:var(--accent2)}
+  .search-box::placeholder{color:var(--muted)}
+  .search-meta{font-size:11.5px; color:var(--muted); padding:6px 2px 0; min-height:14px}
+  .navbtn.hide{display:none}
+  mark.hl{background:#fde047; color:#1a1a1a; padding:0 1px; border-radius:3px}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:#30363d;border-radius:6px}
+  @media (max-width:820px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:static}
+    .main{padding:24px 18px 60px}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1117">
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <a href="index.html" style="display:inline-block;color:var(--muted);text-decoration:none;font-size:12.5px;margin-bottom:10px">← সব টপিক (Dashboard)</a>
+      <h1>🤝 Soft Skills ও Interview Mastery</h1>
+      <p>Beginner → Advanced • বাংলায় (keyword ইংরেজিতে)</p>
+      <div class="search-wrap">
+        <input type="text" id="courseSearch" class="search-box" placeholder="🔍 এই কোর্সে সার্চ করুন..." autocomplete="off">
+        <div class="search-meta" id="searchMeta"></div>
+      </div>
+    </div>
+  </nav>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const pages = [
+  {id:"foundation",            icon:"🌱", title:"Soft Skills কী, কেন গুরুত্বপূর্ণ এবং Hard Skills বনাম Soft Skills"},
+  {id:"communication-basics",  icon:"💬", title:"Communication Fundamentals — Active Listening, Clarity ও Non-verbal Communication"},
+  {id:"communication-workplace",icon:"🏢", title:"Workplace Communication — Standup, Async Communication ও Documentation"},
+  {id:"public-speaking",       icon:"🎤", title:"Public Speaking ও Presentation Skills"},
+  {id:"eq",                    icon:"❤️", title:"Emotional Intelligence (EQ) — Self-awareness, Empathy ও Emotion Management"},
+  {id:"teamwork",              icon:"👥", title:"Teamwork, Collaboration ও Cross-functional Communication"},
+  {id:"feedback",              icon:"🔄", title:"Feedback ও Difficult Conversations হ্যান্ডলিং করা"},
+  {id:"time-management",       icon:"⏳", title:"Time Management, Prioritization ও Deep Work"},
+  {id:"interview-foundation",  icon:"🧭", title:"Interview Preparation Fundamentals — Interview-এর ধরন, Resume ও Research"},
+  {id:"behavioral-interview",  icon:"⭐", title:"Behavioral Interview — STAR Method গভীরভাবে"},
+  {id:"technical-interview",   icon:"🧩", title:"Technical Interview Strategy — Thinking Aloud ও Problem-Solving Communication"},
+  {id:"negotiation-basics",    icon:"⚖️", title:"Negotiation Fundamentals — BATNA, Anchoring ও Research"},
+  {id:"negotiation-salary",    icon:"💰", title:"Salary ও Offer Negotiation — Deep Dive"},
+  {id:"networking-branding",   icon:"🌐", title:"Professional Networking ও Personal Branding"},
+  {id:"career-growth",         icon:"📈", title:"Career Growth, Leadership ও Mentoring"},
+  {id:"interview",             icon:"🎯", title:"Interview প্রশ্নোত্তর"},
+];
+</script>
+
+<!-- ============================ CONTENT ============================ -->
+
+<template data-page="foundation">
+<h2 class="title">১. Soft Skills কী, কেন গুরুত্বপূর্ণ এবং Hard Skills বনাম Soft Skills</h2>
+<p class="lead">একজন ইঞ্জিনিয়ারের ক্যারিয়ার একটা নির্দিষ্ট পর্যায়ের পরে আর শুধু কোড লেখার দক্ষতা দিয়ে এগোয় না — এগোয় তিনি কতটা স্পষ্টভাবে বোঝাতে পারেন, কতটা ভালোভাবে অন্যের সাথে কাজ করতে পারেন, এবং কতটা বিশ্বাস অর্জন করতে পারেন তার ওপর।</p>
+
+<h3>Hard Skills বনাম Soft Skills</h3>
+<p><span class="kw">Hard Skills</span> হলো measurable, teachable, নির্দিষ্ট টুল বা টেকনিক-ভিত্তিক দক্ষতা — যেমন C#, SQL, Docker, System Design। এগুলো একটা সার্টিফিকেট বা টেস্ট দিয়ে যাচাই করা যায়। <span class="kw">Soft Skills</span> হলো মানুষের সাথে কাজ করার, চিন্তা প্রকাশ করার, এবং সিদ্ধান্ত নেওয়ার দক্ষতা — যেমন Communication, Emotional Intelligence, Negotiation, Time Management। এগুলো পরিমাপ করা কঠিন কিন্তু প্রভাব বিশাল — একটা দুর্দান্ত সমাধান যদি ঠিকভাবে যোগাযোগ করা না যায়, সেটা কখনও বাস্তবায়িত হয় না।</p>
+
+<h3>কেন সিনিয়র লেভেলে Soft Skills বেশি গুরুত্বপূর্ণ হয়ে ওঠে</h3>
+<p>ক্যারিয়ারের শুরুতে একজন ইঞ্জিনিয়ারের কাজ মূলত ব্যক্তিগত — একটা টিকিট নেওয়া, কোড লেখা, টেস্ট পাস করানো। কিন্তু সিনিয়রিটি বাড়ার সাথে সাথে কাজের প্রকৃতি বদলে যায় — এখন কাজ হয়ে ওঠে অন্যদের প্রভাবিত করা, সঠিক সিদ্ধান্তে পৌঁছাতে সাহায্য করা, এবং টিমকে align রাখা। এই রূপান্তরে hard skills প্রয়োজনীয় থাকে কিন্তু আর যথেষ্ট থাকে না।</p>
+<table>
+<tr><th>লেভেল</th><th>মূল প্রত্যাশা</th><th>প্রধান Soft Skill</th></tr>
+<tr><td>Junior Engineer</td><td>টাস্ক সম্পন্ন করা, নির্দেশনা অনুসরণ করা</td><td>Active Listening, স্পষ্টভাবে প্রশ্ন করা</td></tr>
+<tr><td>Mid-level Engineer</td><td>স্বাধীনভাবে ফিচার ডিজাইন ও ডেলিভার করা</td><td>Communication, Time Management</td></tr>
+<tr><td>Senior Engineer</td><td>একাধিক টিমের সাথে coordination, mentoring</td><td>Teamwork, Feedback, Conflict Resolution</td></tr>
+<tr><td>Staff/Lead Engineer</td><td>টেকনিক্যাল ডিরেকশন সেট করা, বিনা কর্তৃত্বে নেতৃত্ব</td><td>Negotiation, Leadership, EQ</td></tr>
+</table>
+
+<h3>Soft Skills-এর মূল ক্যাটাগরি — এই কোর্সের ম্যাপ</h3>
+<ul>
+<li><b>Communication:</b> স্পষ্টভাবে বোঝানো ও শোনা — ২য়-৪র্থ অধ্যায়ে বিস্তারিত।</li>
+<li><b>Emotional Intelligence:</b> নিজেকে ও অন্যকে বোঝা — ৫ম অধ্যায়ে।</li>
+<li><b>Teamwork ও Feedback:</b> একসাথে কাজ করা, মতপার্থক্য সামলানো — ৬ষ্ঠ-৭ম অধ্যায়ে।</li>
+<li><b>Time Management:</b> সময় ও অগ্রাধিকার নিয়ন্ত্রণ — ৮ম অধ্যায়ে।</li>
+<li><b>Interview Skills:</b> নিজেকে উপস্থাপন করা — ৯ম-১১শ অধ্যায়ে।</li>
+<li><b>Negotiation:</b> নিজের মূল্য আদায় করা — ১২শ-১৩শ অধ্যায়ে।</li>
+<li><b>Networking ও Career Growth:</b> দীর্ঘমেয়াদী ক্যারিয়ার নির্মাণ — ১৪শ-১৫শ অধ্যায়ে।</li>
+</ul>
+
+<div class="callout mistake"><span class="tag">Common mistake — "আমার কোড নিজেই কথা বলে" ভাবা</span>
+অনেক ইঞ্জিনিয়ার মনে করেন প্রযুক্তিগত দক্ষতা যথেষ্ট, এবং কমিউনিকেশন বা রিলেশনশিপ-বিল্ডিং সময় নষ্ট। বাস্তবে একটা চমৎকার প্রযুক্তিগত সিদ্ধান্ত যদি stakeholder-দের বোঝানো না যায়, সেটা approve হয় না, বাস্তবায়িত হয় না, এবং কৃতিত্বও পাওয়া যায় না। Promotion committee কোড কোয়ালিটি না, impact এবং influence দেখে — আর influence আসে communication থেকে।</div>
+
+<div class="callout why"><span class="tag">কেন Soft Skills-কে "practice" হিসেবে দেখা উচিত</span>
+DSA বা System Design যেমন ইচ্ছাকৃত অনুশীলনের (deliberate practice) মাধ্যমে উন্নত হয়, Soft Skills-ও ঠিক তেমনই — এটা জন্মগত ব্যক্তিত্বের বিষয় না, বরং শেখা যায় এমন একটা দক্ষতাসেট। এই কোর্সের প্রতিটা অধ্যায়কে একটা framework হিসেবে দেখুন, যা বাস্তব পরিস্থিতিতে সচেতনভাবে প্রয়োগ করে অনুশীলন করতে হবে।</div>
+
+<div class="callout best"><span class="tag">Best practice — প্রতিটা মিটিং/কনভারসেশনকে একটা অনুশীলনের সুযোগ হিসেবে দেখুন</span>
+প্রতিটা স্ট্যান্ডআপ, কোড রিভিউ কমেন্ট, বা ইন্টারভিউ প্রস্তুতি একটা সুযোগ এই কোর্সে শেখা টেকনিকগুলো প্রয়োগ করার। ছোট ছোট, নিয়মিত অনুশীলনই বড় পরিবর্তন আনে — একটা একক "নিখুঁত" চেষ্টার চেয়ে।</div>
+</template>
+
+<template data-page="communication-basics">
+<h2 class="title">২. Communication Fundamentals — Active Listening, Clarity ও Non-verbal Communication</h2>
+<p class="lead">যোগাযোগ শুধু কথা বলা না — এটা এমনভাবে বার্তা পাঠানো যাতে অন্যপক্ষ ঠিক সেটাই বোঝে যা আপনি বোঝাতে চেয়েছেন।</p>
+
+<h3>Communication Model — Sender, Message, Channel, Receiver, Feedback</h3>
+<p>যেকোনো যোগাযোগে পাঁচটা উপাদান থাকে — একজন <b>sender</b> যিনি একটা <b>message</b> তৈরি করেন, একটা <b>channel</b> (মুখে, লিখিত, ভিডিও কল) দিয়ে পাঠান, একজন <b>receiver</b> সেটা গ্রহণ করেন এবং নিজের মতো ব্যাখ্যা করেন, এবং তারপর <b>feedback</b> দিয়ে নিশ্চিত করেন তিনি ঠিক বুঝেছেন কি না। বেশিরভাগ যোগাযোগ ব্যর্থতা ঘটে কারণ sender ধরে নেন receiver ঠিক তার মতোই বুঝবেন — অথচ receiver-এর প্রেক্ষাপট, পূর্ব-জ্ঞান, এবং মনোযোগ সম্পূর্ণ ভিন্ন হতে পারে।</p>
+
+<div class="diagram"><pre>
+  [Sender]  ──message──▶  [Channel]  ──▶  [Receiver]
+     ▲                                        │
+     │                                        │
+     └───────────── feedback ─────────────────┘
+
+  ভুল বোঝাবুঝি এড়াতে feedback loop বন্ধ করা আবশ্যক —
+  "বুঝেছেন?" জিজ্ঞেস করার বদলে receiver-কে নিজের ভাষায় repeat করতে বলা ভালো।
+</pre></div>
+
+<h3>Active Listening — শুধু শোনা না, বোঝার জন্য শোনা</h3>
+<p><span class="kw">Active Listening</span> মানে পরবর্তী কী বলবেন তা চিন্তা করার বদলে সম্পূর্ণ মনোযোগ দিয়ে অন্যপক্ষের কথা শোনা। এর কয়েকটা মূল কৌশল —</p>
+<ul>
+<li><b>Paraphrasing:</b> অন্যপক্ষ কথা শেষ করার পর নিজের ভাষায় সংক্ষেপে বলা "তার মানে আপনি বলছেন..." — এতে ভুল বোঝাবুঝি সাথে সাথে ধরা পড়ে।</li>
+<li><b>মাঝপথে না থামানো:</b> কেউ কথা বলার সময় বাধা দেওয়া মানে হলো তার চিন্তা সম্পূর্ণভাবে না শোনাই সিদ্ধান্ত নেওয়া।</li>
+<li><b>Clarifying Questions:</b> অস্পষ্ট থাকলে অনুমান না করে সরাসরি জিজ্ঞেস করা — "আপনি বলতে চাইছেন X, নাকি Y?"</li>
+<li><b>Body Language দিয়ে সাড়া দেওয়া:</b> মাথা নাড়ানো, চোখে চোখ রাখা — যা দেখায় আপনি সত্যিই শুনছেন।</li>
+</ul>
+
+<h3>Clarity ও Conciseness — কম শব্দে বেশি বোঝানো</h3>
+<p>প্রযুক্তিগত আলোচনায় সবচেয়ে সাধারণ সমস্যা হলো অতিরিক্ত বিস্তারিত দিয়ে মূল বিষয় হারিয়ে ফেলা। <span class="kw">BLUF (Bottom Line Up Front)</span> নীতি — আগে সিদ্ধান্ত/উপসংহার বলুন, তারপর প্রয়োজনে বিস্তারিত ব্যাখ্যা দিন। এটা বিশেষভাবে গুরুত্বপূর্ণ যখন শ্রোতা ব্যস্ত (ম্যানেজার, stakeholder) — তারা প্রথম বাক্যেই জানতে চান "কী সিদ্ধান্ত নিতে হবে" বা "কী করতে হবে", পুরো প্রেক্ষাপট পরে।</p>
+<table>
+<tr><th>সমস্যা</th><th>উদাহরণ</th><th>সমাধান</th></tr>
+<tr><td>প্রেক্ষাপট আগে, সিদ্ধান্ত পরে</td><td>"আমরা DB migration নিয়ে অনেক পরীক্ষা করেছি... (৫ মিনিট পর) ...তাই আমরা Postgres বেছে নিয়েছি"</td><td>"আমরা Postgres বেছে নিয়েছি। কারণ..." (BLUF)</td></tr>
+<tr><td>Jargon overload</td><td>অ-প্রযুক্তিগত stakeholder-কে "eventual consistency" ব্যাখ্যা ছাড়াই বলা</td><td>প্রথমে সহজ ভাষায় প্রভাব বলা, তারপর প্রযুক্তিগত টার্ম</td></tr>
+<tr><td>দ্ব্যর্থবোধক ভাষা</td><td>"আমার মনে হয় এটা মোটামুটি ঠিক আছে"</td><td>"এই approach কাজ করবে, তবে X ক্ষেত্রে সমস্যা হতে পারে"</td></tr>
+</table>
+
+<h3>Non-verbal Communication ও Tone</h3>
+<p>শব্দের বাইরেও অনেক কিছু বার্তা বহন করে — <b>tone of voice</b> (একই বাক্য উষ্ণ বা রুক্ষ শোনাতে পারে), <b>facial expression</b>, এবং <b>body language</b>। ভিডিও কলে ক্যামেরা বন্ধ রাখা বা স্ক্রিনে অন্য কিছু দেখা receiver-কে "মনোযোগ নেই" বার্তা দেয়, এমনকি অনিচ্ছাকৃতভাবেও। লিখিত যোগাযোগে (Slack, ইমেইল) tone হারিয়ে যাওয়ার ঝুঁকি বেশি — একটা সংক্ষিপ্ত বার্তা রুক্ষ মনে হতে পারে, যেখানে উদ্দেশ্য ছিল শুধু efficient হওয়া।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — শোনার বদলে উত্তর প্রস্তুত করা</span>
+মিটিং-এ অনেকে অন্যপক্ষ কথা বলার সময় নিজের পরবর্তী বক্তব্য নিয়ে চিন্তা করতে থাকেন, ফলে আসল কথাটাই মিস করে ফেলেন। এতে conversation টা দুটো সমান্তরাল মনোলগে পরিণত হয়, প্রকৃত সংলাপে না।</div>
+
+<div class="callout best"><span class="tag">Best practice — লেখার আগে "আমার শ্রোতা কে, তার কী দরকার" ভাবুন</span>
+যেকোনো বার্তা পাঠানোর আগে এক মুহূর্ত থেমে ভাবুন — এই বার্তা কে পড়বে, তাদের কতটা প্রেক্ষাপট আছে, এবং তারা ঠিক কী জানতে/করতে চাইবে। এই ছোট অভ্যাসটাই সবচেয়ে বেশি যোগাযোগ-দক্ষতা উন্নত করে।</div>
+</template>
+
+<template data-page="communication-workplace">
+<h2 class="title">৩. Workplace Communication — Standup, Async Communication ও Documentation</h2>
+<p class="lead">অফিসের যোগাযোগের নিজস্ব নিয়ম আছে — একটা স্ট্যান্ডআপ, একটা Slack মেসেজ, বা একটা কোড রিভিউ কমেন্ট ভুলভাবে করলে টিমের গতি কমে যায়, ঠিকভাবে করলে টিম দ্রুত এগোয়।</p>
+
+<h3>Daily Standup — সংক্ষিপ্ত ও কার্যকর</h3>
+<p>স্ট্যান্ডআপ status report না, এটা coordination টুল — মূল উদ্দেশ্য হলো টিমকে জানানো কে কী করছে এবং কার সাহায্য দরকার। একটা ভালো স্ট্যান্ডআপ আপডেট সংক্ষিপ্ত (৩০-৬০ সেকেন্ড) এবং তিনটা প্রশ্নে কেন্দ্রীভূত — গতকাল কী করলাম, আজ কী করব, এবং কোনো blocker আছে কি না। বিস্তারিত ডিবাগিং আলোচনা স্ট্যান্ডআপের পরে আলাদাভাবে করা উচিত ("parking lot")।</p>
+
+<h3>Async Communication — Slack/Email Etiquette</h3>
+<p>Distributed/remote টিমে বেশিরভাগ যোগাযোগ <span class="kw">asynchronous</span> — অর্থাৎ পাঠানোর সাথে সাথে উত্তর আশা করা যায় না। এতে কয়েকটা নীতি গুরুত্বপূর্ণ —</p>
+<ul>
+<li><b>স্ব-সম্পূর্ণ বার্তা লিখুন:</b> "একটা প্রশ্ন আছে?" এর বদলে সরাসরি পুরো প্রশ্নটা লিখুন — এতে receiver-কে "হ্যাঁ" বলার জন্য অপেক্ষা করতে হয় না, একটা রাউন্ড-ট্রিপ বেঁচে যায়।</li>
+<li><b>প্রেক্ষাপট দিন:</b> "এটা ভাঙা" এর বদলে "প্রোডাকশনে checkout API ৫০০ error দিচ্ছে, লিংক: [log], শুরু হয়েছে আনুমানিক ১০টায়"।</li>
+<li><b>Urgency স্পষ্ট করুন:</b> সবকিছু জরুরি মনে হলে receiver অগ্রাধিকার বুঝতে পারেন না — সত্যিই জরুরি হলে সরাসরি বলুন, নাহলে "জরুরি না, সুবিধামতো দেখুন" লিখুন।</li>
+<li><b>টাইমজোন সম্মান করুন:</b> ভিন্ন টাইমজোনের সহকর্মীর কাছ থেকে তাৎক্ষণিক উত্তর প্রত্যাশা না করা।</li>
+</ul>
+
+<h3>Code Review-এ যোগাযোগ</h3>
+<p>কোড রিভিউ কমেন্ট লেখার ধরন টিমের সংস্কৃতি নির্ধারণ করে। মন্তব্য যতটা সম্ভব ব্যক্তিকে না, কোডকে target করা উচিত ("এই ফাংশনে..." না "তুমি ভুল করেছ...")। প্রশ্ন আকারে মন্তব্য করলে (যেমন "এখানে null check দরকার নেই কি?") এটা আদেশের বদলে সংলাপের সুযোগ তৈরি করে। রিভিউ গ্রহণ করার সময়ও defensively react না করে প্রতিটা কমেন্টকে কোড ভালো করার সুযোগ হিসেবে দেখা উচিত।</p>
+
+<h3>Documentation — লেখা একটা Force Multiplier</h3>
+<p>একবার লেখা একটা ভালো README, Architecture Decision Record (ADR), বা runbook বারবার একই প্রশ্নের উত্তর দেওয়া থেকে বাঁচায় — এটা এক ধরনের "asynchronous মেন্টরিং" যা টিম স্কেল করার সাথে সাথে আরও মূল্যবান হয়ে ওঠে। ভালো ডকুমেন্টেশন "কী" এর চেয়ে "কেন" ব্যাখ্যা করে বেশি (কোড থেকেই "কী" বোঝা যায়)।</p>
+
+<table>
+<tr><th>যোগাযোগের ধরন</th><th>কখন ব্যবহার করবেন</th><th>সুবিধা</th></tr>
+<tr><td>Synchronous (মিটিং, কল)</td><td>জটিল সিদ্ধান্ত, সংবেদনশীল টপিক, দ্রুত back-and-forth দরকার</td><td>তাৎক্ষণিক feedback, tone স্পষ্ট বোঝা যায়</td></tr>
+<tr><td>Asynchronous (Slack, ইমেইল, ডকুমেন্ট)</td><td>স্ট্যাটাস আপডেট, non-urgent প্রশ্ন, বিভিন্ন টাইমজোন</td><td>প্রত্যেকের নিজের সময়ে respond করার সুযোগ, রেকর্ড থেকে যায়</td></tr>
+</table>
+
+<div class="callout mistake"><span class="tag">Common mistake — প্রতিটা প্রশ্ন সরাসরি DM/মিটিং-এ পাঠানো</span>
+যেসব প্রশ্নের উত্তর ইতিমধ্যে ডকুমেন্টেড আছে বা সবার জানা দরকার, সেগুলো ব্যক্তিগত DM-এ পাঠালে জ্ঞান সিলোড হয়ে যায় এবং একই প্রশ্ন বারবার আসতে থাকে। পাবলিক চ্যানেলে জিজ্ঞেস করা বা ডকুমেন্টেশন খুঁজে দেখা — দুটোই টিমের সামগ্রিক দক্ষতা বাড়ায়।</div>
+
+<div class="callout best"><span class="tag">Best practice — "Parking Lot" ব্যবহার করুন</span>
+স্ট্যান্ডআপ বা মিটিং-এ কোনো টপিক গভীর আলোচনার দাবি রাখলে, সেটাকে সাথে সাথে না ধরে একটা "parking lot" (পরে আলোচনার তালিকা)-এ লিখে রাখুন এবং প্রাসঙ্গিক মানুষদের নিয়ে আলাদাভাবে বসুন। এতে মূল মিটিং সংক্ষিপ্ত থাকে এবং সবার সময় বাঁচে।</div>
+</template>
+
+<template data-page="public-speaking">
+<h2 class="title">৪. Public Speaking ও Presentation Skills</h2>
+<p class="lead">একটা দুর্দান্ত প্রযুক্তিগত কাজও যদি আত্মবিশ্বাসের সাথে উপস্থাপন করা না যায়, তার প্রভাব হারিয়ে যায় — Public Speaking শেখা যায়, এটা জন্মগত প্রতিভা না।</p>
+
+<h3>Stage Fear কাটিয়ে ওঠা</h3>
+<p>নার্ভাসনেস সবারই হয় — অভিজ্ঞ বক্তারাও অনুভব করেন, পার্থক্য হলো তারা সেটা সামলাতে শিখেছেন। কয়েকটা কার্যকর কৌশল — পর্যাপ্ত <b>প্রস্তুতি ও অনুশীলন</b> (জোরে জোরে বলে অনুশীলন করা, শুধু মনে মনে না), প্রথম কয়েকটা বাক্য মুখস্থ রাখা (শুরুটা সবচেয়ে কঠিন), এবং নার্ভাসনেসকে "excitement" হিসেবে reframe করা (শারীরিক লক্ষণ একই, ব্যাখ্যা ভিন্ন)।</p>
+
+<h3>একটা টক গঠন করা</h3>
+<p>একটা কার্যকর উপস্থাপনার একটা সহজ কাঠামো থাকে — <b>Hook</b> (প্রথম ৩০ সেকেন্ডে মনোযোগ ধরা — একটা প্রশ্ন, একটা চমকপ্রদ তথ্য, বা একটা সমস্যা), <b>Body</b> (মূল বিষয়বস্তু, সাধারণত ৩টার বেশি মূল পয়েন্টে না রাখা — <span class="kw">Rule of Three</span>), এবং <b>Conclusion</b> (সংক্ষিপ্ত সারমর্ম ও clear call-to-action/next step)।</p>
+<table>
+<tr><th>অংশ</th><th>উদ্দেশ্য</th><th>সময় বরাদ্দ (২০ মিনিটের টকে)</th></tr>
+<tr><td>Hook</td><td>মনোযোগ ধরা, "কেন শুনব" এর উত্তর দেওয়া</td><td>~১-২ মিনিট</td></tr>
+<tr><td>Body</td><td>মূল বার্তা, ৩টার মধ্যে সীমিত মূল পয়েন্ট</td><td>~১৫ মিনিট</td></tr>
+<tr><td>Conclusion</td><td>সারমর্ম, next step/call-to-action</td><td>~২ মিনিট</td></tr>
+<tr><td>Q&A</td><td>স্পষ্টীকরণ, গভীরতর আলোচনা</td><td>বাকি সময়</td></tr>
+</table>
+
+<h3>Tech Talk ও Demo — বাস্তব ঝুঁকি ব্যবস্থাপনা</h3>
+<p>লাইভ ডেমো যেকোনো সময় ব্যর্থ হতে পারে (নেটওয়ার্ক, environment issue) — তাই সবসময় একটা backup (screen recording বা স্ক্রিনশট) প্রস্তুত রাখা উচিত। ডেটা বা ফলাফল উপস্থাপনের সময় স্রেফ সংখ্যা না দেখিয়ে একটা <b>গল্প</b> বলা বেশি কার্যকর — "আগে X ছিল, আমরা Y করলাম, এখন Z" — এই কাঠামো শ্রোতাদের মনে রাখতে সাহায্য করে।</p>
+
+<h3>Q&A সামলানো</h3>
+<p>একটা প্রশ্নের উত্তর না জানলে অনুমান করে ভুল তথ্য দেওয়ার চেয়ে সততার সাথে "এই মুহূর্তে নিশ্চিত না, খুঁজে জানাব" বলা অনেক বেশি বিশ্বাসযোগ্যতা তৈরি করে। প্রশ্ন সবার শোনার আগে (বড় রুমে) পুনরাবৃত্তি করা ভালো অভ্যাস, যাতে সবাই প্রসঙ্গ বোঝে এবং বক্তা উত্তর দেওয়ার আগে চিন্তা করার একটু সময় পান।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — স্লাইডে অতিরিক্ত টেক্সট ভরে রাখা</span>
+স্লাইড ভর্তি টেক্সট থাকলে শ্রোতারা বক্তার কথা না শুনে পড়তে ব্যস্ত হয়ে যান। স্লাইড বক্তব্যের সহায়ক (visual aid) হওয়া উচিত, পুরো স্ক্রিপ্ট না — মূল কীওয়ার্ড, ডায়াগ্রাম, বা একটা ছবি যথেষ্ট।</div>
+
+<div class="callout best"><span class="tag">Best practice — শ্রোতার দিকে তাকিয়ে, স্লাইডের দিকে না</span>
+বক্তৃতার সময় স্লাইড পড়ার বদলে শ্রোতাদের দিকে তাকিয়ে কথা বলুন — এতে সংযোগ তৈরি হয় এবং আত্মবিশ্বাস প্রকাশ পায়। স্লাইড শুধু একটা প্রম্পট, বক্তব্যের উৎস না।</div>
+</template>
+
+<template data-page="eq">
+<h2 class="title">৫. Emotional Intelligence (EQ) — Self-awareness, Empathy ও Emotion Management</h2>
+<p class="lead">টেকনিক্যাল দক্ষতা (IQ) আপনাকে একটা সমাধান খুঁজে দিতে সাহায্য করে, কিন্তু Emotional Intelligence (EQ) ঠিক করে সেই সমাধান নিয়ে মানুষ আপনার সাথে কতটা সহজে কাজ করবে।</p>
+
+<h3>Daniel Goleman-এর পাঁচটা উপাদান</h3>
+<table>
+<tr><th>উপাদান</th><th>সংজ্ঞা</th><th>কর্মক্ষেত্রে উদাহরণ</th></tr>
+<tr><td>Self-awareness</td><td>নিজের আবেগ, শক্তি ও দুর্বলতা চেনা</td><td>বোঝা যে একটা code review comment আপনাকে রক্ষণাত্মক করে তুলছে</td></tr>
+<tr><td>Self-regulation</td><td>impulsive প্রতিক্রিয়া নিয়ন্ত্রণ করা</td><td>প্রোডাকশন incident-এর সময় শান্ত থেকে ডিবাগ করা, প্যানিক না করা</td></tr>
+<tr><td>Motivation</td><td>বাহ্যিক পুরস্কার ছাড়াই লক্ষ্যে অবিচল থাকা</td><td>কঠিন রিফ্যাক্টরিং প্রজেক্টে ধৈর্য ধরে রাখা</td></tr>
+<tr><td>Empathy</td><td>অন্যের দৃষ্টিকোণ ও অনুভূতি বোঝা</td><td>একজন জুনিয়র কেন একটা ভুল করেছে তা বোঝা, শুধু দোষারোপ না করা</td></tr>
+<tr><td>Social Skills</td><td>সম্পর্ক গড়া ও পরিচালনা করা</td><td>একটা মতবিরোধপূর্ণ মিটিংকে গঠনমূলক দিকে নিয়ে যাওয়া</td></tr>
+</table>
+
+<h3>Self-awareness — প্রথম ধাপ</h3>
+<p>নিজের আবেগীয় trigger চেনা EQ-এর ভিত্তি। যেমন, একজন ইঞ্জিনিয়ার হয়তো লক্ষ্য করেন যে তার কোড সমালোচিত হলে তিনি সাথে সাথে defensive হয়ে যান। এই প্যাটার্ন চেনা মানেই তা নিয়ন্ত্রণ করার প্রথম পদক্ষেপ — পরের বার সেই অনুভূতি এলে, প্রতিক্রিয়া জানানোর আগে একটা মুহূর্ত থামা যায়।</p>
+
+<h3>Self-regulation — চাপের মধ্যে শান্ত থাকা</h3>
+<p>প্রোডাকশন incident, কঠোর সমালোচনা, বা tight deadline-এর মতো উচ্চ-চাপের পরিস্থিতিতে আবেগ দ্রুত বিচার-বিবেচনাকে ছাপিয়ে যেতে পারে। কার্যকর কৌশল হলো প্রতিক্রিয়া জানানোর আগে একটা সংক্ষিপ্ত বিরতি নেওয়া (কয়েকটা গভীর শ্বাস, বা "আমাকে ৫ মিনিট ভাবতে দিন" বলা) — এতে impulsive প্রতিক্রিয়ার বদলে চিন্তাশীল প্রতিক্রিয়া সম্ভব হয়।</p>
+
+<h3>Empathy — অন্যের দৃষ্টিকোণ থেকে দেখা</h3>
+<p>Empathy মানে অন্যের সাথে একমত হওয়া না, বরং তাদের পরিস্থিতি ও অনুভূতি বোঝা। একজন প্রোডাক্ট ম্যানেজার একটা "সাধারণ" ফিচারের জন্য চাপ দিচ্ছেন কারণ তিনি একটা ক্লায়েন্ট commitment-এর চাপে আছেন — এই প্রেক্ষাপট বোঝা একটা কথোপকথনকে "না, এটা সম্ভব না" থেকে "চলুন একসাথে একটা বাস্তবসম্মত সময়সীমা খুঁজি" দিকে নিয়ে যেতে পারে।</p>
+
+<div class="callout why"><span class="tag">কেন EQ ক্যারিয়ারের প্রভাবকে বহুগুণ করে</span>
+উচ্চ IQ থাকা সত্ত্বেও কম EQ-সম্পন্ন একজন ইঞ্জিনিয়ার প্রায়ই "কঠিন মানুষ" হিসেবে পরিচিত হন — তার সমাধান সঠিক হলেও মানুষ তার সাথে কাজ করতে দ্বিধা বোধ করে। বিপরীতে, উচ্চ EQ একজন গড় প্রযুক্তিগত দক্ষতার ইঞ্জিনিয়ারকেও একটা বিশ্বস্ত, প্রভাবশালী টিম সদস্যে পরিণত করতে পারে, কারণ মানুষ তার সাথে কাজ করা সহজ মনে করে।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — Empathy কে দুর্বলতা মনে করা</span>
+কিছু ইঞ্জিনিয়ার মনে করেন empathy দেখানো মানে standard কমিয়ে দেওয়া বা নরম হয়ে যাওয়া। বাস্তবে empathy এবং সততা/কঠোরতা একসাথে থাকতে পারে — ৭ম অধ্যায়ে আলোচিত Radical Candor মডেল ঠিক এই ভারসাম্যের কথাই বলে।</div>
+
+<div class="callout best"><span class="tag">Best practice — প্রতিক্রিয়া জানানোর আগে থামুন</span>
+একটা কঠিন মুহূর্তে (সমালোচনা, ভুল ধরা পড়া, তর্ক) সাথে সাথে প্রতিক্রিয়া জানানোর বদলে এক-দুই সেকেন্ড থামুন। এই ছোট বিরতিই impulsive reaction এবং thoughtful response-এর মধ্যে পার্থক্য তৈরি করে দেয়।</div>
+</template>
+
+<template data-page="teamwork">
+<h2 class="title">৬. Teamwork, Collaboration ও Cross-functional Communication</h2>
+<p class="lead">সফটওয়্যার একা তৈরি হয় না — Product, Design, QA, এবং অন্য ইঞ্জিনিয়ারদের সাথে কার্যকরভাবে কাজ করার ক্ষমতাই একটা টিমের প্রকৃত গতি নির্ধারণ করে।</p>
+
+<h3>Cross-functional দলের সাথে কাজ করা</h3>
+<p>প্রতিটা রোলের অগ্রাধিকার আলাদা — Product Manager ব্যবসায়িক impact ও deadline নিয়ে চিন্তিত, Designer user experience ও consistency নিয়ে, QA reliability ও edge case নিয়ে, আর Engineer maintainability ও technical debt নিয়ে। এই পার্থক্য বোঝা দ্বন্দ্বকে ব্যক্তিগত মনে না করে একটা স্বাভাবিক trade-off হিসেবে দেখতে সাহায্য করে (এটাই ৩য় অধ্যায়ে আলোচিত architecture stakeholder ধারণার সাথে মিলে যায়)।</p>
+
+<h3>Psychological Safety</h3>
+<p>Google-এর <b>Project Aristotle</b> গবেষণায় দেখা গেছে, একটা হাই-পারফর্মিং টিমের সবচেয়ে গুরুত্বপূর্ণ বৈশিষ্ট্য হলো <span class="kw">Psychological Safety</span> — এমন একটা পরিবেশ যেখানে টিম সদস্যরা প্রশ্ন করতে, ভুল স্বীকার করতে, বা দ্বিমত পোষণ করতে ভয় পান না, উপহাস বা শাস্তির আশঙ্কা ছাড়াই। একটা টিম লিড হিসেবে (বা যেকোনো সদস্য হিসেবে) নিজের ভুল প্রকাশ্যে স্বীকার করা psychological safety তৈরির সবচেয়ে কার্যকর উপায়।</p>
+
+<h3>নতুন টিম সদস্যদের সাথে কাজ করা</h3>
+<p>একজন নতুন টিমমেট বা জুনিয়রের সাথে pairing করার সময় ধৈর্য অত্যন্ত গুরুত্বপূর্ণ — তাদের প্রশ্নকে "বোকা প্রশ্ন" হিসেবে না দেখে, তাদের প্রেক্ষাপটের অভাব হিসেবে দেখা উচিত। ভালো onboarding communication ভবিষ্যতের অনেক ভুল বোঝাবুঝি প্রতিরোধ করে।</p>
+
+<h3>Remote/Distributed Team-এ Collaboration</h3>
+<p>দূরবর্তী দলে non-verbal cue হারিয়ে যায়, তাই স্পষ্ট, লিখিত যোগাযোগ (৩য় অধ্যায়ে আলোচিত) আরও গুরুত্বপূর্ণ হয়ে ওঠে। নিয়মিত ১:১ চেক-ইন এবং ইচ্ছাকৃতভাবে সামাজিক সংযোগ তৈরি করা (শুধু কাজের কথা না) দূরত্বের কারণে সম্পর্ক দুর্বল হয়ে যাওয়া প্রতিরোধ করে।</p>
+
+<table>
+<tr><th>পরিস্থিতি</th><th>ভালো পদ্ধতি</th></tr>
+<tr><td>PM একটা tight deadline চাইছেন</td><td>trade-off স্পষ্টভাবে তুলে ধরা: "X সম্ভব যদি আমরা Y বাদ দিই, বা আমরা Z সময় নিলে দুটোই পাব"</td></tr>
+<tr><td>QA একটা বাগ রিপোর্ট করেছে যা reproduce হচ্ছে না</td><td>দোষারোপ না করে একসাথে বসে reproduction steps খুঁজে বের করা</td></tr>
+<tr><td>একজন সিনিয়র সহকর্মী আপনার approach-এর সাথে দ্বিমত পোষণ করছেন</td><td>trade-off নিয়ে কৌতূহলী প্রশ্ন করা ("আপনার উদ্বেগটা কী?"), সাথে সাথে defend না করা</td></tr>
+</table>
+
+<div class="callout mistake"><span class="tag">Common mistake — অন্য রোলকে "বাধা" হিসেবে দেখা</span>
+QA বা Product-কে ডেলিভারির পথে "বাধা" হিসেবে দেখা একটা adversarial সম্পর্ক তৈরি করে। বাস্তবে তারা একই লক্ষ্যের (সফল প্রোডাক্ট) দিকে কাজ করছেন, শুধু ভিন্ন কোণ থেকে — এই framing বদলালে সহযোগিতা অনেক সহজ হয়ে যায়।</div>
+
+<div class="callout best"><span class="tag">Best practice — কৃতিত্ব প্রকাশ্যে ভাগ করুন</span>
+একটা সফল প্রজেক্টের কৃতিত্ব প্রকাশ্যে সবার সাথে ভাগ করে নেওয়া (শুধু নিজের অবদান হাইলাইট না করে) বিশ্বাস তৈরি করে এবং ভবিষ্যতে সহযোগিতাকে আরও সহজ করে তোলে।</div>
+</template>
+
+<template data-page="feedback">
+<h2 class="title">৭. Feedback ও Difficult Conversations হ্যান্ডলিং করা</h2>
+<p class="lead">ফিডব্যাক দেওয়া এবং নেওয়া একটা দক্ষতা — ভুলভাবে করলে সম্পর্ক নষ্ট হয়, ঠিকভাবে করলে টিম দ্রুত উন্নতি করে।</p>
+
+<h3>SBI মডেল — Situation, Behavior, Impact</h3>
+<p>অস্পষ্ট ফিডব্যাক ("তুমি ভালো communicate করো না") অকার্যকর কারণ এটা actionable না। <span class="kw">SBI মডেল</span> ফিডব্যাককে নির্দিষ্ট করে — <b>Situation</b> (কখন, কোথায় ঘটেছে), <b>Behavior</b> (ঠিক কী করা হয়েছিল, পর্যবেক্ষণযোগ্য আচরণ, ব্যাখ্যা না), এবং <b>Impact</b> (তার ফলাফল কী হয়েছিল)। যেমন — "গতকালের ডিজাইন রিভিউতে (Situation), তুমি অন্যরা কথা শেষ করার আগেই তিনবার থামিয়ে দিয়েছ (Behavior), যার ফলে দুইজন টিম সদস্য পরে আর মতামত দেননি (Impact)।"</p>
+
+<h3>Radical Candor — Care Personally + Challenge Directly</h3>
+<p>Kim Scott-এর <span class="kw">Radical Candor</span> ফ্রেমওয়ার্ক দুইটা মাত্রায় ফিডব্যাককে ম্যাপ করে — আপনি ব্যক্তি হিসেবে কতটা যত্নশীল (Care Personally), এবং আপনি কতটা সরাসরি challenge করেন (Challenge Directly)। দুটোই একসাথে থাকলেই Radical Candor হয়; একটা বাদ দিলে সমস্যা হয়।</p>
+
+<div class="diagram"><pre>
+                     উচ্চ Challenge Directly
+                            │
+   Obnoxious Aggression     │      Radical Candor
+   ("তুমি এটা ভুল করেছ,     │      ("আমি তোমার উন্নতি চাই,
+    বোকার মতো")             │       তাই সরাসরি বলছি...")
+                            │
+  ──────────────────────────┼──────────────────────────  Care Personally →
+                            │
+   Manipulative Insincerity │      Ruinous Empathy
+   (মিথ্যা প্রশংসা,          │      ("সব ঠিক আছে" বলা,
+    পেছনে সমালোচনা)          │       আসল সমস্যা এড়িয়ে যাওয়া)
+                            │
+                     নিম্ন Challenge Directly
+</pre></div>
+<p>বেশিরভাগ ম্যানেজার/সহকর্মী অজান্তেই <b>Ruinous Empathy</b>-তে পড়ে যান — খারাপ লাগানোর ভয়ে সত্যিকারের সমস্যা এড়িয়ে যান, যা আসলে দীর্ঘমেয়াদে বেশি ক্ষতিকর, কারণ সমস্যা সমাধান হয় না।</p>
+
+<h3>Feedback গ্রহণ করা</h3>
+<p>ফিডব্যাক পাওয়ার সময় প্রথম প্রতিক্রিয়া প্রায়ই defensive হয়ে ওঠে। কার্যকর পদ্ধতি হলো — প্রথমে শুধু শোনা (৩য় অধ্যায়ের active listening), সাথে সাথে justify না করা, "ধন্যবাদ, এটা নিয়ে ভাবতে হবে" বলা, এবং পরে শান্ত মাথায় বিশ্লেষণ করা এটা সত্য কি না।</p>
+
+<h3>কঠিন কথোপকথন পরিচালনা করা</h3>
+<p>একটা কঠিন কথোপকথনের (যেমন একজন সহকর্মীর বারবার একই ভুল করা, বা একটা সিদ্ধান্তে দ্বিমত) আগে প্রস্তুতি গুরুত্বপূর্ণ — নির্দিষ্ট উদাহরণ (SBI) প্রস্তুত রাখা, ব্যক্তিগত আক্রমণ এড়িয়ে আচরণে ফোকাস করা, এবং একটা সমাধান-কেন্দ্রিক সুর রাখা ("আমরা কীভাবে এটা এগিয়ে নিতে পারি" — অভিযোগের বদলে)।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — "Feedback Sandwich" এর ওপর অতিরিক্ত নির্ভরতা</span>
+প্রশংসা-সমালোচনা-প্রশংসা কাঠামো (sandwich) মাঝে মাঝে কার্যকর হলেও, অতিরিক্ত ব্যবহারে receiver শিখে যায় যে "মাঝের অংশটাই" আসল বার্তা, ফলে শুরু ও শেষের প্রশংসা বিশ্বাসযোগ্যতা হারায়। সরাসরি কিন্তু যত্নশীল ভাষায় ফিডব্যাক দেওয়া বেশি কার্যকর।</div>
+
+<div class="callout best"><span class="tag">Best practice — Feedback দিন সময়মতো, দেরি না করে</span>
+একটা সমস্যা ঘটার সাথে সাথেই (বা দ্রুত পরে) ফিডব্যাক দিন। মাসের পর মাস জমিয়ে রেখে একটা annual review-এ একসাথে বলা receiver-কে অবাক ও রক্ষণাত্মক করে তোলে, কারণ তার সংশোধনের কোনো সুযোগ ছিল না।</div>
+</template>
+
+<template data-page="time-management">
+<h2 class="title">৮. Time Management, Prioritization ও Deep Work</h2>
+<p class="lead">সময় একটা fixed resource — একে বাড়ানো যায় না, শুধু ভালোভাবে বরাদ্দ করা যায়।</p>
+
+<h3>Eisenhower Matrix — Urgent বনাম Important</h3>
+<p>প্রতিটা টাস্ককে দুইটা মাত্রায় ভাগ করা যায় — কতটা <b>জরুরি</b> (তাৎক্ষণিক মনোযোগ দরকার) এবং কতটা <b>গুরুত্বপূর্ণ</b> (দীর্ঘমেয়াদী লক্ষ্যের সাথে সম্পর্কিত)। বেশিরভাগ মানুষ ভুলবশত "জরুরি" টাস্কে সময় ব্যয় করেন, "গুরুত্বপূর্ণ কিন্তু জরুরি না" টাস্ক (যেমন technical debt কমানো, শেখা, রিলেশনশিপ বিল্ডিং) অবহেলিত থেকে যায়।</p>
+<table>
+<tr><th></th><th>জরুরি</th><th>জরুরি না</th></tr>
+<tr><td><b>গুরুত্বপূর্ণ</b></td><td>প্রোডাকশন incident, hard deadline — এখনই করুন</td><td>Architecture planning, শেখা, মেন্টরিং — সময় নির্ধারণ করে রাখুন</td></tr>
+<tr><td><b>গুরুত্বপূর্ণ না</b></td><td>কিছু মিটিং, ইন্টারাপশন — delegate বা কমান</td><td>অপ্রয়োজনীয় distraction — বাদ দিন</td></tr>
+</table>
+
+<h3>Deep Work — গভীর মনোযোগের সময় রক্ষা করা</h3>
+<p>Cal Newport-এর <span class="kw">Deep Work</span> ধারণা অনুযায়ী, জটিল প্রযুক্তিগত কাজ (ডিজাইন, ডিবাগিং, লেখা) মনোযোগহীনভাবে ছোট ছোট টুকরায় করা যায় না — এর জন্য নিরবচ্ছিন্ন, একনাগাড়ে সময় দরকার। প্রতিটা interruption (Slack notification, মিটিং) মনোযোগ পুনরায় ফিরে পেতে উল্লেখযোগ্য সময় নেয় ("context switching cost")। কার্যকর ইঞ্জিনিয়াররা ইচ্ছাকৃতভাবে notification বন্ধ রেখে, ক্যালেন্ডারে "Focus Time" ব্লক করে গভীর কাজের সময় রক্ষা করেন।</p>
+
+<h3>না বলতে শেখা</h3>
+<p>প্রতিটা অনুরোধে "হ্যাঁ" বলা scope creep এবং burnout-এর দিকে নিয়ে যায়। একটা যুক্তিসঙ্গত "না" (বা "এখন না, পরে") বলার দক্ষতা — বিশেষ করে trade-off স্পষ্ট করে ("আমি এটা করতে পারি, কিন্তু তাহলে X দেরি হবে") — একটা গুরুত্বপূর্ণ professional দক্ষতা, শুধু impolite মনে হওয়ার ভয়ে সবকিছুতে রাজি হওয়ার চেয়ে ভালো।</p>
+
+<h3>Procrastination এড়ানো</h3>
+<p>বড়, অস্পষ্ট টাস্ক প্রায়ই procrastination-এর কারণ হয় — মস্তিষ্ক "কোথা থেকে শুরু করব" বুঝতে না পেরে এড়িয়ে যায়। এটা কাটাতে টাস্ককে ছোট, নির্দিষ্ট, শুরু করা সহজ এমন ধাপে ভাগ করা কার্যকর (যেমন "ফিচার তৈরি করো" এর বদলে "প্রথম API endpoint-এর স্কিমা লিখি")।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — Busy থাকা মানেই productive ভাবা</span>
+সারাদিন মিটিং আর মেসেজে ব্যস্ত থাকা প্রায়ই প্রকৃত অগ্রগতির চেয়ে "ব্যস্ততার অনুভূতি" তৈরি করে। প্রকৃত productivity মাপা উচিত outcome দিয়ে (কী সম্পন্ন হলো), activity দিয়ে না (কতগুলো মিটিং করলাম)।</div>
+
+<div class="callout best"><span class="tag">Best practice — দিনের শুরুতে সবচেয়ে গুরুত্বপূর্ণ কাজ প্রথমে করুন</span>
+মানসিক শক্তি সাধারণত দিনের শুরুতে সবচেয়ে বেশি থাকে। ইমেইল/Slack চেক করে দিন শুরু করার বদলে, সেই সময়টা দিনের সবচেয়ে গুরুত্বপূর্ণ (এবং কঠিন) কাজে ব্যবহার করুন, রুটিন কাজ পরে করুন।</div>
+</template>
+
+<template data-page="interview-foundation">
+<h2 class="title">৯. Interview Preparation Fundamentals — Interview-এর ধরন, Resume ও Research</h2>
+<p class="lead">একটা ইন্টারভিউ প্রক্রিয়া বোঝা এবং প্রস্তুতি নেওয়া নিজেই একটা দক্ষতা — যতটা প্রস্তুতি প্রযুক্তিগত জ্ঞানে নেওয়া হয়, ততটাই প্রক্রিয়া বোঝায় দেওয়া উচিত।</p>
+
+<h3>Interview-এর সাধারণ ধাপ</h3>
+<table>
+<tr><th>ধাপ</th><th>উদ্দেশ্য</th><th>কী মূল্যায়ন করা হয়</th></tr>
+<tr><td>Recruiter Screen</td><td>প্রাথমিক ফিট যাচাই</td><td>প্রত্যাশা, অভিজ্ঞতা সারাংশ, motivation</td></tr>
+<tr><td>Technical/Coding Round</td><td>সমস্যা সমাধান দক্ষতা</td><td>algorithm, কোড কোয়ালিটি, communication</td></tr>
+<tr><td>System Design Round</td><td>বড় স্কেলে সিস্টেম ডিজাইন করার ক্ষমতা</td><td>trade-off চিন্তা, স্কেলেবিলিটি জ্ঞান (এই সাইটের System Design ও Scalability কোর্স দেখুন)</td></tr>
+<tr><td>Behavioral Round</td><td>past experience, soft skills</td><td>STAR উত্তর, টিমওয়ার্ক, সিদ্ধান্ত নেওয়ার প্রক্রিয়া</td></tr>
+<tr><td>Hiring Manager Round</td><td>টিম ফিট, দীর্ঘমেয়াদী alignment</td><td>ক্যারিয়ার লক্ষ্য, কাজের ধরন সামঞ্জস্য</td></tr>
+<tr><td>Bar Raiser / Panel</td><td>সামগ্রিক মান নিশ্চিত করা</td><td>সব dimension জুড়ে সামগ্রিক মূল্যায়ন</td></tr>
+</table>
+
+<h3>Resume — Impact কে Quantify করা</h3>
+<p>একটা কার্যকর resume দায়িত্ব তালিকা করে না, <b>impact</b> দেখায়। "API তৈরি করেছি" এর বদলে "একটা API তৈরি করেছি যা checkout latency ৪০% কমিয়েছে, যা মাসিক ৫০ হাজার ট্রানজেকশন সামলায়" — এভাবে সংখ্যা ও ফলাফল যোগ করা resume-কে অনেক বেশি বিশ্বাসযোগ্য করে তোলে। Buzzword-ভরা কিন্তু ফাঁপা বাক্য ("passionate team player", "results-driven") এড়িয়ে চলা উচিত — এগুলো কোনো তথ্য দেয় না।</p>
+
+<h3>Company Research</h3>
+<p>ইন্টারভিউর আগে কোম্পানির প্রোডাক্ট, সাম্প্রতিক সংবাদ, এবং টেক স্ট্যাক নিয়ে গবেষণা করা দুইটা কাজ করে — এটা দেখায় আপনি সত্যিই আগ্রহী, এবং এটা আপনাকে প্রাসঙ্গিক, চিন্তাশীল প্রশ্ন করার সুযোগ দেয় (ইন্টারভিউ শেষে "আপনার কোনো প্রশ্ন আছে?" — এই মুহূর্তটা কাজে লাগানো)।</p>
+
+<h3>Mock Interview-এর মূল্য</h3>
+<p>একা একা প্রস্তুতি নেওয়া এবং সত্যিকারের চাপের মধ্যে (একজন অচেনা মানুষের সামনে, সময়ের চাপে) কথা বলা সম্পূর্ণ ভিন্ন অভিজ্ঞতা। একজন বন্ধু বা মেন্টরের সাথে mock interview অনুশীলন করলে সেই চাপের পরিস্থিতিতে চিন্তাভাবনা প্রকাশ করার অভ্যাস তৈরি হয়, যা আসল ইন্টারভিউতে nervousness কমায়।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — শুধু প্রযুক্তিগত প্রস্তুতি নেওয়া, কমিউনিকেশন অনুশীলন না করা</span>
+অনেকে শুধু algorithm সমাধান অনুশীলন করেন কিন্তু জোরে জোরে চিন্তা প্রকাশ করে বলার অনুশীলন করেন না। ইন্টারভিউয়ে সঠিক উত্তর নীরবে দেওয়ার চেয়ে চিন্তা প্রক্রিয়া স্পষ্টভাবে প্রকাশ করা প্রায়ই বেশি গুরুত্বপূর্ণ (১১শ অধ্যায়ে বিস্তারিত)।</div>
+
+<div class="callout best"><span class="tag">Best practice — প্রতিটা ইন্টারভিউ শেষে নোট নিন</span>
+কোন প্রশ্ন এসেছিল, কোথায় আটকে গিয়েছিলেন, কী ভালো গিয়েছিল — এগুলো লিখে রাখলে পরের ইন্টারভিউয়ের জন্য একটা স্পষ্ট improvement loop তৈরি হয়, শুধু "কেমন গেল মনে হয়" এর অস্পষ্ট অনুভূতির চেয়ে।</div>
+</template>
+
+<template data-page="behavioral-interview">
+<h2 class="title">১০. Behavioral Interview — STAR Method গভীরভাবে</h2>
+<p class="lead">"আমাকে এমন একটা সময়ের কথা বলুন যখন..." — এই প্রশ্নের উত্তর এলোমেলোভাবে না দিয়ে একটা কাঠামো দিয়ে দিলে তা অনেক বেশি স্পষ্ট ও প্রভাবশালী হয়ে ওঠে।</p>
+
+<h3>STAR Method — চারটা উপাদান</h3>
+<table>
+<tr><th>উপাদান</th><th>বর্ণনা</th></tr>
+<tr><td><b>S</b>ituation</td><td>সংক্ষিপ্ত প্রেক্ষাপট — কখন, কোথায়, কী পরিস্থিতি ছিল (১-২ বাক্য)</td></tr>
+<tr><td><b>T</b>ask</td><td>আপনার নির্দিষ্ট দায়িত্ব বা লক্ষ্য ছিল কী</td></tr>
+<tr><td><b>A</b>ction</td><td>আপনি ঠিক কী করলেন — এখানেই সবচেয়ে বেশি সময় দেওয়া উচিত, "আমরা" না বলে "আমি" কী করলাম তা স্পষ্ট করে</td></tr>
+<tr><td><b>R</b>esult</td><td>ফলাফল কী হলো — সম্ভব হলে পরিমাপযোগ্য (সংখ্যা, শতাংশ), এবং কী শিখলেন</td></tr>
+</table>
+
+<h3>একটা সম্পূর্ণ উদাহরণ</h3>
+<div class="diagram"><pre>
+প্রশ্ন: "একটা সময়ের কথা বলুন যখন আপনি একটা টিম কনফ্লিক্ট সামলেছেন।"
+
+S: আমাদের টিমে একজন সিনিয়র ইঞ্জিনিয়ার আর আমি একটা মাইক্রোসার্ভিস
+   split করার approach নিয়ে দ্বিমত পোষণ করছিলাম।
+
+T: আমার কাজ ছিল একটা সিদ্ধান্তে পৌঁছানো যা টিমকে দুই সপ্তাহের
+   মধ্যে এগিয়ে যেতে দেবে, সম্পর্ক নষ্ট না করে।
+
+A: আমি তাকে একটা ১:১ মিটিং-এ ডাকলাম, প্রথমে তার উদ্বেগ পুরোপুরি
+   শুনলাম, তারপর দুটো approach-এর trade-off একটা ডকুমেন্টে লিখে
+   একটা ছোট spike (২ দিনের প্রোটোটাইপ) প্রস্তাব করলাম ডেটা দিয়ে
+   সিদ্ধান্ত নেওয়ার জন্য, শুধু মতামতের ওপর নির্ভর না করে।
+
+R: Spike থেকে দেখা গেল আমার approach ৩০% কম latency দিচ্ছে,
+   টিম সেটা গ্রহণ করল। এরপর থেকে আমরা বড় আর্কিটেকচার সিদ্ধান্তে
+   "প্রথমে ছোট spike" নীতি অনুসরণ করা শুরু করলাম।
+</pre></div>
+
+<h3>সাধারণ Behavioral প্রশ্নের ক্যাটাগরি</h3>
+<ul>
+<li><b>Conflict:</b> "টিমমেট/ম্যানেজারের সাথে দ্বিমত হয়েছিল এমন সময়ের কথা বলুন।"</li>
+<li><b>Failure:</b> "একটা প্রজেক্ট ব্যর্থ হয়েছিল, কী শিখলেন।"</li>
+<li><b>Leadership:</b> "কর্তৃত্ব ছাড়াই কাউকে প্রভাবিত করেছিলেন এমন উদাহরণ।"</li>
+<li><b>Ambiguity:</b> "অস্পষ্ট requirement নিয়ে কাজ করতে হয়েছিল এমন পরিস্থিতি।"</li>
+<li><b>Prioritization:</b> "একসাথে একাধিক জরুরি কাজের মধ্যে অগ্রাধিকার ঠিক করেছিলেন।"</li>
+</ul>
+
+<h3>আগে থেকে একটা "Story Bank" তৈরি করুন</h3>
+<p>ইন্টারভিউর সময় হঠাৎ প্রাসঙ্গিক অভিজ্ঞতা মনে করা কঠিন। আগে থেকে ৫-৮টা উল্লেখযোগ্য পেশাদার অভিজ্ঞতা (বিভিন্ন ক্যাটাগরি কভার করে) STAR ফরম্যাটে লিখে প্রস্তুত রাখা উচিত — যাতে ইন্টারভিউতে সেগুলো থেকে প্রাসঙ্গিকটা বেছে অভিযোজিত করে বলা যায়।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — "Action" অংশ ছোট করে "Situation" নিয়ে বেশি সময় ব্যয় করা</span>
+অনেকে প্রেক্ষাপট বর্ণনায় অতিরিক্ত সময় ব্যয় করেন কিন্তু নিজে ঠিক কী করলেন তা সংক্ষেপে বলে দেন। ইন্টারভিউয়ার মূলত জানতে চান আপনার সিদ্ধান্ত ও কর্ম — তাই Action অংশেই সবচেয়ে বেশি বিস্তারিত থাকা উচিত।</div>
+
+<div class="callout best"><span class="tag">Best practice — Result-এ সংখ্যা এবং শেখা — দুটোই অন্তর্ভুক্ত করুন</span>
+শুধু "এটা সফল হয়েছিল" না বলে, পরিমাপযোগ্য ফলাফল (সম্ভব হলে) এবং সেই অভিজ্ঞতা থেকে কী শিখলেন তাও যোগ করুন — এটা দেখায় আপনি নিজের কাজ নিয়ে reflective, শুধু execute করেন না।</div>
+</template>
+
+<template data-page="technical-interview">
+<h2 class="title">১১. Technical Interview Strategy — Thinking Aloud ও Problem-Solving Communication</h2>
+<p class="lead">টেকনিক্যাল ইন্টারভিউতে সঠিক উত্তরে পৌঁছানোর চেয়ে বেশি গুরুত্বপূর্ণ হলো কীভাবে সেই উত্তরে পৌঁছালেন তা স্পষ্টভাবে প্রকাশ করা।</p>
+
+<h3>কেন নীরবে কোড লেখা একটা ভুল কৌশল</h3>
+<p>ইন্টারভিউয়ার শুধু "সঠিক উত্তর" মূল্যায়ন করেন না — তারা মূল্যায়ন করেন আপনি কীভাবে চিন্তা করেন, কীভাবে অস্পষ্টতা সামলান, এবং একজন ভবিষ্যৎ সহকর্মী হিসেবে আপনার সাথে কাজ করা কেমন হবে। নীরবে ৫ মিনিট চিন্তা করে হঠাৎ কোড লেখা শুরু করলে ইন্টারভিউয়ার আপনার চিন্তা প্রক্রিয়া সম্পর্কে কিছুই জানতে পারেন না, এমনকি ভুল দিকে গেলেও গাইড করতে পারেন না।</p>
+
+<h3>একটা কাঠামোবদ্ধ পদ্ধতি</h3>
+<table>
+<tr><th>ধাপ</th><th>কী করবেন</th></tr>
+<tr><td>১. Clarify</td><td>প্রশ্ন সম্পূর্ণ বোঝার আগে কোড লেখা শুরু করবেন না — edge case, input constraint, expected output নিয়ে প্রশ্ন করুন</td></tr>
+<tr><td>২. Approach আলোচনা</td><td>কোড লেখার আগে আপনার পরিকল্পনা মুখে বলুন ("আমি একটা hashmap ব্যবহার করব কারণ...") — ইন্টারভিউয়ারকে ভুল দিক এড়াতে সুযোগ দিন</td></tr>
+<tr><td>৩. Code লিখুন</td><td>লেখার সময়ও সংক্ষেপে ব্যাখ্যা করতে থাকুন কী করছেন, বিশেষ করে non-obvious অংশে</td></tr>
+<tr><td>৪. Test করুন</td><td>নিজে থেকেই একটা example দিয়ে হাতে dry-run করুন, edge case (empty input, duplicate, বড় ইনপুট) পরীক্ষা করুন</td></tr>
+<tr><td>৫. Optimize আলোচনা</td><td>time/space complexity বলুন, এবং কীভাবে আরও ভালো করা যেত তা নিয়ে আলোচনা করুন</td></tr>
+</table>
+
+<h3>"আমি জানি না" বলার সঠিক উপায়</h3>
+<p>একটা প্রশ্নের উত্তর সরাসরি না জানলে অনুমান বা bluff করার চেষ্টা না করে সততার সাথে স্বীকার করা ভালো — তবে সেখানেই থেমে না গিয়ে, related knowledge থেকে reasoning করার চেষ্টা দেখানো উচিত ("আমি এই নির্দিষ্ট অ্যালগরিদম জানি না, কিন্তু এটা একটা shortest-path সমস্যার মতো মনে হচ্ছে, তাই BFS দিয়ে শুরু করতে পারি")। এটা দেখায় আপনি অজানা পরিস্থিতিতেও চিন্তা করতে পারেন — যা বাস্তব কাজের সবচেয়ে গুরুত্বপূর্ণ দক্ষতা।</p>
+
+<h3>System Design Interview-এ যোগাযোগ</h3>
+<p>System Design ইন্টারভিউতে (এই সাইটের System Design ও Scalability কোর্সে টেকনিক্যাল কনটেন্ট বিস্তারিত আছে) যোগাযোগ আরও বেশি গুরুত্বপূর্ণ, কারণ এখানে কোনো একক "সঠিক উত্তর" নেই। requirement স্পষ্ট করা দিয়ে শুরু করুন (কত ইউজার, read/write ratio, consistency প্রয়োজনীয়তা), তারপর high-level থেকে বিস্তারিত দিকে ধাপে ধাপে এগোন, এবং প্রতিটা সিদ্ধান্তে trade-off স্পষ্টভাবে বলুন ("আমি SQL বেছে নিচ্ছি কারণ strong consistency দরকার, যদিও এটা horizontal scaling একটু কঠিন করে তোলে")।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — ইন্টারভিউয়ারের ইঙ্গিত উপেক্ষা করা</span>
+ইন্টারভিউয়ার প্রায়ই সূক্ষ্ম ইঙ্গিত দেন যখন আপনি ভুল দিকে যাচ্ছেন (একটা প্রশ্ন, একটা ভ্রু কুঁচকানো)। এই ইঙ্গিত উপেক্ষা করে নিজের approach-এ অবিচল থাকা একগুঁয়েমি হিসেবে দেখা যেতে পারে — মনোযোগী থাকুন এবং প্রয়োজনে দিক পরিবর্তন করুন।</div>
+
+<div class="callout best"><span class="tag">Best practice — নীরবতাকে ভয় পাবেন না, কিন্তু এটাকে ব্যাখ্যা করুন</span>
+চিন্তা করার জন্য কিছুক্ষণ নীরব থাকা সম্পূর্ণ স্বাভাবিক — কিন্তু নীরবতার আগে বলুন "একটু ভাবতে দিন" যাতে ইন্টারভিউয়ার বুঝতে পারেন আপনি আটকে যাননি, চিন্তা করছেন।</div>
+</template>
+
+<template data-page="negotiation-basics">
+<h2 class="title">১২. Negotiation Fundamentals — BATNA, Anchoring ও Research</h2>
+<p class="lead">Negotiation একটা confrontation না — এটা একটা যৌথ সমস্যা সমাধান প্রক্রিয়া, যেখানে দুইপক্ষই একটা গ্রহণযোগ্য ফলাফল খুঁজছে।</p>
+
+<h3>কেন ইঞ্জিনিয়াররা প্রায়ই কম Negotiate করেন</h3>
+<p>অনেক ইঞ্জিনিয়ার negotiation-কে আক্রমণাত্মক বা লোভী মনে করেন, এবং প্রথম অফারই মেনে নেন। বাস্তবে বেশিরভাগ কোম্পানি প্রথম অফারে কিছুটা "নেগোশিয়েশন রুম" রেখেই দেয় — negotiate না করা মানে সেই সুযোগ স্বেচ্ছায় ছেড়ে দেওয়া। Negotiation একবার করলেই বেতনের ভিত্তি (base) বেড়ে যায়, যা প্রতিটা ভবিষ্যৎ raise ও bonus-এর হিসাবেও প্রভাব ফেলে (compounding effect)।</p>
+
+<h3>BATNA — Best Alternative to a Negotiated Agreement</h3>
+<p><span class="kw">BATNA</span> মানে হলো, যদি এই নির্দিষ্ট আলোচনা ব্যর্থ হয়, আপনার কাছে সবচেয়ে ভালো বিকল্প কী। একটা শক্তিশালী BATNA (যেমন হাতে আরেকটা অফার, বা বর্তমান চাকরিতে সন্তুষ্ট থাকা) আপনাকে আলোচনায় প্রকৃত ক্ষমতা দেয় — আপনি জানেন আপনি "যেকোনো শর্তে রাজি" হতে বাধ্য না। BATNA দুর্বল হলে (জরুরি ভাবে চাকরি দরকার) আলোচনার সুযোগ সীমিত হয়ে যায়, তাই সম্ভব হলে একাধিক বিকল্প তৈরি রাখা কৌশলগতভাবে গুরুত্বপূর্ণ।</p>
+
+<h3>Anchoring Effect — কে প্রথমে সংখ্যা বলে</h3>
+<p><span class="kw">Anchoring</span> একটা cognitive bias — আলোচনায় প্রথম উল্লেখিত সংখ্যা পরবর্তী পুরো আলোচনার একটা মানসিক রেফারেন্স পয়েন্ট হয়ে যায়, এমনকি যদি সেটা arbitrary হয়। সাধারণ নীতি হলো — যদি আপনার কাছে বাজার-গবেষণা ভালো থাকে এবং আপনি বেশি আশা করেন, প্রথমে সংখ্যা বলা সুবিধাজনক (উচ্চ anchor সেট করা)। কিন্তু আপনার কাছে পর্যাপ্ত তথ্য না থাকলে, নিয়োগকর্তাকে আগে range বলতে বলা নিরাপদ ("আপনাদের বাজেট রেঞ্জ কী?")।</p>
+
+<h3>Research — আলোচনার আগে হোমওয়ার্ক</h3>
+<p>Negotiation-এ leverage মূলত তথ্য থেকে আসে। আলোচনার আগে জানা উচিত — একই রোলের বাজার-বেতন রেঞ্জ (levels.fyi, Glassdoor-এর মতো সোর্স থেকে), কোম্পানির funding/financial অবস্থা, এবং নিজের unique value proposition (এমন কোনো দক্ষতা যা এই টিমের জন্য বিশেষভাবে মূল্যবান)।</p>
+
+<div class="diagram"><pre>
+        দুর্বল BATNA                     শক্তিশালী BATNA
+   (কোনো বিকল্প অফার নেই,          (একাধিক অফার, বা বর্তমান
+    জরুরি চাকরি দরকার)               চাকরিতে সন্তুষ্ট)
+            │                                 │
+            ▼                                 ▼
+   কম negotiating power            বেশি negotiating power
+   → প্রথম অফার মেনে নেওয়ার                 → শর্ত নিয়ে আলোচনা
+     সম্ভাবনা বেশি                            করার সুযোগ বেশি
+
+  BATNA উন্নত করার উপায়: একাধিক জায়গায় আবেদন করা,
+  নিজের skill-set-কে market-এ আরও visible করা (১৪শ অধ্যায়)
+</pre></div>
+
+<div class="callout why"><span class="tag">কেন Negotiation একটা zero-sum game না</span>
+অনেকে ভাবেন negotiation মানে একপক্ষ জেতে, আরেকপক্ষ হারে। বাস্তবে ভালো negotiation উভয়পক্ষের underlying interest বোঝার চেষ্টা করে — হয়তো কোম্পানি base salary বাড়াতে না পারলেও signing bonus, equity, বা remote flexibility-তে নমনীয় (১৩শ অধ্যায়ে বিস্তারিত), যা উভয়পক্ষের জন্যই ভালো ফলাফল তৈরি করতে পারে।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — অস্বস্তির ভয়ে negotiate না করা</span>
+অনেকে negotiate করলে অফার প্রত্যাহার হয়ে যাবে এই ভয়ে চুপ থাকেন। বাস্তবে পেশাদারভাবে, সম্মানের সাথে করা একটা counter-offer অফার প্রত্যাহারের কারণ প্রায় হয় না — বরং কোম্পানিগুলো এটাকে স্বাভাবিক প্রক্রিয়া হিসেবেই দেখে।</div>
+
+<div class="callout best"><span class="tag">Best practice — সবসময় লিখিত অফার নিয়ে ভাবার সময় নিন</span>
+মৌখিক অফারে সাথে সাথে হ্যাঁ/না না বলে, "এটা নিয়ে আমি উচ্ছ্বসিত, আমাকে লিখিত অফারটা পর্যালোচনা করতে কয়েকদিন সময় দিন" বলা সম্পূর্ণ পেশাদার এবং প্রত্যাশিত — এই সময়টাই আলোচনার প্রস্তুতির জন্য ব্যবহার করুন।</div>
+</template>
+
+<template data-page="negotiation-salary">
+<h2 class="title">১৩. Salary ও Offer Negotiation — Deep Dive</h2>
+<p class="lead">বেতন আলোচনা একটাই সংখ্যা নিয়ে না — পুরো compensation package এবং কাজের শর্তের একটা সামগ্রিক আলোচনা।</p>
+
+<h3>ধাপে ধাপে Offer Negotiation প্রক্রিয়া</h3>
+<ol>
+<li><b>উচ্ছ্বাস প্রকাশ করুন, সাথে সাথে গ্রহণ/প্রত্যাখ্যান করবেন না:</b> "আমি এই অফারে খুবই উত্তেজিত, লিখিতভাবে পর্যালোচনা করে কয়েকদিনের মধ্যে ফিরে আসছি।"</li>
+<li><b>পুরো package বুঝে নিন:</b> base salary, bonus, equity/stock, benefits, সব লিখিতভাবে চেয়ে নিন — মৌখিক প্রতিশ্রুতির ওপর নির্ভর করবেন না।</li>
+<li><b>নিজের research-ভিত্তিক counter তৈরি করুন:</b> "বাজার-গবেষণা এবং আমার অভিজ্ঞতা অনুযায়ী, আমি X আশা করছিলাম — এটা কি সম্ভব?"</li>
+<li><b>নির্দিষ্ট, যুক্তিসঙ্গত সংখ্যা দিন:</b> গোলাকার সংখ্যার (৳১,০০,০০০) বদলে নির্দিষ্ট সংখ্যা (৳৯৭,৫০০) বেশি বিশ্বাসযোগ্য মনে হয়, কারণ এটা গবেষণা-ভিত্তিক মনে হয়।</li>
+<li><b>লিখিত চূড়ান্ত অফার পাওয়ার পরই আনুষ্ঠানিকভাবে গ্রহণ করুন।</b></li>
+</ol>
+
+<h3>বেতনের বাইরেও Negotiate করার জিনিস</h3>
+<table>
+<tr><th>Lever</th><th>কখন কার্যকর</th></tr>
+<tr><td>Signing Bonus</td><td>কোম্পানি base salary বাড়াতে না পারলে (budget band-এর কারণে) — one-time bonus প্রায়ই বেশি নমনীয়</td></tr>
+<tr><td>Equity/Stock</td><td>স্টার্টআপ বা বড় টেক কোম্পানিতে — দীর্ঘমেয়াদী upside, কিন্তু ঝুঁকিও বেশি</td></tr>
+<tr><td>Title</td><td>ভবিষ্যৎ ক্যারিয়ার লেভেলিং ও পরবর্তী চাকরির আলোচনায় প্রভাব ফেলে</td></tr>
+<tr><td>Remote Work / Flexibility</td><td>জীবনযাত্রার মানের ওপর সরাসরি প্রভাব, প্রায়ই কোম্পানির জন্য কম খরচে দেওয়া সম্ভব</td></tr>
+<tr><td>Start Date</td><td>বর্তমান চাকরিতে নোটিশ পিরিয়ড বা বিরতির প্রয়োজন থাকলে</td></tr>
+<tr><td>Vacation/PTO</td><td>Standard policy-এর বাইরে কিছুটা নমনীয়তা প্রায়ই সম্ভব</td></tr>
+</table>
+
+<h3>"আপনার বর্তমান বেতন কত" প্রশ্ন সামলানো</h3>
+<p>এই প্রশ্নের সরাসরি উত্তর দেওয়া আপনার negotiating leverage কমিয়ে দেয় (অনেক জায়গায় এই প্রশ্ন এখন আইনত নিষিদ্ধও)। একটা ভালো উত্তর হলো বর্তমান বেতনের সংখ্যা এড়িয়ে ভবিষ্যতের প্রত্যাশার দিকে কথা ফেরানো — "আমি বর্তমান সংখ্যার চেয়ে এই রোলের জন্য বাজার-উপযুক্ত compensation নিয়ে আলোচনা করতে চাই, যা আমার research অনুযায়ী X-Y রেঞ্জে।"</p>
+
+<h3>একাধিক Offer থাকলে</h3>
+<p>একাধিক প্রতিযোগী অফার সবচেয়ে শক্তিশালী negotiation leverage তৈরি করে। এটা ব্যবহার করার সময় স্বচ্ছ ও পেশাদার থাকা উচিত — মিথ্যা অফার বানানো ঝুঁকিপূর্ণ এবং অনৈতিক, কিন্তু সত্যিকারের competing অফার উল্লেখ করা ("আমার কাছে আরেকটা অফার আছে যা X দিচ্ছে, আপনাদের কি কিছুটা flexibility আছে?") সম্পূর্ণ গ্রহণযোগ্য।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — প্রথম counter-এই সবচেয়ে বেশি চাওয়া</span>
+অত্যধিক আক্রমণাত্মক প্রথম counter (বাজার রেঞ্জের অনেক ওপরে) সম্পর্ক নষ্ট করতে পারে এবং অযৌক্তিক মনে হতে পারে। Research-ভিত্তিক, যুক্তিসঙ্গত কিন্তু আত্মবিশ্বাসী সংখ্যা সবচেয়ে কার্যকর।</div>
+
+<div class="callout best"><span class="tag">Best practice — সবসময় নম্র কিন্তু দৃঢ় থাকুন</span>
+Negotiation-এ আক্রমণাত্মক হওয়ার দরকার নেই — কৃতজ্ঞতা প্রকাশ করে, সহযোগিতামূলক সুরে, কিন্তু স্পষ্ট সংখ্যা ও যুক্তি দিয়ে আলোচনা করাই সবচেয়ে বেশি ফলাফল দেয় এবং ভবিষ্যতের কর্মসম্পর্কের জন্যও ভালো একটা প্রথম ছাপ রাখে।</div>
+</template>
+
+<template data-page="networking-branding">
+<h2 class="title">১৪. Professional Networking ও Personal Branding</h2>
+<p class="lead">সেরা সুযোগগুলো প্রায়ই পাবলিক জব বোর্ডে আসার আগেই মানুষের নেটওয়ার্কের ভেতর দিয়ে চলে যায় — নেটওয়ার্কিং একটা দীর্ঘমেয়াদী ক্যারিয়ার বিনিয়োগ।</p>
+
+<h3>কেন Networking গুরুত্বপূর্ণ</h3>
+<p>অনেক চাকরি আনুষ্ঠানিক আবেদন প্রক্রিয়ার আগেই referral-এর মাধ্যমে পূরণ হয়ে যায় ("hidden job market")। একটা শক্তিশালী পেশাদার নেটওয়ার্ক শুধু চাকরির সুযোগই না, বরং নতুন প্রযুক্তি সম্পর্কে জ্ঞান, মেন্টরশিপ, এবং industry insight-এর একটা উৎসও।</p>
+
+<h3>Personal Branding — আপনার কাজ দৃশ্যমান করা</h3>
+<ul>
+<li><b>LinkedIn Profile:</b> শুধু চাকরির তালিকা না, নির্দিষ্ট impact ও প্রজেক্ট হাইলাইট করা প্রোফাইল অনেক বেশি মনোযোগ আকর্ষণ করে।</li>
+<li><b>লেখালেখি/ব্লগিং:</b> একটা সমস্যা সমাধানের অভিজ্ঞতা লিখে শেয়ার করা আপনার চিন্তাভাবনা প্রকাশ করার পাশাপাশি community-তে দৃশ্যমানতা তৈরি করে।</li>
+<li><b>Open Source Contribution:</b> একটা পাবলিক, যাচাইযোগ্য কাজের রেকর্ড তৈরি করে, যা resume-এর চেয়েও বিশ্বাসযোগ্য প্রমাণ।</li>
+<li><b>Community অংশগ্রহণ:</b> মিটআপ, কনফারেন্স, অনলাইন ফোরামে সক্রিয় থাকা নতুন সম্পর্ক তৈরির স্বাভাবিক সুযোগ দেয়।</li>
+</ul>
+
+<h3>সম্পর্ক বজায় রাখা — "Give Before You Ask"</h3>
+<p>নেটওয়ার্কিং-এর সবচেয়ে সাধারণ ভুল হলো শুধু প্রয়োজনের সময় (চাকরি খোঁজার সময়) যোগাযোগ করা। কার্যকর নেটওয়ার্কিং চলমান — নিয়মিতভাবে সংযোগ বজায় রাখা (একটা প্রাসঙ্গিক আর্টিকেল শেয়ার করা, কারো সাফল্যে অভিনন্দন জানানো), এবং নিজে কিছু চাওয়ার আগে অন্যদের সাহায্য করা (একটা রেফারেল দেওয়া, একটা প্রশ্নের উত্তর দেওয়া)।</p>
+
+<h3>একটা কথোপকথন থেকে সম্পর্কে রূপান্তর</h3>
+<p>একটা conference বা মিটআপে একবার কথা বলাই যথেষ্ট না — যোগাযোগের তথ্য বিনিময় করে পরবর্তীতে একটা সংক্ষিপ্ত ফলো-আপ বার্তা পাঠানো ("আজকের কথোপকথন উপভোগ করেছি, LinkedIn-এ সংযুক্ত হতে চাই") সেই মুহূর্তের পরিচয়কে একটা দীর্ঘমেয়াদী সংযোগে পরিণত করে।</p>
+
+<div class="callout mistake"><span class="tag">Common mistake — শুধু চাকরি খোঁজার সময় নেটওয়ার্কিং করা</span>
+হঠাৎ চাকরি দরকার হলে বছরের পর বছর যোগাযোগ না রাখা মানুষদের কাছে সাহায্য চাওয়া অস্বস্তিকর এবং কম কার্যকর। নেটওয়ার্কিং একটা চলমান অভ্যাস হওয়া উচিত, জরুরি প্রয়োজনের সমাধান না।</div>
+
+<div class="callout best"><span class="tag">Best practice — নিয়মিত, ছোট ছোট মিথষ্ক্রিয়া বেশি কার্যকর</span>
+মাসে একবার বড় নেটওয়ার্কিং ইভেন্টে যাওয়ার চেয়ে, নিয়মিত ছোট ছোট মিথষ্ক্রিয়া (একটা মন্তব্য, একটা শুভেচ্ছা বার্তা, একটা প্রশ্নের সহায়ক উত্তর) দীর্ঘমেয়াদে অনেক বেশি শক্তিশালী নেটওয়ার্ক তৈরি করে।</div>
+</template>
+
+<template data-page="career-growth">
+<h2 class="title">১৫. Career Growth, Leadership ও Mentoring</h2>
+<p class="lead">ক্যারিয়ার গ্রোথ এমনি এমনি ঘটে না — এটা ইচ্ছাকৃত পরিকল্পনা, দৃশ্যমান impact, এবং সঠিক কথোপকথনের ফলাফল।</p>
+
+<h3>IC Track বনাম Management Track</h3>
+<p>একটা নির্দিষ্ট সিনিয়রিটির পর ক্যারিয়ার সাধারণত দুই দিকে ভাগ হয় — <span class="kw">Individual Contributor (IC)</span> ট্র্যাক (Staff/Principal Engineer, গভীর প্রযুক্তিগত নেতৃত্ব) এবং <span class="kw">Management</span> ট্র্যাক (Engineering Manager, মানুষ ও প্রক্রিয়া নেতৃত্ব)। কোনটা "উঁচু" তা না, বরং কোন কাজে আপনি বেশি সন্তুষ্টি ও কার্যকারিতা পান তার ওপর নির্ভর করে সিদ্ধান্ত নেওয়া উচিত — দুটোই সমানভাবে গুরুত্বপূর্ণ এবং সম্মানজনক ক্যারিয়ার পথ।</p>
+
+<h3>বিনা কর্তৃত্বে নেতৃত্ব (Leadership Without Authority)</h3>
+<p>একজন সিনিয়র বা স্টাফ ইঞ্জিনিয়ারের প্রভাব প্রায়ই তার আনুষ্ঠানিক পদবীর বাইরে যায় — তিনি অন্য টিমের ইঞ্জিনিয়ারদেরও প্রভাবিত করেন, শুধু ভালো যুক্তি, স্পষ্ট যোগাযোগ, এবং বিশ্বাসযোগ্যতার মাধ্যমে, ম্যানেজারিয়াল কর্তৃত্ব ছাড়াই। এটাই "influence without authority" — এই কোর্সে আলোচিত communication, EQ এবং negotiation দক্ষতার সম্মিলিত ফলাফল।</p>
+
+<h3>জুনিয়রদের Mentoring করা</h3>
+<p>মেন্টরিং মানে সব উত্তর দিয়ে দেওয়া না, বরং সঠিক প্রশ্ন জিজ্ঞেস করে মেন্টিকে নিজে সমাধানে পৌঁছাতে সাহায্য করা। একজন ভালো মেন্টর প্রত্যাশা স্পষ্টভাবে যোগাযোগ করেন, নিয়মিত, গঠনমূলক ফিডব্যাক দেন (৭ম অধ্যায়ের SBI মডেল), এবং মেন্টিকে ধীরে ধীরে বেশি স্বাধীনতা দেন যতটা তারা প্রস্তুত।</p>
+
+<h3>ক্যারিয়ার গ্রোথ নিয়ে ম্যানেজারের সাথে কথোপকথন</h3>
+<p>Promotion বা growth এমনি এমনি নজরে আসে না — এটা সক্রিয়ভাবে যোগাযোগ করতে হয়। কার্যকর কৌশল —</p>
+<ul>
+<li><b>Impact ডকুমেন্ট করুন:</b> নিয়মিতভাবে (সাপ্তাহিক/মাসিক) নিজের উল্লেখযোগ্য কাজ ও তার প্রভাব লিখে রাখুন — annual review-এর সময় মনে করার ওপর নির্ভর করবেন না।</li>
+<li><b>প্রত্যাশা স্পষ্ট করুন:</b> ম্যানেজারকে সরাসরি জিজ্ঞেস করুন পরবর্তী লেভেলে যেতে ঠিক কী প্রমাণ করতে হবে — অস্পষ্ট "আরও ভালো করো" এর বদলে নির্দিষ্ট, actionable মানদণ্ড চান।</li>
+<li><b>নিয়মিত ১:১-এ আলোচনা করুন:</b> শুধু বছরে একবার review-এর সময় না, নিয়মিতভাবে growth নিয়ে ছোট ছোট কথোপকথন করুন যাতে কোনো surprise না থাকে।</li>
+</ul>
+
+<div class="callout why"><span class="tag">কেন শুধু "ভালো কাজ করা" যথেষ্ট না</span>
+একজন ইঞ্জিনিয়ার হয়তো চমৎকার কাজ করছেন, কিন্তু যদি সেই কাজের impact ম্যানেজার বা promotion committee দৃশ্যমান না হয় (কারণ এটা যোগাযোগ করা হয়নি), তা growth-এ প্রতিফলিত হয় না। "ভালো কাজ নিজে থেকেই প্রকাশ পাবে" এই ধারণাটা প্রায়ই ভুল প্রমাণিত হয় — বিশেষ করে বড় সংস্থায় যেখানে ম্যানেজার আপনার প্রতিদিনের কাজের সব বিস্তারিত দেখেন না।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — শুধু "কষ্ট করলে" promotion আসবে ভাবা</span>
+বেশি ঘণ্টা কাজ করা বা বেশি টাস্ক সম্পন্ন করা নিজে থেকে promotion নিশ্চিত করে না — promotion সাধারণত পরবর্তী লেভেলের প্রত্যাশিত scope ও impact-এর সাথে সামঞ্জস্যপূর্ণ, দৃশ্যমান কাজের ভিত্তিতে হয়। "বেশি খাটা" এর বদলে "সঠিক, দৃশ্যমান জিনিসে" ফোকাস করা বেশি কার্যকর।</div>
+
+<div class="callout best"><span class="tag">Best practice — নিজের গ্রোথের মালিকানা নিজে নিন</span>
+ম্যানেজার সহায়ক হতে পারেন, কিন্তু ক্যারিয়ার গ্রোথের মূল দায়িত্ব নিজের। সক্রিয়ভাবে ফিডব্যাক চাওয়া, প্রত্যাশা স্পষ্ট করা, এবং নিজের impact যোগাযোগ করা — এই অভ্যাসগুলো passive থাকার চেয়ে অনেক বেশি নির্ভরযোগ্যভাবে গ্রোথ নিয়ে আসে।</div>
+</template>
+
+<template data-page="interview">
+<h2 class="title">১৬. Interview প্রশ্নোত্তর</h2>
+<p class="lead">এই কোর্সের বিষয়বস্তু নিয়ে সাধারণ প্রশ্ন — সংক্ষিপ্ত, সরাসরি উত্তরসহ।</p>
+
+<h3>১) Hard Skills আর Soft Skills-এর মধ্যে পার্থক্য কী, এবং ক্যারিয়ারে সিনিয়রিটি বাড়ার সাথে সাথে কেন soft skills বেশি গুরুত্বপূর্ণ হয়ে ওঠে?</h3>
+<p>Hard skills নির্দিষ্ট টুল/টেকনিক-ভিত্তিক ও পরিমাপযোগ্য (যেমন coding), soft skills মানুষের সাথে কাজ করার দক্ষতা (communication, EQ)। জুনিয়র লেভেলে কাজ ব্যক্তিগত (কোড লেখা), কিন্তু সিনিয়র লেভেলে কাজ হয়ে ওঠে অন্যদের প্রভাবিত করা ও align করা — যেখানে soft skills নির্ধারক ভূমিকা রাখে।</p>
+
+<h3>২) Active Listening কী, এবং এর প্রধান কৌশলগুলো কী কী?</h3>
+<p>Active Listening মানে পরবর্তী উত্তর প্রস্তুত করার বদলে সম্পূর্ণ মনোযোগ দিয়ে শোনা। প্রধান কৌশল — paraphrasing (নিজের ভাষায় repeat করা), মাঝপথে না থামানো, clarifying question জিজ্ঞেস করা, এবং body language দিয়ে সাড়া দেওয়া।</p>
+
+<h3>৩) BLUF (Bottom Line Up Front) নীতি কী, এবং কেন এটা কার্যকর?</h3>
+<p>BLUF মানে প্রেক্ষাপটের আগে সিদ্ধান্ত/উপসংহার বলা। এটা কার্যকর কারণ ব্যস্ত শ্রোতা (ম্যানেজার, stakeholder) প্রথমেই জানতে চান "কী সিদ্ধান্ত" — পুরো বিস্তারিত প্রেক্ষাপট প্রয়োজন হলে পরে দেওয়া যায়।</p>
+
+<h3>৪) Radical Candor ফ্রেমওয়ার্কের চারটা কোয়াড্র্যান্ট কী কী, এবং কোনটা লক্ষ্য?</h3>
+<p>Care Personally ও Challenge Directly — এই দুই মাত্রায় চারটা কোয়াড্র্যান্ট: Ruinous Empathy (যত্নশীল কিন্তু সরাসরি না), Obnoxious Aggression (সরাসরি কিন্তু যত্নহীন), Manipulative Insincerity (কোনোটাই না), এবং Radical Candor (দুটোই একসাথে) — যেটা লক্ষ্য হওয়া উচিত।</p>
+
+<h3>৫) SBI ফিডব্যাক মডেলের তিনটা অংশ কী?</h3>
+<p>Situation (কখন-কোথায় ঘটেছে), Behavior (নির্দিষ্ট, পর্যবেক্ষণযোগ্য আচরণ, ব্যাখ্যা না), এবং Impact (তার ফলাফল) — এই কাঠামো ফিডব্যাককে নির্দিষ্ট ও actionable করে তোলে।</p>
+
+<h3>৬) Psychological Safety কী, এবং এটা কেন হাই-পারফর্মিং টিমের জন্য গুরুত্বপূর্ণ?</h3>
+<p>Psychological Safety হলো এমন একটা পরিবেশ যেখানে টিম সদস্যরা ভুল স্বীকার করতে, প্রশ্ন করতে, বা দ্বিমত পোষণ করতে ভয় পান না। Google-এর Project Aristotle গবেষণা অনুযায়ী এটাই হাই-পারফর্মিং টিমের সবচেয়ে গুরুত্বপূর্ণ বৈশিষ্ট্য, কারণ এটা খোলামেলা যোগাযোগ ও দ্রুত শেখাকে সম্ভব করে।</p>
+
+<h3>৭) Eisenhower Matrix কীভাবে কাজ করে?</h3>
+<p>টাস্ককে জরুরি ও গুরুত্বপূর্ণ — এই দুই মাত্রায় ভাগ করে। সবচেয়ে সাধারণ ভুল হলো "গুরুত্বপূর্ণ কিন্তু জরুরি না" (planning, শেখা) টাস্ক অবহেলিত রেখে শুধু "জরুরি" টাস্কে ব্যস্ত থাকা।</p>
+
+<h3>৮) Deep Work কী, এবং কেন context switching ক্ষতিকর?</h3>
+<p>Deep Work মানে নিরবচ্ছিন্ন, গভীর মনোযোগের সময় যা জটিল কাজের জন্য প্রয়োজন। প্রতিটা interruption মনোযোগ ফিরে পেতে উল্লেখযোগ্য সময় নেয় — তাই ঘন ঘন context switching সামগ্রিক productivity উল্লেখযোগ্যভাবে কমিয়ে দেয়, এমনকি কাজের সময় একই থাকলেও।</p>
+
+<h3>৯) STAR method-এর চারটা অংশ কী, এবং কোন অংশে সবচেয়ে বেশি সময় দেওয়া উচিত?</h3>
+<p>Situation, Task, Action, Result। Action অংশে সবচেয়ে বেশি সময় দেওয়া উচিত — কারণ ইন্টারভিউয়ার মূলত জানতে চান আপনি ঠিক কী সিদ্ধান্ত নিয়েছিলেন ও কী করেছিলেন, শুধু পরিস্থিতি না।</p>
+
+<h3>১০) টেকনিক্যাল ইন্টারভিউতে নীরবে কোড লেখা কেন একটা ঝুঁকিপূর্ণ কৌশল?</h3>
+<p>ইন্টারভিউয়ার শুধু সঠিক উত্তর না, চিন্তা প্রক্রিয়াও মূল্যায়ন করেন। নীরবে কোড লিখলে তারা ভুল দিকে গেলে গাইড করতে পারেন না, এবং আপনার সমস্যা-সমাধান পদ্ধতি সম্পর্কে কিছুই বুঝতে পারেন না — যা প্রায়ই "সঠিক উত্তর"-এর চেয়ে বেশি গুরুত্বপূর্ণ মূল্যায়ন বিষয়।</p>
+
+<h3>১১) BATNA কী, এবং এটা negotiation-এ কীভাবে সাহায্য করে?</h3>
+<p>BATNA (Best Alternative to a Negotiated Agreement) মানে আলোচনা ব্যর্থ হলে আপনার সবচেয়ে ভালো বিকল্প। একটা শক্তিশালী BATNA (যেমন আরেকটা অফার) আপনাকে আলোচনায় প্রকৃত ক্ষমতা দেয়, কারণ আপনি জানেন যেকোনো শর্তে রাজি হতে বাধ্য নন।</p>
+
+<h3>১২) Anchoring effect কী, এবং salary আলোচনায় কে আগে সংখ্যা বলা উচিত?</h3>
+<p>Anchoring মানে আলোচনায় প্রথম উল্লেখিত সংখ্যা একটা মানসিক রেফারেন্স পয়েন্ট হয়ে যাওয়া। ভালো বাজার-গবেষণা থাকলে প্রথমে সংখ্যা বলা (উচ্চ anchor সেট করা) সুবিধাজনক; পর্যাপ্ত তথ্য না থাকলে নিয়োগকর্তাকে আগে বলতে বলা নিরাপদ।</p>
+
+<h3>১৩) বেতনের বাইরে আর কী কী নিয়ে negotiate করা যায়?</h3>
+<p>Signing bonus, equity/stock, title, remote work/flexibility, start date, এবং vacation/PTO — এগুলোর প্রতিটাই কোম্পানির জন্য base salary-এর চেয়ে নমনীয় হতে পারে, বিশেষ করে budget band-এর সীমাবদ্ধতা থাকলে।</p>
+
+<h3>১৪) "আপনার বর্তমান বেতন কত" প্রশ্নের ভালো উত্তর কী?</h3>
+<p>সরাসরি সংখ্যা না দিয়ে ভবিষ্যতের বাজার-উপযুক্ত প্রত্যাশার দিকে কথা ফেরানো ভালো — "আমি বাজার-গবেষণা অনুযায়ী এই রোলের জন্য X-Y রেঞ্জ প্রত্যাশা করছি।" এটা negotiating leverage রক্ষা করে।</p>
+
+<h3>১৫) কেন নেটওয়ার্কিং শুধু চাকরি খোঁজার সময় করলে কম কার্যকর হয়?</h3>
+<p>সম্পর্ক তৈরি হতে সময় লাগে এবং বিশ্বাস আগে থেকেই থাকা দরকার। শুধু জরুরি প্রয়োজনের সময় যোগাযোগ করলে (বছরের পর বছর নীরব থেকে) তা অস্বস্তিকর এবং কম কার্যকর হয় — নেটওয়ার্কিং একটা চলমান, "give before you ask" অভ্যাস হওয়া উচিত।</p>
+
+<h3>১৬) IC Track আর Management Track-এর মধ্যে পার্থক্য কী?</h3>
+<p>IC (Individual Contributor) ট্র্যাক গভীর প্রযুক্তিগত নেতৃত্বের দিকে যায় (Staff/Principal Engineer), Management ট্র্যাক মানুষ ও প্রক্রিয়া নেতৃত্বের দিকে (Engineering Manager)। কোনোটাই "উঁচু" না — ব্যক্তিগত সন্তুষ্টি ও কার্যকারিতার ওপর ভিত্তি করে বেছে নেওয়া উচিত।</p>
+
+<h3>১৭) কেন শুধু "ভালো কাজ করা" promotion নিশ্চিত করে না?</h3>
+<p>কাজের impact যদি ম্যানেজার বা promotion committee-র কাছে দৃশ্যমান না হয় (কারণ যোগাযোগ করা হয়নি), তা growth-এ প্রতিফলিত হয় না। impact নিয়মিত ডকুমেন্ট করা এবং স্পষ্টভাবে যোগাযোগ করা তাই "ভালো কাজ"-এর সমান গুরুত্বপূর্ণ।</p>
+</template>
+
+<script>
+(function(){
+  const sidebar = document.getElementById('sidebar');
+  const main = document.getElementById('main');
+  const templates = {};
+  document.querySelectorAll('template[data-page]').forEach(t=>{ templates[t.dataset.page]=t.innerHTML; });
+
+  pages.forEach((p,i)=>{
+    const btn = document.createElement('button');
+    btn.className='navbtn'+(i===0?' active':'');
+    btn.dataset.target=p.id;
+    btn.innerHTML=`<span class="num">${i+1}</span><span>${p.icon} ${p.title}</span>`;
+    sidebar.appendChild(btn);
+
+    const pg = document.createElement('section');
+    pg.className='page'+(i===0?' active':'');
+    pg.id='page-'+p.id;
+    pg.innerHTML=templates[p.id]||('<h2 class="title">'+p.title+'</h2><p>Coming soon.</p>');
+    const nav=document.createElement('div');
+    nav.className='footer';
+    const prev=pages[i-1], next=pages[i+1];
+    nav.innerHTML = (prev?`<a href="#" data-go="${prev.id}" style="color:var(--accent2);text-decoration:none">← ${prev.title}</a>`:'<span></span>')
+      + ' &nbsp;•&nbsp; '
+      + (next?`<a href="#" data-go="${next.id}" style="color:var(--accent2);text-decoration:none">${next.title} →</a>`:'<span>শেষ</span>');
+    pg.appendChild(nav);
+    main.appendChild(pg);
+  });
+
+  const searchIndex = {};
+  (function buildIndex(){
+    const tmp = document.createElement('div');
+    pages.forEach(p=>{
+      tmp.innerHTML = templates[p.id] || '';
+      searchIndex[p.id] = ((p.title||'') + ' ' + tmp.textContent).toLowerCase();
+    });
+  })();
+
+  let currentQuery = '';
+
+  function clearHighlights(root){
+    root.querySelectorAll('mark.hl').forEach(m=>{ m.replaceWith(document.createTextNode(m.textContent)); });
+    root.normalize();
+  }
+
+  function highlightIn(root, q){
+    if(!q) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        const p = node.parentNode;
+        if(!node.nodeValue || !p || p.tagName==='SCRIPT' || p.tagName==='STYLE' || p.tagName==='MARK') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes=[]; let n; while((n=walker.nextNode())) nodes.push(n);
+    const ql = q.toLowerCase();
+    nodes.forEach(node=>{
+      const text = node.nodeValue, lower = text.toLowerCase();
+      if(!lower.includes(ql)) return;
+      const frag = document.createDocumentFragment();
+      let idx=0, pos;
+      while((pos = lower.indexOf(ql, idx)) !== -1){
+        if(pos>idx) frag.appendChild(document.createTextNode(text.slice(idx,pos)));
+        const mark = document.createElement('mark');
+        mark.className='hl';
+        mark.textContent = text.slice(pos, pos+ql.length);
+        frag.appendChild(mark);
+        idx = pos+ql.length;
+      }
+      if(idx<text.length) frag.appendChild(document.createTextNode(text.slice(idx)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  function applyHighlight(){
+    const active = main.querySelector('.page.active');
+    if(!active) return;
+    clearHighlights(active);
+    if(currentQuery) highlightIn(active, currentQuery);
+  }
+
+  function show(id){
+    document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
+    document.querySelectorAll('.page').forEach(s=>s.classList.toggle('active',s.id==='page-'+id));
+    applyHighlight();
+    const active = main.querySelector('.page.active');
+    const firstMark = active ? active.querySelector('mark.hl') : null;
+    if(firstMark && firstMark.scrollIntoView) firstMark.scrollIntoView({block:'center'});
+    else window.scrollTo(0,0);
+    if(history.replaceState) history.replaceState(null,'','#'+id);
+  }
+
+  sidebar.addEventListener('click',e=>{const b=e.target.closest('.navbtn'); if(b) show(b.dataset.target);});
+  main.addEventListener('click',e=>{const a=e.target.closest('[data-go]'); if(a){e.preventDefault(); show(a.dataset.go);}});
+
+  const searchInput = document.getElementById('courseSearch');
+  const searchMeta = document.getElementById('searchMeta');
+  if(searchInput){
+    searchInput.addEventListener('input', ()=>{
+      const q = searchInput.value.trim();
+      currentQuery = q;
+      const ql = q.toLowerCase();
+      let matchCount = 0, firstMatch = null;
+      pages.forEach(p=>{
+        const btn = sidebar.querySelector('.navbtn[data-target="'+p.id+'"]');
+        const matches = !ql || searchIndex[p.id].includes(ql);
+        if(matches){ matchCount++; if(!firstMatch) firstMatch = p; }
+        if(btn) btn.classList.toggle('hide', !matches);
+      });
+      if(!ql) searchMeta.textContent = '';
+      else if(matchCount===0) searchMeta.textContent = 'কোনো ফলাফল নেই';
+      else searchMeta.textContent = matchCount + 'টা অধ্যায়ে ফলাফল পাওয়া গেছে';
+
+      const active = main.querySelector('.page.active');
+      const activeId = active ? active.id.replace('page-','') : null;
+      const activeMatches = !!(ql && activeId && searchIndex[activeId] && searchIndex[activeId].includes(ql));
+      if(ql && !activeMatches && firstMatch){
+        show(firstMatch.id);
+      } else {
+        applyHighlight();
+        const mark = active ? active.querySelector('mark.hl') : null;
+        if(ql && mark && mark.scrollIntoView) mark.scrollIntoView({block:'center'});
+      }
+    });
+    searchInput.addEventListener('keydown', e=>{
+      if(e.key==='Escape'){ searchInput.value=''; searchInput.dispatchEvent(new Event('input')); searchInput.blur(); }
+    });
+  }
+
+  const h=location.hash.replace('#','');
+  if(h && pages.some(p=>p.id===h)) show(h);
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+<script src="global-search.js"></script>
+</body>
+</html>
