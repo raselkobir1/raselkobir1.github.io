@@ -127,7 +127,8 @@ const pages = [
   {id:"grammar-basics",          icon:"📘", title:"Basic Grammar ১ — Sentence Structure ও Tense"},
   {id:"grammar-more",            icon:"📗", title:"Basic Grammar ২ — Article, Preposition, Modal"},
   {id:"grammar-dev",             icon:"🧮", title:"Developer Grammar — Conditional, Passive, Reported Speech"},
-  {id:"standup",                 icon:"🧑‍💻", title:"Standup, Meeting ও Clarifying Question"},
+  {id:"common-words",            icon:"💡", title:"Common Words ও Everyday Expressions — নিয়মিত যোগাযোগের শব্দভাণ্ডার"},
+  {id:"standup",                 icon:"📋", title:"Standup, Meeting ও Clarifying Question"},
   {id:"tech-talk",               icon:"🗨️", title:"Bug, Architecture ও Code Review কথায় বলা"},
   {id:"writing",                 icon:"✍️", title:"Written English — Slack, Commit, PR, Docs"},
   {id:"phrasal-idioms",          icon:"🧩", title:"Phrasal Verbs, Idioms ও Everyday Tech Expressions"},
@@ -696,8 +697,106 @@ Rafi: If we had added mobile Safari to our test matrix earlier,
 <p>প্রথম লাইনে reported speech ("QA said... crashed") দিয়ে বাগ রিপোর্ট রিলে করা হয়েছে। দ্বিতীয় লাইনে first conditional দিয়ে বাস্তব fix-এর ফলাফল বলা হয়েছে। তৃতীয় লাইনে third conditional দিয়ে postmortem-স্টাইলে বলা হয়েছে কী করলে এই বাগটা এড়ানো যেত। এই তিনটা প্যাটার্ন একসাথে ব্যবহার করতে পারলে আপনি যেকোনো bug-discussion বা incident review-তে flawlessly ইংরেজিতে কথা বলতে পারবেন।</p>
 </template>
 
+<template data-page="common-words">
+<h2 class="title">৯. Common Words ও Everyday Expressions — নিয়মিত যোগাযোগের শব্দভাণ্ডার</h2>
+<p class="lead">Fluent শোনানোর রহস্য বড় বড় শব্দ জানায় না — বরং একই কয়েকটা "workhorse" শব্দ (get, make, take, look) সঠিক প্রসঙ্গে ব্যবহার করতে পারায়। এই চ্যাপ্টার সেই দৈনন্দিন, বারবার-ব্যবহৃত শব্দভাণ্ডার নিয়ে।</p>
+
+<h3>কেন Grammar না, Common Vocabulary-ই প্রথম বাধা</h3>
+<p>একজন বাংলাভাষী প্রায়ই সঠিক tense আর sentence structure জানার পরেও থেমে যান, কারণ তার মাথায় একটা শব্দ বাংলায় আসে কিন্তু ইংরেজি প্রতিশব্দটা মনে পড়ে না — অথবা মনে পড়া শব্দটা প্রসঙ্গে অস্বাভাবিক শোনায় (dictionary থেকে সরাসরি অনুবাদ করা শব্দ)। Native speaker-রা আসলে হাজার হাজার rare শব্দ ব্যবহার করেন না — গবেষণায় দেখা গেছে দৈনন্দিন কথোপকথনের প্রায় ৮০% অংশ মাত্র কয়েকশ high-frequency শব্দ দিয়েই চলে। তাই fluency বাড়ানোর সবচেয়ে কার্যকর উপায় হলো এই অল্প কিছু শব্দ একদম নিখুঁতভাবে, বিভিন্ন প্রসঙ্গে ব্যবহার করতে শেখা।</p>
+
+<h3>"Workhorse" Verb — একটা শব্দ, অনেক অর্থ</h3>
+<p>ইংরেজির কিছু ছোট verb (get, make, take, put) প্রসঙ্গভেদে সম্পূর্ণ ভিন্ন অর্থ বহন করে — এগুলো না জানলে সহজ কথোপকথনও কঠিন মনে হয়।</p>
+<table>
+<tr><th>Verb</th><th>সাধারণ অর্থ</th><th>উদাহরণ বাক্য</th></tr>
+<tr><td rowspan="3"><b>get</b></td><td>পাওয়া/অর্জন করা</td><td>I got a new laptop.</td></tr>
+<tr><td>বোঝা</td><td>I don't get what you mean.</td></tr>
+<tr><td>হয়ে ওঠা (become)</td><td>It's getting late, let's wrap up.</td></tr>
+<tr><td rowspan="3"><b>make</b></td><td>তৈরি করা</td><td>Let's make a plan first.</td></tr>
+<tr><td>বাধ্য করা</td><td>The deadline made us rush.</td></tr>
+<tr><td>সিদ্ধান্ত নেওয়া (make a decision)</td><td>We need to make a call on this today.</td></tr>
+<tr><td rowspan="2"><b>take</b></td><td>সময় লাগা</td><td>This will take two days.</td></tr>
+<tr><td>দায়িত্ব নেওয়া (take care of / take over)</td><td>I'll take care of the deployment.</td></tr>
+<tr><td rowspan="2"><b>put</b></td><td>রাখা</td><td>Put the file in the shared folder.</td></tr>
+<tr><td>বিলম্বিত করা (put off)</td><td>Let's not put off this decision.</td></tr>
+<tr><td><b>look</b></td><td>মনে হওয়া (seem)</td><td>This approach looks solid.</td></tr>
+<tr><td><b>work</b></td><td>কার্যকর হওয়া</td><td>That solution didn't work for us.</td></tr>
+</table>
+
+<h3>Connector ও Filler Word — বাক্যকে স্বাভাবিক শোনানো</h3>
+<p>এই শব্দগুলো বাক্যের অর্থ বদলায় না, কিন্তু কথাকে স্বাভাবিক, সংযুক্ত এবং কম রোবটিক শোনায় — এগুলো ছাড়া কথা বললে বাক্য সঠিক হলেও "textbook" শোনায়।</p>
+<table>
+<tr><th>শব্দ/বাক্যাংশ</th><th>অর্থ ও ব্যবহার</th><th>উদাহরণ</th></tr>
+<tr><td><b>well</b></td><td>উত্তর শুরু করার আগে একটু ভাবার সময় নেওয়া</td><td>Well, I think we should test this first.</td></tr>
+<tr><td><b>actually</b></td><td>প্রত্যাশার বিপরীতে কিছু বলা, বা সংশোধন করা</td><td>Actually, the bug was in the frontend, not the API.</td></tr>
+<tr><td><b>basically</b></td><td>একটা জটিল বিষয় সরলীকরণ করে বলা</td><td>Basically, we just need to restart the service.</td></tr>
+<tr><td><b>so</b></td><td>একটা উপসংহার বা পরবর্তী ধাপে যাওয়া</td><td>So, what's the plan for tomorrow?</td></tr>
+<tr><td><b>anyway</b></td><td>টপিক পরিবর্তন করে মূল বিষয়ে ফেরা</td><td>Anyway, let's get back to the main issue.</td></tr>
+<tr><td><b>by the way</b></td><td>প্রাসঙ্গিক কিন্তু আলাদা একটা কথা যোগ করা</td><td>By the way, did you see the new design?</td></tr>
+<tr><td><b>I mean</b></td><td>নিজের কথা স্পষ্ট করা বা সংশোধন করা</td><td>It's slow — I mean, really slow, like 5 seconds.</td></tr>
+<tr><td><b>kind of / sort of</b></td><td>নিশ্চিত না, আংশিকভাবে সত্য</td><td>It's kind of working, but not fully.</td></tr>
+</table>
+
+<h3>প্রায়ই গুলিয়ে ফেলা শব্দজোড়া (Word Pairs)</h3>
+<p>বাংলা থেকে সরাসরি অনুবাদ করলে এই শব্দগুলো প্রায়ই একে অপরের বদলে ভুলভাবে ব্যবহৃত হয় — অথচ ইংরেজিতে এদের অর্থ স্পষ্টভাবে ভিন্ন।</p>
+<table>
+<tr><th>শব্দজোড়া</th><th>পার্থক্য</th></tr>
+<tr><td><b>Say</b> বনাম <b>Tell</b></td><td><code>tell</code>-এর পরে সরাসরি ব্যক্তি বসে (tell <b>me</b>), <code>say</code>-এর পরে বসে না — "Tell me the plan" ঠিক, "Say me the plan" ভুল।</td></tr>
+<tr><td><b>Listen</b> বনাম <b>Hear</b></td><td><code>listen</code> মানে সচেতনভাবে মনোযোগ দিয়ে শোনা (Listen to this), <code>hear</code> মানে অনিচ্ছাকৃতভাবে শব্দ কানে আসা (I heard a noise)।</td></tr>
+<tr><td><b>Look</b> বনাম <b>See</b> বনাম <b>Watch</b></td><td><code>look</code> ইচ্ছাকৃতভাবে একদিকে তাকানো (Look at this bug), <code>see</code> চোখে পড়া (I see what you mean), <code>watch</code> চলমান কিছুতে মনোযোগ দেওয়া (Watch the demo)।</td></tr>
+<tr><td><b>Borrow</b> বনাম <b>Lend</b></td><td><code>borrow</code> মানে অন্যের থেকে ধার নেওয়া (Can I borrow your charger?), <code>lend</code> মানে নিজের থেকে ধার দেওয়া (Can you lend me your charger?)।</td></tr>
+<tr><td><b>Speak</b> বনাম <b>Talk</b></td><td><code>speak</code> কিছুটা আনুষ্ঠানিক/একমুখী (speak a language, speak to the client), <code>talk</code> কিছুটা অনানুষ্ঠানিক/দ্বিমুখী কথোপকথন (let's talk about this)।</td></tr>
+<tr><td><b>Remember</b> বনাম <b>Remind</b></td><td><code>remember</code> নিজে মনে রাখা (I remember the meeting), <code>remind</code> অন্য কাউকে মনে করিয়ে দেওয়া (Remind me about the meeting)।</td></tr>
+</table>
+
+<h3>দৈনন্দিন Adjective — "Good" আর "Bad"-এর বাইরে</h3>
+<p>সবকিছুতে শুধু "good" বা "bad" ব্যবহার করলে কথা একঘেয়ে শোনায়। নির্দিষ্ট adjective ব্যবহার করলে অনুভূতি বা মতামত অনেক বেশি স্পষ্টভাবে প্রকাশ পায়।</p>
+<table>
+<tr><th>Adjective</th><th>অর্থ</th><th>উদাহরণ</th></tr>
+<tr><td>exhausted</td><td>অত্যন্ত ক্লান্ত (tired-এর চেয়ে বেশি)</td><td>I'm exhausted after that release.</td></tr>
+<tr><td>overwhelmed</td><td>অতিরিক্ত কাজ/তথ্যে জর্জরিত</td><td>I'm a bit overwhelmed with all these tickets.</td></tr>
+<tr><td>convenient</td><td>সুবিধাজনক, সহজ</td><td>Is 3 PM convenient for the call?</td></tr>
+<tr><td>reliable</td><td>নির্ভরযোগ্য</td><td>This library is really reliable.</td></tr>
+<tr><td>straightforward</td><td>সহজবোধ্য, জটিল না</td><td>The fix was pretty straightforward.</td></tr>
+<tr><td>confusing</td><td>বিভ্রান্তিকর</td><td>The error message is a bit confusing.</td></tr>
+<tr><td>thrilled</td><td>অত্যন্ত আনন্দিত/উত্তেজিত</td><td>I'm thrilled about the new role.</td></tr>
+<tr><td>annoyed</td><td>বিরক্ত</td><td>She's annoyed about the delay.</td></tr>
+</table>
+
+<h3>ভদ্রভাবে অনুরোধ, প্রস্তাব ও উত্তর দেওয়া</h3>
+<p>দৈনন্দিন যোগাযোগে "সরাসরি আদেশ" আর "ভদ্র অনুরোধ"-এর মধ্যে পার্থক্য বোঝা গুরুত্বপূর্ণ — একই কথা ভিন্নভাবে বললে সম্পূর্ণ ভিন্ন শোনায়।</p>
+<table>
+<tr><th>উদ্দেশ্য</th><th>বাক্যাংশ</th></tr>
+<tr><td>ভদ্রভাবে অনুরোধ করা</td><td>Could you send me the file? / Would you mind reviewing this?</td></tr>
+<tr><td>অনুমতি চাওয়া</td><td>Do you mind if I join late? / Is it okay if I take tomorrow off?</td></tr>
+<tr><td>দ্বিধার সাথে প্রস্তাব দেওয়া</td><td>I was wondering if we could push the deadline.</td></tr>
+<tr><td>সম্মতি জানানো</td><td>Sure, no problem. / Of course. / Sounds good.</td></tr>
+<tr><td>ভদ্রভাবে না বলা</td><td>I'd rather not, if that's okay. / I'm afraid that won't work for me.</td></tr>
+</table>
+
+<h3>কথোপকথনে সংক্ষিপ্ত প্রতিক্রিয়া</h3>
+<p>শুধু "yes/no" বা "okay" না বলে, এই ছোট প্রতিক্রিয়াগুলো কথোপকথনকে অনেক বেশি স্বাভাবিক করে তোলে।</p>
+<table>
+<tr><th>প্রতিক্রিয়া</th><th>কখন ব্যবহার</th></tr>
+<tr><td>That makes sense.</td><td>কারো ব্যাখ্যা যুক্তিসঙ্গত মনে হলে</td></tr>
+<tr><td>Fair enough.</td><td>সম্পূর্ণ একমত না হলেও যুক্তিটা মেনে নেওয়া</td></tr>
+<tr><td>Good point.</td><td>কারো তোলা একটা গুরুত্বপূর্ণ বিষয় স্বীকার করা</td></tr>
+<tr><td>I see what you mean.</td><td>কারো দৃষ্টিভঙ্গি বোঝা প্রকাশ করা</td></tr>
+<tr><td>No way!</td><td>বিস্ময় প্রকাশ করা (অনানুষ্ঠানিক)</td></tr>
+<tr><td>I guess so.</td><td>দ্বিধার সাথে সম্মতি</td></tr>
+</table>
+
+<div class="callout why"><span class="tag">কেন workhorse verb শেখা big vocabulary-এর চেয়ে বেশি কার্যকর</span>
+নতুন শিক্ষার্থীরা প্রায়ই কঠিন, কম-ব্যবহৃত শব্দ মুখস্থ করায় সময় দেন, কিন্তু native-এর মতো fluent শোনানো নির্ভর করে <code>get</code>, <code>make</code>, <code>take</code>-এর মতো শব্দের সঠিক ব্যবহারের ওপর — কারণ এগুলোই কথোপকথনের প্রতিটা বাক্যে বারবার ফিরে আসে। একটা rare শব্দ মাসে একবার কাজে লাগতে পারে, কিন্তু <code>get</code> প্রতিদিন কয়েকবার লাগে।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — বাংলা শব্দ সরাসরি অনুবাদ করে বলা</span>
+"Say me" (বলুন আমাকে বলে), বা "I am boring" (আমি বোরড, অথচ এর মানে "আমি নিজেই বিরক্তিকর একটা মানুষ") — এই ধরনের সরাসরি অনুবাদ প্রায়ই সম্পূর্ণ ভুল অর্থ তৈরি করে। "I am bored" (আমি বিরক্ত বোধ করছি) আর "I am boring" (আমি একজন বিরক্তিকর মানুষ) — এই পার্থক্যটা বিশেষভাবে মনে রাখা দরকার।</div>
+
+<div class="callout best"><span class="tag">Best practice — প্রতি সপ্তাহে ৫টা workhorse verb-এর সব অর্থ প্র্যাকটিস করুন</span>
+নতুন নতুন শব্দ শেখার বদলে, <code>get</code>, <code>make</code>, <code>take</code>, <code>put</code>, <code>look</code>-এর মতো কয়েকটা core verb-এর প্রতিটা সাধারণ অর্থ নিয়ে নিজের জীবনের বাক্য বানিয়ে অনুশীলন করুন। এই অল্প কয়েকটা শব্দ গভীরভাবে আয়ত্ত করাই দ্রুততম fluency তৈরির উপায় — পরের অধ্যায়ে (Standup, Meeting) এই শব্দগুলোই বারবার কাজে লাগবে।</div>
+</template>
+
 <template data-page="standup">
-<h2 class="title">৯. Everyday Developer English — Standup, Meeting ও Clarifying Question</h2>
+<h2 class="title">১০. Everyday Developer English — Standup, Meeting ও Clarifying Question</h2>
 <p class="lead">একজন সফটওয়্যার ইঞ্জিনিয়ারের দৈনন্দিন কাজের বেশিরভাগ ইংরেজি আসলে খুব ছোট ছোট ফরম্যাটেড কথোপকথনে ঘটে — daily standup-এ তিনটা লাইন বলা, sprint planning-এ একটা মতামত দেওয়া, কারো কথা না বুঝে সেটা জিজ্ঞেস করা, অথবা মিটিং শেষে action item গুলো এক লাইনে গুছিয়ে বলা। এই অধ্যায়ে আমরা সেই খুব practical, প্রতিদিন কাজে লাগবে এমন phrase গুলো শিখব — grammar নয়, বরং কাজ চালানোর জন্য দরকারি স্ক্রিপ্ট।</p>
 
 <h3>১. Daily Standup — Yesterday / Today / Blockers টেমপ্লেট</h3>
@@ -784,7 +883,7 @@ Tanvir: Sounds good. So, just to summarize — we're doing the checkout
 </template>
 
 <template data-page="tech-talk">
-<h2 class="title">১০. Technical Communication — Bug রিপোর্ট, Architecture ও Code Review কথায় বলা</h2>
+<h2 class="title">১১. Technical Communication — Bug রিপোর্ট, Architecture ও Code Review কথায় বলা</h2>
 <p class="lead">Senior ইঞ্জিনিয়ার আর জুনিয়ার ইঞ্জিনিয়ারের মধ্যে পার্থক্য শুধু কোড লেখায় না — <b>জটিল টেকনিক্যাল তথ্য কতটা পরিষ্কারভাবে অন্যকে বোঝাতে পারেন</b> তাতেও। একটা bug ঠিকভাবে বর্ণনা করতে না পারলে debugging-এ দ্বিগুণ সময় লাগে, একটা architecture ভুলভাবে ব্যাখ্যা করলে নতুন টিমমেট ভুল ধারণা নিয়ে কোড লেখা শুরু করে, আর একটা code review comment ভুল টোনে লিখলে সম্পর্ক নষ্ট হয়। এই chapter-এ আমরা তিনটা সবচেয়ে ঘন ঘন ঘটা technical conversation-এর জন্য reusable ভাষার কাঠামো শিখব।</p>
 
 <h3>একটা Bug স্পষ্টভাবে মুখে বর্ণনা করা</h3>
@@ -877,7 +976,7 @@ Rafi:  Yeah, doing that now.
 </template>
 
 <template data-page="writing">
-<h2 class="title">১১. Written English — Slack/Email, Commit Message ও Documentation</h2>
+<h2 class="title">১২. Written English — Slack/Email, Commit Message ও Documentation</h2>
 <p class="lead">কথা বলার ইংরেজিতে <span class="kw">clarity over perfection</span> — এটাই ছিল এই কোর্সের শুরুর নীতি। কিন্তু লেখা ইংরেজিতে (Slack message, email, commit message, PR description, documentation) নিয়ম কিছুটা বদলে যায়। লেখাটা থেকে যায় — সহকর্মী পরে পড়বে, ছয় মাস পর আপনি নিজেই পড়বেন, এমনকি ভবিষ্যতের কোনো নতুন টিম মেম্বার পড়বে। তাই লেখায় দুটো জিনিস বেশি গুরুত্বপূর্ণ হয়ে ওঠে — <b>সংক্ষিপ্ততা</b> (কারণ পাঠক আপনার সাথে সরাসরি কথা বলতে পারছে না) আর <b>সঠিকতা</b> (কারণ ভুল লেখা বহুদিন থেকে যায়, ভুল উচ্চারণ মুহূর্তেই মিলিয়ে যায়)।</p>
 
 <h3>Slack/Email — Tone ও Structure: আগে সিদ্ধান্ত, পরে প্রসঙ্গ</h3>
@@ -954,7 +1053,7 @@ that kind of burst traffic.
 </template>
 
 <template data-page="phrasal-idioms">
-<h2 class="title">১২. Phrasal Verbs, Idioms ও Everyday Tech Expressions</h2>
+<h2 class="title">১৩. Phrasal Verbs, Idioms ও Everyday Tech Expressions</h2>
 <p class="lead">এতক্ষণ আমরা grammar structure আর নির্দিষ্ট পরিস্থিতির (standup, code review, writing) ভাষা শিখেছি। কিন্তু native ও fluent non-native speaker-দের কথায় প্রতিনিয়ত এমন কিছু শব্দগুচ্ছ ঘুরেফিরে আসে যেগুলো আক্ষরিক অর্থ থেকে সম্পূর্ণ আলাদা কিছু বোঝায় — <span class="kw">phrasal verb</span> আর <span class="kw">idiom</span>। বাংলায় verb-এর সাথে particle (up/down/into/off) জুড়ে অর্থ বদলে দেওয়ার এই পদ্ধতিটাই নেই, তাই এগুলো না জানলে মিটিং-এ প্রায় প্রতিটা বাক্যে একটা-দুটো শব্দ অপরিচিত ঠেকে, যদিও প্রতিটা শব্দ আলাদাভাবে সহজ।</p>
 
 <h3>Phrasal Verb আসলে কেন এত কঠিন লাগে</h3>
@@ -1060,7 +1159,7 @@ that kind of burst traffic.
 </template>
 
 <template data-page="interview">
-<h2 class="title">১৩. Interview English — Technical ও Behavioral (STAR Method)</h2>
+<h2 class="title">১৪. Interview English — Technical ও Behavioral (STAR Method)</h2>
 <p class="lead">ইন্টারভিউ মানে শুধু আপনার technical জ্ঞান যাচাই না — আপনি কীভাবে চিন্তা করেন, কীভাবে communicate করেন, আর কীভাবে একটা গল্পকে গুছিয়ে বলেন সেটাও দেখা হয়। এই chapter-এ আমরা দেখব একটা modern tech interview-এর structure কেমন হয়, behavioral প্রশ্নের জন্য <span class="kw">STAR method</span> কীভাবে ব্যবহার করবেন, আর live coding round-এ চুপ না থেকে জোরে চিন্তা করার (thinking out loud) কৌশল।</p>
 
 <h3>১. একটি Modern Interview-এর ধাপ</h3>
@@ -1310,7 +1409,7 @@ the underlying record had changed."</pre>
 </template>
 
 <template data-page="advanced">
-<h2 class="title">১৪. Advanced — Presentation, Client Communication ও Remote Team</h2>
+<h2 class="title">১৫. Advanced — Presentation, Client Communication ও Remote Team</h2>
 <p class="lead">এই chapter-এ আমরা তিনটা advanced দক্ষতা নিয়ে কাজ করব — একটা tech talk বা demo গুছিয়ে উপস্থাপন করা, ক্লায়েন্ট বা PM-এর সাথে বাস্তবসম্মত ও পেশাদার যোগাযোগ (দরকার হলে বিনয়ের সাথে "না" বলাও), আর remote/async টিমে কাজ করার সময় সাংস্কৃতিক পার্থক্য ও সময়-অঞ্চলের ফারাক সামলানো। এই তিনটাই সেই জায়গা যেখানে টেকনিক্যাল জ্ঞান যথেষ্ট নয় — যোগাযোগের সূক্ষ্মতাই পার্থক্য গড়ে দেয়।</p>
 
 <h3>একটা Tech Talk / Demo গুছিয়ে উপস্থাপন করা</h3>
@@ -1391,7 +1490,7 @@ Remote ও async টিমে সবচেয়ে বড় anxiety-র উৎ
 </template>
 
 <template data-page="practice">
-<h2 class="title">১৫. Listening, Accent ও ৯০-দিনের Practice Plan</h2>
+<h2 class="title">১৬. Listening, Accent ও ৯০-দিনের Practice Plan</h2>
 <p class="lead">এটা এই কোর্সের শেষ অধ্যায় — কিন্তু ইংরেজি বলার অনুশীলনের শেষ নয়। আগের ১৩টা অধ্যায়ে আমরা phonetics, grammar pattern, standup/code-review/interview-এর ভাষা শিখেছি; এই অধ্যায়ে সেগুলোকে একটা <span class="kw">শোনা (listening)</span>-ভিত্তিক অনুশীলন-পদ্ধতির মধ্যে বসানো হবে, আর পুরো কোর্সটাকে একটা বাস্তবসম্মত ৯০-দিনের রুটিনে রূপান্তর করা হবে — যাতে শেখাটা বইয়ের জ্ঞান হয়ে না থেকে মুখের অভ্যাসে পরিণত হয়।</p>
 
 <h3>Shadowing — উচ্চারণ ও ছন্দ শেখার সবচেয়ে কার্যকর কৌশল</h3>
