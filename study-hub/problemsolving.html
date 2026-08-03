@@ -121,6 +121,8 @@
 const pages = [
   {id:"foundation",   icon:"🧭", title:"Foundation — Problem Solving Framework"},
   {id:"complexity",   icon:"📈", title:"Complexity Analysis — Big-O"},
+  {id:"dsintro",      icon:"🧱", title:"Data Structure — পরিচিতি ও প্রকারভেদ"},
+  {id:"algointro",    icon:"⚙️", title:"Algorithm — পরিচিতি ও প্রকারভেদ"},
   {id:"arrays",       icon:"🔢", title:"Arrays ও Strings — বেসিক প্যাটার্ন"},
   {id:"twopointer",   icon:"👉", title:"Two Pointers ও Sliding Window"},
   {id:"hashing",      icon:"🗂️", title:"Hashing"},
@@ -203,8 +205,133 @@ O(1) &lt; O(log n) &lt; O(n) &lt; O(n log n) &lt; O(n²) &lt; O(2ⁿ) &lt; O(n!)
 একটা সমাধান সঠিক আউটপুট দিলেও, ইন্টারভিউয়ার সবসময় জিজ্ঞেস করবেন "এর Time/Space Complexity কী?" — এই প্রশ্নের উত্তর দিতে না পারা মানে সমাধানটা সত্যিই বোঝা হয়নি বলে ধরা হয়। প্রতিটা সমাধান লেখার পরপরই নিজে থেকেই এর complexity বলার অভ্যাস করা উচিত, জিজ্ঞাসা করার অপেক্ষায় না থেকে।</div>
 </template>
 
+<template data-page="dsintro">
+<h2 class="title">৩. Data Structure — পরিচিতি ও প্রকারভেদ</h2>
+<p class="lead">একই ডেটা দুইভাবে সাজানো যায় — একভাবে সাজালে একটা অপারেশন O(n) লাগে, আরেকভাবে সাজালে সেই একই অপারেশন O(1) বা O(log n)-এ হয়ে যায়। <span class="kw">Data Structure</span> মানেই এই "কীভাবে সাজাবো" সিদ্ধান্ত — আর এই কোর্সের বাকি প্রতিটা অধ্যায় আসলে একেকটা নির্দিষ্ট সাজানোর কৌশল, যা নির্দিষ্ট কিছু অপারেশনকে দ্রুত করার জন্য ডিজাইন করা।</p>
+
+<h3>Data Structure আসলে কী</h3>
+<p>একটা <span class="kw">Data Structure</span> হলো ডেটা সংরক্ষণ ও সংগঠিত করার একটা নির্দিষ্ট পদ্ধতি, যাতে সেই ডেটার ওপর নির্দিষ্ট কিছু অপারেশন (access, search, insert, delete) দক্ষতার সাথে করা যায়। লক্ষ করুন — সংজ্ঞাটা শুধু "ডেটা রাখা" নিয়ে না, বরং <b>কোন অপারেশন দ্রুত হবে</b> তা নিয়ে। যেমন হাজার হাজার ফোন নম্বর যদি এলোমেলোভাবে একটা লিস্টে রাখা হয়, একটা নির্দিষ্ট নাম খুঁজতে পুরো লিস্ট স্ক্যান করতে হয় (O(n))। একই ডেটা যদি নাম অনুযায়ী sorted রাখা হয় (একটা ফোন বইয়ের মতো), Binary Search দিয়ে সেই একই খোঁজ O(log n)-এ হয়ে যায় — ডেটা একই, শুধু সংগঠনের পদ্ধতি ভিন্ন।</p>
+
+<h3>Data Structure বনাম Abstract Data Type (ADT)</h3>
+<p>একটা <span class="kw">Abstract Data Type (ADT)</span> শুধু বলে দেয় কোন কোন অপারেশন সমর্থিত (যেমন Stack-এর <code>Push</code>, <code>Pop</code>, <code>Peek</code>) — কীভাবে ভেতরে বাস্তবায়িত হবে তা বলে না। একটা নির্দিষ্ট <span class="kw">Data Structure</span> হলো সেই ADT-র একটা concrete বাস্তবায়ন — যেমন Stack ADT একটা Array দিয়েও বাস্তবায়ন করা যায়, আবার Linked List দিয়েও। এই পার্থক্য গুরুত্বপূর্ণ কারণ এটাই দেখায় কেন একই আচরণ (behavior) ভিন্ন ভিন্ন performance trade-off নিয়ে একাধিকভাবে বাস্তবায়িত হতে পারে (১১ নম্বর অধ্যায়ে Stack-এ আরও বিস্তারিত)।</p>
+
+<h3>শ্রেণীবিভাগ — Linear বনাম Non-linear</h3>
+<div class="diagram"><pre>
+Linear (একটার পর একটা, sequential):
+  Array, Linked List, Stack, Queue
+  [A] → [B] → [C] → [D]        একটামাত্র পথে সবগুলো element ভ্রমণ করা যায়
+
+Non-linear (hierarchical বা networked সম্পর্ক):
+  Tree, Heap, Graph
+        [A]
+       /   \
+     [B]     [C]                একাধিক দিক/স্তর, একাধিক সম্ভাব্য পথ
+     /
+   [D]
+</pre></div>
+<p><b>Linear</b> data structure-এ elements একটা ধারাবাহিক ক্রমে সাজানো থাকে — একটা single loop দিয়ে সব element ভ্রমণ করা যায়। <b>Non-linear</b> data structure-এ elements-এর মধ্যে hierarchical (Tree) বা arbitrary (Graph) সম্পর্ক থাকে — traversal-এর জন্য বিশেষ অ্যালগরিদম (BFS/DFS, ১৪ নম্বর অধ্যায়ে) দরকার হয়।</p>
+
+<h3>Static বনাম Dynamic Data Structure</h3>
+<table>
+<tr><th></th><th>Static</th><th>Dynamic</th></tr>
+<tr><td>আকার (Size)</td><td>তৈরি হওয়ার সময়ই নির্দিষ্ট, পরে পরিবর্তন করা যায় না</td><td>প্রয়োজন অনুযায়ী runtime-এ বাড়ে/কমে</td></tr>
+<tr><td>মেমরি বরাদ্দ</td><td>একটানা (contiguous) block, compile-time বা creation-time-এ</td><td>প্রয়োজন অনুযায়ী নতুন মেমরি বরাদ্দ, প্রায়ই non-contiguous</td></tr>
+<tr><td>উদাহরণ</td><td>Fixed-size Array (<code>int[5]</code>)</td><td>Linked List, <code>List&lt;T&gt;</code> (Dynamic Array), Dictionary</td></tr>
+</table>
+<div class="callout behind"><span class="tag">Primitive বনাম Non-primitive Data Structure</span>
+<span class="kw">Primitive</span> data structure ভাষার মধ্যে সরাসরি built-in (int, float, char, boolean) — এগুলো নিজেরাই আরও ছোট উপাদানে ভাঙা যায় না। <span class="kw">Non-primitive</span> data structure এই primitive টাইপগুলো দিয়ে তৈরি একটা জটিল কাঠামো (Array, Linked List, Stack, Tree, Graph) — এই পুরো কোর্স মূলত non-primitive data structure নিয়েই, কারণ এখানেই আসল ডিজাইন সিদ্ধান্তগুলো নেওয়া হয়।</div>
+
+<h3>একনজরে — এই কোর্সের প্রতিটা Data Structure ও তার Complexity</h3>
+<table>
+<tr><th>Data Structure</th><th>Access</th><th>Search</th><th>Insert</th><th>Delete</th><th>কখন ব্যবহার করবেন</th></tr>
+<tr><td>Array</td><td>O(1)</td><td>O(n)</td><td>O(n)</td><td>O(n)</td><td>Index দিয়ে দ্রুত access, আকার আগে থেকে জানা (৫ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>Linked List</td><td>O(n)</td><td>O(n)</td><td>O(1)*</td><td>O(1)*</td><td>বারবার শুরু/মাঝে insert/delete (১০ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>Stack / Queue</td><td>O(n)</td><td>O(n)</td><td>O(1)</td><td>O(1)</td><td>LIFO/FIFO আচরণ প্রয়োজন — undo, BFS (১১ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>Hash Table</td><td>—</td><td>O(1) গড়ে</td><td>O(1) গড়ে</td><td>O(1) গড়ে</td><td>Key দিয়ে দ্রুত lookup, "আগে দেখেছি কিনা" (৭ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>Binary Search Tree</td><td>O(log n)*</td><td>O(log n)*</td><td>O(log n)*</td><td>O(log n)*</td><td>Sorted order বজায় রেখে দ্রুত search/insert (১২ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>Heap</td><td>O(1) min/max</td><td>O(n)</td><td>O(log n)</td><td>O(log n)</td><td>বারবার min/max দরকার — priority queue (১৩ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>Graph</td><td>—</td><td>O(V+E)</td><td>O(1)</td><td>O(V+E)</td><td>Network/সম্পর্ক মডেল করা — শহর, বন্ধু, dependency (১৪ নম্বর অধ্যায়ে)</td></tr>
+</table>
+<p style="font-size:13px;color:var(--muted)">* Position/node আগে থেকে জানা থাকলে; না জানা থাকলে খুঁজে বের করতে O(n)/O(log n) অতিরিক্ত সময় লাগবে। BST-র জন্য tree height-balanced হওয়া প্রয়োজন, নাহলে worst-case O(n)।</p>
+
+<h3>সঠিক Data Structure বেছে নেওয়ার Framework</h3>
+<p>একটা সমস্যা দেখেই সরাসরি পরিচিত Array/List ব্যবহার না করে, প্রথমে জিজ্ঞাসা করুন — <b>কোন অপারেশনটা সবচেয়ে বেশি বার হবে?</b> বারবার membership check করতে হলে Hash Set; বারবার sorted order বজায় রাখতে হলে BST/sorted structure; বারবার সবচেয়ে ছোট/বড় উপাদান দরকার হলে Heap; সম্পর্ক/নেটওয়ার্ক মডেল করতে হলে Graph।</p>
+
+<div class="callout why"><span class="tag">কেন Data Structure নির্বাচন সরাসরি Algorithm-এর গতি নির্ধারণ করে</span>
+২ নম্বর অধ্যায়ের Big-O আলোচনা মনে করুন — একটা অ্যালগরিদমের complexity সরাসরি নির্ভর করে তার ভেতরে ব্যবহৃত data structure-এর অপারেশন কতটা দ্রুত তার ওপর। "আমি কি এই মান আগে দেখেছি" প্রশ্নের উত্তর একটা List-এ O(n) লাগে, কিন্তু একটা HashSet-এ O(1) — অ্যালগরিদমের লজিক একই থাকলেও শুধু data structure বদলে সম্পূর্ণ সমাধান O(n²) থেকে O(n)-এ নেমে আসতে পারে। তাই "কোন অ্যালগরিদম" ভাবার আগেই "কোন data structure" ভাবা জরুরি।</div>
+
+<div class="callout mistake"><span class="tag">Common mistake — শুধু পরিচিত বলেই সবসময় Array/List ব্যবহার করা</span>
+নতুন প্রবলেম-সলভাররা প্রায়ই সব সমস্যায় Array/List ব্যবহার করেন কারণ এটাই সবচেয়ে পরিচিত — এমনকি যখন সমস্যায় বারবার "এই মান কি আছে?" জিজ্ঞাসা করা হচ্ছে (যেখানে HashSet স্পষ্টভাবে ভালো) বা বারবার সবচেয়ে ছোট মান দরকার হচ্ছে (যেখানে Heap ভালো)। প্রতিটা data structure একটা নির্দিষ্ট অপারেশনের জন্য অপ্টিমাইজড — ভুল স্ট্রাকচার বেছে নিলে কোড কাজ করবে ঠিকই, কিন্তু বড় input-এ বহুগুণ ধীর হয়ে যাবে।</div>
+
+<div class="callout best"><span class="tag">Best practice — অপারেশন চিহ্নিত করুন, তারপর Data Structure বেছে নিন</span>
+কোনো সমস্যা সমাধান শুরু করার আগে, সমস্যায় প্রয়োজনীয় অপারেশনগুলো (access by index? frequent search? insert at both ends? maintain order? track relationships?) স্পষ্টভাবে তালিকাভুক্ত করুন — তারপর উপরের টেবিল অনুযায়ী কোন structure সেই অপারেশনগুলোতে সবচেয়ে দক্ষ তা মিলিয়ে দেখুন। এই অভ্যাস ১ নম্বর অধ্যায়ের "Understand" ধাপেরই একটা সম্প্রসারণ — সমস্যা বোঝার সাথে সাথে সঠিক টুল বেছে নেওয়াও শুরু হয়ে যায়।</div>
+</template>
+
+<template data-page="algointro">
+<h2 class="title">৪. Algorithm — পরিচিতি ও প্রকারভেদ</h2>
+<p class="lead">৩ নম্বর অধ্যায়ে দেখা হয়েছে ডেটা কীভাবে সাজানো যায় (Data Structure) — এবার প্রশ্ন হলো, সেই সাজানো ডেটার ওপর কাজ করে একটা সমস্যার সমাধান বের করার সুনির্দিষ্ট পদ্ধতি কী। এটাই <span class="kw">Algorithm</span> — আর একটা নির্দিষ্ট সমস্যা দেখেই সঠিক ধরনের algorithmic approach চেনাই এই কোর্সের বাকি অংশের মূল লক্ষ্য।</p>
+
+<h3>Algorithm আসলে কী</h3>
+<p>একটা <span class="kw">Algorithm</span> হলো একটা সসীম সংখ্যক, স্পষ্টভাবে সংজ্ঞায়িত ধাপের একটা ক্রম, যা একটা নির্দিষ্ট input নিয়ে একটা নির্দিষ্ট output তৈরি করে, একটা নির্দিষ্ট সমস্যা সমাধান করার জন্য। যেমন "একটা array-তে সবচেয়ে বড় সংখ্যাটা খুঁজে বের করো" — এর অ্যালগরিদম হতে পারে: প্রথম element-কে সাময়িক "max" ধরো, তারপর বাকি প্রতিটা element-এর সাথে তুলনা করে max বড় হলে আপডেট করো, শেষে max-ই উত্তর। এই লজিকটাই algorithm — এটা কোনো নির্দিষ্ট প্রোগ্রামিং ভাষার ওপর নির্ভর করে না।</p>
+
+<h3>একটা ভালো Algorithm-এর অপরিহার্য বৈশিষ্ট্য</h3>
+<table>
+<tr><th>বৈশিষ্ট্য</th><th>ব্যাখ্যা</th></tr>
+<tr><td>Input/Output</td><td>শূন্য বা তার বেশি সুনির্দিষ্ট input নেয়, অন্তত একটা সুনির্দিষ্ট output দেয়</td></tr>
+<tr><td>Definiteness</td><td>প্রতিটা ধাপ স্পষ্ট ও দ্ব্যর্থহীন — অস্পষ্টতার কোনো সুযোগ নেই</td></tr>
+<tr><td>Finiteness</td><td>সসীম সংখ্যক ধাপে থেমে যেতে হবে — অসীম লুপে আটকে থাকতে পারবে না</td></tr>
+<tr><td>Effectiveness</td><td>প্রতিটা ধাপ ব্যবহারিকভাবে সম্পাদনযোগ্য হতে হবে (একটা কাগজ-কলমেও করা সম্ভব হওয়া উচিত)</td></tr>
+<tr><td>Correctness</td><td>প্রতিটা বৈধ input-এর জন্য সঠিক output দিতে হবে — শুধু "সাধারণ কেস"-এ না, edge case-এও</td></tr>
+</table>
+<div class="callout behind"><span class="tag">Finiteness কেন গুরুত্বপূর্ণ — Algorithm বনাম Process</span>
+একটা অপারেটিং সিস্টেম বা ওয়েব সার্ভার অনির্দিষ্টকালের জন্য চলতে থাকে (এটাকে "process" বলা হয়, algorithm নয়) — কিন্তু একটা algorithm সবসময় সসীম সময়ে থেমে একটা নির্দিষ্ট উত্তর দেয়। এই পার্থক্যটাই কেন "সবচেয়ে বড় সংখ্যা খোঁজা" একটা algorithm, কিন্তু "সার্ভার রিকোয়েস্ট শোনা" একটা algorithm না (যদিও এটাও ধাপে ধাপে কোড দিয়ে লেখা)।</div>
+
+<h3>Algorithm বনাম Program বনাম Pseudocode</h3>
+<p><span class="kw">Algorithm</span> হলো সমাধানের ভাষা-নিরপেক্ষ যুক্তি/ধারণা। <span class="kw">Pseudocode</span> হলো সেই যুক্তিকে একটা structured, আধা-ফরমাল ভাষায় লেখা — কোনো নির্দিষ্ট ভাষার syntax নিয়ে চিন্তা না করেই ধাপগুলো স্পষ্টভাবে প্রকাশ করার একটা মাধ্যম (এই কোর্সের প্রতিটা diagram-এ ব্যবহৃত ধরনটাই pseudocode-এর কাছাকাছি)। <span class="kw">Program</span> হলো সেই algorithm-এর একটা নির্দিষ্ট প্রোগ্রামিং ভাষায় (যেমন C#) বাস্তবায়ন, যা কম্পাইল/রান করা যায়।</p>
+<div class="diagram"><pre>
+Algorithm (যুক্তি/ধারণা)
+     │  "সসীম ধাপে সমাধান বের করার পদ্ধতি"
+     ▼
+Pseudocode (আধা-ফরমাল লেখা)
+     │  "if arr[i] &gt; max then max = arr[i]"
+     ▼
+Program (নির্দিষ্ট ভাষায় বাস্তবায়ন)
+     │  C#/Java/Python কোড — কম্পাইল ও রান করা যায়
+</pre></div>
+<div class="callout mistake"><span class="tag">Common mistake — "কোড কাজ করছে" মানেই "Algorithm সঠিক"</span>
+একটা প্রোগ্রাম কয়েকটা টেস্ট কেসে সঠিক আউটপুট দিলেই এর অন্তর্নিহিত algorithm সঠিক বা efficient, এমনটা ধরে নেওয়া বিপজ্জনক। একটা algorithm-এর correctness প্রমাণ করতে হয় সব সম্ভাব্য valid input-এর জন্য (empty input, একটা element, duplicate, বিশাল input) — শুধু হাতে-বাছাই কয়েকটা উদাহরণে না (১ নম্বর অধ্যায়ের "Review" ধাপের সাথে সরাসরি সম্পর্কিত)।</div>
+
+<h3>Algorithm Design Paradigm — সমস্যা সমাধানের প্রধান কৌশল</h3>
+<p>প্রতিটা নতুন সমস্যার জন্য শূন্য থেকে চিন্তা করার বদলে, বেশিরভাগ সমস্যাই কয়েকটা পরিচিত <span class="kw">Design Paradigm</span>-এর একটার আওতায় পড়ে — একটা সমস্যা দেখে সঠিক paradigm চিনতে পারাই দক্ষ প্রবলেম-সলভিং-এর মূল।</p>
+<table>
+<tr><th>Paradigm</th><th>মূল ধারণা</th><th>উদাহরণ</th></tr>
+<tr><td>Brute Force</td><td>সব সম্ভাব্য সমাধান একে একে try করা, কোনো optimization ছাড়াই</td><td>Nested loop দিয়ে সব জোড়া চেক করা</td></tr>
+<tr><td>Divide and Conquer</td><td>সমস্যাকে ছোট, স্বাধীন উপ-সমস্যায় ভাঙা, প্রতিটা আলাদাভাবে সমাধান করে ফলাফল একত্র করা</td><td>Merge Sort, Binary Search (৯ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>Greedy</td><td>প্রতিটা ধাপে "এই মুহূর্তে সবচেয়ে ভালো" সিদ্ধান্ত নেওয়া, ফিরে না দেখে</td><td>Activity Selection, Huffman Coding (১৮ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>Dynamic Programming</td><td>Overlapping subproblem-এর ফলাফল ক্যাশ করে রাখা, বারবার গণনা এড়ানো</td><td>Knapsack, LCS (১৬-১৭ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>Backtracking</td><td>একটা choice করে এগিয়ে যাওয়া, ব্যর্থ হলে ফিরে এসে (unchoose) অন্য choice try করা</td><td>Subsets, N-Queens (৮ নম্বর অধ্যায়ে)</td></tr>
+<tr><td>Branch and Bound</td><td>Backtracking-এর মতোই, কিন্তু একটা bounding function দিয়ে অনেক শাখা আগেভাগেই বাদ দেওয়া</td><td>Optimization সমস্যা (যেমন Job Assignment)-এ ব্যবহৃত</td></tr>
+</table>
+
+<h3>Algorithm-কে শ্রেণীবদ্ধ করার আরেকটা উপায় — কাজ অনুযায়ী (By Function)</h3>
+<div class="diagram"><pre>
+Algorithm ─┬─ Searching     (Linear Search, Binary Search)
+           ├─ Sorting       (Merge Sort, Quick Sort)
+           ├─ Graph         (BFS, DFS, Dijkstra, Union-Find)
+           ├─ String        (Pattern Matching)
+           └─ Numerical     (GCD, Prime Check, Fast Exponentiation)
+</pre></div>
+<p>Design Paradigm (কীভাবে সমাধান করা হচ্ছে) আর Function (কী ধরনের সমস্যা সমাধান করা হচ্ছে) — এই দুইটা শ্রেণীবিভাগ একে অপরের বিকল্প না, বরং পরিপূরক। যেমন Merge Sort একই সাথে একটা <b>Sorting</b> algorithm (function অনুযায়ী) এবং একটা <b>Divide and Conquer</b> algorithm (paradigm অনুযায়ী)।</p>
+
+<div class="callout why"><span class="tag">কেন Paradigm আগে চেনা — কোড লেখার আগেই অর্ধেক কাজ শেষ</span>
+একটা না-দেখা সমস্যায় সরাসরি কোড লেখা শুরু করার বদলে, প্রথমে ভাবুন এটা কোন paradigm-এর সাথে মিলে যায়। "Overlapping subproblem আছে?" (DP), "প্রতিটা ধাপে locally optimal choice কি global optimal-এ নিয়ে যায়?" (Greedy), "সব সম্ভাব্য combination দরকার?" (Backtracking) — এই প্রশ্নগুলোর উত্তর অনেকটাই ঠিক করে দেয় কোন দিকে এগোতে হবে, এলোমেলোভাবে বিভিন্ন approach try করার বদলে (১৯ নম্বর অধ্যায়ে এই স্কিল আরও বিস্তারিত অনুশীলন করা হয়েছে)।</div>
+
+<div class="callout best"><span class="tag">Best practice — Paradigm সন্দেহ হলে, Brute Force দিয়েই শুরু করুন</span>
+কোনো সমস্যায় কোন paradigm প্রযোজ্য তা নিশ্চিত না হলে, দ্বিধা না করে প্রথমে Brute Force সমাধান ভাবুন — এটা প্রায় সবসময় সম্ভব, আর brute force-এর কাঠামো পর্যবেক্ষণ করলেই প্রায়ই বোঝা যায় কোথায় repeated work হচ্ছে (DP-র ইঙ্গিত) বা কোথায় একটা greedy choice নিরাপদ (১ নম্বর অধ্যায়ের "Brute Force থেকে Optimal" নীতিরই একটা সম্প্রসারণ)।</div>
+</template>
+
 <template data-page="arrays">
-<h2 class="title">৩. Arrays ও Strings — বেসিক প্যাটার্ন</h2>
+<h2 class="title">৫. Arrays ও Strings — বেসিক প্যাটার্ন</h2>
 <p class="lead">Array ও String প্রায় প্রতিটা প্রবলেম-সলভিং প্রশ্নের ভিত্তি — কিছু পুনরাবৃত্ত টেকনিক আছে যা বারবার বিভিন্ন সমস্যায় ব্যবহৃত হয়।</p>
 
 <h3>Prefix Sum — Range Query দ্রুত করা</h3>
@@ -229,11 +356,11 @@ Range Sum(l, r) = prefix[r] - prefix[l-1]     ← O(1)-এ যেকোনো su
 
 <h3>In-Place Array Manipulation</h3>
 <div class="callout best"><span class="tag">Best practice — Extra Space ছাড়াই Array বদলানো</span>
-"Remove duplicates from sorted array" বা "Move zeroes to end"-এর মতো সমস্যায় প্রায়ই একটা নতুন array না বানিয়ে, একটা "write pointer" ব্যবহার করে ইন-প্লেস সমাধান সম্ভব — যেমন একটা <code>writeIndex</code> রেখে valid element-গুলো সামনের দিকে ঠেলে দেওয়া। এটা O(1) extra space-এ সমাধান দেয়, যা বহু ইন্টারভিউতে স্পষ্টভাবে চাওয়া হয় (৪ নম্বর অধ্যায়ে Two Pointer টেকনিকে আরও বিস্তারিত)।</div>
+"Remove duplicates from sorted array" বা "Move zeroes to end"-এর মতো সমস্যায় প্রায়ই একটা নতুন array না বানিয়ে, একটা "write pointer" ব্যবহার করে ইন-প্লেস সমাধান সম্ভব — যেমন একটা <code>writeIndex</code> রেখে valid element-গুলো সামনের দিকে ঠেলে দেওয়া। এটা O(1) extra space-এ সমাধান দেয়, যা বহু ইন্টারভিউতে স্পষ্টভাবে চাওয়া হয় (৬ নম্বর অধ্যায়ে Two Pointer টেকনিকে আরও বিস্তারিত)।</div>
 </template>
 
 <template data-page="twopointer">
-<h2 class="title">৪. Two Pointers ও Sliding Window</h2>
+<h2 class="title">৬. Two Pointers ও Sliding Window</h2>
 <p class="lead">এই দুই টেকনিক nested loop-এর O(n²) সমাধানকে প্রায়ই O(n)-এ নামিয়ে আনে — সবচেয়ে বেশি ব্যবহৃত, সবচেয়ে বেশি মূল্যবান প্যাটার্নগুলোর একটা।</p>
 
 <h3>Two Pointers — বিপরীত প্রান্ত থেকে</h3>
@@ -263,7 +390,7 @@ Sorted Array:  [1, 3, 4, 6, 8, 11]   target = 10
 Array sorted বলেই আমরা নিশ্চিতভাবে জানি: <code>sum</code> target-এর চেয়ে বড় হলে, right pointer কমালে sum নিশ্চিতভাবেই কমবে (কখনো বাড়বে না) — তাই right কমানো নিরাপদ। একইভাবে sum ছোট হলে left বাড়ানো নিরাপদ। প্রতিটা ধাপে অন্তত একটা সম্ভাব্য জোড়া বাদ পড়ে, তাই সর্বোচ্চ n ধাপে সব জোড়া কার্যকরভাবে বিবেচিত হয় — O(n²) সব জোড়া পরীক্ষা করার বদলে O(n)।</div>
 
 <h3>Sliding Window — Fixed Size</h3>
-<p>৩ নম্বর অধ্যায়ে দেখা "max sum subarray of size k" সমস্যা সমাধান করা যায় একটা window সরিয়ে সরিয়ে — প্রতিবার নতুন সম্পূর্ণ যোগফল না গুনে, শুধু window-এর একটা প্রান্ত যোগ ও অন্য প্রান্ত বিয়োগ করে।</p>
+<p>৫ নম্বর অধ্যায়ে দেখা "max sum subarray of size k" সমস্যা সমাধান করা যায় একটা window সরিয়ে সরিয়ে — প্রতিবার নতুন সম্পূর্ণ যোগফল না গুনে, শুধু window-এর একটা প্রান্ত যোগ ও অন্য প্রান্ত বিয়োগ করে।</p>
 <pre>int MaxSumSubarray(int[] arr, int k) {
     int windowSum = 0;
     for (int i = 0; i &lt; k; i++) windowSum += arr[i];
@@ -281,7 +408,7 @@ Array sorted বলেই আমরা নিশ্চিতভাবে জা�
 </template>
 
 <template data-page="hashing">
-<h2 class="title">৫. Hashing</h2>
+<h2 class="title">৭. Hashing</h2>
 <p class="lead">HashMap/HashSet প্রায় প্রতিটা O(n²) থেকে O(n)-এ নামিয়ে আনা সমাধানের চাবিকাঠি — "আমি কি আগে এটা দেখেছি?" প্রশ্নের উত্তর O(1)-এ দেয়।</p>
 
 <h3>ক্লাসিক উদাহরণ — Two Sum</h3>
@@ -302,7 +429,7 @@ Brute force-এ প্রতিটা element-এর জন্য বাকি �
 <table>
 <tr><th>ব্যবহার</th><th>উদাহরণ</th></tr>
 <tr><td>Duplicate খুঁজে বের করা</td><td>একটা array-তে কোনো element দুইবার আছে কিনা — HashSet-এ যোগ করার সময় already-present চেক</td></tr>
-<tr><td>Visited ট্র্যাক করা</td><td>Graph traversal-এ (১২ নম্বর অধ্যায়ে), recursion-এ cycle detection</td></tr>
+<tr><td>Visited ট্র্যাক করা</td><td>Graph traversal-এ (১৪ নম্বর অধ্যায়ে), recursion-এ cycle detection</td></tr>
 <tr><td>Frequency Counting</td><td>Anagram check, majority element (Dictionary&lt;char/int, int&gt;)</td></tr>
 </table>
 
@@ -312,7 +439,7 @@ Brute force-এ প্রতিটা element-এর জন্য বাকি �
 </template>
 
 <template data-page="recursion">
-<h2 class="title">৬. Recursion ও Backtracking</h2>
+<h2 class="title">৮. Recursion ও Backtracking</h2>
 <p class="lead">যে সমস্যা নিজের ছোট সংস্করণের মাধ্যমে সংজ্ঞায়িত করা যায়, তার জন্য <span class="kw">Recursion</span> স্বাভাবিক সমাধান — আর <span class="kw">Backtracking</span> হলো recursion ব্যবহার করে সব সম্ভাব্য সমাধান পদ্ধতিগতভাবে খোঁজার একটা কৌশল।</p>
 
 <h3>Recursion-এর দুইটা অপরিহার্য অংশ</h3>
@@ -349,7 +476,7 @@ Unchoose ছাড়া, একটা choice প্রয়োগ করার
 </template>
 
 <template data-page="sorting">
-<h2 class="title">৭. Sorting ও Binary Search</h2>
+<h2 class="title">৯. Sorting ও Binary Search</h2>
 <p class="lead">Sorting নিজেই একটা সমস্যা সমাধান করে না, কিন্তু sorted ডেটার ওপর বহু দ্রুত অ্যালগরিদম (Binary Search, Two Pointer) সম্ভব হয় — তাই sorting প্রায়ই একটা প্রথম ধাপ।</p>
 
 <h3>Sorting অ্যালগরিদম তুলনা</h3>
@@ -380,7 +507,7 @@ Binary Search শুধু "sorted array-তে একটা মান খোঁ
 </template>
 
 <template data-page="linkedlist">
-<h2 class="title">৮. Linked List</h2>
+<h2 class="title">১০. Linked List</h2>
 <p class="lead">Array-এর বিপরীতে, Linked List-এ elements মেমরিতে ধারাবাহিকভাবে থাকে না — প্রতিটা node পরের node-এর reference ধরে রাখে। এটা insertion/deletion-কে O(1) করে (index জানা থাকলে), কিন্তু random access হারায় (O(n))।</p>
 
 <h3>Reverse a Linked List — ক্লাসিক সমস্যা</h3>
@@ -417,7 +544,7 @@ fast pointer প্রতি ধাপে ২টা node এগোয়
 </template>
 
 <template data-page="stackqueue">
-<h2 class="title">৯. Stack ও Queue</h2>
+<h2 class="title">১১. Stack ও Queue</h2>
 <p class="lead"><span class="kw">Stack</span> (LIFO — Last In First Out) ও <span class="kw">Queue</span> (FIFO — First In First Out) দুটো মৌলিক ডেটা স্ট্রাকচার, প্রতিটার নিজস্ব সমস্যার শ্রেণি আছে যেখানে এরা স্বাভাবিক ফিট।</p>
 
 <h3>Valid Parentheses — Stack-এর ক্লাসিক ব্যবহার</h3>
@@ -440,11 +567,11 @@ Bracket matching-এ সবসময় সবচেয়ে <b>সাম্প
 একটা <span class="kw">Monotonic Stack</span> সবসময় ক্রমবর্ধমান বা ক্রমহ্রাসমান ক্রম বজায় রাখে — নতুন element ঢোকানোর সময়, স্ট্যাকের top-এর যেসব element এই নতুন element-এর চেয়ে ছোট, তাদের pop করে ফেলে দেওয়া হয় (কারণ তাদের "next greater element" এই নতুন element-ই)। এই টেকনিক "Next Greater Element", "Daily Temperatures"-এর মতো সমস্যা O(n²) থেকে O(n)-এ নামিয়ে আনে, কারণ প্রতিটা element সর্বোচ্চ একবার push ও একবার pop হয়।</div>
 
 <h3>Queue — BFS-এর ভিত্তি</h3>
-<p>Queue-এর FIFO আচরণ ঠিক Graph/Tree-এর <span class="kw">Breadth-First Search (BFS)</span>-এর জন্য প্রয়োজনীয় — "level অনুযায়ী" (level-order) processing নিশ্চিত করে, যা ১০ ও ১২ নম্বর অধ্যায়ে বিস্তারিত।</p>
+<p>Queue-এর FIFO আচরণ ঠিক Graph/Tree-এর <span class="kw">Breadth-First Search (BFS)</span>-এর জন্য প্রয়োজনীয় — "level অনুযায়ী" (level-order) processing নিশ্চিত করে, যা ১২ ও ১৪ নম্বর অধ্যায়ে বিস্তারিত।</p>
 </template>
 
 <template data-page="trees">
-<h2 class="title">১০. Trees — Binary Tree, BST</h2>
+<h2 class="title">১২. Trees — Binary Tree, BST</h2>
 <p class="lead">একটা <span class="kw">Tree</span> একটা hierarchical ডেটা স্ট্রাকচার — প্রতিটা node-এর সর্বোচ্চ কিছু সংখ্যক child থাকে, একটা root থেকে শুরু হয়ে কোনো cycle থাকে না।</p>
 
 <h3>Tree Traversal — চার ধরনের ক্রম</h3>
@@ -483,14 +610,14 @@ Level-order (BFS):              5, 3, 8, 1, 4   ← Queue ব্যবহার 
 </template>
 
 <template data-page="heap">
-<h2 class="title">১১. Heap ও Priority Queue</h2>
+<h2 class="title">১৩. Heap ও Priority Queue</h2>
 <p class="lead">যখন বারবার "সবচেয়ে ছোট/বড় element কী" জানতে হয়, আর নতুন element যোগও হতে থাকে — একটা <span class="kw">Heap</span> এই দুই অপারেশনই O(log n)-এ দেয়, যেখানে sorting বারবার করলে O(n log n) লাগতো।</p>
 
 <h3>Min-Heap বনাম Max-Heap</h3>
 <table>
 <tr><th></th><th>Min-Heap</th><th>Max-Heap</th></tr>
 <tr><td>Root-এ কী থাকে</td><td>সবচেয়ে ছোট element</td><td>সবচেয়ে বড় element</td></tr>
-<tr><td>ব্যবহার</td><td>Kth largest, Dijkstra (১৩ নম্বর অধ্যায়ে)</td><td>Kth smallest, Task scheduling</td></tr>
+<tr><td>ব্যবহার</td><td>Kth largest, Dijkstra (১৫ নম্বর অধ্যায়ে)</td><td>Kth smallest, Task scheduling</td></tr>
 </table>
 
 <h3>Kth Largest Element — Min-Heap দিয়ে</h3>
@@ -511,7 +638,7 @@ Level-order (BFS):              5, 3, 8, 1, 4   ← Queue ব্যবহার 
 </template>
 
 <template data-page="graphs">
-<h2 class="title">১২. Graphs — BFS, DFS</h2>
+<h2 class="title">১৪. Graphs — BFS, DFS</h2>
 <p class="lead">একটা <span class="kw">Graph</span> node (vertex) ও তাদের মধ্যেকার সংযোগ (edge) নিয়ে গঠিত — Tree-এর একটা সাধারণীকরণ, যেখানে cycle থাকতে পারে, একাধিক parent থাকতে পারে।</p>
 
 <h3>Graph Representation</h3>
@@ -550,7 +677,7 @@ Tree-তে কোনো cycle নেই বলে recursion নিরাপদ,
 </template>
 
 <template data-page="graphadv">
-<h2 class="title">১৩. Graph Advanced — Shortest Path, Union-Find</h2>
+<h2 class="title">১৫. Graph Advanced — Shortest Path, Union-Find</h2>
 <p class="lead">Weighted graph, connectivity, ও dependency-ordering সমস্যার জন্য আরও তিনটা গুরুত্বপূর্ণ অ্যালগরিদম।</p>
 
 <h3>Dijkstra's Algorithm — Weighted Shortest Path</h3>
@@ -602,7 +729,7 @@ BFS প্রতিটা edge-কে সমান ওজন (১) ধরে ন
 </template>
 
 <template data-page="dp1">
-<h2 class="title">১৪. Dynamic Programming — Foundation</h2>
+<h2 class="title">১৬. Dynamic Programming — Foundation</h2>
 <p class="lead"><span class="kw">Dynamic Programming (DP)</span> প্রায়ই সবচেয়ে ভীতিকর মনে হয়, কিন্তু এটা আসলে একটা সরল ধারণা — একই উপ-সমস্যা বারবার সমাধান না করে, একবার সমাধান করে সংরক্ষণ (cache) করে রাখা।</p>
 
 <h3>দুইটা পূর্বশর্ত</h3>
@@ -649,7 +776,7 @@ Memoization (Top-Down) recursion দিয়ে শুরু করে, প্�
 </template>
 
 <template data-page="dp2">
-<h2 class="title">১৫. Dynamic Programming — Advanced</h2>
+<h2 class="title">১৭. Dynamic Programming — Advanced</h2>
 <p class="lead">২-মাত্রিক (2D) DP আরও জটিল সমস্যার সমাধান দেয় — যেখানে state শুধু একটা সংখ্যা নয়, একাধিক প্যারামিটারের সমন্বয়ে গঠিত।</p>
 
 <h3>0/1 Knapsack — ক্লাসিক 2D DP</h3>
@@ -691,7 +818,7 @@ Memoization (Top-Down) recursion দিয়ে শুরু করে, প্�
 </template>
 
 <template data-page="greedy">
-<h2 class="title">১৬. Greedy Algorithms</h2>
+<h2 class="title">১৮. Greedy Algorithms</h2>
 <p class="lead">একটা <span class="kw">Greedy</span> অ্যালগরিদম প্রতিটা ধাপে "এই মুহূর্তে সবচেয়ে ভালো" সিদ্ধান্ত নেয়, ভবিষ্যতের প্রভাব বিবেচনা না করেই — কখনো এটা optimal সমাধান দেয়, কখনো দেয় না।</p>
 
 <h3>Activity Selection — Greedy যেখানে সঠিকভাবে কাজ করে</h3>
@@ -707,7 +834,7 @@ Greedy (সবচেয়ে বড় coin আগে): 4 + 1 + 1 = ৩টা c
 Optimal:                      3 + 3     = ২টা coin   ← Greedy ব্যর্থ!
 </pre></div>
 <div class="callout mistake"><span class="tag">Common misconception — Greedy সবসময় কাজ করে</span>
-বহু শিক্ষার্থী ধরে নেন Coin Change-এ সবসময় সবচেয়ে বড় coin আগে বেছে নিলেই optimal সমাধান মেলে — এটা শুধুমাত্র নির্দিষ্ট coin system-এ (যেমন US coins: 1,5,10,25) সত্য, সব coin system-এ নয়। উপরের উদাহরণে {1,3,4} coin system-এ greedy ভুল উত্তর দেয়। যখন নিশ্চিত না যে exchange argument প্রযোজ্য, Dynamic Programming (১৪-১৫ নম্বর অধ্যায়ে) দিয়ে সব সম্ভাবনা বিবেচনা করাই নিরাপদ — Coin Change-এর সাধারণ সমাধান আসলে একটা DP সমস্যা, Greedy নয়।</div>
+বহু শিক্ষার্থী ধরে নেন Coin Change-এ সবসময় সবচেয়ে বড় coin আগে বেছে নিলেই optimal সমাধান মেলে — এটা শুধুমাত্র নির্দিষ্ট coin system-এ (যেমন US coins: 1,5,10,25) সত্য, সব coin system-এ নয়। উপরের উদাহরণে {1,3,4} coin system-এ greedy ভুল উত্তর দেয়। যখন নিশ্চিত না যে exchange argument প্রযোজ্য, Dynamic Programming (১৬-১৭ নম্বর অধ্যায়ে) দিয়ে সব সম্ভাবনা বিবেচনা করাই নিরাপদ — Coin Change-এর সাধারণ সমাধান আসলে একটা DP সমস্যা, Greedy নয়।</div>
 
 <h3>কখন Greedy বিশ্বাস করবেন</h3>
 <div class="callout best"><span class="tag">Best practice — Greedy প্রমাণ করুন, অনুমান করবেন না</span>
@@ -715,20 +842,20 @@ Optimal:                      3 + 3     = ২টা coin   ← Greedy ব্য�
 </template>
 
 <template data-page="patterns">
-<h2 class="title">১৭. Pattern Recognition ও Interview Strategy</h2>
+<h2 class="title">১৯. Pattern Recognition ও Interview Strategy</h2>
 <p class="lead">এই কোর্সের প্রতিটা টেকনিক এখন পরিচিত — শেষ ধাপে দেখা যাক একটা না-দেখা সমস্যায় কীভাবে সঠিক প্যাটার্ন দ্রুত চিনতে হয়, আর ইন্টারভিউতে কীভাবে যোগাযোগ করতে হয়।</p>
 
 <h3>Keyword থেকে Pattern অনুমান — একটা দ্রুত রেফারেন্স</h3>
 <table>
 <tr><th>সমস্যায় যা দেখলে</th><th>সম্ভাব্য প্যাটার্ন</th></tr>
-<tr><td>"Sorted array", "find pair/triplet"</td><td>Two Pointers (৪ নম্বর অধ্যায়)</td></tr>
-<tr><td>"Subarray/substring of size k", "contiguous"</td><td>Sliding Window (৪ নম্বর অধ্যায়)</td></tr>
-<tr><td>"Have I seen this before?", "count frequency"</td><td>Hashing (৫ নম্বর অধ্যায়)</td></tr>
-<tr><td>"All combinations/permutations/subsets"</td><td>Backtracking (৬ নম্বর অধ্যায়)</td></tr>
-<tr><td>"Shortest path", "minimum steps", "levels"</td><td>BFS (১২ নম্বর অধ্যায়)</td></tr>
-<tr><td>"Maximum/minimum ways", "can we reach", "optimal value"</td><td>Dynamic Programming (১৪-১৫ নম্বর অধ্যায়)</td></tr>
-<tr><td>"Kth largest/smallest", "top k"</td><td>Heap (১১ নম্বর অধ্যায়)</td></tr>
-<tr><td>"Connected components", "groups"</td><td>Union-Find বা DFS/BFS (১২-১৩ নম্বর অধ্যায়)</td></tr>
+<tr><td>"Sorted array", "find pair/triplet"</td><td>Two Pointers (৬ নম্বর অধ্যায়)</td></tr>
+<tr><td>"Subarray/substring of size k", "contiguous"</td><td>Sliding Window (৬ নম্বর অধ্যায়)</td></tr>
+<tr><td>"Have I seen this before?", "count frequency"</td><td>Hashing (৭ নম্বর অধ্যায়)</td></tr>
+<tr><td>"All combinations/permutations/subsets"</td><td>Backtracking (৮ নম্বর অধ্যায়)</td></tr>
+<tr><td>"Shortest path", "minimum steps", "levels"</td><td>BFS (১৪ নম্বর অধ্যায়)</td></tr>
+<tr><td>"Maximum/minimum ways", "can we reach", "optimal value"</td><td>Dynamic Programming (১৬-১৭ নম্বর অধ্যায়)</td></tr>
+<tr><td>"Kth largest/smallest", "top k"</td><td>Heap (১৩ নম্বর অধ্যায়)</td></tr>
+<tr><td>"Connected components", "groups"</td><td>Union-Find বা DFS/BFS (১৪-১৫ নম্বর অধ্যায়)</td></tr>
 </table>
 
 <h3>ইন্টারভিউতে যোগাযোগ — Talk-Through-Code পদ্ধতি</h3>
@@ -741,38 +868,38 @@ Optimal:                      3 + 3     = ২টা coin   ← Greedy ব্য�
 </template>
 
 <template data-page="interview">
-<h2 class="title">১৮. Interview প্রশ্নোত্তর</h2>
+<h2 class="title">২০. Interview প্রশ্নোত্তর</h2>
 <p class="lead">Problem Solving/DSA ইন্টারভিউতে বারবার আসা প্রশ্ন — প্রতিটার উত্তরে শুধু "কী" নয়, "কেন" বোঝানো হয়েছে।</p>
 
 <h3>১) Time Complexity আর Space Complexity-র পার্থক্য কী?</h3>
 <p><b>ব্যাখ্যা:</b> Time Complexity বলে input বড় হলে অপারেশনের সংখ্যা কীভাবে বাড়ে। Space Complexity বলে input ছাড়া অতিরিক্ত কত মেমরি লাগে। প্রায়ই এই দুইয়ের মধ্যে trade-off থাকে — HashMap ব্যবহার করে time কমানো যায় কিন্তু space বাড়ে (২ নম্বর অধ্যায়ে)।</p>
 
 <h3>২) Two Pointer টেকনিক কখন ব্যবহার করবেন?</h3>
-<p><b>ব্যাখ্যা:</b> যখন array/string sorted (বা sorted করা যায়), আর একটা জোড়া/ট্রিপলেট খুঁজতে হয় যা একটা শর্ত পূরণ করে — sorted order-এর সুবিধা নিয়ে প্রতিটা ধাপে অন্তত একটা সম্ভাবনা বাদ দেওয়া যায়, O(n²) থেকে O(n)-এ নামিয়ে (৪ নম্বর অধ্যায়ে)।</p>
+<p><b>ব্যাখ্যা:</b> যখন array/string sorted (বা sorted করা যায়), আর একটা জোড়া/ট্রিপলেট খুঁজতে হয় যা একটা শর্ত পূরণ করে — sorted order-এর সুবিধা নিয়ে প্রতিটা ধাপে অন্তত একটা সম্ভাবনা বাদ দেওয়া যায়, O(n²) থেকে O(n)-এ নামিয়ে (৬ নম্বর অধ্যায়ে)।</p>
 
 <h3>৩) Memoization আর Tabulation-এর পার্থক্য কী?</h3>
-<p><b>ব্যাখ্যা:</b> Memoization (Top-Down) recursion দিয়ে শুরু করে, প্রয়োজন অনুযায়ী সমাধান ক্যাশ করে। Tabulation (Bottom-Up) ছোট উপ-সমস্যা থেকে শুরু করে ধাপে ধাপে বড়র দিকে এগোয়, একটা table পূরণ করে — সাধারণত দ্রুততর, কম space লাগে (১৪ নম্বর অধ্যায়ে)।</p>
+<p><b>ব্যাখ্যা:</b> Memoization (Top-Down) recursion দিয়ে শুরু করে, প্রয়োজন অনুযায়ী সমাধান ক্যাশ করে। Tabulation (Bottom-Up) ছোট উপ-সমস্যা থেকে শুরু করে ধাপে ধাপে বড়র দিকে এগোয়, একটা table পূরণ করে — সাধারণত দ্রুততর, কম space লাগে (১৬ নম্বর অধ্যায়ে)।</p>
 
 <h3>৪) BFS আর DFS কখন কোনটা ব্যবহার করবেন?</h3>
-<p><b>ব্যাখ্যা:</b> BFS ব্যবহার করুন যখন shortest path (unweighted graph-এ) বা "level অনুযায়ী" কিছু দরকার — Queue ব্যবহার করে। DFS ব্যবহার করুন যখন সব সম্ভাব্য path/connectivity/cycle detection দরকার — Stack বা recursion ব্যবহার করে (১২ নম্বর অধ্যায়ে)।</p>
+<p><b>ব্যাখ্যা:</b> BFS ব্যবহার করুন যখন shortest path (unweighted graph-এ) বা "level অনুযায়ী" কিছু দরকার — Queue ব্যবহার করে। DFS ব্যবহার করুন যখন সব সম্ভাব্য path/connectivity/cycle detection দরকার — Stack বা recursion ব্যবহার করে (১৪ নম্বর অধ্যায়ে)।</p>
 
 <h3>৫) Greedy আর Dynamic Programming-এর মধ্যে পার্থক্য কী?</h3>
-<p><b>ব্যাখ্যা:</b> Greedy প্রতিটা ধাপে "এই মুহূর্তে সবচেয়ে ভালো" সিদ্ধান্ত নেয়, কখনো ফিরে দেখে না — শুধু তখনই সঠিক যখন প্রমাণ করা যায় (exchange argument) স্থানীয় optimal সিদ্ধান্তগুলো সবসময় global optimal-এ নিয়ে যায়। DP সব সম্ভাব্য উপ-সমস্যা বিবেচনা করে, তাই greedy যেখানে ব্যর্থ হয় (Coin Change {1,3,4}) সেখানেও সঠিক উত্তর দেয় (১৬ নম্বর অধ্যায়ে)।</p>
+<p><b>ব্যাখ্যা:</b> Greedy প্রতিটা ধাপে "এই মুহূর্তে সবচেয়ে ভালো" সিদ্ধান্ত নেয়, কখনো ফিরে দেখে না — শুধু তখনই সঠিক যখন প্রমাণ করা যায় (exchange argument) স্থানীয় optimal সিদ্ধান্তগুলো সবসময় global optimal-এ নিয়ে যায়। DP সব সম্ভাব্য উপ-সমস্যা বিবেচনা করে, তাই greedy যেখানে ব্যর্থ হয় (Coin Change {1,3,4}) সেখানেও সঠিক উত্তর দেয় (১৮ নম্বর অধ্যায়ে)।</p>
 
 <h3>৬) Union-Find (Disjoint Set)-এর ব্যবহার কী?</h3>
-<p><b>ব্যাখ্যা:</b> দ্রুত জানতে হলে দুইটা element একই group/component-এ আছে কিনা, বা দুইটা group একসাথে মেলাতে হলে — Union-Find এই দুই অপারেশনই প্রায় O(1) (path compression + union by rank সহ) সময়ে করে। Kruskal's MST, connectivity check, cycle detection-এ ব্যবহৃত (১৩ নম্বর অধ্যায়ে)।</p>
+<p><b>ব্যাখ্যা:</b> দ্রুত জানতে হলে দুইটা element একই group/component-এ আছে কিনা, বা দুইটা group একসাথে মেলাতে হলে — Union-Find এই দুই অপারেশনই প্রায় O(1) (path compression + union by rank সহ) সময়ে করে। Kruskal's MST, connectivity check, cycle detection-এ ব্যবহৃত (১৫ নম্বর অধ্যায়ে)।</p>
 
 <h3>৭) 0/1 Knapsack-এ "0/1" মানে কী?</h3>
-<p><b>ব্যাখ্যা:</b> প্রতিটা আইটেম হয় সম্পূর্ণ নেওয়া যায় (1) নয় একদমই না নেওয়া (0) — আংশিক নেওয়া যায় না (Fractional Knapsack থেকে আলাদা, যেখানে আংশিক নেওয়া যায় ও Greedy দিয়ে সমাধান করা যায়)। এই সীমাবদ্ধতাই কেন 0/1 Knapsack Greedy দিয়ে সমাধান করা যায় না, DP প্রয়োজন হয় (১৫ নম্বর অধ্যায়ে)।</p>
+<p><b>ব্যাখ্যা:</b> প্রতিটা আইটেম হয় সম্পূর্ণ নেওয়া যায় (1) নয় একদমই না নেওয়া (0) — আংশিক নেওয়া যায় না (Fractional Knapsack থেকে আলাদা, যেখানে আংশিক নেওয়া যায় ও Greedy দিয়ে সমাধান করা যায়)। এই সীমাবদ্ধতাই কেন 0/1 Knapsack Greedy দিয়ে সমাধান করা যায় না, DP প্রয়োজন হয় (১৭ নম্বর অধ্যায়ে)।</p>
 
 <h3>৮) কীভাবে বুঝবেন একটা সমস্যা DP দিয়ে সমাধান করা যাবে?</h3>
-<p><b>ব্যাখ্যা:</b> দুইটা লক্ষণ খুঁজুন — Overlapping Subproblems (একই উপ-সমস্যা বারবার আসছে) ও Optimal Substructure (মূল সমস্যার সমাধান উপ-সমস্যার সমাধান দিয়ে তৈরি করা যায়)। এছাড়া "maximum/minimum ways", "কতভাবে সম্ভব", "optimal value" ধরনের শব্দ প্রায়ই DP-র ইঙ্গিত দেয় (১৪ নম্বর অধ্যায়ে)।</p>
+<p><b>ব্যাখ্যা:</b> দুইটা লক্ষণ খুঁজুন — Overlapping Subproblems (একই উপ-সমস্যা বারবার আসছে) ও Optimal Substructure (মূল সমস্যার সমাধান উপ-সমস্যার সমাধান দিয়ে তৈরি করা যায়)। এছাড়া "maximum/minimum ways", "কতভাবে সম্ভব", "optimal value" ধরনের শব্দ প্রায়ই DP-র ইঙ্গিত দেয় (১৬ নম্বর অধ্যায়ে)।</p>
 
 <h3>৯) একটা Linked List-এ Cycle আছে কিনা কীভাবে O(1) space-এ যাচাই করবেন?</h3>
-<p><b>ব্যাখ্যা:</b> Floyd's Cycle Detection (Fast/Slow Pointer) — slow pointer প্রতি ধাপে ১টা node, fast pointer ২টা node এগোয়। Cycle থাকলে fast পরিশেষে slow-কে ধরে ফেলবে (দুইটা একই node-এ মিলবে); cycle না থাকলে fast আগেই <code>null</code>-এ পৌঁছাবে (৮ নম্বর অধ্যায়ে)।</p>
+<p><b>ব্যাখ্যা:</b> Floyd's Cycle Detection (Fast/Slow Pointer) — slow pointer প্রতি ধাপে ১টা node, fast pointer ২টা node এগোয়। Cycle থাকলে fast পরিশেষে slow-কে ধরে ফেলবে (দুইটা একই node-এ মিলবে); cycle না থাকলে fast আগেই <code>null</code>-এ পৌঁছাবে (১০ নম্বর অধ্যায়ে)।</p>
 
 <h3>১০) একটা সমস্যা দেখেই কীভাবে বুঝবেন কোন প্যাটার্ন ব্যবহার করবেন?</h3>
-<p><b>ব্যাখ্যা:</b> প্রথমে constraint দেখুন (n-এর আকার প্রত্যাশিত complexity বলে দেয়), তারপর সমস্যার ভাষায় কীওয়ার্ড খুঁজুন ("sorted", "contiguous subarray", "shortest path", "kth largest") — এগুলো নির্দিষ্ট প্যাটার্নের দিকে ইঙ্গিত করে। কোনো পরিচিত প্যাটার্ন না মিললে, brute force দিয়ে শুরু করে ধাপে ধাপে optimize করুন (১ ও ১৭ নম্বর অধ্যায়ে)।</p>
+<p><b>ব্যাখ্যা:</b> প্রথমে constraint দেখুন (n-এর আকার প্রত্যাশিত complexity বলে দেয়), তারপর সমস্যার ভাষায় কীওয়ার্ড খুঁজুন ("sorted", "contiguous subarray", "shortest path", "kth largest") — এগুলো নির্দিষ্ট প্যাটার্নের দিকে ইঙ্গিত করে। কোনো পরিচিত প্যাটার্ন না মিললে, brute force দিয়ে শুরু করে ধাপে ধাপে optimize করুন (১ ও ১৯ নম্বর অধ্যায়ে)।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->
