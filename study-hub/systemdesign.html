@@ -728,6 +728,16 @@ Refill rate: 5 token/sec, Bucket capacity: 20
 <tr><td>Sliding Window Counter</td><td>ভালো</td><td>উচ্চ (approximate)</td><td>কম</td></tr>
 </table>
 
+<h3>প্রতিটা Algorithm-এর সুবিধা ও অসুবিধা (Pros &amp; Cons)</h3>
+<table>
+<tr><th>Algorithm</th><th>সুবিধা (Pros)</th><th>অসুবিধা (Cons)</th></tr>
+<tr><td>Token Bucket</td><td>Controlled burst সহ্য করতে পারে (bucket capacity পর্যন্ত); implement করা সহজ, memory খরচ কম (শুধু token count + last-refill timestamp); Stripe, AWS-এর মতো প্রোডাকশন সিস্টেমে ব্যবহৃত, ভালো পরীক্ষিত পদ্ধতি</td><td>দুটো প্যারামিটার (refill rate, bucket size) সঠিকভাবে টিউন করা কঠিন; bucket size বেশি রাখলে বড় burst downstream service-কে overwhelm করতে পারে</td></tr>
+<tr><td>Leaky Bucket</td><td>Output rate সবসময় smooth ও constant থাকে — downstream service predictable, স্থির load পায়; traffic shaping/networking-এ ভালো ফিট করে</td><td>Legitimate burst (যেমন flash-sale traffic)-ও সহ্য করে না, reject/delay করে দেয়; queue-based হওয়ায় প্রতিটা request-এ অতিরিক্ত latency যোগ হয়; queue পূর্ণ হলে valid request-ও drop হতে পারে</td></tr>
+<tr><td>Fixed Window Counter</td><td>বাস্তবায়ন সবচেয়ে সহজ; memory খরচ সবচেয়ে কম (per-window শুধু একটা counter)</td><td>Window boundary-তে নির্ধারিত limit-এর প্রায় দ্বিগুণ পর্যন্ত request পাস হয়ে যেতে পারে (দেখুন উপরের "Window Boundary Burst" callout) — কড়া নির্ভুলতা দরকার হলে এই সমস্যা গুরুতর</td></tr>
+<tr><td>Sliding Window Log</td><td>সম্পূর্ণ নির্ভুল, কোনো boundary সমস্যা নেই — সবচেয়ে strict ও fair enforcement</td><td>প্রতিটা request-এর timestamp আলাদা রাখতে হয় বলে memory খরচ ট্রাফিকের সাথে সরাসরি বাড়ে — high-traffic client-এর জন্য ব্যয়বহুল, স্কেল করা কঠিন</td></tr>
+<tr><td>Sliding Window Counter</td><td>Fixed Window-এর সরলতা আর Sliding Log-এর নির্ভুলতার মধ্যে ভালো ব্যালেন্স; কম memory খরচেই boundary burst সমস্যা প্রায় দূর হয়ে যায়; বেশিরভাগ প্রোডাকশন সিস্টেমের (Cloudflare, Kong) বাস্তব পছন্দ</td><td>এটা একটা approximation — আগের window-এর ট্রাফিক uniformly ছড়িয়ে আছে ধরে নেয়, যা সবসময় সত্যি না হলে সামান্য ভুল হিসাব হতে পারে (practical ব্যবহারের জন্য যথেষ্ট নির্ভুল হলেও)</td></tr>
+</table>
+
 <h3>Rate Limiting কোথায় প্রয়োগ করা যায়</h3>
 <ul>
 <li><b>Client-side hint</b> — client নিজে throttle করে (যেমন retry-with-backoff), কিন্তু এটা কখনো নিরাপত্তার একমাত্র লাইন হতে পারে না, কারণ client কোড বাইপাস করা সহজ।</li>
