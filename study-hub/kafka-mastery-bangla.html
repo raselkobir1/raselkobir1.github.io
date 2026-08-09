@@ -1983,6 +1983,105 @@ isolation.level=read_committed
 partition.assignment.strategy=CooperativeStickyAssignor
 max.poll.records=100                    <span class="c"># DB batch এর সাথে মানানসই</span></pre>
 
+<h3>C# appsettings.json + Confluent.Kafka Configuration (Producer + Consumer)</h3>
+<p>উপরের <code>server.properties</code>/topic-level config-টাই .NET client-এর দিক থেকে দেখতে এরকম — <code>appsettings.json</code>-এ ঠিক এই মানগুলো রাখলে financial-grade guarantee client-side-এও নিশ্চিত হয়:</p>
+<pre>{
+  "Kafka": {
+    <span class="c">// Cluster ট্যাবের ৩ AZ থেকে ৩টা আলাদা broker — একটা AZ down হলেও client ঢুকতে পারবে</span>
+    "BootstrapServers": "broker-1.kafka.internal:9092,broker-3.kafka.internal:9092,broker-5.kafka.internal:9092",
+
+    "Producer": {
+      "ClientId": "accounting-invoice-producer",
+      "Acks": "All",
+      "EnableIdempotence": true,
+      "MaxInFlight": 5,
+      "CompressionType": "Lz4",
+      "LingerMs": 5,
+      "MessageTimeoutMs": 30000,
+      "MessageSendMaxRetries": 2147483647
+    },
+
+    "Consumer": {
+      "GroupId": "accounting-ledger-service",
+      "EnableAutoCommit": false,
+      "AutoOffsetReset": "Earliest",
+      "IsolationLevel": "ReadCommitted",
+      "PartitionAssignmentStrategy": "CooperativeSticky",
+      "SessionTimeoutMs": 10000,
+      "MaxPollIntervalMs": 300000
+    }
+  }
+}</pre>
+
+<h4>Code — POCO bind + DI registration (Program.cs)</h4>
+<pre><span class="c">// KafkaSettings.cs — appsettings.json-এর সাথে ১:১ shape</span>
+public class KafkaSettings
+{
+    public string BootstrapServers { get; set; } = "";
+    public ProducerSettings Producer { get; set; } = new();
+    public ConsumerSettings Consumer { get; set; } = new();
+}
+public class ProducerSettings { public string ClientId { get; set; } = ""; }
+public class ConsumerSettings { public string GroupId { get; set; } = ""; }
+
+<span class="c">// Program.cs</span>
+builder.Services.Configure&lt;KafkaSettings&gt;(builder.Configuration.GetSection("Kafka"));
+
+builder.Services.AddSingleton&lt;IProducer&lt;string, Invoice&gt;&gt;(sp =&gt;
+{
+    var s = sp.GetRequiredService&lt;IOptions&lt;KafkaSettings&gt;&gt;().Value;
+    var config = new ProducerConfig
+    {
+        BootstrapServers          = s.BootstrapServers,
+        ClientId                  = s.Producer.ClientId,
+        Acks                      = Acks.All,                 <span class="c">// সব ISR ack না দিলে সফল ধরবে না</span>
+        EnableIdempotence         = true,                     <span class="c">// retry-তে broker-side duplicate ঠেকায়</span>
+        MaxInFlight                = 5,
+        CompressionType           = CompressionType.Lz4,
+        LingerMs                  = 5,
+        MessageTimeoutMs          = 30000,                     <span class="c">// delivery.timeout.ms — এর মধ্যে ack না এলে callback-এ error</span>
+        MessageSendMaxRetries     = int.MaxValue,
+        <span class="c">// Cluster Flow ট্যাবের Flow ৩: leader crash হলে client নতুন leader খুঁজে নিতে
+        // যে সময় নেয়, সেটা এই দুটো দিয়ে bound করা — খুব বড় রাখলে failover ধীর মনে হবে</span>
+        SocketTimeoutMs           = 10000,
+        ReconnectBackoffMaxMs     = 5000
+    };
+    return new ProducerBuilder&lt;string, Invoice&gt;(config)
+        .SetValueSerializer(new JsonSerializer&lt;Invoice&gt;())     <span class="c">// অথবা Avro/Protobuf + Schema Registry</span>
+        .Build();
+});
+
+builder.Services.AddSingleton&lt;IConsumer&lt;string, Invoice&gt;&gt;(sp =&gt;
+{
+    var s = sp.GetRequiredService&lt;IOptions&lt;KafkaSettings&gt;&gt;().Value;
+    var config = new ConsumerConfig
+    {
+        BootstrapServers            = s.BootstrapServers,
+        GroupId                     = s.Consumer.GroupId,
+        EnableAutoCommit            = false,                              <span class="c">// manual commit — Inbox pattern-এর পরেই</span>
+        AutoOffsetReset             = AutoOffsetReset.Earliest,
+        IsolationLevel              = IsolationLevel.ReadCommitted,       <span class="c">// aborted transaction record skip করে</span>
+        PartitionAssignmentStrategy = PartitionAssignmentStrategy.CooperativeSticky,
+        SessionTimeoutMs            = 10000,
+        MaxPollIntervalMs           = 300000
+    };
+    return new ConsumerBuilder&lt;string, Invoice&gt;(config)
+        .SetValueDeserializer(new JsonDeserializer&lt;Invoice&gt;())
+        .Build();
+});</pre>
+
+<table>
+<tr><th>Setting</th><th>মান</th><th>কেন (financial-grade)</th></tr>
+<tr><td><code>BootstrapServers</code></td><td>৩ AZ থেকে ৩টা broker (comma-separated)</td><td>একটা AZ down থাকলেও client cluster metadata পাবে (Cluster ট্যাবের Flow ২)</td></tr>
+<tr><td><code>Acks=All</code> + <code>EnableIdempotence=true</code></td><td>—</td><td>সব ISR-এ replicate না হওয়া পর্যন্ত সফল নয়, আর retry-তে duplicate write হয় না</td></tr>
+<tr><td><code>MessageTimeoutMs</code>/<code>SocketTimeoutMs</code></td><td>৩০s / ১০s</td><td>leader crash হলে (Cluster ট্যাবের Flow ৩) client কত দ্রুত নতুন leader-এ retry করবে তার bound — এই দুটো ছাড়া producer অনির্দিষ্টকাল hang করতে পারে</td></tr>
+<tr><td><code>EnableAutoCommit=false</code></td><td>—</td><td>DB transaction commit-এর <b>পরেই</b> manual offset commit (Inbox pattern উপরে)</td></tr>
+<tr><td><code>IsolationLevel=ReadCommitted</code></td><td>—</td><td>abort হওয়া transaction-এর record consumer কখনো দেখবে না</td></tr>
+<tr><td><code>PartitionAssignmentStrategy=CooperativeSticky</code></td><td>—</td><td>rolling deploy/pod restart-এ rebalance storm কমায় (Cluster ট্যাবের Flow ৫, Consumer ট্যাব)</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+<code>BootstrapServers</code>-এ শুধু ১টা broker address রাখা, বা appsettings.json-এ hardcode করে environment-ভেদে (dev/staging/prod) আলাদা না করা। Production-এ সবসময় একাধিক AZ-এর broker address, আর secret/connection string-এর মতোই environment-specific configuration (Key Vault/env var override) হিসেবে রাখুন — কখনো plaintext appsettings.json-এ credential (SASL password) commit করবেন না।</div>
+
 <h3>.NET-নির্দিষ্ট টিপস</h3>
 <ul>
 <li>Client: <b>Confluent.Kafka</b> (librdkafka-based) — production-ready, .NET-এ standard।</li>
@@ -2121,6 +2220,9 @@ max.poll.records=100                    <span class="c"># DB batch এর সা
 <div class="callout why"><span class="tag">কেন Controller-কে Broker থেকে আলাদা node-এ রাখা হলো</span>
 ছোট cluster-এ controller ও broker role একই node-এ combine করা যায় (KRaft-এ default এটাই সহজ)। কিন্তু এখানে ইচ্ছাকৃতভাবে <b>dedicated controller node</b> ব্যবহার করা হয়েছে — কারণ production-এ leader election বা metadata write-এর সময় যদি ঐ একই node-এ ভারী data traffic (produce/fetch/replication) চলে, তাহলে control plane latency বেড়ে যায় (GC pause, disk I/O contention)। Data plane (broker) আর control plane (controller) আলাদা রাখলে একটার load অন্যটাকে প্রভাবিত করে না — বড় financial-grade cluster-এ এটাই recommended pattern।</div>
 
+<div class="callout why"><span class="tag">Rack awareness-এর একটা লুকানো খরচ — cross-AZ traffic</span>
+৩ AZ-জুড়ে replica ছড়ানো availability দেয়, কিন্তু বিনামূল্যে নয়। AWS/GCP/Azure-এর মতো cloud provider-এ একই AZ-এর ভেতরে network traffic সাধারণত ফ্রি, কিন্তু <b>cross-AZ traffic-এ per-GB চার্জ থাকে</b> — আর replication মানেই প্রতিটা write কমপক্ষে ২টা AZ-cross ছুঁয়ে যায় (leader থেকে বাকি ২ follower-এ)। ৬০,০০০ msg/s-এর মতো throughput-এ এই replication traffic মাসে উল্লেখযোগ্য বিল হতে পারে। এছাড়া cross-AZ round-trip latency (সাধারণত ১-২ms) same-AZ-এর তুলনায় বেশি — <code>acks=all</code>-এ প্রতিটা write-কে সেই latency সহ্য করতে হয়। এটা কোনো bug নয় — এটাই durability vs cost/latency-র trade-off; single-AZ cluster সস্তা ও দ্রুত কিন্তু AZ outage-এ পুরো cluster হারায় (Failure ট্যাবের "Zone/cluster outage" দেখুন)।</div>
+
 <h3>Flow ১ — Cluster Bootstrap: প্রথমবার ৯টা node একসাথে উঠলে কী ঘটে</h3>
 <div class="diagram"><pre>
 Controller-1 (AZ-A) ─┐
@@ -2143,6 +2245,26 @@ Broker-1..6 প্রত্যেকে ──RegisterBroker RPC──► Active
 </pre></div>
 <div class="callout behind"><span class="tag">Behind the scenes — Raft election-এ tie হলে কী হয়</span>
 তিন controller-ই একসাথে বুট হলে সবাই একই মুহূর্তে "candidate" হতে পারে এবং vote split হতে পারে। KRaft-এ এক্ষেত্রে randomized election timeout ব্যবহার হয় (Raft paper-এর standard কৌশল) — প্রতিটা candidate ভিন্ন ভিন্ন সময় retry করে, তাই দ্বিতীয় বা তৃতীয় round-এই একজন majority পেয়ে যায়। এই পুরো bootstrap সাধারণত কয়েক সেকেন্ডের মধ্যে শেষ হয়।</div>
+
+<h4>Config snippet — controller ও broker node একে অপরকে কীভাবে খুঁজে পায়</h4>
+<p>উপরের Raft election আর RegisterBroker flow বাস্তবে <code>server.properties</code>-এর এই কয়েকটা key-এর ওপর দাঁড়িয়ে:</p>
+<pre><span class="c"># Controller-1 (AZ-A) — dedicated controller node</span>
+process.roles=controller
+node.id=1
+controller.quorum.voters=1@ctrl-a.internal:9093,2@ctrl-b.internal:9093,3@ctrl-c.internal:9093
+listeners=CONTROLLER://ctrl-a.internal:9093
+
+<span class="c"># Broker-1 (AZ-A) — dedicated broker node, একই quorum.voters সবাই জানে</span>
+process.roles=broker
+node.id=4
+controller.quorum.voters=1@ctrl-a.internal:9093,2@ctrl-b.internal:9093,3@ctrl-c.internal:9093
+broker.rack=az-a
+listeners=PLAINTEXT://0.0.0.0:9092
+advertised.listeners=PLAINTEXT://broker-1.kafka.example.com:9092</pre>
+<p><code>controller.quorum.voters</code> হলো <code>nodeId@host:port</code> ফরম্যাটে সব controller-এর একটা static তালিকা — এটাই সেই ঠিকানা যেখানে broker-রা <code>RegisterBroker</code> পাঠায় আর controller-রা একে অপরের সাথে Raft vote exchange করে। <code>broker.rack</code>-ই controller-কে বলে দেয় কোন broker কোন AZ-তে — এটা ছাড়া rack-aware placement (উপরের diagram-এর মূল ভিত্তি) কাজ করে না।</p>
+
+<div class="callout mistake"><span class="tag">Production gotcha — advertised.listeners ভুল হলে client "cluster down" ভাবে</span>
+<code>listeners</code> হলো broker যে address-এ বসে শোনে (প্রায়ই internal/private, যেমন Docker/K8s pod বা VPC-internal hostname)। কিন্তু Metadata response-এ client-কে broker যেই address পাঠায় সেটা আসে <code>advertised.listeners</code> থেকে — client <b>ঠিক এই address-েই</b> সরাসরি connect করার চেষ্টা করবে (Flow ২ দেখুন)। যদি <code>advertised.listeners</code>-এ এমন একটা hostname/IP থাকে যা client-এর network থেকে পৌঁছানো যায় না (যেমন Kubernetes-এর internal pod IP, বা ভুল AZ-এর private IP), তাহলে producer/consumer <b>bootstrap broker-এর সাথে সফলভাবে connect হয়, Metadata-ও পায়</b>, কিন্তু তারপর leader-এ produce/fetch করতে গিয়ে connection timeout দেয় — লক্ষণ দেখে মনে হয় "cluster অর্ধেক down", আসলে শুধু routing ঠিকানা ভুল। এটাই multi-node cluster-এর সবচেয়ে common আর সবচেয়ে confusing production bug — বিশেষ করে Kubernetes/multi-region deploy-এ যেখানে প্রতিটা broker pod-এর জন্য আলাদা externally-reachable <code>advertised.listeners</code> সেট করতে হয় (per-broker override, cluster-wide এক মান দিয়ে চলে না)।</div>
 
 <h3>Flow ২ — Client Bootstrap: Producer/Consumer কীভাবে সঠিক node খুঁজে পায়</h3>
 <p>এখানেই "multi-node" ব্যাপারটার সবচেয়ে গুরুত্বপূর্ণ দিক বোঝা যায় — client কখনো ৬টা broker-এর সব address জানে না বা সবগুলোর সাথে সমান কথা বলে না।</p>
@@ -2321,6 +2443,41 @@ Follower2:   [0][1][2][3]
 
 <h3>১৫) Auto commit বনাম manual commit — কোনটায় কী ঝুঁকি?</h3>
 <p><b>ব্যাখ্যা:</b> <code>enable.auto.commit=true</code>-তে নির্দিষ্ট interval-এ offset automatic commit হয় — process করার আগেই commit হয়ে গেলে crash-এ ঐ message আর প্রসেস না হয়েই বাদ যায় (data loss)। Manual <code>commitSync()</code> business logic <b>process করার পরে</b> ডাকলে at-least-once নিশ্চিত হয় — কিন্তু commit-এর আগে crash হলে message পুনরায় আসতে পারে (duplicate), তাই consumer-কে idempotent হতে হয় (Consumer ও Production ট্যাব)। Financial/accounting pipeline-এ তাই সবসময় <code>enable.auto.commit=false</code> + process-পরবর্তী manual commit + DB-side idempotency (Inbox pattern) ব্যবহার করা হয়।</p>
+
+<h3>১৬) Consumer group কে তৈরি করে — producer না consumer?</h3>
+<p><b>ব্যাখ্যা:</b> <span class="kw">consumer</span>। আসলে producer-এর consumer group সম্পর্কে কোনো ধারণাই নেই — producer শুধু topic-এর partition-এ record লেখে, কে কোন group-এ পড়ছে তা তার জানার প্রয়োজন নেই (Foundation ট্যাব)। আর কোনো explicit "create group" command/API-ও নেই (topic-এর মতো <code>kafka-topics --create</code>-এর সমতুল্য কিছু নেই) — group তৈরি হয় সম্পূর্ণ implicit ভাবে, প্রথম যেই consumer একটা নতুন <code>group.id</code> দিয়ে connect করে।</p>
+<div class="diagram"><pre>
+consumer.subscribe("accounting.invoice.created")     <span class="c">// group.id = "accounting-ledger-service"</span>
+        │
+        ▼
+Consumer ──FindCoordinatorRequest──► যেকোনো broker
+        │  (broker হিসাব করে: hash(group.id) % __consumer_offsets-এর partition সংখ্যা
+        │   → সেই partition-এর leader broker-ই এই group-এর Group Coordinator)
+        ▼
+Coordinator broker: "accounting-ledger-service" নামে group আগে দেখিনি
+        → এখনই in-memory + __consumer_offsets topic-এ group metadata তৈরি (state: Empty → PreparingRebalance)
+        ▼
+JoinGroup / SyncGroup ──► এই consumer-কে সব partition বরাদ্দ (এই মুহূর্তে গ্রুপে সে একাই)
+</pre></div>
+<p>তাই গ্রুপ producer তৈরি করে না, আর deliberately-created কোনো object-ও নয় — এটা coordinator broker-এর মনে হওয়া মাত্র "ও, এই নামে কেউ নেই তো, বানিয়ে দিই" গোছের lazy side-effect। Consumer সব বন্ধ হয়ে গেলেও group মুছে যায় না — <code>Empty</code> state-এ <code>__consumer_offsets</code>-এ থেকে যায় (committed offset নিয়ে), যতক্ষণ না <code>offsets.retention.minutes</code> (default ৭ দিন) পার হয় বা কেউ ম্যানুয়ালি <code>kafka-consumer-groups --delete</code> চালায়।</p>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+ভাবা যে group.id প্রথমে কোথাও "register" করতে হবে, বা producer-এর সাথে এর কোনো সম্পর্ক আছে। বাস্তবে group.id একটা plain string — টাইপো করলে (যেমন <code>accounting-ledger-servic</code>) Kafka কোনো error দেবে না, চুপচাপ একটা নতুন, আলাদা group তৈরি করে দেবে, যেটা <code>auto.offset.reset</code> অনুযায়ী শুরু থেকে বা একদম নতুন data থেকে পড়া শুরু করবে — পুরনো group-এর progress-এর কোনো সম্পর্কই থাকবে না।</div>
+
+<h3>১৭) auto.offset.reset কী, আর enable.auto.commit-এর সাথে গুলিয়ে ফেলা কেন ভুল?</h3>
+<p><b>ব্যাখ্যা:</b> নামে মিল থাকলেও এই দুটো সম্পূর্ণ ভিন্ন প্রশ্নের উত্তর দেয় (Consumer ট্যাব):</p>
+<table>
+<tr><th>Setting</th><th>প্রশ্ন যার উত্তর দেয়</th><th>কখন relevant</th></tr>
+<tr><td><code>enable.auto.commit</code></td><td>প্রসেস করা offset <b>কখন</b> commit হবে</td><td>প্রতিটা <code>poll()</code>-এ, normal operation-এ সবসময়</td></tr>
+<tr><td><code>auto.offset.reset</code></td><td>এই partition-এ consumer-এর <b>কোনো committed offset-ই না থাকলে</b> কোথা থেকে শুরু করবে</td><td>শুধু ২টা ক্ষেত্রে: (১) সম্পূর্ণ নতুন consumer group, বা (২) committed offset retention পার হয়ে <code>OffsetOutOfRangeException</code> (Failure ট্যাব)</td></tr>
+</table>
+<p><code>auto.offset.reset</code>-এর তিনটা মান:</p>
+<ul>
+<li><code>earliest</code> — topic-এর একদম শুরু থেকে (retention-এর মধ্যে যতদূর আছে) পড়া শুরু করে। কিছু miss হয় না, কিন্তু নতুন group-এর জন্য বিশাল backlog reprocess হতে পারে।</li>
+<li><code>latest</code> — এই মুহূর্তের পরে আসা <b>নতুন</b> message থেকে শুরু করে। এই group শুরু হওয়ার আগে topic-এ যা ছিল, সব silently skip হয়ে যায়।</li>
+<li><code>none</code> — কোনো committed offset না পেলে চুপচাপ কিছু না করে <code>NoOffsetForPartitionException</code> throw করে — decision-টা explicitly code-এ নিতে বাধ্য করে।</li>
+</ul>
+<div class="callout mistake"><span class="tag">কেন AutoOffsetReset.Latest financial pipeline-এ বিপজ্জনক</span>
+ধরুন <code>accounting-ledger-service</code> নামে consumer group প্রথমবার production-এ deploy করলেন, কিন্তু <code>accounting.invoice.created</code> topic-এ আগে থেকেই কয়েক হাজার invoice event জমা আছে (আগে থেকে চলছিল অন্য কোনো producer, বা partition বাড়ানোর সময় backfill হয়েছিল)। <code>AutoOffsetReset.Latest</code> দিলে এই group সেই সব পুরনো invoice <b>কখনো দেখবেই না</b> — কোনো error, কোনো log, কোনো exception ছাড়াই নীরবে skip হয়ে যাবে, কারণ Kafka-র দৃষ্টিতে এটা সঠিক আচরণ ("group-টা তো এখনই শুরু হলো")। এই কারণেই Production ট্যাবের C# config-এ ইচ্ছাকৃতভাবে <code>AutoOffsetReset.Earliest</code> বেছে নেওয়া হয়েছে — accounting-এ "কম ডেটা মিস করার চেয়ে বেশি reprocess করা" সবসময় নিরাপদ পছন্দ, আর duplicate reprocess Inbox pattern (idempotency) দিয়ে already সামলানো হয়। <code>Latest</code> শুধু সেই ক্ষেত্রে ঠিক আছে যেখানে পুরনো data আসলেই গুরুত্বহীন — যেমন real-time metrics dashboard বা live notification, যেখানে শুরুর আগের event miss করাটা acceptable trade-off।</div>
 </template>
 
 <script>
