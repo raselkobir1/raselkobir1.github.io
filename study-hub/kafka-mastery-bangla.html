@@ -147,6 +147,7 @@ const pages = [
   {id:"security", icon:"🔐", title:"Security"},
   {id:"operations", icon:"📟", title:"Operations & Monitoring"},
   {id:"production", icon:"🏦", title:"Production: Accounting System"},
+  {id:"clusterflow", icon:"🖧", title:"Cluster — Multi-Node Flow"},
   {id:"interview", icon:"🎯", title:"Interview প্রশ্নোত্তর"},
 ];
 </script>
@@ -2006,8 +2007,255 @@ max.poll.records=100                    <span class="c"># DB batch এর সা
 এই ক্রমে গেলে concept-এর ভিত মজবুত হয়ে তারপর সেটা আপনার real accounting system-এ প্রয়োগ হবে।</div>
 </template>
 
+<template data-page="clusterflow">
+<h2 class="title">১৬. Kafka Cluster — Multi-Node Flow (আসল Deployment Design)</h2>
+<p class="lead">এতদিন আমরা Kafka-র প্রতিটা concept আলাদা আলাদা টুকরোয় দেখেছি — broker, replication, failure, scaling। এই চ্যাপ্টারে সব টুকরো এক জায়গায় জোড়া দিয়ে দেখব একটা <b>আসল, একাধিক Availability Zone-এ ছড়ানো multi-node cluster</b> — বুট হওয়া থেকে শুরু করে node fail হওয়া, নতুন node যোগ হওয়া আর zero-downtime upgrade পর্যন্ত, প্রতিটা network call ধরে ধরে।</p>
+
+<h3>মূল উদাহরণ — High-Level Design: ৩-AZ, ৬-Broker Accounting Cluster</h3>
+<p>ধরুন Production ট্যাবের সেই <b>.NET + PostgreSQL accounting platform</b>-এর জন্য এবার আপনি cluster-টাই ডিজাইন করছেন — শুধু client code নয়। লক্ষ্য একটাই: একটা পুরো data center (Availability Zone) হারিয়ে গেলেও কোনো downtime বা data loss না হওয়া।</p>
+<table>
+<tr><th>সিদ্ধান্ত</th><th>মান</th><th>কারণ</th></tr>
+<tr><td>Broker সংখ্যা</td><td>৬ (প্রতি AZ-তে ২টা)</td><td>প্রতিটা AZ-তে যথেষ্ট capacity যাতে এক AZ হারালেও বাকি দুটো চালিয়ে নিতে পারে</td></tr>
+<tr><td>Controller সংখ্যা</td><td>৩ (প্রতি AZ-তে ১টা, <b>dedicated node</b>)</td><td>KRaft quorum-এর জন্য বিজোড় সংখ্যা; broker-এর সাথে না মিশিয়ে আলাদা রাখা হয়েছে (নিচে কারণ)</td></tr>
+<tr><td>Topic</td><td><code>accounting.invoice.created</code> (P=12, RF=3), <code>accounting.payment.processed</code> (P=12, RF=3)</td><td>একাধিক partition parallelism দেয়, RF=3 প্রতিটা replica ৩ AZ-তে ছড়ায়</td></tr>
+<tr><td><code>broker.rack</code></td><td>প্রতিটা broker-এ AZ id (<code>az-a</code>/<code>az-b</code>/<code>az-c</code>)</td><td>Controller-কে বলে দেয় replica যেন একই AZ-তে জমে না যায়</td></tr>
+<tr><td><code>min.insync.replicas</code></td><td>২</td><td>একটা AZ হারালেও (RF=3-এর ২টা replica বেঁচে) write চলতে থাকে</td></tr>
+</table>
+
+<figure class="viz">
+<svg viewBox="0 0 900 470" role="img" aria-label="Six broker three availability zone Kafka cluster with dedicated KRaft controller per zone and partition replicas spread rack aware across zones">
+  <text x="450" y="24" text-anchor="middle" fill="#ff8c42" font-size="15" font-weight="700" letter-spacing="1">MULTI-NODE ACCOUNTING CLUSTER — ৩ AVAILABILITY ZONE</text>
+  <rect x="8" y="40" width="884" height="380" rx="12" fill="none" stroke="#2d333b" stroke-dasharray="5 5"/>
+  <!-- AZ-A -->
+  <g>
+    <rect x="20" y="54" width="278" height="344" rx="10" fill="#12161c" stroke="#2d333b"/>
+    <rect x="24" y="58" width="270" height="28" rx="8" fill="#1c2330"/>
+    <text x="159" y="77" text-anchor="middle" fill="#e6edf3" font-size="12.5" font-weight="700">AZ ap-southeast-1a</text>
+    <rect x="30" y="96" width="258" height="42" rx="8" fill="rgba(188,140,255,.14)" stroke="#bc8cff"/>
+    <text x="159" y="113" text-anchor="middle" fill="#bc8cff" font-size="12" font-weight="700">Controller-1 (KRaft voter)</text>
+    <text x="159" y="130" text-anchor="middle" fill="#9aa7b4" font-size="10">control plane শুধু — কোনো partition নেই</text>
+    <rect x="30" y="150" width="258" height="104" rx="8" fill="#161b22" stroke="#2d333b"/>
+    <rect x="30" y="150" width="258" height="24" rx="8" fill="#1c2330"/>
+    <text x="42" y="167" fill="#4aa3ff" font-size="12" font-weight="700">Broker 1</text>
+    <rect x="40" y="182" width="188" height="26" rx="7" fill="rgba(255,140,66,.16)" stroke="#ff8c42"/>
+    <text x="50" y="200" fill="#e6edf3" font-size="11.5">invoice · P0</text>
+    <rect x="236" y="185" width="20" height="20" rx="5" fill="#ff8c42"/><text x="246" y="200" text-anchor="middle" fill="#111" font-size="11" font-weight="700">L</text>
+    <rect x="40" y="214" width="188" height="26" rx="7" fill="rgba(74,163,255,.10)" stroke="#2d5170"/>
+    <text x="50" y="232" fill="#c9d1d9" font-size="11.5">invoice · P2</text>
+    <rect x="236" y="217" width="20" height="20" rx="5" fill="#4aa3ff"/><text x="246" y="232" text-anchor="middle" fill="#111" font-size="11" font-weight="700">F</text>
+    <rect x="30" y="266" width="258" height="104" rx="8" fill="#161b22" stroke="#2d333b"/>
+    <rect x="30" y="266" width="258" height="24" rx="8" fill="#1c2330"/>
+    <text x="42" y="283" fill="#4aa3ff" font-size="12" font-weight="700">Broker 2</text>
+    <rect x="40" y="298" width="188" height="26" rx="7" fill="rgba(74,163,255,.10)" stroke="#2d5170"/>
+    <text x="50" y="316" fill="#c9d1d9" font-size="11.5">invoice · P1</text>
+    <rect x="236" y="301" width="20" height="20" rx="5" fill="#4aa3ff"/><text x="246" y="316" text-anchor="middle" fill="#111" font-size="11" font-weight="700">F</text>
+    <rect x="40" y="330" width="188" height="26" rx="7" fill="rgba(255,140,66,.16)" stroke="#ff8c42"/>
+    <text x="50" y="348" fill="#e6edf3" font-size="11.5">payment · P0</text>
+    <rect x="236" y="333" width="20" height="20" rx="5" fill="#ff8c42"/><text x="246" y="348" text-anchor="middle" fill="#111" font-size="11" font-weight="700">L</text>
+  </g>
+  <!-- AZ-B -->
+  <g>
+    <rect x="311" y="54" width="278" height="344" rx="10" fill="#12161c" stroke="#2d333b"/>
+    <rect x="315" y="58" width="270" height="28" rx="8" fill="#1c2330"/>
+    <text x="450" y="77" text-anchor="middle" fill="#e6edf3" font-size="12.5" font-weight="700">AZ ap-southeast-1b</text>
+    <rect x="321" y="96" width="258" height="42" rx="8" fill="rgba(188,140,255,.14)" stroke="#bc8cff"/>
+    <text x="450" y="113" text-anchor="middle" fill="#bc8cff" font-size="12" font-weight="700">Controller-2 (KRaft voter)</text>
+    <text x="450" y="130" text-anchor="middle" fill="#9aa7b4" font-size="10">এই মুহূর্তে Active Controller</text>
+    <rect x="321" y="150" width="258" height="104" rx="8" fill="#161b22" stroke="#2d333b"/>
+    <rect x="321" y="150" width="258" height="24" rx="8" fill="#1c2330"/>
+    <text x="333" y="167" fill="#4aa3ff" font-size="12" font-weight="700">Broker 3</text>
+    <rect x="331" y="182" width="188" height="26" rx="7" fill="rgba(74,163,255,.10)" stroke="#2d5170"/>
+    <text x="341" y="200" fill="#c9d1d9" font-size="11.5">invoice · P0</text>
+    <rect x="527" y="185" width="20" height="20" rx="5" fill="#4aa3ff"/><text x="537" y="200" text-anchor="middle" fill="#111" font-size="11" font-weight="700">F</text>
+    <rect x="331" y="214" width="188" height="26" rx="7" fill="rgba(74,163,255,.10)" stroke="#2d5170"/>
+    <text x="341" y="232" fill="#c9d1d9" font-size="11.5">invoice · P2</text>
+    <rect x="527" y="217" width="20" height="20" rx="5" fill="#4aa3ff"/><text x="537" y="232" text-anchor="middle" fill="#111" font-size="11" font-weight="700">F</text>
+    <rect x="321" y="266" width="258" height="104" rx="8" fill="#161b22" stroke="#2d333b"/>
+    <rect x="321" y="266" width="258" height="24" rx="8" fill="#1c2330"/>
+    <text x="333" y="283" fill="#4aa3ff" font-size="12" font-weight="700">Broker 4</text>
+    <rect x="331" y="298" width="188" height="26" rx="7" fill="rgba(255,140,66,.16)" stroke="#ff8c42"/>
+    <text x="341" y="316" fill="#e6edf3" font-size="11.5">invoice · P1</text>
+    <rect x="527" y="301" width="20" height="20" rx="5" fill="#ff8c42"/><text x="537" y="316" text-anchor="middle" fill="#111" font-size="11" font-weight="700">L</text>
+    <rect x="331" y="330" width="188" height="26" rx="7" fill="rgba(74,163,255,.10)" stroke="#2d5170"/>
+    <text x="341" y="348" fill="#c9d1d9" font-size="11.5">payment · P0</text>
+    <rect x="527" y="333" width="20" height="20" rx="5" fill="#4aa3ff"/><text x="537" y="348" text-anchor="middle" fill="#111" font-size="11" font-weight="700">F</text>
+  </g>
+  <!-- AZ-C -->
+  <g>
+    <rect x="602" y="54" width="278" height="344" rx="10" fill="#12161c" stroke="#2d333b"/>
+    <rect x="606" y="58" width="270" height="28" rx="8" fill="#1c2330"/>
+    <text x="741" y="77" text-anchor="middle" fill="#e6edf3" font-size="12.5" font-weight="700">AZ ap-southeast-1c</text>
+    <rect x="612" y="96" width="258" height="42" rx="8" fill="rgba(188,140,255,.14)" stroke="#bc8cff"/>
+    <text x="741" y="113" text-anchor="middle" fill="#bc8cff" font-size="12" font-weight="700">Controller-3 (KRaft voter)</text>
+    <text x="741" y="130" text-anchor="middle" fill="#9aa7b4" font-size="10">control plane শুধু — কোনো partition নেই</text>
+    <rect x="612" y="150" width="258" height="104" rx="8" fill="#161b22" stroke="#2d333b"/>
+    <rect x="612" y="150" width="258" height="24" rx="8" fill="#1c2330"/>
+    <text x="624" y="167" fill="#4aa3ff" font-size="12" font-weight="700">Broker 5</text>
+    <rect x="622" y="182" width="188" height="26" rx="7" fill="rgba(74,163,255,.10)" stroke="#2d5170"/>
+    <text x="632" y="200" fill="#c9d1d9" font-size="11.5">invoice · P0</text>
+    <rect x="818" y="185" width="20" height="20" rx="5" fill="#4aa3ff"/><text x="828" y="200" text-anchor="middle" fill="#111" font-size="11" font-weight="700">F</text>
+    <rect x="622" y="214" width="188" height="26" rx="7" fill="rgba(255,140,66,.16)" stroke="#ff8c42"/>
+    <text x="632" y="232" fill="#e6edf3" font-size="11.5">invoice · P2</text>
+    <rect x="818" y="217" width="20" height="20" rx="5" fill="#ff8c42"/><text x="828" y="232" text-anchor="middle" fill="#111" font-size="11" font-weight="700">L</text>
+    <rect x="612" y="266" width="258" height="104" rx="8" fill="#161b22" stroke="#2d333b"/>
+    <rect x="612" y="266" width="258" height="24" rx="8" fill="#1c2330"/>
+    <text x="624" y="283" fill="#4aa3ff" font-size="12" font-weight="700">Broker 6</text>
+    <rect x="622" y="298" width="188" height="26" rx="7" fill="rgba(74,163,255,.10)" stroke="#2d5170"/>
+    <text x="632" y="316" fill="#c9d1d9" font-size="11.5">invoice · P1</text>
+    <rect x="818" y="301" width="20" height="20" rx="5" fill="#4aa3ff"/><text x="828" y="316" text-anchor="middle" fill="#111" font-size="11" font-weight="700">F</text>
+    <rect x="622" y="330" width="188" height="26" rx="7" fill="rgba(74,163,255,.10)" stroke="#2d5170"/>
+    <text x="632" y="348" fill="#c9d1d9" font-size="11.5">payment · P0</text>
+    <rect x="818" y="333" width="20" height="20" rx="5" fill="#4aa3ff"/><text x="828" y="348" text-anchor="middle" fill="#111" font-size="11" font-weight="700">F</text>
+  </g>
+  <text x="450" y="432" text-anchor="middle" fill="#9aa7b4" font-size="12" class="bn">৩ controller node শুধু metadata/election সামলায় — কোনো topic data রাখে না (dedicated control plane)</text>
+  <text x="450" y="452" text-anchor="middle" fill="#9aa7b4" font-size="12" class="bn">প্রতিটা partition-এর ৩ replica ৩টা আলাদা AZ-তে — এক AZ হারালেও সব partition-এর অন্তত ২টা replica বেঁচে থাকে</text>
+</svg>
+<div class="lgnd">
+  <span><i class="sw" style="background:#ff8c42"></i> Leader replica</span>
+  <span><i class="sw" style="background:#4aa3ff"></i> Follower replica</span>
+  <span><i class="sw" style="background:#bc8cff"></i> Dedicated KRaft controller</span>
+</div>
+<figcaption>৬ broker + ৩ dedicated controller, ৩ AZ-জুড়ে। <code>invoice</code> topic-এর leader ইচ্ছাকৃতভাবে ৩ AZ-তে ভাগ করা (load balance) — প্রতিটা AZ ঠিক ১টা partition-এর leader পায়।</figcaption>
+</figure>
+
+<div class="callout why"><span class="tag">কেন Controller-কে Broker থেকে আলাদা node-এ রাখা হলো</span>
+ছোট cluster-এ controller ও broker role একই node-এ combine করা যায় (KRaft-এ default এটাই সহজ)। কিন্তু এখানে ইচ্ছাকৃতভাবে <b>dedicated controller node</b> ব্যবহার করা হয়েছে — কারণ production-এ leader election বা metadata write-এর সময় যদি ঐ একই node-এ ভারী data traffic (produce/fetch/replication) চলে, তাহলে control plane latency বেড়ে যায় (GC pause, disk I/O contention)। Data plane (broker) আর control plane (controller) আলাদা রাখলে একটার load অন্যটাকে প্রভাবিত করে না — বড় financial-grade cluster-এ এটাই recommended pattern।</div>
+
+<h3>Flow ১ — Cluster Bootstrap: প্রথমবার ৯টা node একসাথে উঠলে কী ঘটে</h3>
+<div class="diagram"><pre>
+Controller-1 (AZ-A) ─┐
+Controller-2 (AZ-B) ─┼─ Raft vote exchange ──► majority (2/3 ভোট) পায় ──► Controller-2 = "Active Controller"
+Controller-3 (AZ-C) ─┘                                                    (বাকি ২টা standby/follower controller)
+
+Broker-1..6 প্রত্যেকে ──RegisterBroker RPC──► Active Controller (controller.quorum.voters ঠিকানায় connect করে)
+                                                    │
+                                   Active Controller: broker entry __cluster_metadata log-এ append + Raft দিয়ে
+                                                    replicate করে বাকি ২ controller-কে (durable commit)
+                                                    │
+                        সব ৬ broker আর ২ standby controller ──Fetch (metadata log)──► নিজের local cache আপডেট
+                                                    │
+                       Active Controller: প্রতিটা topic-partition-এর জন্য replica assignment গণনা করে
+                                          (broker.rack দেখে — একই AZ-তে ২টা replica না দেওয়ার চেষ্টা করে)
+                                                    │
+                       প্রতিটা broker বুঝে যায়: "আমি কোন কোন partition-এর leader, কোনগুলোর follower"
+                                                    │
+                                 Follower broker-রা leader-কে FetchRequest পাঠিয়ে actual data replicate শুরু করে
+</pre></div>
+<div class="callout behind"><span class="tag">Behind the scenes — Raft election-এ tie হলে কী হয়</span>
+তিন controller-ই একসাথে বুট হলে সবাই একই মুহূর্তে "candidate" হতে পারে এবং vote split হতে পারে। KRaft-এ এক্ষেত্রে randomized election timeout ব্যবহার হয় (Raft paper-এর standard কৌশল) — প্রতিটা candidate ভিন্ন ভিন্ন সময় retry করে, তাই দ্বিতীয় বা তৃতীয় round-এই একজন majority পেয়ে যায়। এই পুরো bootstrap সাধারণত কয়েক সেকেন্ডের মধ্যে শেষ হয়।</div>
+
+<h3>Flow ২ — Client Bootstrap: Producer/Consumer কীভাবে সঠিক node খুঁজে পায়</h3>
+<p>এখানেই "multi-node" ব্যাপারটার সবচেয়ে গুরুত্বপূর্ণ দিক বোঝা যায় — client কখনো ৬টা broker-এর সব address জানে না বা সবগুলোর সাথে সমান কথা বলে না।</p>
+<div class="diagram"><pre>
+.NET producer config:  bootstrap.servers = "broker1:9092,broker4:9092"   ← যেকোনো ২-৩টা, সবগুলো নয়
+
+Producer ──Metadata request──► broker1 (bootstrap list-এর প্রথমটা, শুধু "entry point")
+                                    │  (broker1 নিজে থেকেই cluster-wide metadata cache রাখে,
+                                    │   controller-কে জিজ্ঞেস করতে হয় না — সবাই sync থাকে)
+Producer ◄──response: {invoice-P0→Broker1(AZ-A), invoice-P1→Broker4(AZ-B), invoice-P2→Broker5(AZ-C), ...}──┘
+
+এরপর producer সরাসরি leader-কে চেনে — broker1 মাঝখানে থাকে না:
+
+    invoice·P0 record ──ProduceRequest──► Broker-1 (AZ-A)   ← সরাসরি
+    invoice·P1 record ──ProduceRequest──► Broker-4 (AZ-B)   ← সরাসরি
+    invoice·P2 record ──ProduceRequest──► Broker-5 (AZ-C)   ← সরাসরি
+</pre></div>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+<code>bootstrap.servers</code>-এ একটামাত্র broker address দেওয়া। ওটা down থাকলে producer/consumer cluster-এ ঢুকতেই পারবে না, যদিও বাকি ৫টা broker সুস্থ। সবসময় অন্তত ৩টা আলাদা AZ-এর broker address দিন — শুধু একটা connect হলেই বাকি cluster metadata চলে আসে।</div>
+
+<h3>Flow ৩ — একটা Broker Node হারিয়ে গেলে পুরো Cluster-এ কী ঘটে</h3>
+<p>ধরুন AZ-B-র Broker-4 crash করল — এটা ছিল <code>invoice·P1</code>-এর leader।</p>
+<div class="diagram"><pre>
+t=0s     Broker-4 crash (hardware/OOM/network) — invoice·P1-এর leader ছিল, payment·P0-এর follower ছিল
+
+t=0–9s   Active Controller (Controller-2) broker-4-এর heartbeat miss করতে থাকে
+         (broker.session.timeout.ms, default প্রায় ৯ সেকেন্ড পার হলে dead ধরে)
+
+t≈9s     Controller: invoice·P1-এর ISR দেখে = {Broker-4(dead), Broker-5, Broker-6}
+                      → নতুন leader নির্বাচন: Broker-5 (AZ-C) বা Broker-6 (AZ-C) থেকে একটা
+                      → ধরি Broker-6 leader হলো
+                      metadata log-এ leader-change commit + Raft দিয়ে বাকি controller-দের কাছে replicate
+                                       │
+                                       ▼
+         সব broker (Fetch করে) নতুন metadata replay করে — কে leader এখন সবাই জানে
+
+t≈9–10s  Producer পরের বার invoice·P1-এ লিখতে গিয়ে পুরনো ঠিকানায় (Broker-4) পাঠায়
+                      → NotLeaderOrFollowerException ফেরত আসে
+                                       │
+                                       ▼
+         Producer নতুন Metadata request পাঠায় (যেকোনো জীবিত broker-কে) → জানে leader এখন Broker-6
+                                       │
+                                       ▼
+         পরের ProduceRequest সরাসরি Broker-6-এ যায় — flow স্বাভাবিক, কোনো manual কাজ লাগেনি
+
+সারমর্ম: end-to-end unavailability window ≈ broker.session.timeout.ms (কয়েক সেকেন্ড মাত্র),
+তারপর producer/consumer নিজে থেকেই re-route হয়ে যায়।
+</pre></div>
+<div class="callout why"><span class="tag">এই design-এ AZ কেন গুরুত্বপূর্ণ</span>
+Broker-4 (AZ-B) হারালেও নতুন leader অন্য AZ (AZ-C)-এ পাওয়া গেল, কারণ replica শুরু থেকেই rack-aware placement-এ ৩ AZ-তে ছড়ানো ছিল। যদি ৩টা replica-ই ভুলবশত একই AZ-তে থাকত, তাহলে সেই AZ হারালে পুরো partition-ই অনুপলব্ধ হয়ে যেত — broker সংখ্যা বেশি হলেও।</div>
+
+<h3>Flow ৪ — Scale-Out: ৭ম Broker যোগ করার Multi-Node Flow</h3>
+<div class="diagram"><pre>
+AZ-A-তে নতুন Broker-7 যোগ হলো:
+
+Broker-7 ──RegisterBroker──► Active Controller ──metadata log entry──► সব broker জানে "নতুন broker আছে"
+
+⚠ কিন্তু এখনই কোনো existing partition Broker-7-এ যায় না — replica move নিজে থেকে হয় না।
+
+DevOps ম্যানুয়ালি চালায়:
+  kafka-reassign-partitions --generate    → rack-aware ভাবে কোন replica কোথায় move করা উচিত suggest করে
+  kafka-reassign-partitions --execute     → নির্বাচিত replica-দের move শুরু হয়
+
+প্রতিটা move-এর network flow (উদাহরণ: invoice·P2-এর একটা replica Broker-1 থেকে Broker-7-এ সরানো):
+  Broker-7 ──FetchRequest (Broker-1, বর্তমান leader-কে)──► পুরনো data catch-up শুরু (follower হিসেবে)
+  Broker-7 caught-up হলে ──► ISR-এ যুক্ত হয়
+  ISR পূর্ণ (নতুন + পুরনো replica একসাথে) হলে ──► পুরনো replica (Broker-1) থেকে drop করা হয়
+                                                    (এই পুরো সময় partition unavailable হয় না, শুধু replicate হয়)
+</pre></div>
+
+<h3>Flow ৫ — Rolling Restart / Zero-Downtime Upgrade</h3>
+<p>৬টা broker-কে নতুন Kafka version-এ upgrade করতে হবে — একসাথে সব বন্ধ করলে পুরো cluster downtime। তাই এক এক করে:</p>
+<div class="diagram"><pre>
+প্রতিটা broker-এর জন্য (একটার পর একটা, কখনো ২টা একসাথে না):
+
+  ১) controlled.shutdown.enable=true থাকায় broker shutdown সংকেত পেলে
+     controller-কে জানায় — তার সব leader partition অন্য ISR replica-কে হ্যান্ডওভার করা হয়
+     (client কোনো error দেখে না, নতুন leader আগে থেকেই ready ছিল)
+
+  ২) broker process বন্ধ ──► নতুন version deploy ──► broker আবার চালু
+
+  ৩) Broker ──RegisterBroker──► Controller ──► follower হিসেবে rejoin, পিছিয়ে থাকা data catch-up
+
+  ৪) auto.leader.rebalance.enable=true (বা ম্যানুয়াল preferred-leader-election)
+     ──► এই broker-এর "preferred leader" partition গুলো আবার তাকে ফিরিয়ে দেওয়া হয়
+         (নাহলে সব leadership কিছুক্ষণে অন্য কয়েকটা broker-এ জমে যাবে — uneven load)
+
+  ৫) পরের broker-এ যান — আগেরটা সুস্থ (ISR পূর্ণ) নিশ্চিত হয়ে তারপর
+</pre></div>
+<div class="callout mistake"><span class="tag">Common mistake</span>
+একসাথে একাধিক broker restart করা "সময় বাঁচানোর জন্য"। যদি দুটো broker একই partition-এর replica হয় এবং দুটোই একসাথে নেমে যায়, আর বাকি একটা matter করলে <code>min.insync.replicas</code> ভেঙে যেতে পারে — write আটকে যাবে। সবসময় এক এক করে, আর প্রতিটা shutdown-এর পর ISR পূর্ণ হয়েছে কিনা নিশ্চিত করে পরের-টা করুন।</div>
+
+<h3>সারসংক্ষেপ — কোন flow কোন node-দের মধ্যে ঘটে</h3>
+<table>
+<tr><th>Flow</th><th>শুরু করে</th><th>যেসব node জড়িত</th><th>ফলাফল</th></tr>
+<tr><td>Cluster bootstrap</td><td>সব node একসাথে ওঠা</td><td>৩ controller (Raft vote) + ৬ broker (register)</td><td>Active controller + প্রাথমিক leader assignment</td></tr>
+<tr><td>Client bootstrap</td><td>producer/consumer চালু হওয়া</td><td>client + যেকোনো ১টা broker (entry point)</td><td>সব leader-এর সরাসরি ঠিকানা জানা</td></tr>
+<tr><td>Node failure</td><td>broker crash</td><td>active controller + ঐ broker-এর ISR-এর বাকিরা + client</td><td>নতুন leader, client auto re-route (~session timeout)</td></tr>
+<tr><td>Scale-out</td><td>DevOps নতুন broker যোগ করা</td><td>নতুন broker + reassignment-এ ধরা পড়া পুরনো leader</td><td>নতুন broker ISR-এ ঢোকে, পুরনো replica drop</td></tr>
+<tr><td>Rolling upgrade</td><td>DevOps ইচ্ছাকৃত shutdown</td><td>একটা broker + controller + তার preferred-leader partition</td><td>Zero client-visible downtime</td></tr>
+</table>
+
+<div class="callout best"><span class="tag">Best practices — multi-node cluster design</span>
+<ul style="margin:4px 0">
+<li>Controller সংখ্যা সবসময় বিজোড় (৩ বা ৫) — majority ভোট hang হয় না।</li>
+<li>বড়/financial cluster-এ controller ও broker আলাদা node-এ (control plane vs data plane isolation)।</li>
+<li>Rack awareness (<code>broker.rack</code>) ছাড়া multi-AZ deploy করলে replica accidentally একই AZ-তে জমে যেতে পারে — সবসময় সেট করুন।</li>
+<li>Rolling restart-এ একসাথে ১টার বেশি broker কখনো নামাবেন না, আর <code>controlled.shutdown.enable=true</code> রাখুন।</li>
+</ul></div>
+</template>
+
 <template data-page="interview">
-<h2 class="title">১৬. Interview প্রশ্নোত্তর</h2>
+<h2 class="title">১৭. Interview প্রশ্নোত্তর</h2>
 <p class="lead">Kafka ইন্টারভিউতে বারবার আসা প্রশ্ন — basic থেকে advanced পর্যন্ত, প্রতিটার সংক্ষিপ্ত বাংলা ব্যাখ্যা, আগের chapter-গুলোর রেফারেন্স সহ।</p>
 
 <h3>১) Partition কী, আর একটা topic-এ একাধিক partition কেন লাগে?</h3>
