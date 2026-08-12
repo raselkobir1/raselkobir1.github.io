@@ -116,6 +116,11 @@
   .tcard.ready:hover .tgo .arw{transform:translateX(4px)}
   .tgo.muted{color:var(--muted); font-weight:500}
 
+  .tprog{margin:0 0 12px}
+  .tprog .ptrack{height:5px; border-radius:4px; background:var(--panel2); overflow:hidden}
+  .tprog .pfill{height:100%; background:var(--c,var(--accent))}
+  .tprog .ptext{font-size:11.5px; color:var(--muted); margin-top:5px}
+
   .empty{grid-column:1/-1; text-align:center; color:var(--muted); padding:50px 0}
 
   footer{margin-top:46px; padding-top:20px; border-top:1px solid var(--border); color:var(--muted); font-size:13px; text-align:center}
@@ -305,6 +310,24 @@ const topics = [
     tags:["১৫ অধ্যায়","Beginner→Advanced"], ready:true, href:"sd-case-studies.html" },
 ];
 
+// ================= PROGRESS =================
+const PROGRESS_KEY = 'studyhub:progress';
+function loadProgress(){
+  try { return JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; }
+  catch(e){ return {}; }
+}
+function bnToInt(s){
+  const map = {'০':'0','১':'1','২':'2','৩':'3','৪':'4','৫':'5','৬':'6','৭':'7','৮':'8','৯':'9'};
+  const ascii = String(s).replace(/[০-৯]/g, d=>map[d]);
+  const m = ascii.match(/\d+/);
+  return m ? parseInt(m[0],10) : 0;
+}
+function chapterTotal(t, saved){
+  const tag = t.tags.find(x=>/অধ্যায়/.test(x));
+  const fromTag = tag ? bnToInt(tag) : 0;
+  return (saved && saved.total) ? saved.total : fromTag;
+}
+
 // ================= RENDER =================
 (function(){
   const grid  = document.getElementById('grid');
@@ -313,12 +336,24 @@ const topics = [
   const chips  = document.getElementById('chips');
   let filter = 'all', term = '';
 
+  const progress = loadProgress();
+  let doneAll = 0, totalAll = 0;
+  topics.forEach(t=>{
+    if(!t.ready) return;
+    const key = t.href.replace(/\.html$/i,'');
+    const saved = progress[key];
+    const total = chapterTotal(t, saved);
+    const done = Math.min((saved && saved.read) ? saved.read.length : 0, total || Infinity);
+    doneAll += done; totalAll += total;
+  });
+
   // stats
   const ready = topics.filter(t=>t.ready).length;
   stats.innerHTML =
      `<div class="stat"><b>${topics.length}</b><span>টপিক</span></div>`
    + `<div class="stat"><b>${ready}</b><span>প্রস্তুত</span></div>`
-   + `<div class="stat"><b>${topics.length-ready}</b><span>শীঘ্রই</span></div>`;
+   + `<div class="stat"><b>${topics.length-ready}</b><span>শীঘ্রই</span></div>`
+   + `<div class="stat"><b>${doneAll}/${totalAll}</b><span>অধ্যায় সম্পন্ন</span></div>`;
 
   function card(t){
     const cls = t.ready ? 'ready' : 'soon';
@@ -329,10 +364,21 @@ const topics = [
       ? '<span class="tgo">শুরু করুন <span class="arw">→</span></span>'
       : '<span class="tgo muted">প্রস্তুত হচ্ছে…</span>';
     const meta = t.tags.map(x=>`<span class="badge">${x}</span>`).join('');
+    let prog = '';
+    if(t.ready){
+      const key = t.href.replace(/\.html$/i,'');
+      const saved = progress[key];
+      const total = chapterTotal(t, saved);
+      const done = Math.min((saved && saved.read) ? saved.read.length : 0, total || Infinity);
+      const pct = total ? Math.round(done/total*100) : 0;
+      prog = `<div class="tprog"><div class="ptrack"><div class="pfill" style="width:${pct}%"></div></div>`
+           + `<div class="ptext">${done}/${total} অধ্যায় সম্পন্ন</div></div>`;
+    }
     const inner =
        `<div class="tcard-top"><div class="ticon">${t.icon}</div>${status}</div>`
      + `<h3>${t.title}</h3>`
      + `<p class="desc">${t.desc}</p>`
+     + prog
      + `<div class="tmeta">${meta}</div>`
      + go;
     if(t.ready){
