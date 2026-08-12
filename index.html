@@ -85,8 +85,16 @@
     letter-spacing: -0.5px;
     color: var(--text);
     text-decoration: none;
+    display: flex;
+    align-items: center;
   }
   .nav-logo span { color: var(--accent); }
+  .nav-logo img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
   .nav-links { display: flex; gap: 32px; list-style: none; }
   .nav-links a {
     color: var(--muted2);
@@ -529,7 +537,7 @@
 
 <!-- NAV -->
 <nav id="navbar">
-  <a href="#" class="nav-logo">RK<span>.</span></a>
+  <a href="#" class="nav-logo"><img src="https://github.com/raselkobir1.png" alt="Rasel Kabir"></a>
   <ul class="nav-links">
     <li><a href="#skills">Skills</a></li>
     <li><a href="#experience">Experience</a></li>
