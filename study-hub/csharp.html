@@ -2931,6 +2931,13 @@ app.Run();</pre>
 <div class="callout why"><span class="tag">builder → services → app → middleware → run — কেন এই ক্রম</span>
 <code>WebApplicationBuilder</code> প্রথমে configuration ও DI container প্রস্তুত করে (<code>builder.Services...</code>), তারপর <code>builder.Build()</code> কল করলে একটা immutable <code>WebApplication</code> instance তৈরি হয়। এই instance-এর উপরেই middleware pipeline সাজানো হয় (<code>app.Use...</code>), আর সবশেষে <code>app.Run()</code> কল করলে Kestrel প্রকৃতপক্ষে port-এ bind করে request শোনা শুরু করে। এই ধাপগুলো উল্টে দিলে কম্পাইল টাইমেই এরর আসবে, কারণ <code>app</code> object তৈরি হওয়ার আগে middleware বসানো সম্ভব না।</div>
 
+<h3>Middleware আসলে কী — Request Delegate ও Short-Circuiting</h3>
+<p>একটা <span class="kw">Middleware</span> হলো এমন একটা ছোট software component, যেটা ASP.NET Core-এর request pipeline-এ বসে প্রতিটা HTTP request এবং তার response দুটোকেই হাতে পাওয়ার সুযোগ পায়। প্রতিটা middleware একটা <b>request delegate</b> (<code>RequestDelegate next</code>) গ্রহণ করে — এই delegate-টাই মূলত "pipeline-এর পরের ধাপ"-কে প্রতিনিধিত্ব করে। middleware নিজে সিদ্ধান্ত নেয় — request-টা <code>await next(context)</code> কল করে পরের middleware-এ পাঠাবে, নাকি নিজেই সরাসরি একটা response তৈরি করে pipeline-টা সেখানেই থামিয়ে দেবে। দ্বিতীয় আচরণটাকে বলে <b>short-circuiting</b>।</p>
+
+<div class="callout why"><span class="tag">কেন Short-Circuiting গুরুত্বপূর্ণ</span>
+যেমন — কোনো ইউজার unauthenticated হলে <code>UseAuthorization()</code> middleware <code>next()</code> কল না করেই সরাসরি একটা <code>401</code>/<code>403</code> response রিটার্ন করে দিতে পারে — এতে pipeline-এর পরের সব ধাপ (routing-এর পরের endpoint execution সহ) সম্পূর্ণ বাদ পড়ে যায়, ফলে অপ্রয়োজনীয় কাজ (যেমন database query চালানো) এড়ানো যায়। <code>UseStaticFiles()</code>-ও একই নীতিতে কাজ করে — request path-টা <code>wwwroot</code>-এ থাকা কোনো ফাইলের সাথে মিললে সেটা সরাসরি সার্ভ করে দেয়, request-টা routing/MVC পর্যন্ত পৌঁছায়ই না। এই জন্যই middleware-কে "nested function call"-এর মতো ভাবা যায় — প্রতিটা middleware তার নিজের before/after কোড চালায়, কিন্তু চাইলে ভেতরের কলটাই বাদ দিয়ে দিতে পারে।
+</div>
+
 <h3>Middleware Pipeline — একটার পর একটা ধাপ</h3>
 <p>প্রতিটা incoming HTTP request একটা <b>ordered chain of middleware</b>-এর ভেতর দিয়ে যায়। প্রতিটা middleware চাইলে request-কে সামনে পাঠানোর <b>আগে</b> কিছু করতে পারে, আবার পরের middleware কল করার (<code>next()</code> delegate invoke করার) <b>পরে</b> response নিয়েও কিছু করতে পারে — অনেকটা nested function call-এর মতো। এটা <code>app.Use(async (context, next) =&gt; { ... await next(); ... })</code> দিয়ে লেখা যায়, অথবা বিল্ট-ইন <code>UseXxx()</code> extension method দিয়ে।</p>
 <div class="diagram"><pre>
@@ -2958,6 +2965,35 @@ app.Use(async (context, next) =&gt;
 <tr><td><code>UseAuthorization</code></td><td>যাচাই করা identity-র উপর ভিত্তি করে <code>[Authorize]</code> নিয়ম প্রয়োগ করে — "তুমি এটা করতে পারবে কিনা" প্রশ্নের উত্তর</td></tr>
 <tr><td><code>UseStaticFiles</code></td><td><code>wwwroot</code> ফোল্ডার থেকে সরাসরি CSS/JS/image-এর মতো static file serve করে</td></tr>
 </table>
+
+<h3>Middleware Ordering — প্রোডাকশনে ব্যবহৃত ক্যানোনিক্যাল ক্রম</h3>
+<p>ASP.NET Core কোনো middleware-এর ক্রম জোর করে চাপিয়ে দেয় না — <code>Program.cs</code>-এ <code>app.Use...()</code> যে ক্রমে কল করা হয়, ঠিক সেই ক্রমেই pipeline তৈরি হয়। তবে প্রায় সব প্রোডাকশন অ্যাপে কাজ করে এমন একটা প্রমাণিত, ক্যানোনিক্যাল ক্রম আছে — নিচের টেবিলে প্রতিটা ধাপ কেন ঠিক ওই position-এ বসে সেটা সহ দেওয়া হলো।</p>
+<table>
+<tr><th>ক্রম</th><th>Middleware</th><th>কেন এই position-এ</th></tr>
+<tr><td>১</td><td><code>UseExceptionHandler</code> / <code>UseDeveloperExceptionPage</code></td><td>সবার আগে বসে, যাতে pipeline-এর পরের যেকোনো ধাপে (routing, auth, endpoint — যেখানেই হোক) exception ছুঁড়লে সেটা ধরে একটা সুশৃঙ্খল error response দেওয়া যায়। এটা নিচে থাকলে তার আগের middleware-এর exception ধরতে পারবে না।</td></tr>
+<tr><td>২</td><td><code>UseHsts</code></td><td>Production-এ ব্রাউজারকে ভবিষ্যতে সরাসরি HTTPS ব্যবহার করতে বলে দেয় — HTTPS redirect-এর ঠিক আগে বসে।</td></tr>
+<tr><td>৩</td><td><code>UseHttpsRedirection</code></td><td>HTTP request-কে HTTPS-এ redirect করে দেয় — এর পরের প্রতিটা middleware (static files, routing) যেন সবসময় secure connection-এর উপর কাজ করে তা নিশ্চিত করতে যত আগে সম্ভব বসানো হয়।</td></tr>
+<tr><td>৪</td><td><code>UseStaticFiles</code></td><td>Routing-এর আগে বসে, কারণ static file request (CSS/JS/image) MVC routing/endpoint execution পর্যন্ত পৌঁছানোর দরকারই নেই — সরাসরি short-circuit করে ফাইল সার্ভ করে দেয়, তাই আগে রাখলে performance-ও ভালো হয়।</td></tr>
+<tr><td>৫</td><td><code>UseRouting</code></td><td>কোন endpoint (controller action বা minimal API handler) এই request হ্যান্ডল করবে সেটা নির্ধারণ করে — কিন্তু এখনো execute করে না। পরের CORS/Authentication/Authorization middleware-গুলোর এই routing decision জানা দরকার, তাই এদের সবার আগে বসতে হয়।</td></tr>
+<tr><td>৬</td><td><code>UseCors</code></td><td>Routing-এর পরে বসে (কোন endpoint-এ কোন CORS policy attribute আছে জানতে দরকার), কিন্তু Authentication/Authorization-এর আগে — যাতে cross-origin request auth চেকের আগেই সঠিক CORS header পায়।</td></tr>
+<tr><td>৭</td><td><code>UseAuthentication</code></td><td>"তুমি কে" প্রশ্নের উত্তর দেয় — Routing-এর পরে বসে (কিছু endpoint <code>[AllowAnonymous]</code> হতে পারে, তাই routing decision আগে দরকার), কিন্তু অবশ্যই Authorization-এর আগে, কারণ Authorization নির্ভর করে Authentication-এ সেট হওয়া <code>User</code>/ClaimsPrincipal-এর উপর।</td></tr>
+<tr><td>৮</td><td><code>UseAuthorization</code></td><td>Authentication-এর ঠিক পরে বসে — যাচাই করা identity অনুযায়ী <code>[Authorize]</code> পলিসি প্রয়োগ করে। Endpoint execution-এর ঠিক আগে থাকা জরুরি, যাতে unauthorized request কখনো endpoint কোড পর্যন্ত না পৌঁছায়।</td></tr>
+<tr><td>৯</td><td><code>UseSession</code> / custom middleware</td><td>প্রয়োজন অনুযায়ী Authentication/Authorization-এর পরে, endpoint-এর আগে বসে — logging, custom header, rate limiting-এর মতো cross-cutting concern, যেগুলোর সিদ্ধান্ত "কে" এবং "কী permission" জানার উপর নির্ভর করতে পারে।</td></tr>
+<tr><td>১০</td><td><code>MapControllers</code> / <code>MapGet</code>/<code>MapPost</code>... (Endpoint execution)</td><td>Pipeline-এর একদম শেষে বসে — routing যে endpoint বেছে নিয়েছিল, তার আসল handler/action কোড এখানেই execute হয়।</td></tr>
+</table>
+<div class="diagram"><pre>
+ExceptionHandler → HSTS → HttpsRedirect → StaticFiles → Routing → CORS → Authentication → Authorization → Session/Custom → Endpoint
+</pre></div>
+<pre><span class="c">// ক্যানোনিক্যাল ক্রম — বাস্তব প্রোডাকশন অ্যাপে যেমনটা দেখা যায়</span>
+app.UseExceptionHandler("/error");
+app.UseHsts();
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();</pre>
 
 <h3>Routing — Minimal APIs বনাম Controllers</h3>
 <p>একই endpoint দুইভাবে লেখা যায় — .NET 6+ থেকে আসা সংক্ষিপ্ত <b>Minimal APIs</b> স্টাইলে, অথবা চিরাচরিত <b>Controller-based</b> স্টাইলে।</p>
