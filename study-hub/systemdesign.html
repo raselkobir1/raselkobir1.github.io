@@ -674,6 +674,45 @@ Asynchronous:
 
 <template data-page="api">
 <h2 class="title">৮. API Design, Rate Limiting ও API Gateway</h2>
+<p class="lead">মূল পার্থক্যটা হলো — প্রতিটা REST API আসলে একটা Web API, কিন্তু প্রতিটা Web API কখনোই REST API না। <span class="kw">Web API</span> একটা ব্যাপক ছাতা-টার্ম (umbrella term) — HTTP প্রোটোকল ব্যবহার করে ইন্টারনেটের মাধ্যমে যোগাযোগ করতে পারে এমন যেকোনো ইন্টারফেসকে বোঝায়। আর <span class="kw">REST API</span> হলো Web API-র একটা নির্দিষ্ট, কঠোরভাবে শৃঙ্খলাবদ্ধ ধরন, যেটা ছয়টা নির্দিষ্ট architectural constraint (যেমন statelessness এবং uniform interface) কঠোরভাবে মেনে চলে।</p>
+
+<h3>Web API বনাম REST API — পাশাপাশি তুলনা</h3>
+<table>
+<tr><th>বিষয়</th><th>Web API</th><th>REST API</th></tr>
+<tr><td>সংজ্ঞা</td><td>HTTP/web-ভিত্তিক সব API-র জন্য একটা সাধারণ category</td><td>REST architectural নিয়ম দিয়ে সংজ্ঞায়িত একটা sub-category</td></tr>
+<tr><td>Architecture</td><td>নমনীয় — SOAP, GraphQL, RPC, বা custom স্টাইল ব্যবহার করতে পারে</td><td>কঠোরভাবে REST নীতির সাথে বাঁধা</td></tr>
+<tr><td>Protocol</td><td>মূলত HTTP/HTTPS, তবে তাত্ত্বিকভাবে অন্য প্রোটোকলও (যেমন SOAP-এর জন্য SMTP) ব্যবহার করা যায়</td><td>কঠোরভাবে HTTP/HTTPS</td></tr>
+<tr><td>Data Format</td><td>যেকোনো ফরম্যাট (JSON, XML, HTML, Plain Text)</td><td>প্রধানত JSON, তবে XML-ও অনুমোদিত</td></tr>
+<tr><td>State Management</td><td>Stateful অথবা stateless দুটোই হতে পারে</td><td>সবসময় সম্পূর্ণ stateless হতে হবে</td></tr>
+<tr><td>Focus</td><td>Action-ভিত্তিক বা endpoint-নির্দিষ্ট</td><td>Resource-ভিত্তিক (verb না, noun)</td></tr>
+</table>
+
+<h3>Web API বোঝা যাক (ব্যাপক category)</h3>
+<p>একটা Web API একটা web server আর client অ্যাপ্লিকেশনের মাঝে মধ্যস্থতাকারী হিসেবে কাজ করে — underlying framework যাই হোক না কেন, ইন্টিগ্রেশন সম্ভব করে তোলে।</p>
+<p><b>"Wild West" প্রকৃতি:</b> এর কোনো standardized rulebook নেই। ডেভেলপাররা যেকোনো naming convention দিয়ে custom endpoint বানাতে পারেন (যেমন <code>/getAllUsers</code>, <code>/saveDataNow</code>)।</p>
+<p><b>বিকল্প Sub-type:</b> Web API ছাতার নিচে উল্লেখযোগ্য অন্য ধরনগুলো —</p>
+<ul>
+<li><b>SOAP:</b> স্ট্রাকচার্ড, নিরাপদ, enterprise-level XML মেসেজিং প্রোটোকল।</li>
+<li><b>GraphQL:</b> একটা single endpoint-ভিত্তিক query language, যেটা precise data-fetching-কে অগ্রাধিকার দেয়।</li>
+<li><b>gRPC / RPC:</b> Action-ভিত্তিক remote procedure execution মডেল।</li>
+</ul>
+
+<h3>REST API বোঝা যাক (কঠোর বাস্তবায়ন)</h3>
+<p><span class="kw">Representational State Transfer (REST)</span> এমন একটা architectural framework দেয় যেটা ওয়েবের নিজের open structure-কে অনুকরণ করার জন্য ডিজাইন করা।</p>
+<p><b>"গোছানো Workshop":</b> একটা Web API-কে "RESTful" হিসেবে গণ্য হতে হলে নিচের কঠোর constraint-গুলো মেনে চলতে হয়।</p>
+<ul>
+<li><b>Resource-Based URL:</b> Endpoint অবশ্যই নির্দিষ্ট entity (noun) বোঝাবে, যেমন <code>/books</code> বা <code>/users</code> — action (verb) নয়।</li>
+<li><b>Standard HTTP Method:</b> মৌলিক action সরাসরি standard verb-এর সাথে map করে — <code>GET</code> (Read), <code>POST</code> (Create), <code>PUT</code>/<code>PATCH</code> (Update), <code>DELETE</code> (Destroy)।</li>
+<li><b>Statelessness:</b> ব্যাকএন্ড সার্ভার কোনো user context জমা রাখে না — প্রতিটা ইনবাউন্ড কলে সেটা প্রসেস করার জন্য প্রয়োজনীয় সব context থাকতে হবে।</li>
+<li><b>Cacheability:</b> সার্ভার response স্পষ্টভাবে জানিয়ে দেয় ডেটা client-side-এ cache করা যাবে কিনা — সার্ভারের লোড কমাতে।</li>
+</ul>
+
+<h3>কোনটা বেছে নেবেন?</h3>
+<ul>
+<li>আধুনিক web/mobile অ্যাপ বানাচ্ছেন যেখানে সহজ, predictable, এবং highly scalable CRUD অপারেশন দরকার — তাহলে <b>REST API</b> নীতি বেছে নিন।</li>
+<li>Real-time streaming (WebSockets), কঠোর enterprise security layer (SOAP), বা heavily customizable multi-field query (GraphQL) দরকার হলে — বিকল্প Web API বাস্তবায়ন বেছে নিন।</li>
+</ul>
+
 <p class="lead">একটা সিস্টেমের ভেতরের ডিজাইন যতই ভালো হোক, বাইরের world API-র মাধ্যমেই তার সাথে কথা বলে — আর সেই API-কে অপব্যবহার থেকে রক্ষা করাটাও ডিজাইনের সমান গুরুত্বপূর্ণ অংশ।</p>
 
 <h3>REST API ডিজাইনের মূল নীতি</h3>
