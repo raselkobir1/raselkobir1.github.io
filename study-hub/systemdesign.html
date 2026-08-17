@@ -146,6 +146,29 @@ const pages = [
 
 <template data-page="foundation">
 <h2 class="title">১. System Design Interview Framework</h2>
+<p class="lead">System design is the process of planning and defining the architecture, components, modules, interfaces, and data for a software system to meet specific functional and non-functional requirements. It acts as a structural blueprint, ensuring the application remains scalable, reliable, and efficient under varying user loads.</p>
+
+<h3>High-Level vs. Low-Level Design</h3>
+<ul>
+<li><b>High-Level Design (HLD):</b> Focuses on the macro-level architecture, mapping out major services, databases, load balancers, and how data flows between external clients and internal components.</li>
+<li><b>Low-Level Design (LLD):</b> Zooms into the micro-level implementation, detailing specific classes, methods, data structures, and the internal logic of individual modules.</li>
+</ul>
+
+<h3>Core Building Blocks</h3>
+<ul>
+<li><b>Load Balancers:</b> Distribute incoming user traffic evenly across multiple application servers to prevent any single point of failure.</li>
+<li><b>Databases (SQL &amp; NoSQL):</b> Persist durable data depending on whether your workload requires rigid relational constraints or flexible horizontal scaling.</li>
+<li><b>Caches &amp; CDNs:</b> Store frequently accessed data closer to the user to drastically minimize response times and reduce database load.</li>
+<li><b>Message Queues:</b> Decouple different parts of a system to process tasks asynchronously and absorb sudden traffic spikes.</li>
+</ul>
+
+<h3>Key Considerations</h3>
+<ul>
+<li><b>Scalability:</b> The capacity of the system to handle growth—either by adding more power to a single server (vertical) or adding more servers (horizontal).</li>
+<li><b>Reliability &amp; Availability:</b> Ensuring the system remains operational and fault-tolerant even if specific hardware or network pieces break down.</li>
+<li><b>Trade-offs:</b> Weighing performance, cost, complexity, and consistency limits against realistic business needs.</li>
+</ul>
+
 <p class="lead">System Design ইন্টারভিউয়ে কোনো একক "সঠিক উত্তর" নেই — যা যাচাই করা হয় সেটা হলো আপনি অস্পষ্ট একটা সমস্যাকে কীভাবে ভেঙে trade-off ভিত্তিক সিদ্ধান্তে রূপান্তর করেন এবং সেই সিদ্ধান্তের কারণ কতটা স্পষ্টভাবে ব্যাখ্যা করতে পারেন।</p>
 
 <h3>কোডিং ইন্টারভিউ থেকে কেন এটা সম্পূর্ণ ভিন্ন খেলা</h3>
