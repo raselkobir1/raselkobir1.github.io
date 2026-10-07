@@ -1125,6 +1125,62 @@ Project 3 — Production: AI Financial Assistant
 <pre>দরকার:   FastAPI · Pydantic · NumPy basics · Async programming · openai / AI SDKs
 দরকার নেই (শুরুতে): উন্নত Python, গভীর data science</pre>
 <p><b>ব্যাখ্যা:</b> advanced Python দরকার নেই — লক্ষ্য একটা AI service বা prototype বানানোর মতো যথেষ্ট জানা: FastAPI দিয়ে API, Pydantic দিয়ে data validation (structured output-এর সাথে মেলে), async programming, আর AI provider-দের SDK। NumPy-র basics embedding/vector বোঝার জন্য সহায়ক। আপনি production backend .NET-এই রাখতে পারেন (Microsoft.Extensions.AI, Semantic Kernel)। Python মূলত AI ইকোসিস্টেমের উদাহরণ, prototype ও টুল বোঝার জন্য, আর সময় ২–৩ সপ্তাহের বেশি লাগার কথা নয়।</p>
+
+<h3>৩২) LLM কী, আর এটি কীভাবে একটা উত্তর তৈরি করে?</h3>
+<pre>Input → Tokens → Model processing → Next-token prediction → Response
+
+"What is dependency injection?"
+  → Dependency → Injection → is → a → design → pattern ...</pre>
+<p><b>ব্যাখ্যা:</b> LLM (Large Language Model) হলো এমন একটা AI মডেল যা বিশাল পরিমাণ টেক্সট থেকে ভাষার প্যাটার্ন শিখে মানুষের মতো টেক্সট বুঝতে ও তৈরি করতে পারে — যেমন GPT, Claude, Gemini, Llama। সহজ ভাষায়: input-কে token-এ ভাগ করে, শেখা প্যাটার্ন ব্যবহার করে একের পর এক সবচেয়ে উপযুক্ত পরবর্তী token predict করে response বানায় (Foundation অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৩৩) Prompt Engineering কী? খারাপ আর ভালো prompt-এর পার্থক্য কী?</h3>
+<pre>খারাপ:   Explain accounting.
+ভালো:    Explain double-entry accounting for a .NET developer.
+         Use a simple example with debit, credit and ledger.
+আরও ভালো: You are an accounting tutor. Explain in Bangla, keep technical terms
+         in English, give a real example, explain Debit and Credit separately.</pre>
+<p><b>ব্যাখ্যা:</b> AI মডেলকে ভালোভাবে নির্দেশনা দেওয়ার কৌশলই Prompt Engineering। prompt যত নির্দিষ্ট (কার জন্য, কোন ভাষায়, কী ফরম্যাটে, কী উদাহরণসহ), উত্তর তত কাজের হয় — অস্পষ্ট prompt-এ মডেল অনুমান করে generic উত্তর দেয়। পূর্ণাঙ্গ structure-এর জন্য প্রশ্ন ১৭ দেখুন।</p>
+
+<h3>৩৪) System Prompt কী, আর user prompt থেকে এটা কীভাবে আলাদা?</h3>
+<pre>system: You are an accounting assistant.
+        Never invent financial data.
+        If information is unavailable, say "I don't know".
+user:   Show today's revenue.</pre>
+<p><b>ব্যাখ্যা:</b> System prompt মডেলের সামগ্রিক আচরণ, ভূমিকা ও নিয়ম ঠিক করে দেয়; user message হলো প্রতিটা নির্দিষ্ট অনুরোধ (Prompt Engineering অধ্যায়ে তিনটা role — system, user, assistant)। মডেল system নির্দেশনা অনুযায়ী উত্তর দেওয়ার <i>চেষ্টা</i> করে — কিন্তু এটা hard security boundary নয় (প্রশ্ন ৫ দেখুন)।</p>
+
+<h3>৩৫) Embedding কী?</h3>
+<pre>"How to create an invoice?"  →  Embedding Model  →  [0.12, -0.45, 0.78, 0.21, ...]</pre>
+<p><b>ব্যাখ্যা:</b> Embedding হলো টেক্সট (বা অন্য ডেটা)-কে একটা numeric vector-এ রূপান্তর করা, যার উদ্দেশ্য টেক্সটের <b>semantic অর্থ</b> ধারণ করা — কাছাকাছি অর্থের টেক্সট vector স্পেসে কাছাকাছি থাকে (Embeddings অধ্যায়ে বিস্তারিত)। সবচেয়ে সাধারণ ব্যবহার: Documents → Chunks → Embeddings → Vector Database → Semantic Search, যা RAG-এর ভিত্তি।</p>
+
+<h3>৩৬) Vector Database কী, আর কোন কোন বিকল্প আছে?</h3>
+<p><b>ব্যাখ্যা:</b> Vector database এমন system যেখানে vector embedding সংরক্ষণ করে similarity search করা যায়। উদাহরণ: <b>PostgreSQL + pgvector</b>, Pinecone, Qdrant, Weaviate। .NET/PostgreSQL ব্যাকগ্রাউন্ডের কারও জন্য pgvector শেখা বিশেষভাবে সুবিধাজনক, কারণ আলাদা infrastructure ছাড়াই বিদ্যমান database-এই কাজ হয় (প্রশ্ন ২০ ও Vector Database অধ্যায় দেখুন)।</p>
+
+<h3>৩৭) RAG কী, আর এটি কেন দরকার?</h3>
+<pre>User Question → Create Embedding → Vector Search → Relevant Documents → LLM → Answer</pre>
+<p><b>ব্যাখ্যা:</b> RAG (Retrieval-Augmented Generation) হলো মডেলের নিজের জ্ঞানের উপর পুরোপুরি নির্ভর না করে আগে external knowledge retrieve করে, তারপর সেই context দিয়ে উত্তর তৈরি করার কৌশল। দরকার, কারণ LLM আপনার কোম্পানির accounting API doc, policy, GL mapping rule বা user manual জানে না। RAG-এ প্রাসঙ্গিক অংশ খুঁজে prompt-এ জুড়ে দিলে উত্তর grounded হয় এবং hallucination কমে (RAG অধ্যায়ে বিস্তারিত; পূর্ণ architecture-এর জন্য প্রশ্ন ২১)।</p>
+
+<h3>৩৮) Function/Tool Calling কী, আর এটা chatbot-কে কীভাবে বদলে দেয়?</h3>
+<pre>User: "Show my current account balance."
+LLM → getAccountBalance(accountId) → আপনার .NET API → Database → Result → LLM → User</pre>
+<p><b>ব্যাখ্যা:</b> মডেল নিজে database/API execute করে না; সে আপনার predefined function/tool কল করার <i>অনুরোধ</i> জানায়, আর আসল execution আপনার application করে (প্রশ্ন ১০)। এর বড় সুবিধা — AI শুধু কথা বলা chatbot না থেকে বাস্তব application-এর সাথে যুক্ত হয়: যেমন "আজকের total sales দেখাও" বললে <code>GetSalesSummary()</code> → Accounting API → PostgreSQL থেকে প্রকৃত সংখ্যা এনে ব্যাখ্যা করে। এখানেই backend engineer-এর দক্ষতার মূল্য।</p>
+
+<h3>৩৯) AI Agent কী?</h3>
+<p><b>ব্যাখ্যা:</b> Agent হলো এমন AI system যা একটা লক্ষ্য অর্জনের জন্য reasoning করে, tool ব্যবহার করে এবং একাধিক ধাপ চালাতে পারে: Goal → Think/Plan → Choose Tool → Execute → Observe Result → পরবর্তী Action → Final Answer (AI Agents অধ্যায়ে বিস্তারিত)। chatbot-এর সাথে পার্থক্য ও accounting উদাহরণ প্রশ্ন ২৩-এ, আর অসীম লুপ ঠেকানোর উপায় প্রশ্ন ১১-এ।</p>
+
+<h3>৪০) AI Fundamentals-এর টপিকগুলোর মধ্যে কোনটাকে কতটা অগ্রাধিকার দেবেন?</h3>
+<table>
+<tr><th>টপিক</th><th>অগ্রাধিকার</th></tr>
+<tr><td>LLM + Tokens</td><td>⭐⭐⭐</td></tr>
+<tr><td>Context Window</td><td>⭐⭐⭐</td></tr>
+<tr><td>Prompt Engineering</td><td>⭐⭐⭐</td></tr>
+<tr><td>Embeddings</td><td>⭐⭐⭐⭐⭐</td></tr>
+<tr><td>Vector DB</td><td>⭐⭐⭐⭐⭐</td></tr>
+<tr><td>RAG</td><td>⭐⭐⭐⭐⭐</td></tr>
+<tr><td>Function/Tool Calling</td><td>⭐⭐⭐⭐⭐</td></tr>
+<tr><td>Agents</td><td>⭐⭐⭐⭐⭐</td></tr>
+<tr><td>Hallucination</td><td>⭐⭐⭐⭐⭐</td></tr>
+</table>
+<p><b>ব্যাখ্যা:</b> LLM, token, context window ও prompt engineering হলো ভিত্তি — বুঝে নিলেই যথেষ্ট। বাস্তব AI application বানানোর মূল শক্তি আসে embeddings, vector DB, RAG, tool calling, agents ও hallucination প্রতিরোধ থেকে — এগুলোতে সবচেয়ে বেশি সময় ও practice দিন। তিন সপ্তাহের পরিকল্পনা প্রশ্ন ২৫-এ দেওয়া আছে।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->
