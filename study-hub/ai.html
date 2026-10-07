@@ -1078,6 +1078,53 @@ Week 3: Function Calling → .NET API Tools → সহজ Agent → Hallucinatio
 
 Current: .NET Backend Engineer → AI-enabled .NET Engineer → AI Engineer / LLM Engineer</pre>
 <p><b>ব্যাখ্যা:</b> Backend engineer-এর জন্য বাজারমুখী পথ হলো AI researcher নয়, <b>AI Engineer / AI-enabled Backend Engineer</b> — অর্থাৎ বাস্তব business application-এর চারপাশে নির্ভরযোগ্য AI system বানানো, শুধু prompt লেখা নয়। প্রথম ২–৩ সপ্তাহের জন্য সবচেয়ে গুরুত্বপূর্ণ বিষয়: embeddings, vector DB, RAG, tool calling, agents ও hallucination প্রতিরোধ (প্রতিটার ওজন বেশি), আর LLM/token/context window ও prompt engineering ভিত্তি হিসেবে। শেষে একটা ছোট প্রজেক্ট বানানো ভালো — "Accounting AI Assistant": ASP.NET Core API → AI Assistant → (RAG + pgvector) ও (Tools + Accounting API + PostgreSQL)। শুরুতে এড়িয়ে চলুন: গভীর গাণিতিক ML, scratch থেকে LLM training, TensorFlow/PyTorch-এ গভীরে যাওয়া, data science, আর একসাথে ২০টা AI framework — এগুলো পরে শেখা যায় যদি ML/research-এর দিকে যেতে চান।</p>
+
+<h3>২৬) Token কেন গুরুত্বপূর্ণ, আর একটা request-এর মোট token কীভাবে হিসাব করবেন?</h3>
+<pre>Input tokens  = 2,000
+Output tokens = 1,000
+Total         ≈ 3,000 tokens   <span class="c">// pricing ও context limit দুটোই এই সংখ্যার উপর নির্ভর করে</span></pre>
+<p><b>ব্যাখ্যা:</b> একটা token সবসময় একটা শব্দ নয় — পুরো শব্দ, শব্দের অংশ, punctuation বা space-সংক্রান্ত টুকরাও হতে পারে ("programming" ≈ <code>program</code> + <code>ming</code>)। LLM API-র <b>pricing</b>, <b>context limit</b> ও <b>input/output size</b> সবই token-ভিত্তিক, আর সাধারণত input ও output token-এর দাম আলাদা। তাই production-এ system prompt ছোট রাখা, অপ্রয়োজনীয় history/chunk বাদ দেওয়া, ও response-এর max length সীমিত করা — এই token optimization সরাসরি খরচ কমায় (Tokenization অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>২৭) Context window কি মানুষের স্থায়ী স্মৃতির মতো? এতে কী কী ঢোকে?</h3>
+<pre>Context Window = 128K tokens
+  ├─ system instruction
+  ├─ আগের conversation messages
+  ├─ retrieved documents (RAG)
+  ├─ tool results
+  └─ মডেলের নিজের output   <span class="c">// সব মিলিয়ে এই সীমার ভেতরে থাকতে হবে</span></pre>
+<p><b>ব্যাখ্যা:</b> Context window-কে মডেলের <b>working memory</b>-এর মতো ভাবা যায় — একটা request-এ মডেল ঠিক এতটুকু তথ্যই একসাথে বিবেচনা করতে পারে। কিন্তু এটা মানুষের permanent memory-এর মতো নয়: request শেষ হলে মডেল কিছুই ধরে রাখে না (প্রশ্ন ১ দেখুন), আর সীমা পেরিয়ে গেলে পুরনো অংশ বাদ দিতে বা সারাংশ করতে হয় (Context Engineering অধ্যায়ে বিস্তারিত)। তাই system instruction, history, document, tool result — সবকিছু একই বাজেট ভাগ করে নেয়, এবং এই বাজেট সচেতনভাবে সাজানোই context engineering।</p>
+
+<h3>২৮) Similarity search-এ query কীভাবে সবচেয়ে প্রাসঙ্গিক ডকুমেন্ট বেছে নেয়? একটা উদাহরণ দিন।</h3>
+<pre>A = "How to create invoice?"
+B = "How to cancel ticket?"
+C = "How to create customer?"
+
+Query: "How can I make a bill?"
+  Query → A = 0.91   ← সবচেয়ে প্রাসঙ্গিক
+  Query → C = 0.61
+  Query → B = 0.22</pre>
+<p><b>ব্যাখ্যা:</b> প্রথমে query-কে একই embedding model দিয়ে vector বানানো হয়, তারপর সংরক্ষিত প্রতিটা vector-এর সাথে similarity (সাধারণত cosine, প্রশ্ন ৭) হিসাব করে সবচেয়ে বেশি স্কোরের top-k ফল নেওয়া হয়। এখানে "make a bill" আর "create invoice" শব্দে আলাদা হলেও অর্থে কাছাকাছি, তাই A সবচেয়ে উপরে — কিন্তু "create customer" আংশিক মিল পায় ("create" শব্দের কারণে), আর "cancel ticket" প্রায় অসম্পর্কিত। বড় ডেটায় প্রতিটার সাথে তুলনা না করে ANN ইনডেক্স (HNSW) ব্যবহার হয় (প্রশ্ন ৮)।</p>
+
+<h3>২৯) ৬ মাসের AI roadmap-এ একজন .NET engineer কোন ধাপে কতটা সময় দেবেন, আর কোন ধাপে সবচেয়ে বেশি জোর দেবেন?</h3>
+<pre>১. AI Fundamentals          — ২–৩ সপ্তাহ
+২. Python (প্রয়োজনীয় অংশ)   — ২–৩ সপ্তাহ
+৩. LLM Application Dev  ⭐   — ১–১.৫ মাস
+৪. AI + .NET            ⭐⭐⭐ — ১ মাস
+৫. AI Agents                — ১ মাস
+৬. Production AI           — ১ মাস</pre>
+<p><b>ব্যাখ্যা:</b> সবচেয়ে বেশি জোর <b>LLM Application Development</b> (OpenAI/Claude/Gemini API, structured output, function calling, streaming, RAG, pgvector, Redis, document processing, AI app-এর auth) এবং <b>AI + .NET</b>-এ (ASP.NET Core + LLM, Microsoft.Extensions.AI, Semantic Kernel, background worker, Kafka/RabbitMQ দিয়ে AI processing, observability, cost/token management) — কারণ এখানেই আপনার বিদ্যমান backend শক্তি সরাসরি কাজে লাগে। Agents ধাপে database/API/document search ও multi-tool ব্যবহার শেখা হয়, আর Production AI ধাপে AI security, prompt injection, PII সুরক্ষা, evaluation, caching, rate limiting, cost optimization ও model selection। শুধু ভিডিও/কোর্স দেখে না থেকে প্রতিটা ধাপ প্রজেক্টে প্রয়োগ করা জরুরি।</p>
+
+<h3>৩০) শেখার সময় কোন ৩টা প্রজেক্ট বানানো উচিত, আর প্রতিটা কী শেখায়?</h3>
+<pre>Project 1 — RAG:        Accounting Documentation AI Assistant
+Project 2 — AI Agent:   "Show me January's highest expenses" → Agent → Accounting API
+Project 3 — Production: AI Financial Assistant
+                        .NET + PostgreSQL + Redis + Kafka + LLM + RAG + Agent</pre>
+<p><b>ব্যাখ্যা:</b> প্রজেক্ট ১ (RAG) chunking, embedding, pgvector retrieval ও grounded answer শেখায়। প্রজেক্ট ২ (Agent) tool/function calling শেখায় — user-এর প্রশ্ন থেকে agent আপনার accounting API কল করে ফলাফল ব্যাখ্যা করে (User → AI Agent → Accounting API → PostgreSQL → Result → AI explanation)। প্রজেক্ট ৩ উপরের সবকিছু একত্র করে production-মানের সিস্টেম বানায় — caching, async processing (Kafka), observability, security সহ। তিনটাই আপনার বিদ্যমান .NET ও accounting domain-জ্ঞানের উপর দাঁড়ায়, যা ইন্টারভিউতে একটা বাস্তব গল্প হিসেবে শক্তিশালী।</p>
+
+<h3>৩১) একজন .NET engineer-কে AI শুরু করতে Python কতটা শিখতে হবে?</h3>
+<pre>দরকার:   FastAPI · Pydantic · NumPy basics · Async programming · openai / AI SDKs
+দরকার নেই (শুরুতে): উন্নত Python, গভীর data science</pre>
+<p><b>ব্যাখ্যা:</b> advanced Python দরকার নেই — লক্ষ্য একটা AI service বা prototype বানানোর মতো যথেষ্ট জানা: FastAPI দিয়ে API, Pydantic দিয়ে data validation (structured output-এর সাথে মেলে), async programming, আর AI provider-দের SDK। NumPy-র basics embedding/vector বোঝার জন্য সহায়ক। আপনি production backend .NET-এই রাখতে পারেন (Microsoft.Extensions.AI, Semantic Kernel)। Python মূলত AI ইকোসিস্টেমের উদাহরণ, prototype ও টুল বোঝার জন্য, আর সময় ২–৩ সপ্তাহের বেশি লাগার কথা নয়।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->
