@@ -204,6 +204,22 @@ const pages = [
 প্রায় প্রতিটা provider API-তে temperature-এর পাশাপাশি <span class="kw">top_p</span> নামে আরেকটা sampling parameter থাকে, আর দুটো প্রায়ই গুলিয়ে ফেলা হয়। temperature পুরো probability distribution-টাকে বেশি "সমান" (flat) বা বেশি "তীক্ষ্ণ" (peaked) করে — কিন্তু কতগুলো token বিবেচনায় থাকবে তা সীমাবদ্ধ করে না। top_p বরং সম্ভাবনার ক্রম অনুযায়ী সবচেয়ে বেশি-সম্ভাবনার token একে একে যোগ করতে থাকে যতক্ষণ না তাদের সম্মিলিত সম্ভাবনা top_p-এ পৌঁছায় (যেমন 0.9 মানে ৯০%) — বাকি লম্বা, কম-সম্ভাবনার "টেইল"-এর token সম্পূর্ণ বাদ পড়ে যায়, ভাষার ভুল ব্যাকরণ বা অদ্ভুত শব্দ আসার ঝুঁকি কমে। ব্যবহারিকভাবে দুটোই একসাথে বদলানোর দরকার নেই — একটাকে ডিফল্টে (সাধারণত top_p ≈ 1.0) রেখে শুধু temperature দিয়েই randomness নিয়ন্ত্রণ করাই বেশি predictable, কারণ দুটো parameter একসাথে চরম মানে সেট করলে (যেমন temperature বেশি, top_p কম) ফলাফল অনুমান করা কঠিন হয়ে যায়।</div>
 <div class="callout best"><span class="tag">Best practice</span>
 যেখানে নির্ভরযোগ্যতা ও পুনরাবৃত্তিযোগ্যতা (reproducibility) দরকার — যেমন tool call, JSON output, classification — সেখানে temperature কম (০ থেকে ০.২) রাখুন। Production system টেস্ট করার সময় temperature 0 না হলে flaky test পাবেন, কারণ output প্রতিবার সামান্য বদলাতে পারে।</div>
+
+<h3>LLM-এর সীমাবদ্ধতা — Hallucination সহ যেসব জায়গায় মডেল ভুল করে</h3>
+<p>একটা LLM-কে "সবজান্তা" ভেবে system বানালে production-এ ধাক্কা খেতে হয়। তাই ক্ষমতার পাশাপাশি সীমাবদ্ধতাও সমান গুরুত্ব দিয়ে জানা দরকার — কারণ পরের প্রায় প্রতিটা অধ্যায় (RAG, tool calling, guardrails, evaluation) আসলে এই সীমাবদ্ধতাগুলোরই প্রকৌশলগত সমাধান।</p>
+<table>
+<tr><th>সীমাবদ্ধতা</th><th>কেন হয়</th><th>প্রতিকার</th></tr>
+<tr><td><span class="kw">Hallucination</span></td><td>মডেল "সবচেয়ে সম্ভাব্য পরবর্তী token" বের করে — সত্য কিনা যাচাই করে না; তাই plausible শোনালেও ভুল বা বানানো তথ্য আত্মবিশ্বাসের সাথে বলতে পারে</td><td>RAG, tool calling, "না জানলে বলো" নির্দেশনা, citation, evaluation</td></tr>
+<tr><td><span class="kw">Knowledge cutoff</span></td><td>training data একটা নির্দিষ্ট তারিখ পর্যন্ত — এর পরের ঘটনা, দাম, আইন মডেল জানে না</td><td>RAG বা web-search/API tool দিয়ে হালনাগাদ তথ্য আনা</td></tr>
+<tr><td>Non-determinism</td><td>sampling-এর কারণে একই prompt-এ প্রতিবার সামান্য ভিন্ন output</td><td>কম temperature, structured output, retry/validation</td></tr>
+<tr><td>নির্ভুল গণনা/অক্ষর গোনায় দুর্বলতা</td><td>মডেল token নিয়ে কাজ করে, calculator নয় — বড় সংখ্যার গুণ বা "শব্দে কয়টা অক্ষর" ভুল হতে পারে</td><td>গণনা tool/code-এ ছেড়ে দেওয়া; মডেল শুধু ব্যাখ্যা করবে</td></tr>
+<tr><td>Stateless — আগের কথা মনে নেই</td><td>প্রতিটা API call স্বতন্ত্র; "মনে রাখা" application layer-এর কাজ</td><td>history পাঠানো, summary/long-term memory</td></tr>
+<tr><td>Bias ও খোশামোদ (sycophancy)</td><td>training data-র পক্ষপাত; কখনো ব্যবহারকারীর ভুল ধারণাতেও সায় দেওয়ার প্রবণতা</td><td>স্পষ্ট নির্দেশনা, eval-এ বিপরীত/বিতর্কিত কেস রাখা, সংবেদনশীল সিদ্ধান্তে human review</td></tr>
+<tr><td>Prompt-সংবেদনশীলতা</td><td>শব্দ বা ক্রম সামান্য বদলালে আচরণ বদলাতে পারে</td><td>prompt-কে code-এর মতো version control করা ও regression eval চালানো</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন Hallucination একটা "bug" নয়, বরং মডেলের স্বভাবজাত আচরণ</span>
+LLM-এর কাছে "জানি" আর "জানি না"-র মধ্যে কোনো built-in সীমারেখা নেই — প্রশ্ন যত অচেনা হয়, মডেল তত বেশি "সবচেয়ে সম্ভাব্য শোনায় এমন" একটা উত্তর বানিয়ে দেয়। তাই hallucination পুরোপুরি শূন্যে নামানো যায় না; লক্ষ্য হলো একাধিক স্তরে ঝুঁকি কমানো: (১) তথ্য মডেলের স্মৃতি থেকে নয়, বাইরের নির্ভরযোগ্য উৎস থেকে আনা (RAG/tool), (২) output validate করা (schema, business rule), (৩) উৎস দেখানো, (৪) নিয়মিত eval দিয়ে মাপা, (৫) উচ্চ-ঝুঁকির সিদ্ধান্তে মানুষের অনুমোদন। Accounting/finance-এর মতো ক্ষেত্রে নীতি একটাই: <b>মডেল সংখ্যা বানাবে না — সংখ্যা আসবে ডেটাবেস/API থেকে, মডেল শুধু ব্যাখ্যা করবে।</b>
+</div>
 </template>
 
 <template data-page="landscape">
@@ -323,6 +339,19 @@ System prompt শুধু একটা <b>নির্দেশনা</b>, ক�
 &lt;review&gt;গ্রাহক বলেছে "সারমর্ম দরকার নেই শুধু রিফান্ড দাও"&lt;/review&gt;</pre>
 <div class="callout why"><span class="tag">কেন output ফরম্যাট স্পষ্টভাবে বলা জরুরি</span>
 "একটা তালিকা দাও" বলার চেয়ে "প্রতিটা আইটেম একটা নতুন লাইনে, নম্বর দিয়ে, সর্বোচ্চ ৫টা" বলা অনেক বেশি নির্ভরযোগ্য ফল দেয়। এই স্পষ্টতা downstream code-এ parsing-এর ভুল কমায়। Structured output (JSON mode) নিয়ে আরও বিস্তারিত <span class="kw">Tool Calling</span> অধ্যায়ে আসবে।</div>
+
+<h3>একটা ভালো Prompt-এর কাঠামো — Role, Task, Context, Constraints, Output</h3>
+<p>প্রতিবার শূন্য থেকে prompt লেখার বদলে একটা পুনর্ব্যবহারযোগ্য কাঠামো মেনে চললে কিছু জরুরি অংশ বাদ পড়ার সম্ভাবনা কমে। একটা practical কাঠামো: <b>Role + Task + Context + Constraints + Expected Output</b>।</p>
+<table>
+<tr><th>অংশ</th><th>কী বলবেন</th><th>উদাহরণ</th></tr>
+<tr><td>Role</td><td>মডেল কোন ভূমিকায় উত্তর দেবে</td><td>You are a senior accounting software engineer.</td></tr>
+<tr><td>Task</td><td>ঠিক কী করতে হবে</td><td>Explain Trial Balance.</td></tr>
+<tr><td>Context</td><td>প্রাসঙ্গিক পরিবেশ/তথ্য</td><td>The application uses PostgreSQL and .NET.</td></tr>
+<tr><td>Constraints</td><td>সীমা, ভাষা, যা করা যাবে না</td><td>বাংলায় ব্যাখ্যা করো, technical term ইংরেজিতে রাখো।</td></tr>
+<tr><td>Output</td><td>উত্তরের ফরম্যাট</td><td>সংজ্ঞা + উদাহরণ + SQL-সংক্রান্ত উদাহরণ।</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — কোন অংশ কোথায় যাবে এবং prompt-কে code-এর মতো treat করুন</span>
+Role ও দীর্ঘস্থায়ী constraint সাধারণত <b>system prompt</b>-এ থাকে, আর প্রতিটা request-এর নির্দিষ্ট task ও context থাকে <b>user message</b>-এ। Production-এ prompt-কে source control-এ রাখুন (code-এর মতোই review ও version), পরিবর্তনের পর golden dataset-এ regression eval চালান (Evaluation অধ্যায়) — কারণ একটা শব্দ বদলালেও আচরণ বদলাতে পারে। আর শুরুতে সহজ prompt লিখে ফলাফল দেখে ধাপে ধাপে উন্নত করুন; প্রথমেই অতিরিক্ত জটিল prompt লিখলে কোন অংশ কাজ করছে তা বোঝা কঠিন হয়।</div>
 </template>
 
 <template data-page="advprompting">
@@ -510,6 +539,18 @@ LIMIT 5;</pre>
 <span class="kw">BM25</span> একটা পুরনো, keyword-frequency-ভিত্তিক scoring পদ্ধতি — একটা শব্দ ডকুমেন্টে কতবার এসেছে আর পুরো corpus-এ কতটা বিরল/গুরুত্বপূর্ণ, তার উপর ভিত্তি করে স্কোর করে। এর সাথে vector similarity-এর কোনো গাণিতিক সম্পর্ক নেই — স্কেলও ভিন্ন (BM25 স্কোর সীমাহীন, cosine similarity 0–1-এর মধ্যে)। তাই দুইটা raw স্কোর সরাসরি যোগ বা গড় করা অর্থহীন। বাস্তবে সবচেয়ে প্রচলিত সমাধান <span class="kw">Reciprocal Rank Fusion (RRF)</span> — প্রতিটা পদ্ধতির raw স্কোর নয়, বরং প্রতিটা document প্রতিটা পদ্ধতিতে কততম position-এ (rank) আছে তা ব্যবহার করে একটা combined score বানানো হয় (সাধারণত <code>1/(k + rank)</code> সূত্রে, দুই পদ্ধতির ফল যোগ করে)। Rank-ভিত্তিক হওয়ায় দুই ভিন্ন স্কেলের সমস্যা এড়ানো যায়, আর যেকোনো একটা পদ্ধতিতে উপরের দিকে থাকা result চূড়ান্ত ranking-এও এগিয়ে থাকে।</div>
 <div class="callout best"><span class="tag">Best practice</span>
 শুধু vector search দিয়ে শুরু না করে, প্রথম দিন থেকেই metadata filter (কমপক্ষে tenant/user isolation-এর জন্য) যোগ করুন — নাহলে multi-tenant প্রোডাক্টে এক ব্যবহারকারীর ডেটা আরেকজনের কাছে "semantically similar" হিসেবে leak হওয়ার ঝুঁকি থাকে।</div>
+
+<h3>Distance Metric ও pgvector Operator — কোনটা কখন</h3>
+<table>
+<tr><th>Metric</th><th>pgvector operator</th><th>Index operator class</th><th>কখন</th></tr>
+<tr><td><span class="kw">Cosine distance</span></td><td><code>&lt;=&gt;</code></td><td><code>vector_cosine_ops</code></td><td>টেক্সট embedding-এর সবচেয়ে প্রচলিত পছন্দ — দিক (অর্থ) তুলনা করে, দৈর্ঘ্য নয়</td></tr>
+<tr><td><span class="kw">Inner product</span></td><td><code>&lt;#&gt;</code> (negative মান ফেরত দেয়)</td><td><code>vector_ip_ops</code></td><td>vector আগে থেকেই normalize করা থাকলে cosine-এর সমতুল্য ও সামান্য দ্রুত; অনেক embedding model-ই normalized vector দেয়</td></tr>
+<tr><td><span class="kw">Euclidean (L2)</span></td><td><code>&lt;-&gt;</code></td><td><code>vector_l2_ops</code></td><td>যেখানে vector-এর magnitude-ও অর্থবহ — টেক্সট retrieval-এ কম ব্যবহৃত</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — query-র operator আর index-এর operator class না মেলানো</span>
+ইনডেক্স তৈরি হয়েছে <code>vector_cosine_ops</code> দিয়ে, কিন্তু query-তে <code>&lt;-&gt;</code> (L2) ব্যবহার করলে planner সেই ইনডেক্স কাজে লাগাতে পারে না — query সঠিক ফল দিলেও ধীর (sequential scan) হয়ে যায়। Embedding model-এর ডকুমেন্টেশনে যে metric সুপারিশ করা আছে সেটাই বেছে নিন, এবং ইনডেক্স ও query-তে একই metric রাখুন।</div>
+<div class="callout behind"><span class="tag">HNSW tuning — recall বনাম speed বনাম মেমরি</span>
+HNSW ইনডেক্সে দুটো মূল knob: build-time-এ <code>m</code> (প্রতিটা node-এর সংযোগ সংখ্যা) ও <code>ef_construction</code>, আর query-time-এ <code>ef_search</code> (কতগুলো candidate পরীক্ষা করা হবে)। মান বাড়ালে recall বাড়ে, কিন্তু মেমরি, ইনডেক্স-নির্মাণের সময় ও query latency-ও বাড়ে। ডিফল্ট দিয়ে শুরু করে নিজের golden dataset-এ recall মেপে তবেই tune করুন। আর metadata filter (<code>WHERE</code>) যুক্ত করলে ANN ইনডেক্স অনুমোদিত ফলের কম সংখ্যক row ফেরত দিতে পারে — filter-সহ query-র ফল সংখ্যা ও recall আলাদাভাবে যাচাই করুন; এ বিষয়ে আপনার pgvector সংস্করণের ডকুমেন্টেশন দেখে নিন।</div>
 </template>
 
 <template data-page="rag">
@@ -584,6 +625,32 @@ Context-এ উত্তর না থাকলেও LLM প্রায়ই 
 
 <h3>Citation ও Source Attribution</h3>
 <p>প্রতিটা retrieved chunk-এর সাথে তার উৎস (ডকুমেন্ট নাম, পৃষ্ঠা/সেকশন) মেটাডেটা হিসেবে রেখে দিলে, prompt-এ মডেলকে "উত্তরের সাথে কোন সোর্স থেকে এসেছে তা উল্লেখ করো" নির্দেশ দেওয়া যায়। এতে ব্যবহারকারী নিজে মূল ডকুমেন্ট গিয়ে যাচাই করতে পারে — hallucination সম্পূর্ণ বন্ধ না হলেও, ভুল উত্তর ধরা অনেক সহজ হয়ে যায়।</p>
+
+<h3>ইনডেক্স হালনাগাদ রাখা ও Access Control</h3>
+<p>RAG-এর বড় সুবিধা — জ্ঞান আপডেট করতে মডেল আবার train করতে হয় না। কিন্তু এজন্য একটা নির্ভরযোগ্য ingestion pipeline দরকার: ডকুমেন্টের content hash/timestamp তুলনা করে শুধু বদলানো ডকুমেন্ট নতুন করে chunk ও embed করা (incremental), আর মুছে যাওয়া ডকুমেন্টের chunk vector store থেকে সরিয়ে ফেলা। নইলে মডেল পুরনো বা বাতিল policy থেকে উত্তর দেবে।</p>
+<div class="callout best"><span class="tag">Best practice — প্রতিটা chunk-এর সাথে metadata রাখুন</span>
+source/ডকুমেন্ট ID, version, তৈরির তারিখ, embedding model-এর নাম, আর tenant/role/ACL — এই metadata তিনটা কাজে লাগে: (১) পরিবর্তন শনাক্ত করে আপডেট, (২) citation দেখানো, (৩) <b>retrieval query-তেই permission filter</b> প্রয়োগ করা, যাতে অননুমোদিত chunk কখনো prompt-এ পৌঁছায়ই না। মডেলকে prompt-এ "অন্যের ডেটা দেখাবে না" বলে এই সুরক্ষা দেওয়া যায় না।</div>
+
+<h3>উন্নত RAG কৌশল — কখন বেসিক RAG যথেষ্ট নয়</h3>
+<table>
+<tr><th>কৌশল</th><th>ধারণা</th><th>কখন কাজে লাগে</th></tr>
+<tr><td><span class="kw">HyDE</span> (Hypothetical Document Embeddings)</td><td>প্রশ্নের একটা কাল্পনিক উত্তর LLM দিয়ে বানিয়ে সেটাকে embed করে খোঁজা — প্রশ্নের চেয়ে "উত্তরের ধাঁচ" ডকুমেন্টের কাছাকাছি হয়</td><td>প্রশ্ন ছোট/ভাষাগতভাবে ডকুমেন্টের থেকে আলাদা হলে</td></tr>
+<tr><td><span class="kw">Contextual chunking/retrieval</span></td><td>প্রতিটা chunk embed করার আগে তার সাথে ডকুমেন্টের কোন অংশ থেকে এসেছে সেই সংক্ষিপ্ত প্রসঙ্গ জুড়ে দেওয়া</td><td>একটা chunk আলাদা করে পড়লে অর্থ অস্পষ্ট হলে ("এটি ৩০ দিনের মধ্যে প্রযোজ্য" — কোনটি?)</td></tr>
+<tr><td><span class="kw">Agentic RAG</span></td><td>retrieval-কে agent-এর একটা tool বানানো — agent নিজে সিদ্ধান্ত নেয় কী খুঁজবে, ফল যথেষ্ট কিনা, আবার খুঁজবে কিনা</td><td>multi-hop বা একাধিক উৎসে ছড়ানো প্রশ্নে</td></tr>
+<tr><td><span class="kw">GraphRAG</span></td><td>ডকুমেন্ট থেকে entity ও সম্পর্ক বের করে একটা knowledge graph বানিয়ে তার উপর retrieve করা</td><td>"সামগ্রিক চিত্র" বা সম্পর্ক-নির্ভর প্রশ্নে, যেখানে আলাদা chunk যথেষ্ট নয়</td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — শুরুতেই জটিল RAG বানানো</span>
+প্রতিটা অতিরিক্ত ধাপ (rewrite, rerank, graph, agent loop) মানে বাড়তি LLM call, latency, cost ও ডিবাগ-জটিলতা। আগে বেসিক RAG (ভালো chunking + hybrid search + reranking + grounded prompt) দাঁড় করান, golden dataset দিয়ে মাপুন কোথায় ব্যর্থ হচ্ছে, তারপর শুধু সেই ব্যর্থতার জন্য নির্দিষ্ট কৌশল যোগ করুন।</div>
+
+<h3>RAG ব্যর্থতার নির্ণয় — কোথায় ভুল হচ্ছে</h3>
+<table>
+<tr><th>লক্ষণ</th><th>সম্ভাব্য কারণ</th><th>কী করবেন</th></tr>
+<tr><td>সঠিক তথ্য ডকুমেন্টে আছে, কিন্তু উত্তরে আসছে না</td><td>retrieval ব্যর্থ — chunking, embedding, top-k বা filter</td><td>retrieved chunk লগ করে দেখুন; chunk size/overlap, hybrid search, query rewriting</td></tr>
+<tr><td>সঠিক chunk এসেছে, কিন্তু উত্তর ভুল</td><td>generation সমস্যা — context-এর ভিড়, prompt, মডেল</td><td>reranking দিয়ে chunk কমান, context-এর ক্রম ঠিক করুন, prompt কড়া করুন</td></tr>
+<tr><td>প্রাসঙ্গিক কিছু নেই তবুও মডেল উত্তর বানায়</td><td>দুর্বল chunk-ও top-k-তে ঢুকছে</td><td>similarity threshold, "না জানলে বলো" নির্দেশনা, fallback</td></tr>
+<tr><td>পুরনো/বাতিল তথ্য থেকে উত্তর</td><td>ইনডেক্স হালনাগাদ হয়নি</td><td>incremental re-index, delete handling</td></tr>
+</table>
+<p>এই সব ক্ষেত্রেই আগে retrieval ও generation আলাদাভাবে মাপুন (Evaluation অধ্যায়) — বেশিরভাগ ব্যর্থতা retrieval-এই ঘটে, তাই prompt বা মডেল বদলানোর আগে retrieved chunk দেখুন।</p>
 </template>
 
 <template data-page="toolcalling">
@@ -685,6 +752,28 @@ while (true) {
 
 <h3>একটা বাস্তব উদাহরণ — কাস্টমার সাপোর্ট Agent</h3>
 <p>ব্যবহারকারী বলল "আমার অর্ডার কোথায়, আর যদি দেরি হয় তাহলে রিফান্ড দাও"। একটা agent এভাবে কাজ করতে পারে: (১) <code>get_order_status</code> tool কল করে ডেলিভারি স্ট্যাটাস আনে, (২) সেটা দেখে ডেলিভারি নির্ধারিত তারিখের চেয়ে দেরি কিনা যাচাই করে, (৩) দেরি হলে <code>check_refund_policy</code> tool কল করে যোগ্যতা যাচাই করে, (৪) যোগ্য হলে <code>initiate_refund</code> কল করার আগে ব্যবহারকারীর কাছে নিশ্চিতকরণ চায় (human-in-the-loop), (৫) চূড়ান্ত ফলাফল সংক্ষেপে জানায়।</p>
+
+<h3>Workflow বনাম Agent — সবসময় Agent দরকার নেই</h3>
+<table>
+<tr><th></th><th>Workflow</th><th>Agent</th></tr>
+<tr><td>ধাপ কে ঠিক করে</td><td>আপনার কোড (আগে থেকে নির্ধারিত)</td><td>মডেল নিজে, চলতি পথে</td></tr>
+<tr><td>Predictability</td><td>উচ্চ — একই ইনপুটে একই পথ</td><td>কম — আলাদা রানে আলাদা পথ</td></tr>
+<tr><td>Cost/latency</td><td>কম ও আনুমানিক</td><td>বেশি ও পরিবর্তনশীল</td></tr>
+<tr><td>ডিবাগ</td><td>সহজ</td><td>কঠিন — পুরো trace লাগে</td></tr>
+<tr><td>কখন</td><td>ধাপ জানা আছে (ডকুমেন্ট পড়ো → সারাংশ → JSON)</td><td>ধাপের সংখ্যা/ক্রম ইনপুটের উপর নির্ভর করে, আগে বলা যায় না</td></tr>
+</table>
+<div class="callout best"><span class="tag">নীতি — সবচেয়ে সহজ সমাধান দিয়ে শুরু করুন</span>
+একটা সাধারণ LLM call → prompt chaining/workflow → শুধু প্রয়োজন হলে agent। Autonomy বাড়ালে নমনীয়তা পান, কিন্তু cost, ব্যর্থতার সুযোগ ও নিরাপত্তা-ঝুঁকিও একসাথে বাড়ে।</div>
+
+<h3>Tool design ও Idempotency — Write অপারেশন নিয়ে বাড়তি সতর্কতা</h3>
+<p>মডেল tool বাছাই করে মূলত নাম, বিবরণ ও parameter schema দেখে — তাই অস্পষ্ট নাম বা একে অপরের সাথে মিলে যাওয়া অনেকগুলো tool ভুল সিদ্ধান্তের বড় কারণ। ভালো tool: একটা কাজ করে, স্পষ্ট নাম ও বিবরণ, typed parameter, read ও write আলাদা, আর ব্যর্থ হলে মডেলের বোঝার মতো পরিষ্কার error message দেয় (যাতে সে সংশোধন করে আবার চেষ্টা করতে পারে)।</p>
+<pre>create_payment(amount, idempotency_key: "order-1042-pay")
+<span class="c">// network error বা retry-তে একই key এলে সার্ভার নতুন payment না বানিয়ে আগের ফলাফল ফেরত দেয়</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake — Write tool-কে retry-নিরাপদ না বানানো</span>
+Timeout, network ব্যর্থতা বা মডেলের পুনরায় চেষ্টা — যেকোনো কারণে একই tool call একাধিকবার চলতে পারে। শুধু পড়ার tool-এ এতে সমস্যা নেই, কিন্তু payment, voucher posting বা record তৈরির মতো write-এ duplicate সরাসরি আর্থিক ক্ষতি করে। তাই write tool-কে <b>idempotent</b> বানান (idempotency key), ঝুঁকি অনুযায়ী স্তর রাখুন — read: স্বয়ংক্রিয়; draft/প্রস্তাব: ব্যবহারকারীকে দেখিয়ে নিশ্চিতকরণ; post/pay/delete: স্পষ্ট human approval ও audit log।</div>
+
+<h3>Agent মূল্যায়ন ও ডিবাগ — শুধু চূড়ান্ত উত্তর যথেষ্ট নয়</h3>
+<p>একটা agent ভুল পথে গিয়েও কখনো ঠিক উত্তরে পৌঁছাতে পারে, আবার সঠিক পথে গিয়েও শেষে ভুল করতে পারে; আর অপ্রয়োজনীয় ধাপ cost বাড়ায়। তাই পুরো <b>trajectory</b> মাপুন: সঠিক tool নির্বাচন, argument-এর সঠিকতা, ধাপ সংখ্যা, মোট token/cost। প্রতিটা ধাপের trace (thought, tool, argument, result, token, latency) লগ করুন, golden task-এর সেট বানিয়ে প্রতিটা prompt/tool/মডেল পরিবর্তনের পর regression চালান, আর ব্যর্থ বাস্তব session থেকে নতুন test case যোগ করুন (Evaluation ও Production অধ্যায় দেখুন)।</p>
 </template>
 
 <template data-page="multiagent">
@@ -879,6 +968,22 @@ builder.Services.AddHttpClient&lt;IChatCompletionService, OpenAiChatService&gt;(
 <p>প্রতিটা LLM call-এর input prompt, output, token count, latency, ও cost লগ করা জরুরি — শুধু debugging-এর জন্য নয়, বরং drift detection (মডেল/prompt পরিবর্তনের পর quality কমে গেছে কিনা বোঝা) ও cost tracking-এর জন্যও। <span class="kw">OpenTelemetry</span>-এর GenAI semantic convention (span-এ model, token usage, ইত্যাদি attribute) এখন এই ধরনের tracing-এর একটা প্রচলিত মানদণ্ড হয়ে উঠছে।</p>
 <div class="callout why"><span class="tag">কেন token/cost metric আলাদাভাবে ট্র্যাক করা জরুরি</span>
 প্রথাগত APM (Application Performance Monitoring) request count ও latency দেখায়, কিন্তু LLM feature-এর আসল অপারেশনাল ঝুঁকি হলো <b>cost</b> — একটা bug যেখানে একটা loop বারবার একই বড় document পাঠাচ্ছে তা latency-তে সেভাবে না ধরা পড়লেও বিল-এ বিশাল আকারে ধরা পড়বে। প্রতি-request token usage আর ক্রমবর্ধমান দৈনিক খরচের উপর আলাদা dashboard/alert রাখা তাই একটা must-have, nice-to-have নয়।</div>
+
+<h3>Rate Limiting, Per-user Quota ও Cost নিয়ন্ত্রণ</h3>
+<p>Provider-এর rate limit (429) সামলানো আর <b>নিজের ব্যবহারকারীদের</b> সীমিত করা — দুটো আলাদা সমস্যা। প্রথমটা retry/backoff দিয়ে সামলানো হয় (উপরে দেখুন)। দ্বিতীয়টা না থাকলে একজন ব্যবহারকারী (বা একটা bot/loop) আপনার পুরো বাজেট খেয়ে ফেলতে পারে। তাই endpoint-এ per-user rate limit, আর সম্ভব হলে প্রতি ব্যবহারকারী/tenant-এর দৈনিক বা মাসিক <b>token quota</b> রাখুন, এবং প্রতি request-এর max input/output token সীমিত করুন।</p>
+<pre><span class="c">// ASP.NET Core built-in rate limiter — প্রতি ব্যবহারকারী মিনিটে ২০টা AI request</span>
+builder.Services.AddRateLimiter(o =&gt; o.AddPolicy("ai", ctx =&gt;
+    RateLimitPartition.GetFixedWindowLimiter(
+        ctx.User.Identity?.Name ?? "anonymous",
+        _ =&gt; new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1) })));
+
+app.UseRateLimiter();
+app.MapPost("/api/ai/ask", AskHandler).RequireRateLimiting("ai");</pre>
+
+<h3>Batch ও Async Processing — সব কাজ real-time হতে হবে না</h3>
+<p>ব্যবহারকারী যে উত্তরের জন্য অপেক্ষা করছে না (বড় ডকুমেন্টের embedding, রাতের সারাংশ, data extraction, evaluation run), সেগুলো queue (RabbitMQ/Kafka) ও background worker দিয়ে asynchronous-ভাবে চালানো ভালো: request দ্রুত গ্রহণ করে job queue-তে রাখা, worker নিয়ন্ত্রিত concurrency-তে LLM call করা (rate limit না ছাড়িয়ে), ব্যর্থ job retry/dead-letter-এ পাঠানো। অনেক provider-এর <b>Batch API</b> আছে, যেখানে দেরিতে ফলাফল নেওয়ার বিনিময়ে সাধারণত কম দাম পাওয়া যায় — অ-জরুরি কাজে cost কমানোর কার্যকর উপায় (নির্দিষ্ট ছাড় ও শর্ত provider-ভেদে আলাদা, তাই বর্তমান ডকুমেন্টেশন দেখুন)।</p>
+<div class="callout why"><span class="tag">কেন queue-ভিত্তিক হলে cost ও স্থিতিশীলতা দুটোই ভালো হয়</span>
+Queue একটা buffer — হঠাৎ traffic spike হলেও LLM provider-এর rate limit অতিক্রম না করে কাজ ধীরে ধীরে নিষ্পন্ন হয়, আর ব্যর্থ call-এর retry ও idempotency একটা জায়গা থেকে নিয়ন্ত্রণ করা যায়। এছাড়া embedding তৈরির মতো ভারী কাজ user-facing API-কে ধীর করে না।</div>
 </template>
 
 <template data-page="integration">
@@ -942,6 +1047,51 @@ API key কখনো <code>appsettings.json</code>-এ commit করবেন �
 
 <h3>সবকিছু একসাথে — একটা এন্ড-টু-এন্ড ফিচারের চিত্র</h3>
 <p>ধরুন আপনি একটা "ডকুমেন্ট থেকে প্রশ্নোত্তর" ফিচার বানাচ্ছেন একটা ASP.NET Core backend-এ। পুরো প্রবাহ এই কোর্সের প্রতিটা অধ্যায়কে ছুঁয়ে যায়: ডকুমেন্ট আপলোড হলে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয় (অধ্যায় ৭-৯); ব্যবহারকারীর প্রশ্ন এলে backend সেই প্রশ্ন embed করে প্রাসঙ্গিক chunk retrieve করে (অধ্যায় ৮); একটা grounded prompt বানিয়ে LLM-কে পাঠানো হয়, context engineering নীতি মেনে শুধু প্রাসঙ্গিক অংশ কিউরেট করে পাঠানো হয় (অধ্যায় ৬), প্রয়োজনে একটা tool দিয়ে অতিরিক্ত ডেটা আনা হয় (অধ্যায় ৪,৫,১০); output নিরাপত্তা ও PII guardrail দিয়ে যাচাই করা হয় (অধ্যায় ১৫); response streaming-এ ফেরত পাঠানো হয়, আর প্রতিটা call-এর token/cost/latency log হয় (অধ্যায় ১৬); নিয়মিত golden dataset-এর উপর eval চালিয়ে regression যাচাই করা হয় (অধ্যায় ১৪)। এই পুরো চিত্রটাই আসলে "AI Engineering" মানে কী তার সংক্ষিপ্ত রূপ — একটা LLM-কে ঘিরে বানানো নির্ভরযোগ্য, পর্যবেক্ষণযোগ্য, নিরাপদ software।</p>
+
+<h3>Microsoft.Extensions.AI ও Semantic Kernel — .NET-এ কোনটা কখন</h3>
+<p>উপরের হাতে-লেখা <code>IChatCompletionService</code> abstraction ধারণা বোঝার জন্য ভালো, কিন্তু বাস্তব প্রজেক্টে .NET ইকোসিস্টেমের নিজস্ব লাইব্রেরি ব্যবহার করা বেশি যুক্তিসঙ্গত। <span class="kw">Microsoft.Extensions.AI</span> একটা হালকা, provider-নিরপেক্ষ abstraction (<code>IChatClient</code>, embedding generator) দেয় এবং middleware-এর মতো function invocation, caching, telemetry যোগ করা যায়। <span class="kw">Semantic Kernel</span> তার উপরে plugin, agent ও orchestration-এর মতো বেশি ফিচার দেয়।</p>
+<pre><span class="c">// Microsoft.Extensions.AI — tool-call লুপ framework নিজে চালায়</span>
+[Description("একটা মাসের Trial Balance ফেরত দেয়। শুধু পড়ে।")]
+static Task&lt;string&gt; GetTrialBalance(int year, int month) =&gt; accounting.GetTrialBalanceJsonAsync(year, month);
+
+IChatClient client = new ChatClientBuilder(innerClient)
+    .UseFunctionInvocation()
+    .Build();
+
+var options = new ChatOptions { Tools = [AIFunctionFactory.Create(GetTrialBalance)] };
+var reply = await client.GetResponseAsync("জানুয়ারি ২০২৬-এর trial balance সংক্ষেপে বলো", options);</pre>
+<div class="callout best"><span class="tag">কোনটা বাছবেন</span>
+শুধু chat/embedding/tool calling দরকার হলে <b>Microsoft.Extensions.AI</b> দিয়েই শুরু করুন — কম abstraction, বেশি নিয়ন্ত্রণ। Plugin ইকোসিস্টেম, multi-agent বা বিল্ট-ইন orchestration লাগলে <b>Semantic Kernel</b> বিবেচনা করুন। এই লাইব্রেরিগুলো দ্রুত বদলায় — API-র নাম ও সংস্করণ ব্যবহারের আগে বর্তমান ডকুমেন্টেশনের সাথে মিলিয়ে নিন।</div>
+
+<h3>AI Feature-এ Authentication ও Authorization — ব্যবহারকারীর পরিচয় tool পর্যন্ত পৌঁছানো</h3>
+<p>AI feature-এর সবচেয়ে সূক্ষ্ম নিরাপত্তা-ঝুঁকি: agent বা RAG এমন ডেটা এনে দিচ্ছে যা সংশ্লিষ্ট ব্যবহারকারীর দেখার অধিকার নেই। মূল নীতি — <b>মডেল কোনো permission দেয় না</b>; permission চেক হয় আপনার কোডে, প্রতিটা tool call ও retrieval-এ, authenticated ব্যবহারকারীর identity দিয়ে।</p>
+<pre>User (JWT) → ASP.NET Core API → AI Service
+                                   ├─ Retrieval: WHERE tenant_id = user.tenant AND role ∈ user.roles
+                                   └─ Tool call: accountingApi.GetBalance(accountId)
+                                         ↳ এখানেও user-এর token/claim দিয়ে authorization চেক
+<span class="c">// tool-এর ভেতরে "এই user কি এই account দেখতে পারে?" — মডেলের দেওয়া accountId অন্ধভাবে বিশ্বাস করা নয়</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake — tool-এ একটা শক্তিশালী service account ব্যবহার করা</span>
+সব tool call যদি একটা admin-ধাঁচের service account দিয়ে চলে, তাহলে prompt injection বা মডেলের ভুলে যেকোনো ব্যবহারকারী অন্যের ডেটা পেতে পারে। বরং ব্যবহারকারীর নিজের identity/claim tool পর্যন্ত propagate করুন (on-behalf-of), tool-কে least privilege দিন, আর প্রতিটা call audit log-এ রাখুন (Safety অধ্যায়ের Least Privilege দেখুন)।</div>
+
+<h3>Background Worker ও Queue দিয়ে AI Processing</h3>
+<p>ভারী বা দীর্ঘ কাজ (ডকুমেন্ট ingestion, embedding তৈরি, batch সারাংশ) HTTP request-এর ভেতরে না চালিয়ে .NET <code>BackgroundService</code> ও message queue (RabbitMQ/Kafka) দিয়ে চালানো হয়। API শুধু job গ্রহণ করে <code>202 Accepted</code> ও job ID দেয়; worker queue থেকে job নিয়ে chunk → embed → pgvector-এ সংরক্ষণ করে, ব্যর্থ হলে retry/dead-letter-এ পাঠায়।</p>
+<pre>API  ──(job: ডকুমেন্ট আপলোড)──▶  Queue  ──▶  BackgroundService (worker)
+ ▲                                               ├─ chunk → embedding API (rate limit মেনে)
+ └── GET /jobs/{id} (status polling/SignalR) ◀───┴─ pgvector-এ upsert → status = Done</pre>
+<div class="callout best"><span class="tag">Best practice</span>
+Worker-এ concurrency সীমিত রাখুন (provider rate limit মানতে), প্রতিটা job idempotent রাখুন (একই ডকুমেন্ট দুইবার প্রসেস হলেও duplicate chunk যেন না হয় — content hash দিয়ে upsert), এবং job-এর token/cost ও ব্যর্থতার হার মেট্রিক হিসেবে ট্র্যাক করুন।</div>
+
+<h3>একজন .NET Engineer-এর AI শেখার রোডম্যাপ</h3>
+<table>
+<tr><th>ধাপ</th><th>সময়</th><th>ফোকাস</th></tr>
+<tr><td>১. AI Fundamentals</td><td>২–৩ সপ্তাহ</td><td>LLM, token, context window, prompt, embedding, vector DB, RAG, tool calling, agent, hallucination</td></tr>
+<tr><td>২. প্রয়োজনীয় Python</td><td>২–৩ সপ্তাহ</td><td>FastAPI, Pydantic, async, AI SDK — advanced Python নয়</td></tr>
+<tr><td>৩. LLM Application Development ⭐</td><td>১–১.৫ মাস</td><td>provider API, structured output, streaming, RAG, pgvector, Redis, document processing</td></tr>
+<tr><td>৪. AI + .NET ⭐⭐⭐</td><td>১ মাস</td><td>ASP.NET Core + LLM, Microsoft.Extensions.AI, Semantic Kernel, background worker, Kafka/RabbitMQ, observability, cost management</td></tr>
+<tr><td>৫. AI Agents</td><td>১ মাস</td><td>database/API/document tool, multi-tool, memory</td></tr>
+<tr><td>৬. Production AI</td><td>১ মাস</td><td>security, prompt injection, PII, evaluation, caching, rate limiting, cost optimization</td></tr>
+</table>
+<p>তিনটা প্রজেক্ট বানিয়ে প্রতিটা ধাপ প্রয়োগ করুন: <b>(১)</b> Documentation AI Assistant (RAG), <b>(২)</b> Accounting AI Agent (যেমন "জানুয়ারির সর্বোচ্চ খরচ দেখাও" → agent আপনার accounting API কল করে), <b>(৩)</b> Production AI Financial Assistant (.NET + PostgreSQL + Redis + Kafka + LLM + RAG + Agent)। শুরুতে এড়িয়ে চলুন: গভীর গাণিতিক ML, scratch থেকে LLM training, TensorFlow/PyTorch-এ গভীরে যাওয়া, data science, আর একসাথে অনেকগুলো AI framework।</p>
 </template>
 
 <template data-page="interview">
@@ -1229,6 +1379,70 @@ Embedding model বদলালে: সবকিছু নতুন করে re
         Context-এ উত্তর না থাকলে বলো "এ বিষয়ে তথ্য পাওয়া যায়নি"।
         প্রতিটা দাবির পাশে [source: ডকুমেন্ট-নাম, chunk-id] দেখাও।</pre>
 <p><b>ব্যাখ্যা:</b> Retrieval সবসময় top-k ফেরত দেয়, এমনকি কোনোটাই প্রাসঙ্গিক না হলেও — তখন মডেল দুর্বল chunk থেকে জোর করে উত্তর বানিয়ে hallucinate করতে পারে। প্রতিরোধ: similarity threshold রাখা, prompt-এ স্পষ্ট "না জানলে বলো" নির্দেশনা, আর প্রয়োজনে fallback (human agent/স্পষ্টীকরণ প্রশ্ন)। Citation দুটো কাজ করে: ব্যবহারকারী উত্তর যাচাই করতে পারে (বিশেষ করে finance/legal-এ), আর আপনি faithfulness নিয়মিত পরীক্ষা করতে পারেন — উত্তরের প্রতিটা দাবি কোনো retrieved chunk দ্বারা সমর্থিত কিনা।</p>
+
+<h3>৪৯) একটা AI Agent-এর মূল উপাদানগুলো কী কী?</h3>
+<pre>        ┌────────── Agent Loop ──────────┐
+Goal →  │ LLM (reasoning) → Tool চয়ন     │ → Final Answer
+        │      ↑                ↓         │
+        │   Memory  ←──  Tool Result      │
+        └─────────────────────────────────┘
+        + Guardrails (iteration/cost limit, permission)</pre>
+<p><b>ব্যাখ্যা:</b> একটা agent সাধারণত চারটা অংশ নিয়ে গঠিত: <b>LLM</b> (সিদ্ধান্ত নেওয়ার "মস্তিষ্ক"), <b>Tools</b> (API/database/search — যা দিয়ে বাইরের জগতে কাজ হয়), <b>Memory</b> (conversation ও আগের ধাপের ফলাফল ধরে রাখা), আর <b>Planning/Loop</b> (পরবর্তী পদক্ষেপ ঠিক করে লক্ষ্য না পাওয়া পর্যন্ত চালানো)। এর উপর production-এ যুক্ত হয় guardrail: সর্বোচ্চ iteration, cost বাজেট, timeout, আর permission সীমা (AI Agents অধ্যায়ে বিস্তারিত)। মনে রাখুন, মডেল নিজে কিছু execute করে না — loop ও tool execution আপনার কোডে।</p>
+
+<h3>৫০) ReAct pattern কী, আর Plan-and-Execute থেকে এটা কীভাবে আলাদা?</h3>
+<pre>ReAct:             Thought → Action(tool) → Observation → Thought → Action → ... → Answer
+Plan-and-Execute:  আগে পুরো plan বানাও (১, ২, ৩...) → প্রতিটা ধাপ চালাও → (দরকারে re-plan)</pre>
+<p><b>ব্যাখ্যা:</b> ReAct-এ মডেল প্রতিটা ধাপে "ভাবে → একটা tool কল করে → ফলাফল দেখে → আবার ভাবে" — অনিশ্চিত বা বদলে যাওয়া পরিস্থিতিতে নমনীয়, কিন্তু প্রতিটা ধাপে LLM call হওয়ায় ধীর ও দামী হতে পারে। Plan-and-Execute-এ আগে সম্পূর্ণ পরিকল্পনা তৈরি হয়, তারপর ধাপগুলো (প্রায়ই ছোট/সস্তা মডেল বা সরাসরি কোড দিয়ে) চালানো হয় — ধাপ স্পষ্ট থাকলে দ্রুত ও predictable, কিন্তু মাঝপথে বাস্তবতা বদলালে re-plan লাগে। বাস্তবে অনেক সিস্টেম দুটোর মিশ্রণ ব্যবহার করে (Advanced Prompting ও Agents অধ্যায় দেখুন)।</p>
+
+<h3>৫১) প্রতিটা সমস্যায় কি Agent ব্যবহার করা উচিত? Workflow বনাম Agent কখন কোনটা?</h3>
+<pre>Workflow:  ধাপ আগে থেকে নির্ধারিত (কোড নিয়ন্ত্রণ করে)   → predictable, সস্তা, ডিবাগ সহজ
+Agent:     ধাপ মডেল নিজে ঠিক করে                         → নমনীয়, কিন্তু ধীর, দামী, কম predictable</pre>
+<p><b>ব্যাখ্যা:</b> কাজের ধাপ যদি আগে থেকেই জানা থাকে (যেমন: ডকুমেন্ট পড়ো → সারাংশ করো → JSON-এ দাও), তাহলে প্রম্পট চেইনিং বা সাধারণ কোড-নিয়ন্ত্রিত workflow-ই ভালো — আলাদা agent লুপ শুধু জটিলতা, cost ও ব্যর্থতার সুযোগ বাড়ায়। Agent তখনই যুক্তিসঙ্গত যখন ধাপের সংখ্যা/ক্রম ইনপুটের উপর নির্ভর করে এবং আগে থেকে ঠিক করা যায় না (যেমন open-ended investigation)। নীতি: সবচেয়ে সহজ সমাধান দিয়ে শুরু করুন, দরকার হলেই autonomy বাড়ান।</p>
+
+<h3>৫২) Agent-এর memory কত ধরনের, আর কোনটা কীভাবে বাস্তবায়ন করবেন?</h3>
+<pre>Short-term:  current conversation + tool result      → context window-এর ভেতর
+Long-term:   আগের session, user preference, জ্ঞান    → বাইরে সংরক্ষণ (DB / vector store), দরকারে retrieve
+Summary:     পুরনো history সংক্ষেপ করে context ছোট রাখা</pre>
+<p><b>ব্যাখ্যা:</b> LLM নিজে stateless (প্রশ্ন ১), তাই "memory" আসলে application-এর কাজ। Short-term memory মানে প্রতিটা call-এ প্রাসঙ্গিক history পাঠানো, যা context window-এর সীমায় আটকা। Long-term memory-র জন্য তথ্য database বা vector store-এ রেখে দরকারমতো retrieve করে prompt-এ জোড়া হয় — এটা কার্যত RAG-ই। লম্বা চলমান agent-এ context পূর্ণ হলে পুরনো অংশ সারাংশ/compact করা হয় (Context Engineering অধ্যায়)। কী মনে রাখা হবে আর কতদিন — এটা privacy/PII নীতির সাথেও জড়িত।</p>
+
+<h3>৫৩) ভালো Tool design কেমন? মডেল কেন ভুল tool বেছে নেয়?</h3>
+<pre>খারাপ:  tool "process"  — description: "কিছু একটা করে"
+ভালো:   get_account_balance(account_id: string)
+        "একটা নির্দিষ্ট account-এর বর্তমান balance ফেরত দেয়। শুধু পড়ে, কিছু বদলায় না।"</pre>
+<p><b>ব্যাখ্যা:</b> মডেল tool বাছাই করে মূলত নাম, description ও parameter schema দেখে — তাই অস্পষ্ট নাম/বর্ণনা বা একই কাজের অনেকগুলো overlapping tool ভুল সিদ্ধান্তের প্রধান কারণ। ভালো tool: একটা কাজ করে, স্পষ্ট নাম ও description, সুনির্দিষ্ট typed parameter, read ও write আলাদা, আর ব্যর্থতায় মডেলের বোঝার মতো পরিষ্কার error message ফেরত দেয় (যাতে সে ঠিক করে আবার চেষ্টা করতে পারে)। tool-এর সংখ্যা যত কম ও স্পষ্ট, নির্ভরযোগ্যতা তত বেশি — কয়েক ডজন tool একসাথে দিলে context ফাঁপে এবং বাছাইয়ের ভুল বাড়ে।</p>
+
+<h3>৫৪) Agent-এর tool ব্যর্থ হলে বা write অপারেশন দুইবার চললে কী হবে? Idempotency কেন গুরুত্বপূর্ণ?</h3>
+<pre>create_payment(amount, idempotency_key: "order-1042-pay")
+<span class="c">// retry-তে একই key → সার্ভার দ্বিতীয়বার payment তৈরি না করে আগের ফলাফল ফেরত দেয়</span></pre>
+<p><b>ব্যাখ্যা:</b> Network error, timeout বা মডেলের পুনরায় চেষ্টা — যেকোনো কারণে একই tool call একাধিকবার চলতে পারে। শুধু পড়ার tool-এ এটা নিরাপদ, কিন্তু payment, voucher posting বা record তৈরির মতো write-এ duplicate আর্থিক ক্ষতি করে। তাই write tool-কে <b>idempotent</b> বানান (idempotency key), ব্যর্থতায় স্পষ্ট error ফেরত দিন যাতে মডেল বুঝে পথ বদলাতে পারে, retry-তে সীমা রাখুন (প্রশ্ন ১১), আর ঝুঁকিপূর্ণ write-এর আগে human approval রাখুন। এটা সাধারণ distributed-system নীতিই, AI agent-এ আরও জরুরি কারণ কলের সিদ্ধান্ত নেয় অনির্ধারিত মডেল।</p>
+
+<h3>৫৫) Human-in-the-loop কী, আর accounting agent-এ কোন কোন পদক্ষেপে এটা বাধ্যতামূলক রাখা উচিত?</h3>
+<pre>পড়া (read):     "জানুয়ারির সর্বোচ্চ খরচ দেখাও"          → স্বয়ংক্রিয়, কম ঝুঁকি
+প্রস্তাব (draft): "এই voucher খসড়া তৈরি করেছি"          → ব্যবহারকারীকে দেখিয়ে নিশ্চিতকরণ
+কার্যকর (write):  post / pay / delete                     → স্পষ্ট human approval + audit log</pre>
+<p><b>ব্যাখ্যা:</b> Human-in-the-loop মানে উচ্চ-ঝুঁকির পদক্ষেপের আগে agent থেমে মানুষের অনুমোদন নেয়। ঝুঁকি অনুযায়ী স্তর ভাগ করুন: read-only কাজ স্বয়ংক্রিয়ভাবে চলতে পারে; আর্থিক সিদ্ধান্ত বা অপরিবর্তনীয় action (payment, posting, delete) অনুমোদন ছাড়া নয়। এটা Excessive Agency ঝুঁকির (Safety অধ্যায়) সরাসরি প্রতিরক্ষা — মডেল ভুল বুঝলে বা prompt injection-এর শিকার হলেও ক্ষতি আটকায়। সব ধাপের জন্য audit log রাখুন: কে অনুরোধ করল, agent কোন tool কী argument-এ চালাল, কে অনুমোদন দিল।</p>
+
+<h3>৫৬) একটা Agent কীভাবে মূল্যায়ন ও ডিবাগ করবেন? শুধু চূড়ান্ত উত্তর দেখলেই কেন যথেষ্ট নয়?</h3>
+<pre>দেখুন:  চূড়ান্ত উত্তর সঠিক?  +  ঠিক tool বেছেছে?  +  argument সঠিক?  +  অপ্রয়োজনীয় ধাপ নেই?
+লগ:     প্রতিটা ধাপের trace — thought, tool, argument, result, token, latency</pre>
+<p><b>ব্যাখ্যা:</b> Agent ভুল পথে গিয়েও কখনো কখনো ঠিক উত্তরে পৌঁছায় (বা সঠিক পথে গিয়েও শেষে ভুল করে), আর অপ্রয়োজনীয় ধাপ cost বাড়ায় — তাই শুধু final answer নয়, পুরো <b>trajectory</b> মাপা দরকার: সঠিক tool নির্বাচন, argument-এর সঠিকতা, ধাপ সংখ্যা, মোট token/cost। এজন্য প্রতিটা ধাপের distributed trace (OpenTelemetry GenAI convention — Production অধ্যায়) রাখুন, golden task-এর একটা সেট বানিয়ে প্রতিটা prompt/tool/মডেল পরিবর্তনের পর regression চালান (Evaluation অধ্যায়), আর বাস্তব ব্যবহারকারীর ব্যর্থ session থেকে নতুন test case যোগ করুন।</p>
+
+<h3>৫৭) C#/.NET-এ একটা সহজ tool-calling agent কীভাবে বানাবেন?</h3>
+<pre><span class="c">// Microsoft.Extensions.AI — মডেল tool কল চাইলে framework নিজে function চালিয়ে ফলাফল ফেরত দেয়</span>
+[Description("একটা মাসের Trial Balance ফেরত দেয়। শুধু পড়ে।")]
+static async Task&lt;string&gt; GetTrialBalance(int year, int month) =&gt; await accounting.GetTrialBalanceJsonAsync(year, month);
+
+IChatClient client = new ChatClientBuilder(innerClient)
+    .UseFunctionInvocation()          <span class="c">// tool-call লুপ নিজে চালায় (সর্বোচ্চ iteration কনফিগারযোগ্য)</span>
+    .Build();
+
+var options = new ChatOptions { Tools = [AIFunctionFactory.Create(GetTrialBalance)] };
+var reply = await client.GetResponseAsync("জানুয়ারি ২০২৬-এর trial balance সংক্ষেপে বলো", options);</pre>
+<p><b>ব্যাখ্যা:</b> .NET-এ দুটো প্রধান পথ: <b>Microsoft.Extensions.AI</b> (<code>IChatClient</code> abstraction + <code>UseFunctionInvocation()</code> middleware — হালকা, provider-নিরপেক্ষ) এবং <b>Semantic Kernel</b> (plugin, planner/agent framework — বেশি ফিচার)। দুই ক্ষেত্রেই tool মূলত আপনার সাধারণ C# মেথড, যা আপনার বিদ্যমান service/API-কে ঘিরে থাকে; মডেল শুধু নাম ও argument প্রস্তাব করে। Tool-এর ভেতরে authorization, input validation ও audit log রাখুন (প্রশ্ন ২২), আর loop-এর সর্বোচ্চ iteration সীমিত করুন। API-র নাম ও সংস্করণ বদলাতে পারে, তাই বাস্তবায়নের আগে বর্তমান ডকুমেন্টেশন মিলিয়ে নিন।</p>
+
+<h3>৫৮) Multi-agent system কখন সত্যিই দরকার, আর কখন single agent-ই ভালো?</h3>
+<pre>Orchestrator → [Research Agent] [SQL/Data Agent] [Writer Agent]  → সমন্বিত উত্তর</pre>
+<p><b>ব্যাখ্যা:</b> Multi-agent তখনই লাভজনক যখন কাজ স্পষ্টভাবে আলাদা বিশেষায়িত অংশে ভাগ হয় (আলাদা tool সেট, আলাদা prompt/context), বা একটা agent-এর context একাধিক বিষয়ে ফেঁপে গিয়ে মান কমছে, বা অংশগুলো সমান্তরালে চালানো যায়। দাম হলো বাড়তি LLM call (cost ও latency), agent-এর মধ্যে তথ্য হারানোর ঝুঁকি, আর ডিবাগ কঠিন হওয়া। তাই একটা ভালো tool সেট-সহ single agent দিয়ে শুরু করুন, বাস্তব bottleneck দেখলে তবেই ভাগ করুন (Multi-Agent অধ্যায়ে Orchestrator/Supervisor pattern দেখুন)।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->
