@@ -317,6 +317,43 @@ str(100)         <span class="c"># "100"</span>
 bool("")         <span class="c"># False</span>
 list("abc")      <span class="c"># ['a', 'b', 'c']</span>
 int("abc")       <span class="c"># ValueError — অবৈধ রূপান্তরে exception</span></pre>
+
+<h3>সংখ্যা নিয়ে কাজ — math, round, Bitwise ও literal</h3>
+<pre>import math
+
+print(math.floor(3.7), math.ceil(3.2), math.sqrt(16), math.pi)   <span class="c"># 3 4 4.0 3.14159...</span>
+print(divmod(17, 5))             <span class="c"># (3, 2) — ভাগফল ও ভাগশেষ একসাথে</span>
+print(abs(-5), pow(2, 10), 2 ** 10)
+
+<span class="c"># round() — "banker's rounding": .5 হলে জোড় সংখ্যার দিকে যায়</span>
+print(round(2.5), round(3.5), round(2.675, 2))   <span class="c"># 2 4 2.67   (float এর অসম্পূর্ণতাও আছে)</span>
+
+<span class="c"># float তুলনা — == নয়, isclose</span>
+print(0.1 + 0.2 == 0.3)                  <span class="c"># False</span>
+print(math.isclose(0.1 + 0.2, 0.3))      <span class="c"># True</span>
+
+<span class="c"># পড়ার সুবিধার জন্য underscore এবং ভিন্ন base</span>
+big = 1_000_000
+print(0xFF, 0b1010, 0o17)                <span class="c"># 255 10 15</span>
+print(int("ff", 16), bin(10), hex(255))  <span class="c"># 255 0b1010 0xff</span>
+print(float("inf") &gt; 10**100)            <span class="c"># True</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake — round() দিয়ে টাকার হিসাব</span>
+<code>round(2.5) == 2</code> (জোড়ের দিকে) এবং float-এর কারণে <code>round(2.675, 2) == 2.67</code> — আর্থিক হিসাবে অপ্রত্যাশিত। টাকা-পয়সায় <code>Decimal</code> ও স্পষ্ট rounding mode ব্যবহার করুন:
+<pre>from decimal import Decimal, ROUND_HALF_UP
+print(Decimal("2.675").quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))   <span class="c"># 2.68</span></pre></div>
+
+<h3>Bitwise Operator</h3>
+<pre>a, b = 0b1100, 0b1010
+print(a &amp; b, bin(a &amp; b))    <span class="c"># 8  0b1000   AND</span>
+print(a | b, bin(a | b))    <span class="c"># 14 0b1110   OR</span>
+print(a ^ b, bin(a ^ b))    <span class="c"># 6  0b110    XOR</span>
+print(~a)                   <span class="c"># -13         NOT</span>
+print(1 &lt;&lt; 3, 16 &gt;&gt; 2)     <span class="c"># 8 4         shift</span>
+
+<span class="c"># বাস্তব ব্যবহার: permission flag</span>
+READ, WRITE, EXEC = 1, 2, 4
+perm = READ | WRITE
+print(bool(perm &amp; WRITE), bool(perm &amp; EXEC))   <span class="c"># True False</span></pre>
 </template>
 
 <template data-page="control">
@@ -477,6 +514,50 @@ users = [{"n": "B", "age": 30}, {"n": "A", "age": 25}]
 print(sorted(users, key=lambda u: u["age"]))   <span class="c"># age অনুযায়ী sort</span></pre>
 <div class="callout best"><span class="tag">Best practice</span>
 জটিল লজিকে lambda না লিখে নামসহ <code>def</code> লিখুন। সরল transform-এ <code>map/filter</code>-এর চেয়ে list comprehension (অধ্যায় ১০) সাধারণত বেশি পঠনযোগ্য।</div>
+
+<h3>Built-in Function — প্রতিদিনের কাজের তালিকা</h3>
+<table>
+<tr><th>Function</th><th>কাজ</th><th>উদাহরণ</th></tr>
+<tr><td><code>len, sum, min, max</code></td><td>আকার, যোগফল, ক্ষুদ্রতম, বৃহত্তম</td><td><code>max(words, key=len)</code></td></tr>
+<tr><td><code>sorted, reversed</code></td><td>সাজানো, উল্টো iterator</td><td><code>sorted(d.items(), key=lambda kv: kv[1])</code></td></tr>
+<tr><td><code>enumerate, zip</code></td><td>index সহ loop, একাধিক iterable একসাথে</td><td><code>zip(a, b, strict=True)</code> (3.10+)</td></tr>
+<tr><td><code>any, all</code></td><td>কোনো/সবগুলো সত্য কিনা</td><td><code>all(x &gt; 0 for x in nums)</code></td></tr>
+<tr><td><code>map, filter</code></td><td>lazy transform/filter</td><td><code>list(map(str, nums))</code></td></tr>
+<tr><td><code>isinstance, type, id</code></td><td>type যাচাই, object-এর identity</td><td><code>isinstance(x, (int, float))</code></td></tr>
+<tr><td><code>getattr, setattr, hasattr</code></td><td>নাম-string দিয়ে attribute</td><td><code>getattr(obj, "name", None)</code></td></tr>
+<tr><td><code>dir, vars, help</code></td><td>object অনুসন্ধান</td><td><code>dir("abc")</code>, <code>help(str.split)</code></td></tr>
+<tr><td><code>iter, next</code></td><td>iterator হাতে চালানো</td><td><code>next(it, None)</code></td></tr>
+</table>
+<pre>nums = [3, -1, 8, 0]
+print(max(nums), min(nums), sum(nums))               <span class="c"># 8 -1 10</span>
+print(any(n &lt; 0 for n in nums), all(n &gt;= 0 for n in nums))   <span class="c"># True False</span>
+words = ["pi", "python", "go"]
+print(max(words, key=len))                           <span class="c"># python</span>
+print(next((n for n in nums if n &gt; 5), None))        <span class="c"># 8 — প্রথম মিলটা, না পেলে None</span>
+
+print("a", "b", "c", sep="-", end="!\n")             <span class="c"># a-b-c!</span>
+print(list(reversed([1, 2, 3])))                     <span class="c"># [3, 2, 1]</span>
+print(getattr(print, "__name__"))                    <span class="c"># print</span></pre>
+
+<h3>Recursion — function নিজেকে ডাকা</h3>
+<pre>def factorial(n):
+    if n &lt;= 1:                  <span class="c"># base case — না থাকলে অসীম recursion</span>
+        return 1
+    return n * factorial(n - 1)
+
+print(factorial(5))             <span class="c"># 120</span>
+
+import sys
+print(sys.getrecursionlimit())  <span class="c"># সাধারণত 1000</span>
+<span class="c"># factorial(5000)               # RecursionError: maximum recursion depth exceeded</span>
+
+def factorial_loop(n):          <span class="c"># গভীর হলে loop-ই নিরাপদ</span>
+    r = 1
+    for i in range(2, n + 1):
+        r *= i
+    return r</pre>
+<div class="callout why"><span class="tag">Python-এ গভীর recursion কেন সমস্যা</span>
+Python tail-call optimization করে না এবং recursion depth সীমিত (ডিফল্ট ~১০০০)। গাছ/গ্রাফের মতো স্বাভাবিকভাবে recursive সমস্যায় recursion ঠিক আছে, কিন্তু লক্ষ ধাপের কাজে loop বা explicit stack ব্যবহার করুন। <code>sys.setrecursionlimit</code> বাড়ানো ঝুঁকিপূর্ণ (stack overflow/crash)।</div>
 </template>
 
 <template data-page="collections">
@@ -670,6 +751,38 @@ with open("sales.csv", "w", newline="", encoding="utf-8") as f:
 with open("sales.csv", newline="", encoding="utf-8") as f:
     for row in csv.DictReader(f):
         print(row["item"], int(row["qty"]))</pre>
+
+<h3>আরও কাজের String Method</h3>
+<pre>s = "Hello, World"
+print(s.find("World"), s.find("xyz"))        <span class="c"># 7 -1  (না পেলে -1; index() হলে ValueError)</span>
+print(s.count("l"))                          <span class="c"># 3</span>
+print("42".isdigit(), "abc".isalpha(), "ab1".isalnum())   <span class="c"># True True True</span>
+print("7".zfill(3))                          <span class="c"># 007</span>
+print("a-b-c".partition("-"))                <span class="c"># ('a', '-', 'b-c')</span>
+print("a\nb\nc".splitlines())                <span class="c"># ['a', 'b', 'c']</span>
+print("hello world".title())                 <span class="c"># Hello World</span>
+print("Straße".casefold() == "STRASSE".casefold())   <span class="c"># True — তুলনার জন্য lower()-এর চেয়ে ভালো</span>
+print(s.removeprefix("Hello, "))             <span class="c"># World (3.9+)</span></pre>
+
+<h3>Unicode ও বাংলা — byte, code point ও দৃশ্যমান অক্ষর</h3>
+<pre>t = "বাংলা"
+print(len(t))                       <span class="c"># 5   ← code point সংখ্যা (দৃশ্যমান অক্ষর ৩টা: বা, ং, লা)</span>
+print(len(t.encode("utf-8")))       <span class="c"># 15  ← UTF-8 byte (প্রতিটা বাংলা code point ৩ byte)</span>
+print([hex(ord(c)) for c in t][:2]) <span class="c"># ['0x9ac', '0x9be']</span>
+
+import unicodedata
+a = "কো"                  <span class="c"># একই অক্ষর ভিন্নভাবে লেখা যায় (composed বনাম decomposed)</span>
+b = "কো"
+print(a == b, unicodedata.normalize("NFC", a) == unicodedata.normalize("NFC", b))   <span class="c"># False True</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake — len() দিয়ে বাংলা "অক্ষর" গোনা, বা slice করা</span>
+Python string Unicode code point-এর ক্রম। বাংলার যুক্তাক্ষর/কার-চিহ্ন একাধিক code point নিয়ে একটা দৃশ্যমান অক্ষর হয় — তাই <code>len()</code> বা <code>[:3]</code> দৃশ্যমান অক্ষরের সংখ্যা/কাটা মেলায় না, আর <code>[::-1]</code> উল্টালে চিহ্ন ভুল জায়গায় যেতে পারে। তুলনা/search-এর আগে <code>unicodedata.normalize("NFC", ...)</code> করে নিন; দৃশ্যমান অক্ষর (grapheme) গুনতে <code>regex</code> package-এর <code>\X</code> ব্যবহার করা যায়। ডাটাবেস/API-তে সবসময় UTF-8।</div>
+
+<h3>bytes বনাম str</h3>
+<pre>data = "হ্যালো".encode("utf-8")      <span class="c"># str → bytes</span>
+print(type(data), data[:6])          <span class="c"># &lt;class 'bytes'&gt; b'\xe0\xa6\xb9\xe0\xa7\x8d'</span>
+print(data.decode("utf-8"))          <span class="c"># bytes → str</span>
+
+<span class="c"># network/ফাইল/ক্রিপ্টো bytes নিয়ে কাজ করে; মানুষের টেক্সট str</span></pre>
 </template>
 
 <template data-page="errors">
@@ -827,6 +940,47 @@ SECRET = os.environ["SECRET_KEY"]       <span class="c"># না থাকলে
 <span class="c"># from dotenv import load_dotenv; load_dotenv()</span></pre>
 <div class="callout mistake"><span class="tag">Common mistake — secret কোডে বা Git-এ রাখা</span>
 API key, password, DB URL কখনো কোডে hardcode বা <code>.env</code> Git-এ commit করবেন না। <code>.gitignore</code>-এ <code>.env</code> ও <code>.venv/</code> যোগ করুন; production-এ secret manager/environment variable ব্যবহার করুন।</div>
+
+<h3>Import-এর ভেতরের কথা — sys.path, __all__ ও circular import</h3>
+<pre>import sys
+print(sys.path[:3])          <span class="c"># Python এই ক্রমে ফোল্ডারে module খোঁজে (current dir প্রথমে)</span>
+
+<span class="c"># utils.py — "from utils import *" এ কী কী আসবে তা নিয়ন্ত্রণ</span>
+__all__ = ["add", "PI"]      <span class="c"># _private নাম বা অন্যান্য নাম বাদ</span>
+
+<span class="c"># module নিজের নাম</span>
+print(__name__, __file__)    <span class="c"># import করা হলে module-এর নাম; সরাসরি চালালে "__main__"</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake — নিজের ফাইলের নাম standard module-এর মতো রাখা</span>
+<code>random.py</code>, <code>json.py</code>, <code>email.py</code> নামে ফাইল বানালে আপনার ফাইলই আগে import হয় এবং আসল module ঢাকা পড়ে (অদ্ভুত error)। নামে সতর্ক থাকুন।</div>
+<pre><span class="c"># Circular import — a.py ও b.py একে অপরকে import করলে ImportError</span>
+<span class="c"># a.py:  from b import g      # b.py:  from a import f   →  সমস্যা</span>
+
+<span class="c"># সমাধান ১: ভেতরের function-এ import (lazy)</span>
+def f():
+    from b import g
+    return g()
+<span class="c"># সমাধান ২ (ভালো): সাধারণ অংশ তৃতীয় module-এ সরানো — নির্ভরতা একমুখী রাখা</span></pre>
+
+<h3>Code Quality টুলচেইন</h3>
+<table>
+<tr><th>টুল</th><th>কাজ</th><th>কমান্ড</th></tr>
+<tr><td><span class="kw">ruff</span></td><td>খুব দ্রুত lint + formatter (flake8/isort/black-এর কাজ)</td><td><code>ruff check .</code> / <code>ruff format .</code></td></tr>
+<tr><td><span class="kw">black</span></td><td>স্বয়ংক্রিয় formatter</td><td><code>black .</code></td></tr>
+<tr><td><span class="kw">mypy / pyright</span></td><td>static type check</td><td><code>mypy app/</code></td></tr>
+<tr><td><span class="kw">pytest + cov</span></td><td>test ও coverage</td><td><code>pytest --cov=app</code></td></tr>
+<tr><td><span class="kw">pre-commit</span></td><td>commit-এর আগে স্বয়ংক্রিয় যাচাই</td><td><code>pre-commit install</code></td></tr>
+<tr><td><span class="kw">pip-audit</span></td><td>dependency-র জানা দুর্বলতা খোঁজা</td><td><code>pip-audit</code></td></tr>
+</table>
+<pre><span class="c"># .pre-commit-config.yaml (সরল)</span>
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.0            <span class="c"># সংস্করণ আপনার পছন্দমতো/সর্বশেষে বদলান</span>
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format</pre>
+<div class="callout best"><span class="tag">Best practice</span>
+টিমে সবাই একই formatter/linter চালালে code review-তে স্টাইল-বিতর্ক থাকে না। CI-তে <code>ruff check</code>, <code>mypy</code>, <code>pytest</code> চালান; <code>requirements.txt</code>/lock ফাইল দিয়ে সংস্করণ নির্দিষ্ট রাখুন।</div>
 </template>
 
 <template data-page="oop">
@@ -970,6 +1124,122 @@ print(Status.PAID.value, Status("pending"))   <span class="c"># paid Status.PEND
 class Good:
     def __init__(self):
         self.items = []    <span class="c"># প্রতিটা object-এর নিজস্ব</span></pre></div>
+
+<h3>Multiple Inheritance ও MRO (Method Resolution Order)</h3>
+<pre>class A:
+    def hi(self): print("A")
+
+class B(A):
+    def hi(self):
+        print("B"); super().hi()
+
+class C(A):
+    def hi(self):
+        print("C"); super().hi()
+
+class D(B, C):                      <span class="c"># diamond inheritance</span>
+    def hi(self):
+        print("D"); super().hi()
+
+D().hi()                            <span class="c"># D B C A  — প্রতিটা class একবারই</span>
+print([k.__name__ for k in D.__mro__])   <span class="c"># ['D', 'B', 'C', 'A', 'object']</span></pre>
+<p><b>MRO</b> (C3 linearization) ঠিক করে method কোন ক্রমে খোঁজা হবে; <code>super()</code> "parent" নয়, বরং <b>MRO-র পরের class</b>-কে ডাকে — তাই diamond-এ <code>A</code> দুবার চলে না। <code>Class.__mro__</code> বা <code>Class.mro()</code> দিয়ে ক্রম দেখা যায়।</p>
+<div class="callout best"><span class="tag">Mixin — multiple inheritance-এর নিরাপদ ব্যবহার</span>
+Mixin ছোট, একটা নির্দিষ্ট আচরণ যোগ করা class (নিজে সাধারণত instance বানানো হয় না):
+<pre>class JsonMixin:
+    def to_json(self):
+        import json
+        return json.dumps(self.__dict__, ensure_ascii=False)
+
+class User(JsonMixin):
+    def __init__(self, name): self.name = name
+
+print(User("রাসেল").to_json())      <span class="c"># {"name": "রাসেল"}</span></pre></div>
+
+<h3>__slots__ — মেমরি বাঁচানো ও attribute সীমিত করা</h3>
+<pre>class Point:
+    __slots__ = ("x", "y")          <span class="c"># এই দুটো ছাড়া attribute নয়; প্রতি object-এ __dict__ নেই</span>
+    def __init__(self, x, y): self.x, self.y = x, y
+
+p = Point(1, 2)
+<span class="c"># p.z = 3          # AttributeError — নতুন attribute যোগ করা যায় না</span></pre>
+<p>লাখ লাখ ছোট object বানালে <code>__slots__</code> মেমরি উল্লেখযোগ্য কমায়। তবে dynamic attribute ও কিছু inheritance-সংক্রান্ত নমনীয়তা হারায় — সাধারণ প্রজেক্টে দরকার হয় না।</p>
+
+<h3>Callable Object ও Container Protocol</h3>
+<pre>class Multiplier:
+    def __init__(self, n): self.n = n
+    def __call__(self, x):              <span class="c"># object-কে function-এর মতো ডাকা যায়</span>
+        return x * self.n
+
+triple = Multiplier(3)
+print(triple(5), callable(triple))      <span class="c"># 15 True</span>
+
+class Playlist:
+    def __init__(self, songs): self._songs = list(songs)
+    def __len__(self): return len(self._songs)
+    def __getitem__(self, i): return self._songs[i]       <span class="c"># index ও slice</span>
+    def __iter__(self): return iter(self._songs)
+    def __contains__(self, s): return s in self._songs
+
+pl = Playlist(["a", "b", "c"])
+print(len(pl), pl[0], pl[1:], "b" in pl, list(pl))   <span class="c"># 3 a ['b', 'c'] True ['a', 'b', 'c']</span></pre>
+<div class="callout why"><span class="tag">Python-এর "data model"</span>
+<code>len(x)</code>, <code>x[i]</code>, <code>for ... in x</code>, <code>in</code>, <code>x()</code> — সবই বিশেষ (dunder) method-এর সাথে বাঁধা। নিজের class-এ এগুলো দিলে সেটা built-in type-এর মতোই ব্যবহারযোগ্য হয় — এটাই Python-এর ডিজাইনের মূল ধারণা।</div>
+
+<h3>Descriptor — property আসলে কীভাবে কাজ করে</h3>
+<pre>class Positive:
+    def __set_name__(self, owner, name):
+        self.name = "_" + name
+    def __get__(self, obj, objtype=None):
+        return getattr(obj, self.name)
+    def __set__(self, obj, value):
+        if value &lt;= 0:
+            raise ValueError("ধনাত্মক হতে হবে")
+        setattr(obj, self.name, value)
+
+class Product:
+    price = Positive()                  <span class="c"># descriptor — attribute access নিয়ন্ত্রণ করে</span>
+    qty = Positive()
+    def __init__(self, price, qty):
+        self.price, self.qty = price, qty
+
+p = Product(10, 2)
+<span class="c"># Product(-5, 1)      # ValueError — validation এক জায়গায়, একাধিক field-এ পুনর্ব্যবহারযোগ্য</span></pre>
+<p>যে object-এ <code>__get__</code>/<code>__set__</code> থাকে সেটাই descriptor। <code>@property</code>, method binding, <code>@classmethod</code> সবই descriptor দিয়ে চলে। একই validation বহু attribute-এ লাগলে (যেমন "positive number") descriptor <code>@property</code>-এর চেয়ে কম পুনরাবৃত্তি দেয়।</p>
+
+<h3>__init_subclass__ ও Metaclass (সংক্ষেপে)</h3>
+<pre><span class="c"># সহজ plugin registry — metaclass ছাড়াই</span>
+class Plugin:
+    registry = {}
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        Plugin.registry[cls.__name__.lower()] = cls     <span class="c"># subclass বানানোর সময় নিজে register</span>
+
+class Csv(Plugin): ...
+class Json(Plugin): ...
+print(list(Plugin.registry))        <span class="c"># ['csv', 'json']</span>
+
+<span class="c"># class নিজেও একটা object, যা "type" দিয়ে বানানো</span>
+Dynamic = type("Dynamic", (), {"hello": lambda self: "hi"})
+print(Dynamic().hello())            <span class="c"># hi</span>
+print(type(Dynamic), type(int))     <span class="c"># &lt;class 'type'&gt; &lt;class 'type'&gt;</span></pre>
+<div class="callout best"><span class="tag">Metaclass কখন</span>
+Metaclass হলো "class-এর class" — class তৈরির প্রক্রিয়া নিয়ন্ত্রণ করে (ORM/framework নির্মাতারা ব্যবহার করেন, যেমন Django model)। সাধারণ অ্যাপ কোডে প্রায় কখনো দরকার হয় না; বেশিরভাগ ক্ষেত্রে <code>__init_subclass__</code>, class decorator বা dataclass যথেষ্ট। "যদি ভাবেন metaclass লাগবে, সম্ভবত লাগবে না।"</div>
+
+<h3>Design Pattern — Python-ধাঁচে</h3>
+<pre><span class="c"># Singleton — Python-এ module নিজেই singleton</span>
+<span class="c"># config.py:   settings = Settings()      →  অন্য সব জায়গায়  from config import settings</span>
+
+<span class="c"># Factory — dict দিয়ে সরল</span>
+handlers = {"csv": CsvExporter, "json": JsonExporter}
+def make_exporter(kind): return handlers[kind]()
+
+<span class="c"># Strategy — function-ই object, class লাগে না</span>
+def pay_card(a): ...
+def pay_bkash(a): ...
+strategies = {"card": pay_card, "bkash": pay_bkash}
+strategies["bkash"](500)</pre>
+<p>Python-এ function first-class হওয়ায় অনেক Java/C#-ধাঁচের pattern (Strategy, Command, Factory) সরল function/dict-এ নেমে আসে — অকারণে class-hierarchy বানাবেন না।</p>
 </template>
 
 <template data-page="iterators">
@@ -1137,7 +1407,67 @@ def opened(path):
     finally:
         f.close()               <span class="c"># exception হলেও cleanup</span></pre>
 <div class="callout why"><span class="tag">FastAPI-তে এগুলোর ব্যবহার</span>
-Route decorator (<code>@app.get("/")</code>) function-কে router-এ register করে; <code>yield</code>-যুক্ত dependency (DB session) আসলে context manager-এর মতো setup/cleanup চালায় (অধ্যায় ১৮ ও ১৯)।</div>
+Route decorator (<code>@app.get("/")</code>) function-কে router-এ register করে; <code>yield</code>-যুক্ত dependency (DB session) আসলে context manager-এর মতো setup/cleanup চালায় (অধ্যায় ১৯ ও ২০)।</div>
+
+<h3>Class-ভিত্তিক Decorator ও Class-এ Decorator</h3>
+<pre>class CountCalls:
+    def __init__(self, func):
+        self.func = func
+        self.calls = 0
+    def __call__(self, *args, **kwargs):      <span class="c"># object-কে function-এর মতো ডাকা</span>
+        self.calls += 1
+        return self.func(*args, **kwargs)
+
+@CountCalls
+def hello(): return "hi"
+
+hello(); hello()
+print(hello.calls)                           <span class="c"># 2</span>
+
+<span class="c"># class-কে decorate করা — register করার প্যাটার্ন</span>
+REGISTRY = {}
+def register(cls):
+    REGISTRY[cls.__name__] = cls
+    return cls
+
+@register
+class Handler: ...
+print(REGISTRY)                              <span class="c"># {'Handler': &lt;class '...Handler'&gt;}</span>
+
+<span class="c"># একাধিক decorator — নিচেরটা আগে প্রয়োগ হয়</span>
+@timer
+@retry(times=2)
+def job(): ...           <span class="c"># job = timer(retry(times=2)(job))</span></pre>
+
+<h3>functools-এর কাজের টুল</h3>
+<pre>from functools import partial, reduce, singledispatch, cached_property, cache
+
+<span class="c"># partial — কিছু argument আগে বেঁধে নতুন function</span>
+def power(base, exp): return base ** exp
+square = partial(power, exp=2)
+print(square(7))                              <span class="c"># 49</span>
+
+<span class="c"># reduce — ক্রমান্বয়ে জমা</span>
+print(reduce(lambda a, b: a * b, [1, 2, 3, 4]))   <span class="c"># 24</span>
+
+<span class="c"># singledispatch — type অনুযায়ী আলাদা implementation</span>
+@singledispatch
+def show(x): return f"অজানা: {x}"
+@show.register
+def _(x: int): return f"int: {x}"
+@show.register
+def _(x: list): return f"list of {len(x)}"
+print(show(5), show([1, 2]), show("a"))      <span class="c"># int: 5  list of 2  অজানা: a</span>
+
+<span class="c"># cached_property — প্রথমবার হিসাব, পরে মনে রাখে</span>
+class Report:
+    @cached_property
+    def heavy(self):
+        print("হিসাব চলছে...")
+        return sum(range(10**6))
+r = Report(); r.heavy; r.heavy               <span class="c"># "হিসাব চলছে..." একবারই</span></pre>
+<div class="callout best"><span class="tag">Best practice</span>
+Decorator সবসময় <code>@wraps</code> ব্যবহার করুন, আর side-effect ও state (counter, cache) থাকলে thread-safety ভাবুন। জটিল cross-cutting কাজ (auth, retry, logging) decorator-এ দিলে business লজিক পরিষ্কার থাকে — কিন্তু অতিরিক্ত stacking ডিবাগ কঠিন করে।</div>
 </template>
 
 <template data-page="typing">
@@ -1277,6 +1607,99 @@ print(secrets.token_urlsafe(16))          <span class="c"># নিরাপদ r
 print(hashlib.sha256(b"hello").hexdigest())   <span class="c"># checksum (পাসওয়ার্ড hash-এর জন্য নয়)</span></pre>
 <div class="callout mistake"><span class="tag">Common mistake — secret-এর জন্য random module</span>
 <code>random</code> module নিরাপত্তা-সংবেদনশীল কাজে (token, OTP, password) ব্যবহার করবেন না — অনুমানযোগ্য। সবসময় <code>secrets</code> module।</div>
+
+<h3>sqlite3 — ইনস্টল ছাড়াই built-in ডাটাবেস</h3>
+<pre>import sqlite3
+
+con = sqlite3.connect(":memory:")          <span class="c"># ফাইলের জন্য: sqlite3.connect("app.db")</span>
+con.execute("CREATE TABLE expense (id INTEGER PRIMARY KEY, title TEXT, amount REAL)")
+
+<span class="c"># parameterized query — ? placeholder (SQL injection থেকে নিরাপদ)</span>
+con.execute("INSERT INTO expense (title, amount) VALUES (?, ?)", ("Lunch", 250.0))
+con.executemany("INSERT INTO expense (title, amount) VALUES (?, ?)",
+                [("Taxi", 400.0), ("Tea", 30.0)])
+con.commit()
+
+con.row_factory = sqlite3.Row               <span class="c"># নাম দিয়ে column</span>
+for row in con.execute("SELECT title, amount FROM expense WHERE amount &gt; ? ORDER BY amount", (100,)):
+    print(row["title"], row["amount"])      <span class="c"># Lunch 250.0  /  Taxi 400.0</span>
+con.close()</pre>
+<div class="callout mistake"><span class="tag">Common mistake — f-string দিয়ে SQL বানানো</span>
+<pre>name = "x'; DROP TABLE expense; --"
+con.execute(f"SELECT * FROM expense WHERE title = '{name}'")   <span class="c"># SQL injection!</span>
+con.execute("SELECT * FROM expense WHERE title = ?", (name,))   <span class="c"># সঠিক — মান আলাদাভাবে পাঠানো</span></pre>
+ORM/driver যেটাই হোক, ব্যবহারকারীর ইনপুট কখনো SQL string-এ জোড়া নয় — সবসময় parameter binding।</div>
+
+<h3>heapq ও bisect — priority queue ও sorted list</h3>
+<pre>import heapq, bisect
+
+nums = [5, 1, 8, 3, 9, 2]
+print(heapq.nlargest(3, nums), heapq.nsmallest(2, nums))   <span class="c"># [9, 8, 5] [1, 2]</span>
+
+heap = []                                  <span class="c"># min-heap — ক্ষুদ্রতম আগে বের হয়</span>
+for n in nums:
+    heapq.heappush(heap, n)
+print(heapq.heappop(heap), heapq.heappop(heap))            <span class="c"># 1 2</span>
+
+tasks = []                                 <span class="c"># priority queue: (priority, কাজ)</span>
+heapq.heappush(tasks, (2, "email"))
+heapq.heappush(tasks, (1, "payment"))
+print(heapq.heappop(tasks))                <span class="c"># (1, 'payment')</span>
+
+sorted_list = [1, 3, 5, 7]
+bisect.insort(sorted_list, 4)              <span class="c"># sorted রেখেই বসানো</span>
+print(sorted_list, bisect.bisect_left(sorted_list, 5))     <span class="c"># [1, 3, 4, 5, 7] 3</span></pre>
+
+<h3>os, sys, shutil, tempfile</h3>
+<pre>import os, sys, shutil, tempfile
+from pathlib import Path
+
+print(os.getcwd(), os.name, sys.platform)
+print(os.environ.get("HOME") or os.environ.get("USERPROFILE"))
+print(sys.argv)                            <span class="c"># python script.py a b → ['script.py', 'a', 'b']</span>
+
+with tempfile.TemporaryDirectory() as tmp:           <span class="c"># বের হলেই নিজে মুছে যায়</span>
+    p = Path(tmp) / "a.txt"
+    p.write_text("hi")
+    shutil.copy(p, Path(tmp) / "b.txt")
+    print(sorted(x.name for x in Path(tmp).iterdir()))   <span class="c"># ['a.txt', 'b.txt']</span></pre>
+
+<h3>Performance মাপা — timeit, cProfile, tracemalloc</h3>
+<pre>import timeit, cProfile, pstats, tracemalloc
+
+<span class="c"># ছোট কোড কতক্ষণ নেয় — সাথে তুলনা</span>
+print(timeit.timeit("sum(range(1000))", number=10_000))
+print(timeit.timeit("sum([i for i in range(1000)])", number=10_000))
+
+<span class="c"># কোন function সবচেয়ে ধীর — profile</span>
+def work():
+    return sorted(str(i) for i in range(100_000))
+
+cProfile.run("work()", "prof.out")
+pstats.Stats("prof.out").sort_stats("cumulative").print_stats(5)
+
+<span class="c"># মেমরি কোথায় যাচ্ছে</span>
+tracemalloc.start()
+data = [i for i in range(100_000)]
+current, peak = tracemalloc.get_traced_memory()
+print(f"{current/1e6:.1f}MB, peak {peak/1e6:.1f}MB")</pre>
+<div class="callout best"><span class="tag">অপ্টিমাইজেশনের নিয়ম</span>
+আগে মাপুন, তারপর অপ্টিমাইজ করুন — অনুমানে নয়। বেশিরভাগ ক্ষেত্রে বড় লাভ আসে ভালো algorithm/data structure (list-এর বদলে set/dict) ও কম I/O থেকে, মাইক্রো-অপ্টিমাইজেশন থেকে নয়।</div>
+
+<h3>Python-এ নিরাপত্তা সতর্কতা</h3>
+<table>
+<tr><th>বিপজ্জনক</th><th>কেন</th><th>নিরাপদ বিকল্প</th></tr>
+<tr><td><code>eval()</code>, <code>exec()</code></td><td>ইনপুটকে সরাসরি কোড হিসেবে চালায় — remote code execution</td><td><code>ast.literal_eval</code>, <code>json.loads</code></td></tr>
+<tr><td><code>pickle.load()</code> অবিশ্বস্ত ডেটায়</td><td>deserialize করার সময় যেকোনো কোড চলতে পারে</td><td>JSON/Pydantic; pickle শুধু নিজের বিশ্বস্ত ডেটায়</td></tr>
+<tr><td><code>subprocess.run(cmd, shell=True)</code> + ইনপুট</td><td>shell command injection</td><td><code>subprocess.run([...list...])</code>, <code>shell=False</code></td></tr>
+<tr><td><code>yaml.load()</code></td><td>object তৈরি করে কোড চালাতে পারে</td><td><code>yaml.safe_load()</code></td></tr>
+<tr><td>ব্যবহারকারীর দেওয়া ফাইলের পথ</td><td>path traversal (<code>../../etc/passwd</code>)</td><td>নাম বদলে UUID, <code>Path.resolve()</code> দিয়ে নির্দিষ্ট ফোল্ডারে আছে কিনা যাচাই</td></tr>
+<tr><td><code>assert</code> দিয়ে ইনপুট validate</td><td><code>python -O</code> চালালে assert বন্ধ হয়ে যায়</td><td>স্পষ্ট <code>if ... raise</code></td></tr>
+<tr><td>পাসওয়ার্ড plain/SHA hash</td><td>দ্রুত hash brute-force-যোগ্য</td><td>Argon2/bcrypt (অধ্যায় ২১)</td></tr>
+</table>
+<pre>import ast, subprocess
+print(ast.literal_eval("[1, 2, {'a': 3}]"))       <span class="c"># নিরাপদ — শুধু literal parse করে, কোড চালায় না</span>
+subprocess.run(["ls", "-l", user_dir], check=True)  <span class="c"># list আকারে — shell injection নেই</span></pre>
 </template>
 
 <template data-page="concurrency">
@@ -1355,7 +1778,109 @@ async def limited(coro):
 async def good():
     await asyncio.sleep(2)
     await asyncio.to_thread(blocking_func)   <span class="c"># blocking কাজ আলাদা thread-এ</span></pre>
-<code>async def</code> নিজে কিছু দ্রুত করে না — শুধু <code>await</code>-এর জায়গায় অন্য কাজ করতে দেয়। ভেতরে blocking কোড থাকলে পুরো সার্ভার জমে যায় (FastAPI-তে এটা খুব গুরুত্বপূর্ণ — অধ্যায় ২১)।</div>
+<code>async def</code> নিজে কিছু দ্রুত করে না — শুধু <code>await</code>-এর জায়গায় অন্য কাজ করতে দেয়। ভেতরে blocking কোড থাকলে পুরো সার্ভার জমে যায় (FastAPI-তে এটা খুব গুরুত্বপূর্ণ — অধ্যায় ২২)।</div>
+
+<h3>Thread-এ Race Condition ও Lock</h3>
+<pre>import threading
+
+counter = 0
+lock = threading.Lock()
+
+def work():
+    global counter
+    for _ in range(100_000):
+        with lock:                 <span class="c"># একসময়ে একটা thread-ই এই অংশে</span>
+            counter += 1           <span class="c"># read → +1 → write — atomic নয়!</span>
+
+threads = [threading.Thread(target=work) for _ in range(4)]
+for t in threads: t.start()
+for t in threads: t.join()
+print(counter)                     <span class="c"># 400000 — lock ছাড়া কম আসতে পারে</span></pre>
+<div class="callout why"><span class="tag">GIL থাকলেও Lock কেন লাগে</span>
+GIL একটা bytecode instruction-কে নিরাপদ করে, কিন্তু <code>counter += 1</code> কয়েকটা instruction (পড়া, যোগ, লেখা) — মাঝপথে thread বদলে গেলে আপডেট হারায়। shared mutable state-এ <code>Lock</code>, অথবা আরও ভালো: thread-দের মধ্যে ডেটা <code>queue.Queue</code> দিয়ে পাঠান।</div>
+
+<h3>Producer–Consumer — queue.Queue</h3>
+<pre>import queue, threading
+
+q = queue.Queue(maxsize=10)        <span class="c"># thread-safe</span>
+
+def producer():
+    for i in range(5):
+        q.put(i)
+    q.put(None)                    <span class="c"># শেষের সংকেত</span>
+
+def consumer():
+    while (item := q.get()) is not None:
+        print("প্রসেস:", item)
+        q.task_done()
+
+threading.Thread(target=producer).start()
+c = threading.Thread(target=consumer); c.start(); c.join()</pre>
+
+<h3>asyncio — Task, TaskGroup ও Timeout</h3>
+<pre>import asyncio
+
+async def fetch(n, delay):
+    await asyncio.sleep(delay)
+    if n == 3:
+        raise ValueError("fail")
+    return n
+
+async def main():
+    <span class="c"># create_task — coroutine-কে এখনই background-এ চালু করে</span>
+    t1 = asyncio.create_task(fetch(1, 1))
+    t2 = asyncio.create_task(fetch(2, 1))
+    print(await t1, await t2)                          <span class="c"># 1 2 — মোট ~১ সেকেন্ড</span>
+
+    <span class="c"># gather — সব ফল একসাথে; return_exceptions=True হলে ব্যর্থতা exception object হিসেবে আসে</span>
+    res = await asyncio.gather(fetch(1, 0.1), fetch(3, 0.1), return_exceptions=True)
+    print(res)                                         <span class="c"># [1, ValueError('fail')]</span>
+
+    <span class="c"># TaskGroup (3.11+) — structured concurrency: একটা ব্যর্থ হলে বাকিগুলো বাতিল</span>
+    try:
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(fetch(1, 0.1))
+            tg.create_task(fetch(3, 0.1))
+    except* ValueError as eg:                          <span class="c"># ExceptionGroup (3.11+)</span>
+        print("ব্যর্থ:", eg.exceptions)
+
+    <span class="c"># Timeout</span>
+    try:
+        async with asyncio.timeout(0.5):               <span class="c"># 3.11+</span>
+            await asyncio.sleep(5)
+    except TimeoutError:
+        print("সময় শেষ")
+        <span class="c"># পুরনো সংস্করণ: await asyncio.wait_for(coro, timeout=0.5)</span>
+
+asyncio.run(main())</pre>
+
+<h3>Async Queue ও Async Generator</h3>
+<pre>import asyncio
+
+async def producer(q):
+    for i in range(3):
+        await q.put(i)
+        await asyncio.sleep(0.1)
+    await q.put(None)
+
+async def consumer(q):
+    while (item := await q.get()) is not None:
+        print("পেলাম:", item)
+
+async def ticker(n):                  <span class="c"># async generator</span>
+    for i in range(n):
+        await asyncio.sleep(0.1)
+        yield i
+
+async def main():
+    q = asyncio.Queue()
+    await asyncio.gather(producer(q), consumer(q))
+    async for t in ticker(3):         <span class="c"># async for</span>
+        print("tick", t)
+
+asyncio.run(main())</pre>
+<div class="callout mistake"><span class="tag">Common mistake — create_task-এর reference হারানো ও exception গিলে ফেলা</span>
+<code>asyncio.create_task(coro())</code> ফল variable-এ না রাখলে task garbage-collected হয়ে যেতে পারে, আর ভেতরের exception কেউ <code>await</code> না করলে চুপচাপ হারায়। task-গুলো সংগ্রহ করে <code>await</code>/<code>gather</code> করুন, অথবা <code>TaskGroup</code> ব্যবহার করুন (3.11+)।</div>
 </template>
 
 <template data-page="testing">
@@ -1579,6 +2104,73 @@ from dotenv import load_dotenv; load_dotenv()</pre>
 (১) আগে standard library দেখুন, (২) PyPI-তে সক্রিয়ভাবে maintain হচ্ছে কিনা (সাম্প্রতিক release, জনপ্রিয়তা) যাচাই করুন, (৩) সংস্করণ নির্দিষ্ট করে lock করুন, (৪) অপরিচিত package install করার আগে সতর্ক থাকুন — নামের মিল দিয়ে ভুয়া (typosquatting) package থাকে।</div>
 <div class="callout why"><span class="tag">শুরুর জন্য কোনগুলো আগে</span>
 ব্যাকএন্ড/AI-তে যেতে চাইলে এই ক্রমে: <b>requests/httpx → Pydantic → FastAPI → SQLAlchemy → pytest</b>। ডেটা/analytics-এ: <b>NumPy → pandas → matplotlib</b>। প্রথমে একটা ক্ষেত্র গভীরভাবে শিখুন — সব library একসাথে নয়।</div>
+
+<h3>matplotlib — চার্ট</h3>
+<pre>import matplotlib.pyplot as plt
+
+months = ["Jan", "Feb", "Mar", "Apr"]
+sales = [120, 150, 90, 200]
+
+plt.figure(figsize=(6, 3))
+plt.bar(months, sales, color="#4aa3ff")
+plt.title("Monthly Sales")
+plt.ylabel("Amount")
+plt.tight_layout()
+plt.savefig("sales.png")        <span class="c"># ফাইলে সংরক্ষণ (সার্ভারে plt.show() নয়)</span></pre>
+
+<h3>scikit-learn — প্রথম ML মডেল</h3>
+<pre>from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+
+X, y = load_iris(return_X_y=True)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+model = LogisticRegression(max_iter=200).fit(X_train, y_train)
+print(model.score(X_test, y_test))          <span class="c"># accuracy (যেমন 0.9+)</span>
+print(model.predict([[5.1, 3.5, 1.4, 0.2]]))   <span class="c"># নতুন ডেটার পূর্বাভাস</span></pre>
+
+<h3>Flask — সবচেয়ে ছোট web অ্যাপ (তুলনার জন্য)</h3>
+<pre>from flask import Flask, jsonify, request
+
+app = Flask(__name__)
+
+@app.get("/hello")
+def hello():
+    name = request.args.get("name", "world")      <span class="c"># validation নিজে করতে হয় — FastAPI-তে স্বয়ংক্রিয়</span>
+    return jsonify(msg=f"hello {name}")
+
+<span class="c"># চালান: flask --app app run</span></pre>
+
+<h3>Celery — background job queue</h3>
+<pre><span class="c"># tasks.py     (pip install celery redis)</span>
+from celery import Celery
+
+app = Celery("tasks", broker="redis://localhost:6379/0", backend="redis://localhost:6379/1")
+
+@app.task(bind=True, max_retries=3)
+def send_report(self, user_id: int):
+    try:
+        ...                                <span class="c"># ভারী কাজ</span>
+        return {"user": user_id, "status": "sent"}
+    except Exception as exc:
+        raise self.retry(exc=exc, countdown=10)    <span class="c"># ১০ সেকেন্ড পরে আবার</span>
+
+<span class="c"># worker চালান:       celery -A tasks worker --loglevel=info</span>
+<span class="c"># কোড থেকে পাঠান:     result = send_report.delay(42);  result.get(timeout=30)</span></pre>
+
+<h3>Selenium / Playwright — browser automation</h3>
+<pre><span class="c"># pip install playwright &amp;&amp; playwright install</span>
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.launch()
+    page = browser.new_page()
+    page.goto("https://example.com")
+    print(page.title())
+    browser.close()</pre>
+<div class="callout best"><span class="tag">Library বাছাইয়ের সময় নতুন-পুরনো সচেতনতা</span>
+Python ecosystem দ্রুত বদলায় (যেমন Pydantic v1→v2, SQLAlchemy 1.x→2.0)। পুরনো টিউটোরিয়ালের কোড নতুন সংস্করণে না-ও চলতে পারে — সবসময় লাইব্রেরির সংস্করণ নির্দিষ্ট করে (<code>pip freeze</code>) এবং তার বর্তমান ডকুমেন্টেশন দেখে কোড লিখুন।</div>
 </template>
 
 <template data-page="fastapi-intro">
@@ -1719,6 +2311,40 @@ def whoami(
     session: Annotated[str | None, Cookie()] = None,
 ):
     return {"ua": user_agent, "session": session}</pre>
+
+<h3>ASP.NET Core থেকে FastAPI — ধারণা-মানচিত্র</h3>
+<table>
+<tr><th>ASP.NET Core (C#)</th><th>FastAPI (Python)</th></tr>
+<tr><td>Controller / Minimal API endpoint</td><td><code>APIRouter</code> / <code>@app.get(...)</code> function</td></tr>
+<tr><td>DTO / ViewModel + DataAnnotations/FluentValidation</td><td>Pydantic <code>BaseModel</code> + <code>Field</code>, <code>@field_validator</code></td></tr>
+<tr><td>Model binding (<code>[FromBody]</code>, <code>[FromQuery]</code>)</td><td>parameter-এর type/অবস্থান থেকে স্বয়ংক্রিয় (<code>Body</code>, <code>Query</code>, <code>Path</code>)</td></tr>
+<tr><td>Dependency Injection container</td><td><code>Depends()</code> (function-ভিত্তিক)</td></tr>
+<tr><td>Middleware pipeline</td><td><code>@app.middleware("http")</code> / Starlette middleware</td></tr>
+<tr><td><code>appsettings.json</code> + Options pattern</td><td><code>.env</code> + <code>pydantic-settings</code> (<code>BaseSettings</code>)</td></tr>
+<tr><td>Entity Framework Core</td><td>SQLAlchemy (বা SQLModel)</td></tr>
+<tr><td>EF Migrations</td><td>Alembic</td></tr>
+<tr><td>Swagger/Swashbuckle (সেটআপ লাগে)</td><td>built-in <code>/docs</code>, <code>/redoc</code></td></tr>
+<tr><td><code>[Authorize]</code> + JWT Bearer</td><td><code>Depends(get_current_user)</code> + <code>OAuth2PasswordBearer</code></td></tr>
+<tr><td>Exception filter / <code>ProblemDetails</code></td><td><code>exception_handler</code>, <code>HTTPException</code></td></tr>
+<tr><td><code>IHostedService</code> / BackgroundService</td><td><code>lifespan</code>, <code>BackgroundTasks</code>, Celery</td></tr>
+<tr><td>xUnit + <code>WebApplicationFactory</code></td><td>pytest + <code>TestClient</code> + <code>dependency_overrides</code></td></tr>
+<tr><td>Kestrel</td><td>Uvicorn (ASGI server)</td></tr>
+</table>
+<div class="callout why"><span class="tag">মূল পার্থক্যটা কোথায়</span>
+C#-এ type compile-time-এ জোর করা হয়; Python/FastAPI-তে type hint <b>runtime-এ Pydantic দিয়ে validation</b> হিসেবে কাজ করে। DI-তে container-registration নেই — dependency সরাসরি function parameter-এ <code>Depends</code> দিয়ে ঘোষণা করা হয়। lifetime (scoped/singleton) মূলত <code>yield</code> dependency, <code>lru_cache</code> বা <code>app.state</code> দিয়ে নিয়ন্ত্রিত হয়।</div>
+
+<h3>Request অবজেক্ট সরাসরি ব্যবহার</h3>
+<pre>from fastapi import Request
+
+@app.get("/debug")
+async def debug(request: Request):
+    return {
+        "method": request.method,
+        "path": request.url.path,
+        "client": request.client.host if request.client else None,
+        "query": dict(request.query_params),
+        "ua": request.headers.get("user-agent"),
+    }</pre>
 </template>
 
 <template data-page="fastapi-models">
@@ -2442,6 +3068,77 @@ def feed(db: DB, after_id: int = 0, limit: int = 20):
 <pre>app.include_router(v1_router, prefix="/api/v1")
 app.include_router(v2_router, prefix="/api/v2")      <span class="c"># ভাঙা পরিবর্তন আসলে নতুন version</span>
 <span class="c"># পুরনো version ঘোষণা করুন deprecated=True (route-এ) এবং সময়সীমা জানান</span></pre>
+
+<h3>Celery-র সাথে FastAPI — ভারী কাজ queue-তে পাঠানো</h3>
+<pre><span class="c"># app/worker.py</span>
+from celery import Celery
+celery_app = Celery("worker", broker="redis://redis:6379/0", backend="redis://redis:6379/1")
+
+@celery_app.task
+def build_report(user_id: int) -&gt; str:
+    ...                                   <span class="c"># ধীর কাজ — আলাদা worker process-এ চলে</span>
+    return f"/files/report-{user_id}.pdf"
+
+<span class="c"># app/main.py</span>
+from celery.result import AsyncResult
+
+@app.post("/reports", status_code=202)
+def request_report(user_id: int):
+    task = build_report.delay(user_id)    <span class="c"># queue-তে পাঠানো, সাথে সাথে ফেরা</span>
+    return {"task_id": task.id}
+
+@app.get("/reports/{task_id}")
+def report_status(task_id: str):
+    r = AsyncResult(task_id, app=celery_app)
+    if r.ready():
+        return {"status": "done", "result": r.get()}
+    return {"status": r.state}            <span class="c"># PENDING / STARTED / RETRY / FAILURE</span></pre>
+<div class="callout best"><span class="tag">কখন Celery</span>
+কাজ ভারী, দীর্ঘ, retry-যোগ্য বা সার্ভার restart-এও হারালে চলবে না — তখন Celery/RQ (বা Kafka/RabbitMQ consumer)। ছোট, হারালে ক্ষতি নেই এমন কাজে <code>BackgroundTasks</code>। async-প্রধান ছোট প্রজেক্টে <code>arq</code>-এর মতো async queue-ও বিকল্প।</div>
+
+<h3>Outbound HTTP — অন্য সার্ভিস কল (httpx, shared client)</h3>
+<pre>import httpx
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.http = httpx.AsyncClient(timeout=httpx.Timeout(10.0), limits=httpx.Limits(max_connections=50))
+    yield
+    await app.state.http.aclose()
+
+app = FastAPI(lifespan=lifespan)
+
+@app.get("/rate/{ccy}")
+async def rate(ccy: str, request: Request):
+    client: httpx.AsyncClient = request.app.state.http      <span class="c"># connection reuse — প্রতি call-এ নতুন client নয়</span>
+    try:
+        r = await client.get(f"https://api.example.com/rates/{ccy}")
+        r.raise_for_status()
+    except httpx.TimeoutException:
+        raise HTTPException(504, "upstream সময়মতো সাড়া দেয়নি")
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(502, f"upstream error {e.response.status_code}")
+    return r.json()</pre>
+<div class="callout why"><span class="tag">কেন gateway-স্তরের ভাবনা</span>
+বাইরের সার্ভিস ধীর/ডাউন হলে আপনার API-ও যেন ঝুলে না যায় — তাই সবসময় timeout, সীমিত retry (exponential backoff), এবং দরকারে circuit breaker। error-কে নিজের status (502/504) দিয়ে স্পষ্টভাবে জানান।</div>
+
+<h3>HTML Response ও Jinja2 Template (ছোট admin পেজ/ইমেইল টেমপ্লেট)</h3>
+<pre><span class="c"># pip install jinja2</span>
+from fastapi import Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="dashboard.html",
+        context={"title": "Dashboard", "items": ["A", "B"]},
+    )
+
+<span class="c"># templates/dashboard.html:  &lt;h1&gt;{{ title }}&lt;/h1&gt; {% for i in items %}&lt;li&gt;{{ i }}&lt;/li&gt;{% endfor %}</span></pre>
+<p>FastAPI মূলত API-এর জন্য; পুরো server-rendered ওয়েবসাইটে Django উপযুক্ত। কিন্তু ছোট admin পেজ বা ইমেইল টেমপ্লেটে Jinja2 সহজ সমাধান। (<code>TemplateResponse</code>-এর signature সংস্করণভেদে বদলেছে — বর্তমান ডকুমেন্টেশন দেখুন।)</p>
 </template>
 
 <template data-page="fastapi-prod">
@@ -2564,6 +3261,97 @@ app = FastAPI(
     docs_url="/docs",          <span class="c"># production-এ None করা যায়</span>
     openapi_url="/openapi.json",
 )</pre>
+
+<h3>Docker Compose — API + PostgreSQL + Redis একসাথে</h3>
+<pre><span class="c"># docker-compose.yml</span>
+services:
+  api:
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://app:secret@db:5432/appdb
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY}          <span class="c"># host-এর environment/.env থেকে</span>
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: appdb
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d appdb"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+
+volumes:
+  pgdata:</pre>
+<pre>docker compose up --build -d
+docker compose exec api alembic upgrade head      <span class="c"># migration প্রয়োগ</span>
+docker compose logs -f api</pre>
+<div class="callout mistake"><span class="tag">Common mistake — compose ফাইলে আসল secret commit করা</span>
+উদাহরণে <code>secret</code> শুধু শেখার জন্য। বাস্তবে password/secret <code>.env</code> (Git-ignored), Docker/Kubernetes secret বা cloud secret manager থেকে দিন।</div>
+
+<h3>CI — GitHub Actions-এ lint, type check ও test</h3>
+<pre><span class="c"># .github/workflows/ci.yml</span>
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: app, POSTGRES_PASSWORD: secret, POSTGRES_DB: appdb }
+        ports: ["5432:5432"]
+        options: &gt;-
+          --health-cmd "pg_isready -U app" --health-interval 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install -r requirements.txt
+      - run: ruff check .
+      - run: mypy app
+      - run: pytest -q
+        env:
+          DATABASE_URL: postgresql+psycopg://app:secret@localhost:5432/appdb</pre>
+
+<h3>Graceful Shutdown ও Configuration পরিবেশভেদে</h3>
+<pre><span class="c"># Settings — পরিবেশ অনুযায়ী আলাদা</span>
+class Settings(BaseSettings):
+    env: Literal["dev", "staging", "prod"] = "dev"
+    debug: bool = False
+    database_url: str
+    allowed_origins: list[str] = []
+
+<span class="c"># app তৈরির সময়</span>
+settings = get_settings()
+app = FastAPI(debug=settings.debug, docs_url=None if settings.env == "prod" else "/docs")</pre>
+<p>Container বন্ধের সময় Kubernetes/Docker <code>SIGTERM</code> পাঠায়; Uvicorn চলমান request শেষ করে বন্ধ হয় (graceful)। <code>lifespan</code>-এর shutdown অংশে connection pool/HTTP client বন্ধ করুন, আর load balancer-এর drain সময়ের চেয়ে বেশি request-timeout রাখবেন না।</p>
+
+<h3>Performance টিউনিং — বাস্তব কৌশল</h3>
+<table>
+<tr><th>সমস্যা</th><th>সমাধান</th></tr>
+<tr><td>event loop আটকে যাচ্ছে</td><td>blocking কল সরান (<code>def</code> বা thread/process pool), <code>asyncio</code>-এ debug mode দিয়ে ধীর callback ধরুন</td></tr>
+<tr><td>DB ধীর</td><td>index, N+1 দূর (<code>selectinload</code>), pagination, connection pool সেটিং (<code>pool_size</code>, <code>max_overflow</code>)</td></tr>
+<tr><td>একই ডেটা বারবার গণনা</td><td>Redis cache, HTTP caching header (<code>ETag</code>, <code>Cache-Control</code>)</td></tr>
+<tr><td>বড় JSON serialization ধীর</td><td>ছোট <code>response_model</code>, অপ্রয়োজনীয় field বাদ, (প্রয়োজনে দ্রুত JSON library)</td></tr>
+<tr><td>CPU-bound কাজ</td><td>worker/process-এ সরান, একাধিক uvicorn worker</td></tr>
+<tr><td>ধীর upstream</td><td>timeout, retry, circuit breaker, cache</td></tr>
+</table>
+<div class="callout best"><span class="tag">Best practice — load test করুন</span>
+অনুমানের বদলে <code>locust</code>, <code>k6</code> বা <code>wrk</code> দিয়ে load test চালিয়ে p95/p99 latency ও error rate দেখুন। অপ্টিমাইজেশনের আগে-পরে তুলনা করুন।</div>
 </template>
 
 <template data-page="python-ai">
@@ -3224,6 +4012,507 @@ def items(skip: int = 0, limit: int = Query(20, ge=1, le=100)):    <span class="
 @app.post("/payments")
 def pay(idem_key: Annotated[str, Header()]): ...</pre>
 <p><b>ব্যাখ্যা:</b> pagination-এ <code>limit</code>-এর উপরে সীমা রাখুন; rate limit (gateway বা slowapi) দিয়ে অপব্যবহার রোধ; payment-এর মতো POST-এ idempotency key দিয়ে retry-তে duplicate আটকান — আর্থিক সিস্টেমে অপরিহার্য।</p>
+
+<h2 class="title" style="font-size:22px;margin-top:30px">ঘ. FastAPI — আরও প্রশ্ন</h2>
+
+<h3>৫০) Validation error-এর response নিজের ফরম্যাটে কীভাবে বদলাবেন?</h3>
+<pre>from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+app = FastAPI()
+
+@app.exception_handler(RequestValidationError)
+async def on_validation_error(request: Request, exc: RequestValidationError):
+    errors = [
+        {"field": ".".join(str(p) for p in e["loc"][1:]), "message": e["msg"]}
+        for e in exc.errors()
+    ]
+    return JSONResponse(status_code=422, content={"errors": errors})</pre>
+<p><b>ব্যাখ্যা:</b> ডিফল্টে FastAPI 422 দেয় <code>detail</code> তালিকাসহ। <code>RequestValidationError</code>-এর জন্য নিজের handler রাখলে frontend-বান্ধব ফরম্যাট (field + message) দেওয়া যায়। <code>loc</code>-এর প্রথম উপাদান <code>"body"/"query"/"path"</code> — তাই <code>[1:]</code> দিয়ে বাদ দেওয়া হয়েছে।</p>
+
+<h3>৫১) অপ্রত্যাশিত (unhandled) exception কীভাবে সামলাবেন যাতে stack trace client-এর কাছে না যায়?</h3>
+<pre>import logging
+log = logging.getLogger(__name__)
+
+@app.exception_handler(Exception)
+async def on_unhandled(request: Request, exc: Exception):
+    log.exception("unhandled error: %s %s", request.method, request.url.path)   <span class="c"># সার্ভারে পূর্ণ trace</span>
+    return JSONResponse(status_code=500, content={"error": "internal_server_error"})  <span class="c"># client-কে নিরাপদ বার্তা</span></pre>
+<p><b>ব্যাখ্যা:</b> production-এ ভেতরের error বিবরণ (SQL, path, stack trace) client-কে দেখানো নিরাপত্তা-ঝুঁকি। একটা সাধারণ handler পূর্ণ তথ্য log/Sentry-তে পাঠায় আর client-কে সাধারণ বার্তা দেয়। প্রত্যাশিত ব্যবসায়িক ত্রুটির জন্য আলাদা custom exception ও handler রাখুন (যেমন <code>InsufficientFunds → 409</code>)।</p>
+
+<h3>৫২) <code>Annotated</code> স্টাইল বনাম পুরনো <code>= Depends()</code> ডিফল্ট স্টাইল — কেন Annotated সুপারিশকৃত?</h3>
+<pre>from typing import Annotated
+from fastapi import Depends, Query
+
+<span class="c"># পুরনো — ডিফল্ট হিসেবে; অন্য ডিফল্ট-যুক্ত parameter-এর সাথে ক্রমের ঝামেলা, reuse কঠিন</span>
+def old(q: str = Query(max_length=10), db=Depends(get_db)): ...
+
+<span class="c"># আধুনিক — type-এর অংশ; alias বানিয়ে পুনর্ব্যবহারযোগ্য</span>
+DB = Annotated[Session, Depends(get_db)]
+Q = Annotated[str, Query(max_length=10)]
+
+def new(q: Q, db: DB): ...</pre>
+<p><b>ব্যাখ্যা:</b> <code>Annotated[Type, Depends(...)]</code>-এ metadata type-এর সাথে বাঁধা থাকে, তাই type checker/IDE ঠিকঠাক কাজ করে, parameter-এর ক্রম-সীমাবদ্ধতা থাকে না (default মান আসল default-ই থাকে), আর <code>DB</code>-র মতো alias বানিয়ে সব endpoint-এ পুনর্ব্যবহার করা যায়। FastAPI-র বর্তমান ডকুমেন্টেশনও এই স্টাইল ব্যবহার করে।</p>
+
+<h3>৫৩) একই dependency এক request-এ একাধিকবার লাগলে কতবার চলে? <code>use_cache</code> কী?</h3>
+<pre>def get_settings():
+    print("চলল"); return {"x": 1}
+
+def a(s=Depends(get_settings)): return s
+def b(s=Depends(get_settings)): return s
+
+@app.get("/t")
+def t(x=Depends(a), y=Depends(b)):     <span class="c"># "চলল" একবারই ছাপা হয়</span>
+    return {"ok": True}
+
+<span class="c"># প্রতিবার নতুন করে চালাতে:  Depends(get_settings, use_cache=False)</span></pre>
+<p><b>ব্যাখ্যা:</b> একই request-এর ভেতরে একই dependency (একই arguments) <b>একবারই</b> evaluate হয় ও ফল cache থাকে (<code>use_cache=True</code> ডিফল্ট) — তাই একাধিক sub-dependency একই DB session শেয়ার করে। প্রতিবার আলাদা মান দরকার হলে <code>use_cache=False</code>। সতর্কতা: <code>yield</code>-যুক্ত dependency-র session <code>BackgroundTasks</code>-এ ব্যবহার করবেন না — exit কোড কখন চলে তা FastAPI সংস্করণভেদে ভিন্ন হতে পারে; task-এর ভেতরে নিজের session খুলুন।</p>
+
+<h3>৫৪) FastAPI-তে CPU-ভারী বা blocking কাজ কীভাবে চালাবেন?</h3>
+<pre>import asyncio
+from fastapi.concurrency import run_in_threadpool
+
+def blocking_report(n):                 <span class="c"># sync, ধীর</span>
+    return sum(i * i for i in range(n))
+
+@app.get("/r1")
+async def r1():
+    return await asyncio.to_thread(blocking_report, 10**6)       <span class="c"># thread-এ (I/O-blocking এর জন্য ভালো)</span>
+
+@app.get("/r2")
+async def r2():
+    return await run_in_threadpool(blocking_report, 10**6)       <span class="c"># FastAPI/Starlette-এর helper</span>
+
+<span class="c"># CPU-ভারী হলে: ProcessPoolExecutor অথবা Celery/worker — thread-এ GIL-এর কারণে core বাড়ে না</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>async def</code>-এর ভেতরে সরাসরি blocking কল event loop আটকায়। blocking I/O হলে <code>to_thread</code>/<code>run_in_threadpool</code>; পুরো endpoint blocking হলে সাধারণ <code>def</code> লিখলেই FastAPI thread pool-এ চালায়। CPU-bound কাজ আলাদা process বা worker queue-তে পাঠান।</p>
+
+<h3>৫৫) JSON-এ camelCase আর Python-এ snake_case — alias কীভাবে করবেন?</h3>
+<pre>from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
+
+class UserOut(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+    first_name: str
+    last_login_at: str | None = None
+
+@app.get("/u", response_model=UserOut)
+def u():
+    return {"first_name": "Rasel"}
+<span class="c"># JSON আউটপুট: {"firstName": "Rasel", "lastLoginAt": null}</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>alias_generator</code> দিয়ে পুরো model-এর field alias স্বয়ংক্রিয় camelCase হয়; <code>populate_by_name=True</code> থাকলে Python নাম দিয়েও তৈরি করা যায়। FastAPI response ডিফল্টে alias ব্যবহার করে। Frontend (JavaScript) ও Python-এর নামকরণ-রীতি মেলাতে কাজে লাগে।</p>
+
+<h3>৫৬) <code>response_model_exclude_unset</code> / <code>exclude_none</code> কখন কাজে লাগে?</h3>
+<pre>class Item(BaseModel):
+    name: str
+    note: str | None = None
+    tags: list[str] = []
+
+@app.get("/a", response_model=Item, response_model_exclude_none=True)
+def a(): return {"name": "pen", "note": None}
+<span class="c"># → {"name": "pen", "tags": []}     (note বাদ)</span>
+
+@app.get("/b", response_model=Item, response_model_exclude_unset=True)
+def b(): return {"name": "pen"}
+<span class="c"># → {"name": "pen"}                  (শুধু যা সত্যিই সেট হয়েছে)</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>exclude_none</code> <code>None</code> মানের field বাদ দেয়; <code>exclude_unset</code> যে field ডেটায় ছিলই না (ডিফল্টে এসেছে) সেগুলো বাদ দেয়; <code>exclude_defaults</code> ডিফল্ট মানের সমান field বাদ দেয়। response ছোট রাখতে বা PATCH-ধরনের আংশিক ডেটা ফেরত দিতে উপযোগী।</p>
+
+<h3>৫৭) Response-এ cookie, header বা ভিন্ন response type কীভাবে সেট করবেন?</h3>
+<pre>from fastapi import Response
+from fastapi.responses import RedirectResponse, FileResponse, PlainTextResponse
+
+@app.post("/login")
+def login(response: Response):                     <span class="c"># parameter হিসেবে চাইলেই পাওয়া যায়</span>
+    response.set_cookie("session", "abc123", httponly=True, secure=True, samesite="lax", max_age=3600)
+    response.headers["X-Trace"] = "42"
+    return {"ok": True}
+
+@app.get("/old")
+def old(): return RedirectResponse("/new", status_code=308)
+
+@app.get("/robots.txt", response_class=PlainTextResponse)
+def robots(): return "User-agent: *\nDisallow:"</pre>
+<p><b>ব্যাখ্যা:</b> endpoint-এর parameter-এ <code>Response</code> নিলে FastAPI সেটা চূড়ান্ত response-এর সাথে মিশিয়ে দেয় (body ও <code>response_model</code> বজায় থেকে)। সরাসরি <code>JSONResponse/RedirectResponse/FileResponse</code> ফেরত দিলে <code>response_model</code> প্রযোজ্য হয় না। session cookie-তে <code>httponly</code>, <code>secure</code>, <code>samesite</code> দিন।</p>
+
+<h3>৫৮) OpenAPI docs কীভাবে কাস্টমাইজ/লুকাবেন?</h3>
+<pre>@app.get("/internal/metrics", include_in_schema=False)      <span class="c"># docs-এ দেখাবে না</span>
+def metrics(): ...
+
+@app.get(
+    "/expenses/{eid}",
+    summary="একটা খরচ দেখান",
+    description="ID দিয়ে একটা expense ফেরত দেয়।",
+    responses={404: {"description": "expense পাওয়া যায়নি"}},
+    tags=["expenses"],
+    deprecated=False,
+)
+def get_expense(eid: int): ...
+
+app = FastAPI(
+    title="Expense API",
+    openapi_tags=[{"name": "expenses", "description": "খরচ ব্যবস্থাপনা"}],
+    docs_url=None if PRODUCTION else "/docs",           <span class="c"># production-এ বন্ধ বা সুরক্ষিত</span>
+)</pre>
+<p><b>ব্যাখ্যা:</b> docs স্বয়ংক্রিয়, তবু <code>summary</code>, <code>description</code>, <code>responses</code>, <code>tags</code> দিলে client developer-দের জন্য ব্যবহারযোগ্য হয়। অভ্যন্তরীণ endpoint <code>include_in_schema=False</code>-এ লুকানো যায়। public API না হলে production-এ <code>/docs</code> বন্ধ বা auth-এর পেছনে রাখুন।</p>
+
+<h3>৫৯) Async endpoint কীভাবে test করবেন?</h3>
+<pre><span class="c"># pip install pytest anyio httpx</span>
+import pytest, httpx
+from app.main import app
+
+@pytest.fixture
+def anyio_backend():
+    return "asyncio"
+
+@pytest.mark.anyio
+async def test_health_async():
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
+        r = await ac.get("/health")
+    assert r.status_code == 200</pre>
+<p><b>ব্যাখ্যা:</b> সাধারণ <code>TestClient</code> sync test-এর জন্য যথেষ্ট (ভেতরে async endpoint-ও চালায়)। test নিজেই <code>async</code> হতে হলে (যেমন async DB ব্যবহার, event loop-এর সাথে সরাসরি কাজ) <code>httpx.AsyncClient</code> + <code>ASGITransport</code> ও anyio/pytest-asyncio ব্যবহার করুন। সার্ভার চালানো লাগে না।</p>
+
+<h3>৬০) দুটো request একসাথে একই balance বদলালে race condition কীভাবে ঠেকাবেন?</h3>
+<pre>from sqlalchemy import select
+
+def withdraw(db: Session, acc_id: int, amount: Decimal):
+    acc = db.scalar(select(Account).where(Account.id == acc_id).with_for_update())  <span class="c"># row lock</span>
+    if acc.balance &lt; amount:
+        raise HTTPException(409, "insufficient balance")
+    acc.balance -= amount
+    db.commit()                                  <span class="c"># commit-এ lock ছাড়ে</span></pre>
+<p><b>ব্যাখ্যা:</b> read → check → write ধাপের মাঝে অন্য request ঢুকে গেলে দুবার টাকা তোলা যেতে পারে। সমাধান: <code>SELECT ... FOR UPDATE</code> (pessimistic lock) বা <code>version</code> column দিয়ে optimistic concurrency, অথবা একটা atomic SQL <code>UPDATE ... WHERE balance &gt;= :amt</code>। সঙ্গে client-retry-র জন্য idempotency key। Python-এর <code>threading.Lock</code> একাধিক worker/সার্ভারে কাজ করে না — DB-স্তরেই সমাধান দরকার।</p>
+
+<h3>৬১) FastAPI-তে rate limiting কীভাবে করবেন?</h3>
+<pre><span class="c"># pip install slowapi</span>
+from fastapi import FastAPI, Request
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
+app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.post("/auth/token")
+@limiter.limit("5/minute")                 <span class="c"># প্রতি IP-তে মিনিটে ৫টা</span>
+def login(request: Request): ...           <span class="c"># slowapi-র জন্য request parameter আবশ্যক</span></pre>
+<p><b>ব্যাখ্যা:</b> লগইন/OTP-র মতো endpoint-এ brute-force রোধে জরুরি। একাধিক worker/সার্ভারে সঠিক গণনার জন্য counter Redis-এ রাখতে হয়। বাস্তবে API gateway/reverse proxy (Nginx, Kong, cloud WAF) স্তরেও rate limit রাখা হয়; user/API-key ভিত্তিক সীমা IP-র চেয়ে নির্ভরযোগ্য (NAT-এর পেছনে অনেক user একই IP)।</p>
+
+<h3>৬২) WebSocket-এ authentication কীভাবে করবেন?</h3>
+<pre>from fastapi import WebSocket, WebSocketDisconnect, status
+
+@app.websocket("/ws")
+async def ws_endpoint(ws: WebSocket, token: str | None = None):    <span class="c"># ?token=...</span>
+    user = verify_token_or_none(token)
+    if user is None:
+        await ws.close(code=status.WS_1008_POLICY_VIOLATION)        <span class="c"># accept-এর আগেই প্রত্যাখ্যান</span>
+        return
+    await ws.accept()
+    try:
+        while True:
+            msg = await ws.receive_text()
+            await ws.send_text(f"{user}: {msg}")
+    except WebSocketDisconnect:
+        pass</pre>
+<p><b>ব্যাখ্যা:</b> browser-এর WebSocket API-তে custom header পাঠানো যায় না, তাই token সাধারণত query parameter, cookie বা সংযোগের প্রথম বার্তায় পাঠানো হয়। <code>accept()</code>-এর আগেই যাচাই করে বন্ধ করুন। query-তে token URL/লগে ধরা পড়তে পারে — তাই স্বল্পমেয়াদী token বা প্রথম-বার্তা পদ্ধতি বিবেচনা করুন; সবসময় <code>wss://</code>।</p>
+
+<h3>৬৩) প্রতিটা request-এ request-id ও structured log কীভাবে যোগ করবেন?</h3>
+<pre>import uuid, logging, contextvars
+request_id_var = contextvars.ContextVar("request_id", default="-")
+
+class RequestIdFilter(logging.Filter):
+    def filter(self, record):
+        record.request_id = request_id_var.get()
+        return True
+
+@app.middleware("http")
+async def add_request_id(request: Request, call_next):
+    rid = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+    token = request_id_var.set(rid)
+    try:
+        response = await call_next(request)
+    finally:
+        request_id_var.reset(token)
+    response.headers["X-Request-ID"] = rid
+    return response
+
+<span class="c"># log format-এ  %(request_id)s  যোগ করলে প্রতিটা লাইনে ID আসে</span></pre>
+<p><b>ব্যাখ্যা:</b> distributed system-এ একটা request-এর সব log এক ID দিয়ে খুঁজে পাওয়ার জন্য। <code>contextvars</code> async কোডেও request-প্রতি আলাদা মান ধরে রাখে (global variable নয়)। upstream (gateway) থেকে আসা ID থাকলে সেটাই ব্যবহার করুন, আর response-এ ফেরত দিন।</p>
+
+<h3>৬৪) Pagination response-এ total সহ envelope কীভাবে বানাবেন (generic model)?</h3>
+<pre>from typing import Generic, TypeVar
+from pydantic import BaseModel
+
+T = TypeVar("T")
+
+class Page(BaseModel, Generic[T]):
+    items: list[T]
+    total: int
+    skip: int
+    limit: int
+
+@app.get("/expenses", response_model=Page[ExpenseRead])
+def list_expenses(db: DB, skip: int = 0, limit: int = 20):
+    total = db.scalar(select(func.count()).select_from(Expense))
+    rows = db.scalars(select(Expense).offset(skip).limit(limit)).all()
+    return {"items": rows, "total": total, "skip": skip, "limit": limit}</pre>
+<p><b>ব্যাখ্যা:</b> Pydantic v2-এর generic <code>BaseModel</code> দিয়ে যেকোনো resource-এর জন্য একই envelope (<code>Page[UserRead]</code>, <code>Page[ExpenseRead]</code>) পুনর্ব্যবহার হয়, আর docs-এও সঠিক schema দেখায়। বড় টেবিলে <code>COUNT(*)</code> ব্যয়বহুল হতে পারে — তখন cursor-based pagination বা আনুমানিক total বিবেচনা করুন।</p>
+
+<h3>৬৫) File upload-এ আকার ও type কীভাবে সীমিত করবেন?</h3>
+<pre>from fastapi import UploadFile, HTTPException
+import shutil, uuid
+from pathlib import Path
+
+MAX_BYTES = 5 * 1024 * 1024
+ALLOWED = {"image/png", "image/jpeg", "application/pdf"}
+
+@app.post("/upload")
+async def upload(file: UploadFile):
+    if file.content_type not in ALLOWED:
+        raise HTTPException(415, "ফাইলের ধরন অনুমোদিত নয়")
+    dest = Path("uploads") / f"{uuid.uuid4()}{Path(file.filename).suffix}"   <span class="c"># ব্যবহারকারীর দেওয়া নাম সরাসরি নয়</span>
+    size = 0
+    with dest.open("wb") as out:
+        while chunk := await file.read(1024 * 1024):          <span class="c"># ১MB করে</span>
+            size += len(chunk)
+            if size &gt; MAX_BYTES:
+                out.close(); dest.unlink(missing_ok=True)
+                raise HTTPException(413, "ফাইল বড় (সর্বোচ্চ ৫MB)")
+            out.write(chunk)
+    return {"saved_as": dest.name, "size": size}</pre>
+<p><b>ব্যাখ্যা:</b> <code>content_type</code> client-নির্ধারিত, তাই জালিয়াতিযোগ্য — গুরুত্বপূর্ণ ক্ষেত্রে ফাইলের আসল বিষয়বস্তু (magic bytes) যাচাই করুন। ফাইলের নাম UUID দিয়ে বদলান (path traversal/overwrite এড়াতে), chunk করে পড়ুন (মেমরি বাঁচাতে), এবং proxy/Nginx স্তরেও body size সীমা রাখুন। বড় ফাইল সরাসরি object storage-এ (S3 presigned URL) পাঠানো ভালো।</p>
+
+<h3>৬৬) ML/AI মডেল বা ভারী resource একবার load করে সব request-এ কীভাবে ব্যবহার করবেন?</h3>
+<pre>from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.model = load_heavy_model()      <span class="c"># startup-এ একবার (প্রতি worker-এ)</span>
+    yield
+    app.state.model = None
+
+app = FastAPI(lifespan=lifespan)
+
+@app.post("/predict")
+def predict(request: Request, text: str):
+    model = request.app.state.model
+    return {"label": model.predict(text)}</pre>
+<p><b>ব্যাখ্যা:</b> প্রতি request-এ মডেল load করলে অসম্ভব ধীর। <code>lifespan</code>-এ একবার load করে <code>app.state</code>-এ রাখা হয়। মনে রাখুন প্রতিটা worker process-এর নিজস্ব কপি থাকে (মেমরি = মডেল × worker সংখ্যা)। inference ভারী/blocking হলে সাধারণ <code>def</code> endpoint বা thread/process pool ব্যবহার করুন।</p>
+
+<h3>৬৭) দীর্ঘ-সময়ের কাজ (যেমন বড় রিপোর্ট) API-তে কীভাবে সামলাবেন?</h3>
+<pre>@app.post("/reports", status_code=202)             <span class="c"># 202 Accepted — কাজ গ্রহণ করা হলো</span>
+def create_report(params: ReportIn):
+    job_id = enqueue_report_job(params)             <span class="c"># Celery/RQ/queue-তে পাঠানো</span>
+    return {"job_id": job_id, "status_url": f"/reports/{job_id}"}
+
+@app.get("/reports/{job_id}")
+def report_status(job_id: str):
+    job = get_job(job_id)
+    if job.state == "done":
+        return {"status": "done", "download_url": job.url}
+    return {"status": job.state}                    <span class="c"># pending / running / failed</span></pre>
+<p><b>ব্যাখ্যা:</b> HTTP request-এ মিনিট ধরে অপেক্ষা করালে timeout ও সম্পদ নষ্ট হয়। সঠিক প্যাটার্ন: <code>202 Accepted</code> + job ID ফেরত দিয়ে কাজ queue ও আলাদা worker-এ চালানো; client status endpoint polling করে (বা WebSocket/webhook-এ জানানো হয়)। এটা <code>BackgroundTasks</code>-এর চেয়ে নির্ভরযোগ্য — retry, persistence, scale পাওয়া যায়।</p>
+
+<h3>৬৮) OAuth2 scope দিয়ে সূক্ষ্ম অনুমতি (fine-grained permission) কীভাবে দেবেন?</h3>
+<pre>from fastapi import Security
+from fastapi.security import OAuth2PasswordBearer, SecurityScopes
+
+oauth2 = OAuth2PasswordBearer(
+    tokenUrl="auth/token",
+    scopes={"expenses:read": "খরচ পড়া", "expenses:write": "খরচ বদলানো"},
+)
+
+def current_user(scopes: SecurityScopes, token: Annotated[str, Depends(oauth2)]):
+    payload = decode_token(token)                       <span class="c"># token-এ "scopes": [...] থাকে</span>
+    granted = set(payload.get("scopes", []))
+    if not set(scopes.scopes) &lt;= granted:
+        raise HTTPException(403, "পর্যাপ্ত scope নেই")
+    return payload["sub"]
+
+@app.delete("/expenses/{eid}")
+def delete(eid: int, user=Security(current_user, scopes=["expenses:write"])): ...</pre>
+<p><b>ব্যাখ্যা:</b> role (admin/user) মোটা দাগের; scope প্রতিটা কাজের আলাদা অনুমতি (<code>expenses:read</code> বনাম <code>expenses:write</code>)। login-এর সময় ব্যবহারকারী/ক্লায়েন্টের জন্য অনুমোদিত scope token-এ বসে, আর endpoint প্রয়োজনীয় scope দাবি করে। তৃতীয়-পক্ষ client-কে সীমিত অ্যাক্সেস দিতে (OAuth2) বিশেষ উপযোগী।</p>
+
+<h3>৬৯) FastAPI sub-application ও static file কীভাবে mount করবেন?</h3>
+<pre>from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+
+app = FastAPI()
+admin_app = FastAPI(title="Admin API")          <span class="c"># সম্পূর্ণ আলাদা app (নিজস্ব docs/dependency)</span>
+
+app.mount("/admin", admin_app)                   <span class="c"># /admin/... এখন admin_app সামলায়, docs: /admin/docs</span>
+app.mount("/static", StaticFiles(directory="static"), name="static")</pre>
+<p><b>ব্যাখ্যা:</b> <code>mount</code> দিয়ে অন্য ASGI app (আরেকটা FastAPI, Starlette, এমনকি WSGI-wrapped Flask) একটা path-এর নিচে বসানো যায় — প্রতিটার নিজস্ব middleware ও OpenAPI থাকে। সাধারণ feature-ভাগের জন্য <code>APIRouter</code> যথেষ্ট; <code>mount</code> ব্যবহার করুন যখন সত্যিই আলাদা, স্বতন্ত্র sub-app দরকার। প্রোডাকশনে static ফাইল সাধারণত Nginx/CDN থেকে দেওয়া ভালো।</p>
+
+<h3>৭০) PUT আর PATCH-এর পার্থক্য FastAPI-তে কীভাবে বাস্তবায়ন করবেন?</h3>
+<pre>class ItemIn(BaseModel):                 <span class="c"># PUT — সব field আবশ্যক (পুরো resource বদল)</span>
+    name: str
+    price: float
+
+class ItemPatch(BaseModel):              <span class="c"># PATCH — সব ঐচ্ছিক</span>
+    name: str | None = None
+    price: float | None = None
+
+@app.put("/items/{iid}")
+def replace(iid: int, item: ItemIn):
+    store[iid] = item.model_dump()
+    return store[iid]
+
+@app.patch("/items/{iid}")
+def patch(iid: int, item: ItemPatch):
+    store[iid].update(item.model_dump(exclude_unset=True))   <span class="c"># শুধু পাঠানো field বদলাবে</span>
+    return store[iid]</pre>
+<p><b>ব্যাখ্যা:</b> PUT পুরো resource প্রতিস্থাপন করে (idempotent), PATCH আংশিক পরিবর্তন। PATCH-এ <code>exclude_unset=True</code> জরুরি — নইলে client যে field পাঠায়নি তা <code>None</code> হয়ে ডেটা মুছে ফেলবে। কেউ স্পষ্টভাবে <code>null</code> পাঠালে সেটা "set" ধরা হয় — আর <code>exclude_unset</code> এই পার্থক্য বোঝে।</p>
+
+<h2 class="title" style="font-size:22px;margin-top:30px">ঙ. Python — আরও প্রশ্ন</h2>
+
+<h3>৭১) MRO কী? Diamond inheritance-এ <code>super()</code> কীভাবে কাজ করে?</h3>
+<pre>class A:
+    def hi(self): print("A")
+class B(A):
+    def hi(self): print("B"); super().hi()
+class C(A):
+    def hi(self): print("C"); super().hi()
+class D(B, C):
+    def hi(self): print("D"); super().hi()
+
+D().hi()                              <span class="c"># D B C A</span>
+print([c.__name__ for c in D.__mro__])  <span class="c"># ['D', 'B', 'C', 'A', 'object']</span></pre>
+<p><b>ব্যাখ্যা:</b> Method Resolution Order (C3 linearization) ঠিক করে attribute/method কোন class-এ কোন ক্রমে খোঁজা হবে। <code>super()</code> "সরাসরি parent" নয়, বরং <b>MRO-তে পরের class</b>-কে ডাকে — তাই diamond-এ <code>A</code> একবারই চলে। multiple inheritance-এ <code>super()</code> সবসময় সহযোগী (cooperative) ভাবে লেখা উচিত।</p>
+
+<h3>৭২) <code>__slots__</code> কী, কখন কাজে লাগে?</h3>
+<pre>class P:
+    __slots__ = ("x", "y")
+    def __init__(self, x, y): self.x, self.y = x, y
+
+p = P(1, 2)
+<span class="c"># p.z = 3     # AttributeError</span>
+print(hasattr(p, "__dict__"))     <span class="c"># False — প্রতি object-এ dict নেই, তাই মেমরি কম</span></pre>
+<p><b>ব্যাখ্যা:</b> ডিফল্টে প্রতিটা object-এ <code>__dict__</code> থাকে (নমনীয় কিন্তু মেমরি-খরচ)। <code>__slots__</code> attribute-এর নাম আগে ঘোষণা করে তা সরিয়ে দেয় — লক্ষ লক্ষ ছোট object-এ মেমরি ও attribute-access দ্রুততা বাড়ে, কিন্তু নতুন attribute যোগ করা যায় না। বেশিরভাগ অ্যাপে দরকার হয় না।</p>
+
+<h3>৭৩) <code>__call__</code> কী? "callable" মানে কী?</h3>
+<pre>class Counter:
+    def __init__(self): self.n = 0
+    def __call__(self):
+        self.n += 1
+        return self.n
+
+c = Counter()
+print(c(), c(), callable(c))     <span class="c"># 1 2 True</span></pre>
+<p><b>ব্যাখ্যা:</b> যে object-কে <code>obj()</code> লিখে ডাকা যায় সেটা callable — function, lambda, class (instance বানায়) এবং <code>__call__</code> থাকা object। state ধরে রাখা function-এর মতো আচরণ (class-ভিত্তিক decorator, strategy) বানাতে কাজে লাগে।</p>
+
+<h3>৭৪) Thread-এ race condition কী, GIL থাকতেও কেন হয়?</h3>
+<pre>import threading
+count = 0
+lock = threading.Lock()
+
+def inc():
+    global count
+    for _ in range(100_000):
+        with lock:                <span class="c"># lock ছাড়া count += 1 নিরাপদ নয়</span>
+            count += 1
+
+ts = [threading.Thread(target=inc) for _ in range(4)]
+[t.start() for t in ts]; [t.join() for t in ts]
+print(count)                      <span class="c"># 400000</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>count += 1</code> আসলে read → add → write, কয়েকটা bytecode; GIL এগুলোর মাঝখানে thread বদলাতে পারে, ফলে আপডেট হারায়। shared state-এ <code>Lock</code> ব্যবহার করুন, বা ডেটা <code>queue.Queue</code> দিয়ে পাঠিয়ে sharing এড়ান।</p>
+
+<h3>৭৫) <code>asyncio.gather</code>, <code>create_task</code> আর সরাসরি <code>await</code>-এর পার্থক্য?</h3>
+<pre>import asyncio
+
+async def job(n):
+    await asyncio.sleep(1); return n
+
+async def main():
+    a = await job(1); b = await job(2)                     <span class="c"># ক্রমানুসারে — ~২ সেকেন্ড</span>
+
+    r = await asyncio.gather(job(1), job(2))               <span class="c"># একসাথে — ~১ সেকেন্ড</span>
+    t1 = asyncio.create_task(job(1)); t2 = asyncio.create_task(job(2))   <span class="c"># এখনই শুরু</span>
+    print(await t1, await t2)                              <span class="c"># ~১ সেকেন্ড</span>
+
+asyncio.run(main())</pre>
+<p><b>ব্যাখ্যা:</b> শুধু <code>await coro()</code> কাজটা শেষ হওয়া পর্যন্ত অপেক্ষা করে — পরপর লিখলে ক্রমানুসারে চলে। <code>gather</code> একাধিক coroutine একসাথে চালিয়ে ফল জমা দেয়। <code>create_task</code> coroutine-কে সাথে সাথে event loop-এ schedule করে (পরে await করা যায়)। আধুনিক পছন্দ <code>TaskGroup</code> (3.11+) — ব্যর্থতা ও বাতিল ঠিকমতো সামলায়।</p>
+
+<h3>৭৬) <code>eval()</code> ও <code>pickle</code> কেন বিপজ্জনক? বিকল্প কী?</h3>
+<pre>import ast, json
+user_input = "__import__('os').system('echo hacked')"
+<span class="c"># eval(user_input)                # সরাসরি কোড চালায় — কখনো নয়!</span>
+print(ast.literal_eval("[1, 2, 3]"))   <span class="c"># শুধু literal — নিরাপদ</span>
+print(json.loads('{"a": 1}'))          <span class="c"># ডেটা বিনিময়ে JSON</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>eval/exec</code> স্ট্রিংকে কোড হিসেবে চালায়, আর <code>pickle.load</code> deserialize করার সময় যেকোনো কোড চালাতে পারে — অবিশ্বস্ত ইনপুটে দুটোই remote code execution-এর রাস্তা। ডেটা বিনিময়ে JSON/Pydantic, আর literal parse-এ <code>ast.literal_eval</code>।</p>
+
+<h3>৭৭) <code>round(2.5)</code> কেন <code>2</code> হয়? টাকার হিসাবে কী করবেন?</h3>
+<pre>print(round(2.5), round(3.5), round(2.675, 2))     <span class="c"># 2 4 2.67</span>
+
+from decimal import Decimal, ROUND_HALF_UP
+print(Decimal("2.675").quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))   <span class="c"># 2.68</span></pre>
+<p><b>ব্যাখ্যা:</b> Python 3 "banker's rounding" (round-half-to-even) ব্যবহার করে — ঠিক .5 হলে জোড় সংখ্যার দিকে যায়, যাতে পরিসংখ্যানগত পক্ষপাত কমে। এর উপর float-এর binary অসম্পূর্ণতা (<code>2.675</code> আসলে সামান্য কম) যোগ হয়ে <code>2.67</code> আসে। আর্থিক হিসাবে <code>Decimal</code> ও স্পষ্ট rounding mode।</p>
+
+<h3>৭৮) "শীর্ষ N" বা priority queue Python-এ কীভাবে করবেন?</h3>
+<pre>import heapq
+
+scores = [("A", 50), ("B", 90), ("C", 70), ("D", 85)]
+print(heapq.nlargest(2, scores, key=lambda t: t[1]))   <span class="c"># [('B', 90), ('D', 85)]</span>
+
+pq = []
+heapq.heappush(pq, (2, "email")); heapq.heappush(pq, (1, "payment"))
+print(heapq.heappop(pq))                               <span class="c"># (1, 'payment') — ক্ষুদ্রতম priority আগে</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>heapq</code> min-heap দেয় — push/pop O(log n)। পুরো list sort না করে শীর্ষ k বের করতে <code>nlargest/nsmallest</code> কার্যকর। max-heap দরকার হলে মান ঋণাত্মক করে রাখুন। thread-safe priority queue-র জন্য <code>queue.PriorityQueue</code>।</p>
+
+<h3>৭৯) <code>sqlite3</code>-তে SQL injection কীভাবে ঠেকাবেন?</h3>
+<pre>import sqlite3
+con = sqlite3.connect(":memory:")
+con.execute("CREATE TABLE u (name TEXT)")
+name = "x'; DROP TABLE u; --"
+
+<span class="c"># con.execute(f"SELECT * FROM u WHERE name = '{name}'")      # বিপজ্জনক</span>
+con.execute("SELECT * FROM u WHERE name = ?", (name,))        <span class="c"># parameter binding</span></pre>
+<p><b>ব্যাখ্যা:</b> মান SQL টেক্সটের সাথে জোড়া না দিয়ে placeholder (<code>?</code> বা <code>%s</code>/<code>:name</code>) দিয়ে আলাদাভাবে পাঠালে driver তাকে ডেটা হিসেবেই ধরে, কোড হিসেবে নয়। ORM (SQLAlchemy) ও FastAPI-তেও একই নীতি — raw SQL-এ <code>text("... :id")</code> ও bind parameter।</p>
+
+<h3>৮০) <code>functools.partial</code> কী, কখন কাজে লাগে?</h3>
+<pre>from functools import partial
+
+def log(level, msg): print(f"[{level}] {msg}")
+error = partial(log, "ERROR")
+error("ডিস্ক ভর্তি")               <span class="c"># [ERROR] ডিস্ক ভর্তি</span>
+
+<span class="c"># callback-এ argument বেঁধে পাঠানো</span>
+nums = list(map(partial(pow, 2), [1, 2, 3]))   <span class="c"># 2**1, 2**2, 2**3 → [2, 4, 8]</span></pre>
+<p><b>ব্যাখ্যা:</b> একটা function-এর কিছু argument আগে বেঁধে নতুন function বানায় — lambda-র চেয়ে স্পষ্ট ও picklable। callback, thread-pool-এ extra argument পাঠানো, বা closure late-binding সমস্যা (প্রশ্ন ২১) এড়াতে উপযোগী।</p>
+
+<h3>৮১) Python-এর data structure-এর time complexity মুখস্থ কী কী?</h3>
+<pre>import timeit
+setup = "data = list(range(100_000)); s = set(data)"
+print(timeit.timeit("99_999 in data", setup=setup, number=1000))   <span class="c"># list: O(n) — ধীর</span>
+print(timeit.timeit("99_999 in s",    setup=setup, number=1000))   <span class="c"># set: O(1) — অনেক দ্রুত</span></pre>
+<table>
+<tr><th>অপারেশন</th><th>list</th><th>dict / set</th><th>deque</th></tr>
+<tr><td>index/key দিয়ে পড়া</td><td>O(1)</td><td>O(1) গড়ে</td><td>মাঝখানে O(n)</td></tr>
+<tr><td><code>in</code> (খোঁজা)</td><td>O(n)</td><td>O(1) গড়ে</td><td>O(n)</td></tr>
+<tr><td>শেষে append/pop</td><td>O(1)</td><td>—</td><td>O(1)</td></tr>
+<tr><td>শুরুতে insert/pop</td><td>O(n)</td><td>—</td><td>O(1)</td></tr>
+<tr><td>sort</td><td>O(n log n)</td><td>—</td><td>—</td></tr>
+</table>
+<p><b>ব্যাখ্যা:</b> বারবার membership test করলে list-কে set/dict-এ বদলান; দুই প্রান্তে যোগ/মোছায় <code>deque</code>। ইন্টারভিউয়ে "এটা O(n²) কে O(n)-এ নামানো যায়?" প্রশ্নের উত্তর প্রায়ই dict/set।</p>
+
+<h3>৮২) Python-এ <code>is</code> কখনো কখনো কেন <code>True</code> দেয় (ছোট int/string)?</h3>
+<pre>a, b = 256, 256
+print(a is b)               <span class="c"># True  — ছোট int (-5..256) cached</span>
+x, y = 1000, 1000           <span class="c"># একই লাইন/ফাইলে compile-time-এ একসাথে হতে পারে</span>
+print(int("1000") is int("1000"))   <span class="c"># False — আলাদা object</span>
+print(None is None)         <span class="c"># True — is-এর সঠিক ব্যবহার; string/সংখ্যা তুলনায় is নয়, ==</span></pre>
+<p><b>ব্যাখ্যা:</b> CPython কিছু immutable মান (ছোট int, কিছু string, <code>None</code>/<code>True</code>/<code>False</code>) পুনর্ব্যবহার (interning) করে, তাই <code>is</code> আকস্মিকভাবে True হয় — এটা implementation detail, ভাষার নিশ্চয়তা নয়। মান তুলনায় সবসময় <code>==</code>; <code>is</code> শুধু <code>None</code>/sentinel-এর জন্য।</p>
+
+<h3>৮৩) Python project-এ কোড মান ধরে রাখতে কী কী টুল ব্যবহার করবেন?</h3>
+<pre>ruff check . &amp;&amp; ruff format --check .      <span class="c"># lint + format</span>
+mypy app/                              <span class="c"># type check</span>
+pytest --cov=app -q                    <span class="c"># test + coverage</span>
+pip-audit                              <span class="c"># dependency দুর্বলতা</span>
+<span class="c"># pre-commit install                   # commit-এর আগে স্বয়ংক্রিয়</span></pre>
+<p><b>ব্যাখ্যা:</b> একটা লাইন-তালিকা: <b>ruff</b> (lint/format), <b>mypy/pyright</b> (type), <b>pytest + coverage</b> (test), <b>pre-commit</b> (স্বয়ংক্রিয় গেট), <b>pip-audit</b> (নিরাপত্তা)। এগুলো CI-তেও চালান যাতে বাজে কোড merge না হয়।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->
