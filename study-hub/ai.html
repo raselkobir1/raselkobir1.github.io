@@ -1181,6 +1181,54 @@ LLM → getAccountBalance(accountId) → আপনার .NET API → Database �
 <tr><td>Hallucination</td><td>⭐⭐⭐⭐⭐</td></tr>
 </table>
 <p><b>ব্যাখ্যা:</b> LLM, token, context window ও prompt engineering হলো ভিত্তি — বুঝে নিলেই যথেষ্ট। বাস্তব AI application বানানোর মূল শক্তি আসে embeddings, vector DB, RAG, tool calling, agents ও hallucination প্রতিরোধ থেকে — এগুলোতে সবচেয়ে বেশি সময় ও practice দিন। তিন সপ্তাহের পরিকল্পনা প্রশ্ন ২৫-এ দেওয়া আছে।</p>
+
+<h3>৪১) Chunking কেন RAG-এর সবচেয়ে গুরুত্বপূর্ণ সিদ্ধান্তগুলোর একটা? Chunk size ও overlap কীভাবে ঠিক করবেন?</h3>
+<pre>ছোট chunk (~১০০ token):  নির্দিষ্ট, কিন্তু প্রসঙ্গ হারায়
+বড় chunk (~১৫০০ token):  প্রসঙ্গ থাকে, কিন্তু embedding "ঘোলা" হয়, token cost বাড়ে
+সাধারণ শুরু:            ~৩০০–৮০০ token, ১০–২০% overlap, তারপর eval দিয়ে tune</pre>
+<p><b>ব্যাখ্যা:</b> Retrieval-এর একক হলো chunk — তাই chunk যদি একটা তথ্যকে দুই ভাগে কেটে ফেলে, বা এক chunk-এ অনেক অসম্পর্কিত বিষয় ঢুকে যায়, ভালো মডেলও সঠিক উত্তর দিতে পারে না। Overlap সীমানায় কেটে যাওয়া তথ্য বাঁচায়। শুধু ধ্রুবক সংখ্যা না ধরে ডকুমেন্টের গঠন মেনে (heading, paragraph, table, code block) কাটা ভালো — যেমন API doc-এ একটা endpoint-এর বিবরণ একসাথে রাখা। কোনো universal সঠিক মান নেই; আপনার প্রশ্নের golden dataset-এ retrieval hit-rate মেপে size/overlap tune করতে হয় (RAG অধ্যায়ে chunking strategy দেখুন)।</p>
+
+<h3>৪২) একটা RAG সিস্টেম ভুল উত্তর দিলে সমস্যাটা retrieval-এ নাকি generation-এ — কীভাবে ধরবেন?</h3>
+<pre>ধাপ ১: প্রশ্নের জন্য retrieved chunk-গুলো দেখুন
+  সঠিক তথ্য chunk-এ নেই?   → Retrieval সমস্যা (chunking / embedding / top-k / filter)
+  আছে, কিন্তু উত্তর ভুল?     → Generation সমস্যা (prompt / context ক্রম / মডেল)</pre>
+<p><b>ব্যাখ্যা:</b> RAG দুটো আলাদা অংশ — retriever ও generator — আর বেশিরভাগ ব্যর্থতা retrieval-এই ঘটে। তাই ডিবাগের প্রথম কাজ প্রতিটা প্রশ্নের জন্য retrieved chunk ও তাদের স্কোর লগ করে দেখা। প্রয়োজনীয় তথ্য top-k-তে না থাকলে prompt বা মডেল বদলিয়ে লাভ নেই; থাকলে কিন্তু মডেল উপেক্ষা করলে (context-এর মাঝখানে হারিয়ে যাওয়া, অসংলগ্ন chunk ভিড় করা) context সাজানো বা reranking ভাবুন। এই কারণে retrieval ও generation আলাদাভাবে মাপা উচিত (প্রশ্ন ৪৪)।</p>
+
+<h3>৪৩) top-k কতটা রাখবেন? বেশি chunk পাঠালে কেন সবসময় ভালো হয় না?</h3>
+<pre>top-k ছোট (২–৩):   precision ভালো, কিন্তু প্রয়োজনীয় chunk মিস হতে পারে (recall কম)
+top-k বড় (২০+):   recall বাড়ে, কিন্তু noise, cost ও latency বাড়ে
+প্রচলিত কৌশল:     বড় top-k (যেমন ২০–৫০) retrieve → reranker → সেরা ৩–৮টা prompt-এ</pre>
+<p><b>ব্যাখ্যা:</b> বেশি chunk পাঠালে অপ্রাসঙ্গিক তথ্যও ঢোকে, মডেল বিভ্রান্ত হতে পারে, আর context rot ও "lost in the middle" সমস্যা বাড়ে (প্রশ্ন ৪)। উল্টোদিকে খুব কম পাঠালে সঠিক chunk বাদ পড়ে। তাই সাধারণত দুই ধাপ: প্রথমে বড় candidate pool তোলা, তারপর cross-encoder reranker (প্রশ্ন ৯) দিয়ে সেরা অল্প কয়েকটা রাখা। সাথে একটা similarity threshold রাখলে দুর্বল মিলের chunk বাদ যায়।</p>
+
+<h3>৪৪) RAG সিস্টেম কীভাবে মূল্যায়ন করবেন? কোন metric দেখবেন?</h3>
+<pre>Retrieval:   Recall@k, Precision@k, MRR   — সঠিক chunk কি top-k-তে এসেছে?
+Generation:  Faithfulness (Groundedness)   — উত্তর কি retrieved context-এর ভেতরেই?
+             Answer Relevance               — উত্তর কি প্রশ্নের জবাব দিয়েছে?
+End-to-end:  Golden dataset-এ correctness, latency, cost</pre>
+<p><b>ব্যাখ্যা:</b> RAG-এর মান দুই স্তরে মাপতে হয়: retrieval ঠিকঠাক তথ্য আনছে কিনা, আর generation সেই তথ্যের প্রতি বিশ্বস্ত থেকে উত্তর দিচ্ছে কিনা। এজন্য প্রশ্ন + প্রত্যাশিত উত্তর + যে ডকুমেন্টে উত্তর আছে — এমন একটা golden dataset বানান (Evaluation অধ্যায়)। Faithfulness/relevance মাপতে LLM-as-judge ব্যবহার করা যায়, তবে এর bias নিয়ে সচেতন থাকুন (প্রশ্ন ১৪)। RAGAS-এর মতো framework এসব metric-এর বাস্তবায়ন দেয়। প্রতিটা chunking/embedding/prompt পরিবর্তনের পর eval আবার চালিয়ে regression ধরা জরুরি।</p>
+
+<h3>৪৫) ব্যবহারকারীর প্রশ্ন অস্পষ্ট বা multi-hop হলে retrieval কীভাবে ভালো করবেন?</h3>
+<pre>"আর ওটার refund?"  →  (history দেখে rewrite)  →  "Premium plan-এর refund policy কী?"
+"A-এর manager-এর বাজেট কত?" →  ধাপ ১: A-এর manager কে?  ধাপ ২: তার বাজেট</pre>
+<p><b>ব্যাখ্যা:</b> Follow-up প্রশ্ন ("ওটার", "আর") একা embed করলে অর্থ থাকে না, তাই conversation history দেখে প্রশ্নটাকে স্বয়ংসম্পূর্ণ আকারে rewrite করে retrieve করা হয় (query rewriting)। একটা প্রশ্ন একাধিক অংশে ভাঙা (query decomposition) বা একাধিক বিকল্প রূপে ফেলে ফল মেলানো (query expansion) সাহায্য করে। Multi-hop প্রশ্নে এক ধাপের ফল পরের ধাপের query-র ইনপুট হয় — এখানে retrieval-কে agent-এর একটা tool বানিয়ে লুপে চালানো (agentic RAG) বাস্তবসম্মত পথ।</p>
+
+<h3>৪৬) Multi-tenant বা permission-সংবেদনশীল সিস্টেমে RAG-এ কীভাবে নিশ্চিত করবেন ব্যবহারকারী শুধু নিজের অনুমোদিত ডকুমেন্টই দেখছে?</h3>
+<pre>SELECT content FROM chunks
+WHERE tenant_id = @tenant AND allowed_roles @> @role   <span class="c">// metadata filter retrieval-এর সময়েই</span>
+ORDER BY embedding &lt;=&gt; @query_vec LIMIT 20;</pre>
+<p><b>ব্যাখ্যা:</b> Access control মডেলের prompt-এ "অন্যের ডেটা দেখাবে না" বলে নিশ্চিত করা যায় না (প্রশ্ন ৫)। সঠিক উপায় হলো প্রতিটা chunk-এর সাথে metadata (tenant, ডকুমেন্টের মালিক, role/ACL) সংরক্ষণ করে <b>retrieval query-তেই</b> filter প্রয়োগ করা — যাতে অননুমোদিত chunk কখনো prompt-এ পৌঁছায়ই না। pgvector-এ এটা সাধারণ SQL <code>WHERE</code> দিয়ে করা যায়, যা PostgreSQL ব্যবহারের একটা বাস্তব সুবিধা। filter-এর ইনপুট আসবে authenticated user-এর claim থেকে, ব্যবহারকারীর পাঠানো প্যারামিটার থেকে নয়।</p>
+
+<h3>৪৭) ডকুমেন্ট আপডেট বা মুছে গেলে vector index কীভাবে সতেজ রাখবেন?</h3>
+<pre>Document বদলালে:  content hash তুলনা → বদলালে সেই ডকুমেন্টের পুরনো chunk মুছে নতুন chunk embed
+Document মুছলে:   তার সব chunk/vector delete করা
+Embedding model বদলালে: সবকিছু নতুন করে re-embed (ভিন্ন model-এর vector তুলনাযোগ্য নয়)</pre>
+<p><b>ব্যাখ্যা:</b> RAG-এর একটা বড় সুবিধা হলো জ্ঞান আপডেট করা সহজ — fine-tuning-এর মতো আবার train করতে হয় না। কিন্তু এজন্য একটা ingestion pipeline থাকতে হয় যা পরিবর্তন শনাক্ত করে (hash/timestamp), শুধু বদলানো ডকুমেন্ট incremental re-index করে, আর মুছে যাওয়া ডকুমেন্টের chunk সরিয়ে ফেলে — নইলে মডেল পুরনো বা বাতিল policy থেকে উত্তর দেবে। প্রতিটা chunk-এ source ও version metadata রাখা এবং embedding model-এর নাম/ভার্সন সংরক্ষণ করা ভবিষ্যৎ migration সহজ করে।</p>
+
+<h3>৪৮) Retrieval-এ প্রাসঙ্গিক কিছু না মিললে RAG সিস্টেম কী করা উচিত? Citation কেন দরকার?</h3>
+<pre>system: শুধু নিচের Context থেকে উত্তর দাও।
+        Context-এ উত্তর না থাকলে বলো "এ বিষয়ে তথ্য পাওয়া যায়নি"।
+        প্রতিটা দাবির পাশে [source: ডকুমেন্ট-নাম, chunk-id] দেখাও।</pre>
+<p><b>ব্যাখ্যা:</b> Retrieval সবসময় top-k ফেরত দেয়, এমনকি কোনোটাই প্রাসঙ্গিক না হলেও — তখন মডেল দুর্বল chunk থেকে জোর করে উত্তর বানিয়ে hallucinate করতে পারে। প্রতিরোধ: similarity threshold রাখা, prompt-এ স্পষ্ট "না জানলে বলো" নির্দেশনা, আর প্রয়োজনে fallback (human agent/স্পষ্টীকরণ প্রশ্ন)। Citation দুটো কাজ করে: ব্যবহারকারী উত্তর যাচাই করতে পারে (বিশেষ করে finance/legal-এ), আর আপনি faithfulness নিয়মিত পরীক্ষা করতে পারেন — উত্তরের প্রতিটা দাবি কোনো retrieved chunk দ্বারা সমর্থিত কিনা।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->
