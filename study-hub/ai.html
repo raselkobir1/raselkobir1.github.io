@@ -1015,6 +1015,69 @@ def cosine_similarity(a, b):
 
 <h3>১৬) একটা AI feature প্রোডাকশনে নেওয়ার আগে caching, cost, আর secret management নিয়ে কী কী নিশ্চিত করবেন?</h3>
 <p><b>ব্যাখ্যা:</b> Cost/latency কমাতে prompt/context caching (বারবার একই system prompt/document পাঠালে provider-side KV cache পুনর্ব্যবহার) আর ঘন ঘন জিজ্ঞাসিত প্রশ্নে semantic caching ব্যবহার করা যায়; সব request-এ সবচেয়ে দামী মডেলের বদলে model routing/cascade দিয়ে সহজ query সস্তা মডেলে পাঠানো (Production Engineering অধ্যায়ে বিস্তারিত)। Architecture-এর দিক থেকে LLM provider-এর API key কখনো frontend/client-side কোডে রাখা উচিত না — সবসময় একটা backend service (BFF) provider-এর সাথে কথা বলবে, key managed secret store-এ (Key Vault/User Secrets) থাকবে, কখনো <code>appsettings.json</code>-এ commit হবে না (Backend/.NET Integration অধ্যায়ে বিস্তারিত)। প্রতিটা call-এ retry/timeout ও token/cost logging রাখা প্রোডাকশন-রেডি হওয়ার জন্য must-have।</p>
+
+<h3>১৭) একটা ভালো prompt-এর structure কী, আর "Explain accounting" কেন দুর্বল prompt?</h3>
+<pre>Role:        You are a senior accounting software engineer.
+Task:        Explain Trial Balance.
+Context:     The application uses PostgreSQL and .NET.
+Constraints: Explain in Bangla, keep technical terms in English.
+Output:      Definition + example + SQL-related example.</pre>
+<p><b>ব্যাখ্যা:</b> একটা practical prompt structure হলো <b>Role + Task + Context + Constraints + Expected Output</b> (Prompt Engineering অধ্যায়ে বিস্তারিত)। "Explain accounting." খুব অস্পষ্ট — কার জন্য, কোন ভাষায়, কতটা গভীরে, কী ফরম্যাটে — কিছুই বলা নেই, তাই মডেল নিজে অনুমান করে একটা generic উত্তর দেয়। একই প্রশ্নে audience (.NET developer), ভাষা (Bangla), ও output ফরম্যাট (debit/credit আলাদা করে, বাস্তব উদাহরণসহ) যোগ করলে উত্তর অনেক বেশি কাজে লাগে। মনে রাখুন, role আর constraint-এর মতো দীর্ঘস্থায়ী আচরণ সাধারণত system prompt-এ থাকে, আর প্রতিটা request-এর নির্দিষ্ট task ও context থাকে user message-এ।</p>
+
+<h3>১৮) Hallucination কী, কেন হয়, আর প্রোডাকশনে কীভাবে কমাবেন?</h3>
+<pre>User:  "আমাদের Voucher API-এর endpoint কী?"
+LLM:   "POST /api/v1/voucher/create"   <span class="c">// তথ্য না থাকলেও আত্মবিশ্বাসের সাথে বানিয়ে বলা — hallucination</span></pre>
+<p><b>ব্যাখ্যা:</b> Hallucination হলো মডেলের আত্মবিশ্বাসের সাথে ভুল বা বানানো তথ্য দেওয়া। কারণ, LLM মূলত একটা language-prediction মডেল — সে "সবচেয়ে সম্ভাব্য পরবর্তী token" বের করে, database-এর মতো প্রতিটা তথ্য সত্য কিনা যাচাই করে না; তাই plausible শোনালেও ভুল উত্তর তৈরি হতে পারে। কমানোর স্তরভিত্তিক উপায়: <b>RAG</b> (প্রকৃত ডকুমেন্ট থেকে grounded উত্তর), <b>tool calling</b> (সংখ্যা/তথ্য আসে আপনার API থেকে, মডেলের স্মৃতি থেকে নয়), structured output ও validation, system prompt-এ "জানা না থাকলে 'আমি জানি না' বলো" নির্দেশনা, source/citation দেখানো, নিয়মিত evaluation, আর গুরুত্বপূর্ণ action-এ human approval। একটা কৌশলই যথেষ্ট নয় — এগুলো একসাথে defense in depth হিসেবে কাজ করে।</p>
+
+<h3>১৯) Keyword search থাকতে embedding-based semantic search কেন লাগে?</h3>
+<pre>DB-তে আছে:    "How can I generate an invoice?"
+User খুঁজলো:  "How do I create a bill?"
+<span class="c">// keyword search: মিল কম (শব্দ আলাদা)  |  embedding search: invoice ≈ bill, generate ≈ create → মিল বেশি</span></pre>
+<p><b>ব্যাখ্যা:</b> Keyword search শব্দ হুবহু মিললেই কাজ করে; ব্যবহারকারী ভিন্ন শব্দ ব্যবহার করলে (প্রতিশব্দ, ভিন্ন বাক্যগঠন) প্রাসঙ্গিক ডকুমেন্ট মিস হয়। Embedding টেক্সটকে numeric vector-এ রূপান্তর করে অর্থ ধারণ করে, তাই "invoice" আর "bill"-এর vector কাছাকাছি থাকে (Embeddings অধ্যায়ে বিস্তারিত)। তবে embedding সবসময় keyword search-এর বিকল্প নয় — error code, product ID বা নির্দিষ্ট নামের মতো exact match দরকার হলে keyword (BM25) এখনো ভালো, তাই প্রোডাকশনে প্রায়ই দুটো মিলিয়ে hybrid search ব্যবহার হয়।</p>
+
+<h3>২০) Vector database কি PostgreSQL/SQL Server-এর মতো traditional database replace করবে?</h3>
+<pre>Traditional DB:  WHERE CustomerId = 1001           <span class="c">// exact, structured ডেটা — Name, Balance</span>
+Vector search:   "customer refund policy"          <span class="c">// অর্থের দিক থেকে কাছাকাছি কনটেন্ট খোঁজা</span></pre>
+<p><b>ব্যাখ্যা:</b> না, দুটো ভিন্ন সমস্যার সমাধান। Customer balance, ledger entry, transaction-এর মতো structured, transactional ডেটার জন্য relational DB-ই সঠিক ও নির্ভরযোগ্য; vector DB দরকার semantic similarity search-এর জন্য (ডকুমেন্ট, policy, FAQ খোঁজা)। বাস্তবে একই সিস্টেমে দুটো একসাথে থাকা স্বাভাবিক — এজন্যই <b>PostgreSQL + pgvector</b> একটা জনপ্রিয় পছন্দ: একই database-এ business ডেটা ও embedding দুটোই রাখা যায়, আলাদা infrastructure ছাড়াই (Vector Database অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>২১) কোম্পানির নিজস্ব documentation-এর উপর প্রশ্নোত্তর (RAG) ASP.NET Core-এ কীভাবে বানাবেন?</h3>
+<pre><span class="c">// Ingestion (একবার/আপডেটে)</span>
+Documents → Chunk → Embedding → PostgreSQL + pgvector
+
+<span class="c">// Query (প্রতিটা প্রশ্নে)</span>
+User → ASP.NET Core API → AI Service → Query Embedding
+     → pgvector similarity search → Relevant chunks → LLM API → Answer</pre>
+<p><b>ব্যাখ্যা:</b> GPT-এর মতো সাধারণ মডেল আপনার কোম্পানির Voucher API doc, GL mapping rule, বা internal policy জানে না। তাই আগে ডকুমেন্টগুলোকে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয়; ব্যবহারকারী প্রশ্ন করলে সেই প্রশ্নও embed হয়, similarity search-এ সবচেয়ে প্রাসঙ্গিক chunk আসে, আর সেগুলো context হিসেবে prompt-এ জুড়ে LLM-কে পাঠানো হয় (RAG অধ্যায়ে বিস্তারিত)। .NET-এ AI Service একটা DI-friendly abstraction হিসেবে বানালে (অধ্যায় ১৭) provider বদলানো ও টেস্ট করা সহজ হয়। কোম্পানির ঘন ঘন বদলানো ডেটার জন্য সাধারণত fine-tuning-এর আগে RAG-ই প্রথম পছন্দ।</p>
+
+<h3>২২) AI-কে কি সরাসরি database query করতে দেওয়া উচিত, নাকি controlled tool দেওয়া উচিত?</h3>
+<pre><span class="c">// ঝুঁকিপূর্ণ: মডেল নিজে SQL বানিয়ে সরাসরি DB-তে চালাচ্ছে</span>
+LLM → "SELECT * FROM ledger ..." → Database
+
+<span class="c">// নিরাপদ: predefined, validated tool</span>
+LLM → GetTrialBalance(period) → আপনার .NET API (auth + validation) → Database</pre>
+<p><b>ব্যাখ্যা:</b> প্রোডাকশনে সাধারণত controlled tool-ই ভালো — <code>GetCustomer()</code>, <code>GetInvoice()</code>, <code>GetAccountBalance()</code>, <code>GetRevenue()</code>-এর মতো সীমিত সংখ্যক ফাংশন expose করা হয়, আর মডেল শুধু উপযুক্ত tool ও argument বেছে নেয়। এতে প্রতিটা call-এ আপনার কোডের authorization, input validation, ও audit log প্রযোজ্য হয়; মডেল ভুল করলে বা prompt injection-এর শিকার হলেও প্রভাব সীমিত থাকে (Least Privilege — Safety অধ্যায়ে আলোচিত)। মডেলকে raw SQL লেখার সুযোগ দিলে ভুল বা destructive query, অন্য user-এর ডেটা ফাঁস হওয়ার ঝুঁকি বাড়ে।</p>
+
+<h3>২৩) সাধারণ Chatbot আর AI Agent-এর পার্থক্য কী? একটা accounting উদাহরণ দিন।</h3>
+<pre>Chatbot:  Question → Answer
+
+Agent:    Goal → Plan → Tool চয়ন → Execute → Result দেখা → পরের Action → Final Answer</pre>
+<p><b>ব্যাখ্যা:</b> Chatbot সাধারণত এক ধাপে প্রশ্নের উত্তর দেয়; Agent একটা লক্ষ্য নিয়ে একাধিক ধাপে reasoning করে, tool ব্যবহার করে, প্রতিটা ফলাফল দেখে পরবর্তী পদক্ষেপ ঠিক করে (AI Agents অধ্যায়ে বিস্তারিত)। উদাহরণ: "১ লাখ টাকার বেশি overdue আছে এমন customer-দের সারসংক্ষেপ দাও" — Agent অনুরোধ বুঝে → Customer API কল করে → outstanding balance query করে → ১,০০,০০০-এর বেশি filter করে → customer detail আনে → সারসংক্ষেপ তৈরি করে। এখানে .NET REST API, PostgreSQL, Redis ও accounting domain-জ্ঞান একসাথে কাজে লাগে। প্রতিটা Agent-এ iteration limit ও permission সীমা রাখা জরুরি (প্রশ্ন ১১ দেখুন)।</p>
+
+<h3>২৪) Accounting/finance সিস্টেমে AI যেন সংখ্যা "বানিয়ে" না বলে, তা কীভাবে নিশ্চিত করবেন?</h3>
+<pre>system: তুমি একটা accounting assistant। কখনো financial সংখ্যা অনুমান করবে না।
+        তথ্য না পেলে "আমি জানি না" বলবে।
+
+User:  "আজকের মোট sales কত?"
+Flow:  LLM → GetSalesSummary() → Accounting API → PostgreSQL → সংখ্যা → LLM ব্যাখ্যা</pre>
+<p><b>ব্যাখ্যা:</b> মূল নীতি — সংখ্যা আসবে ডেটাবেস/API থেকে, মডেলের "মনে" থেকে নয়; মডেলের কাজ শুধু সেই যাচাইকৃত ফলাফল ভাষায় ব্যাখ্যা করা। এজন্য tool calling দিয়ে সংখ্যা আনা, ফলাফল schema দিয়ে validate করা (structured output), system prompt-এ স্পষ্ট নিষেধাজ্ঞা, উত্তরে source/তথ্যের উৎস দেখানো, আর payment/posting/delete-এর মতো উচ্চ-ঝুঁকির action-এ human approval রাখা। সঙ্গে golden dataset দিয়ে নিয়মিত evaluation চালিয়ে regression ধরা (Evaluation অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>২৫) একজন .NET/Backend engineer-এর AI শেখার সঠিক পথ কী, আর শুরুতে কী শেখা উচিত নয়?</h3>
+<pre>Week 1: LLM → Tokens → Context Window → Prompt Engineering → .NET থেকে LLM API call
+Week 2: Embeddings → pgvector → Similarity Search → RAG
+Week 3: Function Calling → .NET API Tools → সহজ Agent → Hallucination প্রতিরোধ
+
+Current: .NET Backend Engineer → AI-enabled .NET Engineer → AI Engineer / LLM Engineer</pre>
+<p><b>ব্যাখ্যা:</b> Backend engineer-এর জন্য বাজারমুখী পথ হলো AI researcher নয়, <b>AI Engineer / AI-enabled Backend Engineer</b> — অর্থাৎ বাস্তব business application-এর চারপাশে নির্ভরযোগ্য AI system বানানো, শুধু prompt লেখা নয়। প্রথম ২–৩ সপ্তাহের জন্য সবচেয়ে গুরুত্বপূর্ণ বিষয়: embeddings, vector DB, RAG, tool calling, agents ও hallucination প্রতিরোধ (প্রতিটার ওজন বেশি), আর LLM/token/context window ও prompt engineering ভিত্তি হিসেবে। শেষে একটা ছোট প্রজেক্ট বানানো ভালো — "Accounting AI Assistant": ASP.NET Core API → AI Assistant → (RAG + pgvector) ও (Tools + Accounting API + PostgreSQL)। শুরুতে এড়িয়ে চলুন: গভীর গাণিতিক ML, scratch থেকে LLM training, TensorFlow/PyTorch-এ গভীরে যাওয়া, data science, আর একসাথে ২০টা AI framework — এগুলো পরে শেখা যায় যদি ML/research-এর দিকে যেতে চান।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->
