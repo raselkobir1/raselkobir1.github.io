@@ -1787,6 +1787,14 @@ Streamable HTTP → remote/shared service, OAuth/token, একাধিক user<
 <pre>১. Host: tools/list → ২. LLM-কে প্রশ্ন + schema → ৩. LLM: tool call প্রস্তাব
 ৪. Host: tools/call → ৫. Server: DB query → ৬. result → LLM → ৭. চূড়ান্ত উত্তর</pre>
 <p><b>ব্যাখ্যা:</b> মডেল শুধু সিদ্ধান্ত নেয়; আসল execution MCP Server-এ হয়। একাধিক tool লাগলে ধাপ ৩–৬ ঘোরে — এটাই Agent loop (MCP অধ্যায়ের বাস্তব উদাহরণ)।</p>
+
+<h3>৬৭) RAG আর MCP-র পার্থক্য কী? কখন কোনটা ব্যবহার করবেন?</h3>
+<pre>RAG → কী তথ্য মডেলকে দেখাবেন  (ডকুমেন্ট খুঁজে prompt-এ বসানো)
+MCP → মডেল কীভাবে বাইরের সিস্টেমের সাথে যুক্ত হবে (tool/resource-এর standard protocol)
+
+"আমাদের refund policy কী?"            → RAG  (ডকুমেন্ট থেকে উত্তর)
+"Triplover-এর এই মাসের revenue কত?"   → MCP tool (live ডেটা, API/DB call)</pre>
+<p><b>ব্যাখ্যা:</b> RAG একটা <b>technique</b>: আগে ডকুমেন্ট embedding করে vector DB-তে রাখা হয়, প্রশ্নে প্রাসঙ্গিক chunk খুঁজে prompt-এ দিয়ে উত্তর তৈরি হয় — মূলত অসংগঠিত লেখার জ্ঞান, সাধারণত শুধু পড়া, আর ডেটা index করা সময় পর্যন্তই হালনাগাদ। MCP একটা <b>protocol</b>: tool-এর তালিকা (<code>tools/list</code>), চালানো (<code>tools/call</code>), resources ও prompts-এর standard পথ — live ডেটা ও action (query, invoice তৈরি, ইমেইল) এর জন্য, যেখানে side effect থাকতে পারে। দুটো প্রতিদ্বন্দ্বী নয়, একসাথে চলে: RAG-এর retrieval-ই একটা MCP tool হতে পারে (<code>search_policy_docs(query)</code>), ফলে একই assistant policy ডকুমেন্ট (RAG) ও live accounting ডেটা (MCP tool) দুটোই ব্যবহার করে। ডকুমেন্টভিত্তিক উত্তর হলে RAG, live ডেটা বা কাজ করাতে হলে MCP tool, পুরো assistant-এ দুটোই (RAG অধ্যায় ৯, MCP অধ্যায় ১১)।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->
