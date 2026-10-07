@@ -134,6 +134,7 @@ const pages = [
   {id:"vectordb",     icon:"🗂️", title:"Vector Database ও Retrieval"},
   {id:"rag",          icon:"📚", title:"RAG — Retrieval-Augmented Generation"},
   {id:"toolcalling",  icon:"🔧", title:"Function/Tool Calling ও Structured Output"},
+  {id:"mcp",           icon:"🔌", title:"MCP — Model Context Protocol"},
   {id:"agents",       icon:"🤖", title:"AI Agents ও Agentic Workflow"},
   {id:"multiagent",   icon:"🕸️", title:"Multi-Agent System ও Orchestration"},
   {id:"finetuning",   icon:"🎛️", title:"Fine-tuning বনাম RAG বনাম Prompting"},
@@ -709,8 +710,305 @@ while (true) {
 মডেল যে tool call "প্রস্তাব" করে তা অন্ধভাবে বিশ্বাস করে execute করা বিপজ্জনক — argument validate করা, destructive action-এ (delete, payment, email পাঠানো) মানুষের নিশ্চিতকরণ বা কমপক্ষে strict permission check রাখা আবশ্যক। এই বিষয় Safety অধ্যায়ে "Excessive Agency" নামে আরও বিস্তারিত আসবে।</div>
 </template>
 
+<template data-page="mcp">
+<h2 class="title">১১. MCP — Model Context Protocol</h2>
+<p class="lead">LLM নিজে শুধু তার context-এর ভেতরের তথ্য নিয়ে উত্তর দেয়। <span class="kw">MCP (Model Context Protocol)</span> হলো AI-এর জন্য একটা <b>standard উপায়</b>, যার মাধ্যমে AI বাইরের Tool, Data ও Service-এর সাথে কথা বলতে পারে — প্রতিটা integration আলাদা করে বানানোর বদলে একটাই সাধারণ নিয়মে।</p>
+
+<div class="callout why"><span class="tag">কেন এখনই শেখা দরকার</span>
+LLM কীভাবে কাজ করে তার একদম basic ধারণা থাকলেই MCP শেখা যায়। AI application development-এ MCP গুরুত্বপূর্ণ কারণ এটা AI-কে "শুধু কথা বলা" থেকে "আপনার application-এর capability ব্যবহার করা"-র দিকে নিয়ে যায়। .NET backend engineer-এর বিদ্যমান API, service ও database knowledge এখানে সরাসরি কাজে লাগে।</div>
+
+<h3>MCP আসলে কী?</h3>
+<p>সাধারণ LLM-এর প্রবাহ খুব সরল:</p>
+<div class="diagram"><pre>
+User → LLM → Answer        (শুধু মডেলের জানা context-এর ওপর ভিত্তি করে)
+</pre></div>
+<p>MCP ব্যবহার করলে AI বাইরের জগতের সাথে যুক্ত হতে পারে:</p>
+<div class="diagram"><pre>
+                   ┌── Database
+                   ├── GitHub
+User → AI/LLM → MCP ├── File System
+                   ├── Jira
+                   └── Custom .NET Service
+</pre></div>
+<p>অর্থাৎ AI শুধু কথা বলে না, প্রয়োজনে আপনার application-এর বিভিন্ন capability ব্যবহার করতে পারে।</p>
+
+<h3>একটা বাস্তব উদাহরণ — Accounting System</h3>
+<p>ধরুন আপনার Accounting API-তে Customer, Supplier, Voucher, Ledger, Trial Balance ও Balance Sheet আছে, আর আপনি AI-কে জিজ্ঞেস করতে চান: <i>"এই মাসে Triplover-এর total revenue কত?"</i> AI নিজে database থেকে এটা জানে না। MCP দিয়ে একটা tool expose করা যায়:</p>
+<pre>get_revenue(
+    customer = "Triplover",
+    fromDate = "2026-10-01",
+    toDate   = "2026-10-31"
+)</pre>
+<div class="diagram"><pre>
+User     "Triplover revenue কত?"
+  ↓
+LLM      বুঝলো → get_revenue tool ব্যবহার করতে হবে
+  ↓
+MCP
+  ↓
+Accounting API
+  ↓
+Database   → Revenue = 25,50,000
+  ↓
+LLM
+  ↓
+"Triplover-এর October revenue 25,50,000 BDT"
+</pre></div>
+
+<h3>MCP আর Function Calling কি একই?</h3>
+<p>না, কিন্তু খুব closely related। <b>Function Calling</b> হলো LLM-কে বলে দেওয়া "তোমার কাছে এই function আছে, দরকার হলে call করতে পারো" (<code>get_customer(id)</code>)। আর <b>MCP</b> হলো একটা standard protocol, যার মাধ্যমে বিভিন্ন AI client ও server-এর মধ্যে tools, resources ও context আদান-প্রদান করা যায়।</p>
+<table>
+<tr><th></th><th>Function Calling</th><th>MCP</th></tr>
+<tr><td>কী</td><td>মডেলের একটা ক্ষমতা/API ফিচার</td><td>AI ↔ Tools/Data/Services-এর standard যোগাযোগ-প্রোটোকল</td></tr>
+<tr><td>উত্তর দেয়</td><td>একটা tool কীভাবে call হবে</td><td>tool কোথায় থাকে, কীভাবে খুঁজে পাওয়া যায়, কীভাবে চালানো হয়</td></tr>
+<tr><td>পুনঃব্যবহার</td><td>প্রতিটা app-এ আলাদা করে tool schema লিখতে হয়</td><td>একবার MCP Server বানালে যেকোনো MCP-সাপোর্টেড client ব্যবহার করতে পারে</td></tr>
+</table>
+<div class="callout behind"><span class="tag">পর্দার পেছনে — দুটো একসাথে কাজ করে</span>
+MCP-তে Host-এর LLM আসলে function/tool calling-এর মাধ্যমেই সিদ্ধান্ত নেয় "কোন tool লাগবে"। MCP বলে দেয় সেই tool-এর তালিকা কোথা থেকে আসবে ও কীভাবে চালানো হবে। তাই MCP-কে শুধু "function calling" ভাবলে concept ছোট করে দেখা হয়।</div>
+
+<h3>MCP-র মূল অংশ — Host, Client, Server</h3>
+<table>
+<tr><th>অংশ</th><th>কাজ</th><th>উদাহরণ</th></tr>
+<tr><td><b>MCP Host</b></td><td>যে AI application ব্যবহারকারীর সাথে কথা বলে ও LLM চালায়</td><td>Claude Desktop, IDE assistant, আপনার নিজের chat app</td></tr>
+<tr><td><b>MCP Client</b></td><td>Host-এর ভেতরের অংশ; একটা MCP Server-এর সাথে ১:১ connection রাখে</td><td>Host প্রতিটা server-এর জন্য একটা client তৈরি করে</td></tr>
+<tr><td><b>MCP Server</b></td><td>Tools, Resources ও Prompts expose করে</td><td>আপনার .NET Accounting MCP Server, GitHub server, filesystem server</td></tr>
+</table>
+<div class="diagram"><pre>
+┌────────────── MCP Host (AI app) ──────────────┐
+│   LLM                                         │
+│    ↕                                          │
+│   MCP Client A ──────────→ MCP Server A (Accounting, .NET)
+│   MCP Client B ──────────→ MCP Server B (GitHub)
+└───────────────────────────────────────────────┘
+</pre></div>
+
+<h3>MCP-র ৩টি মূল primitive</h3>
+<h4>১. Tools — AI কাজ করতে পারবে</h4>
+<pre>create_invoice()
+get_customer()
+get_trial_balance()
+send_email()
+create_jira_ticket()</pre>
+<h4>২. Resources — AI তথ্য/context পড়তে পারবে</h4>
+<pre>customer://123
+accounting://chart-of-accounts
+file://invoice.pdf</pre>
+<h4>৩. Prompts — পুনঃব্যবহারযোগ্য instruction/template</h4>
+<pre>analyze_monthly_financial_report</pre>
+<table>
+<tr><th>Primitive</th><th>কে নিয়ন্ত্রণ করে</th><th>সাধারণত কী জন্য</th></tr>
+<tr><td>Tools</td><td>মডেল (সিদ্ধান্ত নিয়ে call করে)</td><td>action ও query — side effect থাকতে পারে</td></tr>
+<tr><td>Resources</td><td>application/ব্যবহারকারী (কী context-এ যাবে ঠিক করে)</td><td>read-only ডেটা, ফাইল, রেকর্ড</td></tr>
+<tr><td>Prompts</td><td>ব্যবহারকারী (বেছে নেয়)</td><td>প্রস্তুত workflow template</td></tr>
+</table>
+
+<h3>Transport — Client ও Server কীভাবে যোগাযোগ করে</h3>
+<p>MCP-র বার্তা JSON-RPC 2.0 ফরম্যাটে চলে (<code>initialize</code>, <code>tools/list</code>, <code>tools/call</code> ইত্যাদি method)। বহনের পথ (transport) প্রধানত দুটো:</p>
+<table>
+<tr><th>Transport</th><th>কখন</th></tr>
+<tr><td><b>stdio</b></td><td>Server একই machine-এ child process হিসেবে চলে; local tool, desktop app-এর জন্য সহজ</td></tr>
+<tr><td><b>Streamable HTTP</b></td><td>Server remote/shared service হিসেবে চলে; একাধিক ব্যবহারকারী, authentication লাগে, ASP.NET Core-এ স্বাভাবিক</td></tr>
+</table>
+<pre><span class="c">// Client → Server: কোন tool আছে?</span>
+{ "jsonrpc": "2.0", "id": 1, "method": "tools/list" }
+
+<span class="c">// Client → Server: tool চালাও</span>
+{ "jsonrpc": "2.0", "id": 2, "method": "tools/call",
+  "params": { "name": "get_revenue",
+              "arguments": { "customer": "Triplover", "fromDate": "2026-10-01", "toDate": "2026-10-31" } } }</pre>
+
+<h3>C#/.NET-এ একটা MCP Server</h3>
+<pre><span class="c">// dotnet add package ModelContextProtocol   (+ Microsoft.Extensions.Hosting)</span>
+var builder = Host.CreateApplicationBuilder(args);
+builder.Services
+    .AddMcpServer()
+    .WithStdioServerTransport()
+    .WithToolsFromAssembly();      <span class="c">// [McpServerTool] চিহ্নিত মেথড খুঁজে নেয়</span>
+builder.Services.AddScoped&lt;IAccountingService, AccountingService&gt;();
+await builder.Build().RunAsync();
+
+[McpServerToolType]
+public class AccountingTools(IAccountingService accounting)
+{
+    [McpServerTool, Description("একটা customer-এর নির্দিষ্ট সময়ের মোট revenue ফেরত দেয়। শুধু পড়ে।")]
+    public async Task&lt;decimal&gt; GetRevenue(
+        [Description("Customer-এর নাম, যেমন Triplover")] string customer,
+        [Description("শুরুর তারিখ yyyy-MM-dd")] DateOnly fromDate,
+        [Description("শেষের তারিখ yyyy-MM-dd")] DateOnly toDate)
+        =&gt; await accounting.GetRevenueAsync(customer, fromDate, toDate);
+
+    [McpServerTool, Description("একটা মাসের Trial Balance JSON হিসেবে ফেরত দেয়।")]
+    public Task&lt;string&gt; GetTrialBalance(int year, int month)
+        =&gt; accounting.GetTrialBalanceJsonAsync(year, month);
+}</pre>
+<p>Remote service হিসেবে চালাতে ASP.NET Core-এ <code>ModelContextProtocol.AspNetCore</code> package নিয়ে <code>AddMcpServer().WithHttpTransport().WithToolsFromAssembly()</code> ও <code>app.MapMcp()</code> ব্যবহার করা হয়। SDK দ্রুত বদলায়, তাই package-এর নাম ও API বাস্তবায়নের আগে বর্তমান ডকুমেন্টেশন মিলিয়ে নিন।</p>
+<div class="callout best"><span class="tag">Best practice — ভালো tool বানানো</span>
+Tool-এর <code>Description</code> মডেল পড়েই বোঝে কখন ব্যবহার করবে — তাই স্পষ্ট লিখুন (কী করে, কখন ব্যবহার করবে, side effect আছে কিনা)। Tool সংখ্যা কম ও লক্ষ্যনির্দিষ্ট রাখুন; ডজন ডজন প্রায়-একই tool মডেলকে বিভ্রান্ত করে ও context ফুলিয়ে ফেলে। read-only ও write tool আলাদা করুন।</div>
+
+<h3>Security — MCP-তে সবচেয়ে বেশি গুরুত্বপূর্ণ</h3>
+<div class="callout mistake"><span class="tag">ভুল — MCP Server-কে "অভ্যন্তরীণ তাই নিরাপদ" ভাবা</span>
+MCP Server আপনার database ও business action-এর দরজা। মডেলের চাওয়া argument বিশ্বাস করে execute করা বিপজ্জনক (Safety অধ্যায়ের Excessive Agency ও Prompt Injection)।</div>
+<table>
+<tr><th>ঝুঁকি</th><th>প্রতিরোধ</th></tr>
+<tr><td>Authentication/Authorization</td><td>Remote server-এ OAuth/token; tool-এর ভেতরে ব্যবহারকারীর আসল permission যাচাই — AI-র নামে সব access দেবেন না</td></tr>
+<tr><td>Destructive action</td><td>delete/payment/email-এ human confirmation বা approval step; least privilege</td></tr>
+<tr><td>Prompt Injection</td><td>Tool/resource-এর ফেরত ডেটাও untrusted — তাতে লুকানো instruction থাকতে পারে; ডেটা ও instruction আলাদা রাখুন</td></tr>
+<tr><td>অবিশ্বস্ত third-party server</td><td>যেকোনো MCP server install করবেন না; উৎস যাচাই করুন, tool description পড়ুন, sandbox-এ চালান</td></tr>
+<tr><td>Input validation</td><td>Argument validate (type, range, SQL/path injection) — parameterized query ব্যবহার করুন</td></tr>
+<tr><td>Audit</td><td>কে, কোন tool, কী argument দিয়ে চালালো — লগ রাখুন</td></tr>
+</table>
+
+<h3>Learning roadmap-এ MCP কোথায়</h3>
+<div class="diagram"><pre>
+1. LLM Fundamentals
+      ↓
+2. Prompt Engineering
+      ↓
+3. Tokens + Context Window
+      ↓
+4. Embeddings
+      ↓
+5. RAG
+      ↓
+6. Function / Tool Calling
+      ↓
+7. MCP ⭐
+      ↓
+8. AI Agents
+      ↓
+9. Production AI
+</pre></div>
+<p>MCP ও Tool Calling-এর পরে Agent শেখা বেশি যুক্তিসঙ্গত, কারণ Agent মূলত বিভিন্ন tool ব্যবহার করে reasoning + action নেয়:</p>
+<div class="diagram"><pre>
+LLM → Reasoning → Tool selection → MCP → Tool execution → Result → LLM → Final answer
+</pre></div>
+<table>
+<tr><th>Phase</th><th>কী শিখবেন</th></tr>
+<tr><td>১ — AI basic</td><td>LLM, Token, Context Window, Prompt, System/User message, Temperature, Hallucination</td></tr>
+<tr><td>২ — AI Application</td><td>Structured output, Embeddings, Vector DB, RAG, Function calling</td></tr>
+<tr><td>৩ — MCP ⭐</td><td>Host, Client, Server, Tools, Resources, Prompts, Transport — তারপর নিজে C#/.NET দিয়ে MCP Server বানান</td></tr>
+<tr><td>৪ — Agents</td><td>Reasoning + tool selection + MCP execution</td></tr>
+</table>
+
+<h3>প্র্যাকটিস প্রজেক্ট — "AI Accounting Assistant"</h3>
+<p>আপনার বিদ্যমান Accounting জ্ঞান কাজে লাগিয়ে একটা project করলে .NET + PostgreSQL + Accounting + AI + MCP সব এক জায়গায় আসে:</p>
+<table>
+<tr><th>ব্যবহারকারীর প্রশ্ন</th><th>MCP tool</th></tr>
+<tr><td>"আজকে total sales কত?"</td><td><code>get_sales_report()</code></td></tr>
+<tr><td>"এই customer-এর outstanding কত?"</td><td><code>get_customer_outstanding()</code></td></tr>
+<tr><td>"এই মাসের Trial Balance তৈরি করো"</td><td><code>get_trial_balance()</code></td></tr>
+</table>
+<div class="diagram"><pre>
+User → LLM → MCP → get_sales_report() → Accounting API → PostgreSQL → Result → LLM → উত্তর
+</pre></div>
+<p>প্রথমে শুধু read-only tool দিয়ে শুরু করুন; voucher তৈরির মতো write tool পরে যোগ করুন, confirmation step-সহ।</p>
+<h3>সব জোড়া লাগানো — MCP + LLM + Tool Calling একসাথে (বাস্তব উদাহরণ)</h3>
+<p>তিনটা জিনিসের ভূমিকা আলাদা করে মনে রাখুন: <b>LLM</b> সিদ্ধান্ত নেয় (কোন tool, কী argument), <b>Tool Calling</b> হলো সেই সিদ্ধান্ত প্রকাশের ফরম্যাট, আর <b>MCP</b> হলো tool-গুলো খুঁজে পাওয়া ও চালানোর standard পথ। চূড়ান্ত architecture:</p>
+<div class="diagram"><pre>
+┌─────────── আপনার AI Host (ASP.NET Core Chat API) ───────────┐
+│                                                             │
+│  User ──► Chat Endpoint ──► IChatClient (LLM + FunctionInvocation)
+│                                   │  ▲                      │
+│              (২) tool call প্রস্তাব │  │ (৫) tool result      │
+│                                   ▼  │                      │
+│                              MCP Client                     │
+└───────────────────────────────────┬─────────────────────────┘
+                                    │ JSON-RPC (stdio / HTTP)
+                                    ▼
+                          MCP Server (.NET) ── Accounting Tools
+                                    │  auth + validation + audit
+                                    ▼
+                       Accounting Service ──► PostgreSQL
+</pre></div>
+
+<h4>ধাপ ১ — MCP Server (Accounting tools expose করা)</h4>
+<p>উপরের <code>AccountingTools</code> class-ই আপনার Server। এটা আলাদা process/service, নিজের auth ও validation সহ।</p>
+
+<h4>ধাপ ২ — Host-এ MCP Client যুক্ত করে tool-গুলো LLM-কে দেওয়া</h4>
+<pre><span class="c">// Host application — Server চালু করে tool-এর তালিকা আনে</span>
+var transport = new StdioClientTransport(new()
+{
+    Name = "accounting",
+    Command = "dotnet",
+    Arguments = ["run", "--project", "AccountingMcpServer"]
+});
+await using var mcp = await McpClient.CreateAsync(transport);
+
+IList&lt;McpClientTool&gt; tools = await mcp.ListToolsAsync();   <span class="c">// tools/list</span>
+
+<span class="c">// LLM client — tool-calling loop framework নিজেই চালায়</span>
+IChatClient chat = new ChatClientBuilder(innerLlmClient)
+    .UseFunctionInvocation()
+    .Build();
+
+var history = new List&lt;ChatMessage&gt;
+{
+    new(ChatRole.System, "তুমি একটা Accounting সহকারী। সংখ্যা সবসময় tool থেকে নাও, অনুমান করো না। শুধু পড়ার tool ব্যবহার করো।"),
+    new(ChatRole.User, "Triplover-এর এই মাসের revenue কত?")
+};
+
+var reply = await chat.GetResponseAsync(history, new ChatOptions { Tools = [.. tools] });
+Console.WriteLine(reply.Text);</pre>
+<p>এখানে <code>McpClientTool</code> আসলে একটা সাধারণ AI function — তাই যে <code>UseFunctionInvocation()</code> আপনি Tool Calling অধ্যায়ে দেখেছেন, সেটাই MCP tool-ও চালায়। API-র নাম (যেমন <code>McpClient.CreateAsync</code> বনাম পুরনো <code>McpClientFactory</code>) সংস্করণভেদে বদলায়, বর্তমান ডকুমেন্টেশন দেখে নিন।</p>
+
+<h4>ধাপ ৩ — একটা প্রশ্নের সম্পূর্ণ trace</h4>
+<table>
+<tr><th>#</th><th>কে</th><th>কী ঘটে</th></tr>
+<tr><td>১</td><td>Host → MCP Server</td><td>শুরুতে <code>initialize</code> ও <code>tools/list</code> — Server জানায় তার কাছে <code>get_revenue</code>, <code>get_trial_balance</code> আছে (নাম, description, schema)</td></tr>
+<tr><td>২</td><td>Host → LLM</td><td>System prompt + ব্যবহারকারীর প্রশ্ন + tool schema পাঠানো হয়</td></tr>
+<tr><td>৩</td><td>LLM → Host</td><td>উত্তর নয়, tool call প্রস্তাব: <code>get_revenue(customer="Triplover", fromDate="2026-10-01", toDate="2026-10-31")</code></td></tr>
+<tr><td>৪</td><td>Host → MCP Server</td><td><code>tools/call</code> পাঠায় (এখানে policy check, user permission, দরকারে confirmation)</td></tr>
+<tr><td>৫</td><td>MCP Server → DB</td><td>validate → parameterized query → ফলাফল <code>2550000</code></td></tr>
+<tr><td>৬</td><td>MCP Server → Host</td><td>result ফেরত</td></tr>
+<tr><td>৭</td><td>Host → LLM</td><td>tool result যোগ করে আবার call</td></tr>
+<tr><td>৮</td><td>LLM → User</td><td>"Triplover-এর October revenue ২৫,৫০,০০০ BDT।"</td></tr>
+</table>
+<div class="callout behind"><span class="tag">পর্দার পেছনে — কে কোনটা করে</span>
+মডেল কোনো tool নিজে চালায় না (ধাপ ৩ শুধু prediction)। আসল execution ঘটে MCP Server-এ (ধাপ ৪–৬), যেখানে আপনার code ও security নিয়ম চলে। একটা প্রশ্নে একাধিক tool লাগলে ধাপ ৩–৭ কয়েকবার ঘোরে — এটাই Agent loop-এর ভিত্তি।</div>
+
+<h4>RAG-কেও MCP-র ভেতরে আনা যায়</h4>
+<p>"কোম্পানির accounting policy কী?" ধরনের প্রশ্নে আরেকটা tool বা resource রাখুন: <code>search_policy_docs(query)</code> — ভেতরে embedding + pgvector search চলে, MCP Server শুধু top chunk ফেরত দেয়। এভাবে একই AI Assistant একসাথে <b>live ডেটা</b> (tool) ও <b>ডকুমেন্ট জ্ঞান</b> (RAG) দুটোই ব্যবহার করে।</p>
+
+<h3>পূর্ণ Roadmap — শূন্য থেকে Production AI Agent পর্যন্ত</h3>
+<table>
+<tr><th>ধাপ</th><th>বিষয়</th><th>এই কোর্সের অধ্যায়</th><th>হাতে-কলমে কাজ</th></tr>
+<tr><td>১</td><td>LLM Fundamentals, Token, Context Window, Hallucination</td><td>১, ৩</td><td>API দিয়ে একটা প্রশ্ন পাঠান; temperature বদলে দেখুন</td></tr>
+<tr><td>২</td><td>Prompt Engineering, Structured Output</td><td>৪, ৫, ৬, ১০</td><td>Invoice text থেকে JSON বের করুন</td></tr>
+<tr><td>৩</td><td>Embeddings, Vector DB</td><td>৭, ৮</td><td>pgvector-এ ডকুমেন্ট জমা ও similarity search</td></tr>
+<tr><td>৪</td><td>RAG</td><td>৯</td><td>Policy ডকুমেন্টে Q&amp;A, citation সহ</td></tr>
+<tr><td>৫</td><td>Function/Tool Calling</td><td>১০</td><td>নিজে tool-calling loop বানান</td></tr>
+<tr><td>৬</td><td><b>MCP</b> ⭐</td><td>১১ (এই অধ্যায়)</td><td>.NET MCP Server বানান, Host থেকে সংযোগ</td></tr>
+<tr><td>৭</td><td>AI Agents, Multi-agent</td><td>১২, ১৩</td><td>একাধিক tool মিলিয়ে ধাপে-ধাপে কাজ করা agent</td></tr>
+<tr><td>৮</td><td>Evaluation, Safety</td><td>১৫, ১৬</td><td>Golden dataset, injection test, approval step</td></tr>
+<tr><td>৯</td><td>Production — cost, latency, observability</td><td>১৭, ১৮</td><td>Caching, rate limit, tracing, auth সহ deploy</td></tr>
+</table>
+
+<h4>৮ সপ্তাহের প্র্যাকটিস পরিকল্পনা — AI Accounting Assistant</h4>
+<table>
+<tr><th>সপ্তাহ</th><th>লক্ষ্য</th></tr>
+<tr><td>১</td><td>LLM API + prompt + structured output; একটা console chat</td></tr>
+<tr><td>২</td><td>Embeddings + pgvector; policy ডকুমেন্ট index</td></tr>
+<tr><td>৩</td><td>RAG chat — citation, "জানি না" আচরণ</td></tr>
+<tr><td>৪</td><td>Tool calling — <code>get_sales_report</code> সরাসরি app-এর ভেতরে</td></tr>
+<tr><td>৫</td><td>একই tool-গুলো আলাদা MCP Server-এ সরানো (stdio, তারপর HTTP)</td></tr>
+<tr><td>৬</td><td>Resources/Prompts যোগ; Server-এ auth, validation, audit log</td></tr>
+<tr><td>৭</td><td>Agent — একাধিক tool (outstanding → trial balance → সারাংশ); iteration সীমা, write tool-এ confirmation</td></tr>
+<tr><td>৮</td><td>Evaluation (golden প্রশ্ন), injection টেস্ট, tracing, cost সীমা, deploy</td></tr>
+</table>
+
+<h3>সাধারণ ভুল ও সমস্যা</h3>
+<table>
+<tr><th>লক্ষণ</th><th>সম্ভাব্য কারণ</th><th>সমাধান</th></tr>
+<tr><td>মডেল tool ব্যবহারই করে না</td><td>Description অস্পষ্ট বা System prompt বলেনি</td><td>Description-এ "কখন ব্যবহার করবে" লিখুন</td></tr>
+<tr><td>ভুল tool বা ভুল argument</td><td>অনেক মিল-থাকা tool; parameter-এর বর্ণনা নেই</td><td>Tool কমান, প্রতিটা parameter-এ <code>Description</code> ও উদাহরণ দিন</td></tr>
+<tr><td>Context দ্রুত ভরে যায়</td><td>অনেক tool schema + বড় result</td><td>প্রয়োজনীয় tool-ই দিন; result সংক্ষিপ্ত/pagination করুন</td></tr>
+<tr><td>Connection/stdio ব্যর্থ</td><td>Server stdout-এ অন্য কিছু লিখছে</td><td>stdio Server-এ log পাঠান stderr-এ, stdout শুধু protocol-এর জন্য</td></tr>
+<tr><td>Agent অনন্ত loop</td><td>iteration সীমা নেই</td><td>সর্বোচ্চ ধাপ ও timeout সেট করুন</td></tr>
+</table>
+</template>
+
 <template data-page="agents">
-<h2 class="title">১১. AI Agents ও Agentic Workflow</h2>
+<h2 class="title">১২. AI Agents ও Agentic Workflow</h2>
 <p class="lead">যখন একটা LLM নিজে থেকে একাধিক ধাপে চিন্তা করে, tool ব্যবহার করে, ফলাফল দেখে পরবর্তী পদক্ষেপ ঠিক করে — মানুষ প্রতিটা ধাপে হস্তক্ষেপ না করেই — তখন সেটাকে একটা <span class="kw">AI Agent</span> বলা হয়।</p>
 
 <h3>Agent বনাম সাধারণ LLM Call — মূল পার্থক্য</h3>
@@ -777,7 +1075,7 @@ Timeout, network ব্যর্থতা বা মডেলের পুনর
 </template>
 
 <template data-page="multiagent">
-<h2 class="title">১২. Multi-Agent System ও Orchestration</h2>
+<h2 class="title">১৩. Multi-Agent System ও Orchestration</h2>
 <p class="lead">একটা একক agent যখন খুব বেশি দায়িত্ব সামলাতে গিয়ে বিভ্রান্ত হয়ে যায়, তখন কাজটাকে ভাগ করে একাধিক বিশেষায়িত agent-এর মধ্যে সমন্বয় করাটাই যুক্তিসঙ্গত হয়ে ওঠে।</p>
 
 <h3>কেন একটা Single Agent সবসময় যথেষ্ট নয়</h3>
@@ -814,7 +1112,7 @@ Agent loop, tool-call parsing, retry, state management — এগুলো ন�
 </template>
 
 <template data-page="finetuning">
-<h2 class="title">১৩. Fine-tuning বনাম RAG বনাম Prompting</h2>
+<h2 class="title">১৪. Fine-tuning বনাম RAG বনাম Prompting</h2>
 <p class="lead">AI Engineering-এ সবচেয়ে বেশি ভুল হওয়া সিদ্ধান্তগুলোর একটা: "মডেলকে আমার ডেটা শেখানোর জন্য fine-tune করব"। বেশিরভাগ ক্ষেত্রেই এটা ভুল টুল বাছাই।</p>
 
 <h3>তিনটা পদ্ধতির মূল পার্থক্য</h3>
@@ -849,7 +1147,7 @@ Fine-tuning মূলত মডেলকে <b>নতুন প্যাটা�
 </template>
 
 <template data-page="evaluation">
-<h2 class="title">১৪. Evaluation ও Testing — LLM App Quality</h2>
+<h2 class="title">১৫. Evaluation ও Testing — LLM App Quality</h2>
 <p class="lead">একটা প্রথাগত software-এ unit test-এর input/output নির্দিষ্ট (deterministic)। একটা LLM feature-এ output প্রতিবার সামান্য বদলাতে পারে — তাই "কীভাবে টেস্ট করব" প্রশ্নটার উত্তর ভিন্নভাবে ভাবতে হয়।</p>
 
 <h3>Offline Evaluation — Golden Dataset দিয়ে</h3>
@@ -889,7 +1187,7 @@ Fine-tuning মূলত মডেলকে <b>নতুন প্যাটা�
 </template>
 
 <template data-page="safety">
-<h2 class="title">১৫. Safety, Security ও Guardrails</h2>
+<h2 class="title">১৬. Safety, Security ও Guardrails</h2>
 <p class="lead">LLM-চালিত ফিচার প্রথাগত software-এর তুলনায় নতুন ধরনের আক্রমণ-তল (attack surface) খুলে দেয় — কারণ ইনপুট নিজেই "কোড"-এর মতো আচরণ প্রভাবিত করতে পারে। OWASP-এর LLM Top 10 এই ঝুঁকিগুলো ক্যাটাগরি করে।</p>
 
 <h3>OWASP Top 10 for LLM Applications (সংক্ষিপ্ত)</h3>
@@ -930,7 +1228,7 @@ Tool-calling বা JSON mode-এর মতো structured API দিয়ে ou
 </template>
 
 <template data-page="production">
-<h2 class="title">১৬. Production Engineering — Latency, Cost, Caching</h2>
+<h2 class="title">১৭. Production Engineering — Latency, Cost, Caching</h2>
 <p class="lead">একটা LLM feature demo-তে ভালো কাজ করা আর হাজার হাজার ব্যবহারকারীর জন্য সাশ্রয়ী, দ্রুত, নির্ভরযোগ্যভাবে চালানো — দুইটা সম্পূর্ণ আলাদা চ্যালেঞ্জ।</p>
 
 <h3>Streaming — কেন perceived latency আসল latency-এর চেয়ে গুরুত্বপূর্ণ</h3>
@@ -987,7 +1285,7 @@ Queue একটা buffer — হঠাৎ traffic spike হলেও LLM provid
 </template>
 
 <template data-page="integration">
-<h2 class="title">১৭. Backend/.NET Integration — বাস্তবে AI Feature বসানো</h2>
+<h2 class="title">১৮. Backend/.NET Integration — বাস্তবে AI Feature বসানো</h2>
 <p class="lead">এখন পর্যন্ত শেখা সব ধারণা একটা বাস্তব ব্যাকএন্ড architecture-এ কীভাবে বসে — এই অধ্যায়ে সেটাই সংযুক্ত করা হবে, .NET-কেন্দ্রিক দৃষ্টিভঙ্গিতে।</p>
 
 <h3>Architecture Pattern — কখনো Frontend থেকে সরাসরি নয়</h3>
@@ -1046,7 +1344,7 @@ API key কখনো <code>appsettings.json</code>-এ commit করবেন �
 <p>প্রতিটা unit test-এ আসল LLM API call করা ধীর, ব্যয়বহুল, এবং flaky (output প্রতিবার বদলাতে পারে)। এর বদলে <code>IChatCompletionService</code> interface-টা mock করে বিজনেস লজিক (যেমন "AI response থেকে সঠিক field extract হচ্ছে কিনা") deterministic ভাবে টেস্ট করুন। প্রকৃত prompt quality/model behavior টেস্ট করার জন্য আলাদা, কম ঘনঘন চলা eval suite রাখুন (Evaluation অধ্যায়ে বর্ণিত golden dataset পদ্ধতিতে) — এই দুই স্তরের টেস্টিং একে অপরের বিকল্প নয়, পরিপূরক।</p>
 
 <h3>সবকিছু একসাথে — একটা এন্ড-টু-এন্ড ফিচারের চিত্র</h3>
-<p>ধরুন আপনি একটা "ডকুমেন্ট থেকে প্রশ্নোত্তর" ফিচার বানাচ্ছেন একটা ASP.NET Core backend-এ। পুরো প্রবাহ এই কোর্সের প্রতিটা অধ্যায়কে ছুঁয়ে যায়: ডকুমেন্ট আপলোড হলে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয় (অধ্যায় ৭-৯); ব্যবহারকারীর প্রশ্ন এলে backend সেই প্রশ্ন embed করে প্রাসঙ্গিক chunk retrieve করে (অধ্যায় ৮); একটা grounded prompt বানিয়ে LLM-কে পাঠানো হয়, context engineering নীতি মেনে শুধু প্রাসঙ্গিক অংশ কিউরেট করে পাঠানো হয় (অধ্যায় ৬), প্রয়োজনে একটা tool দিয়ে অতিরিক্ত ডেটা আনা হয় (অধ্যায় ৪,৫,১০); output নিরাপত্তা ও PII guardrail দিয়ে যাচাই করা হয় (অধ্যায় ১৫); response streaming-এ ফেরত পাঠানো হয়, আর প্রতিটা call-এর token/cost/latency log হয় (অধ্যায় ১৬); নিয়মিত golden dataset-এর উপর eval চালিয়ে regression যাচাই করা হয় (অধ্যায় ১৪)। এই পুরো চিত্রটাই আসলে "AI Engineering" মানে কী তার সংক্ষিপ্ত রূপ — একটা LLM-কে ঘিরে বানানো নির্ভরযোগ্য, পর্যবেক্ষণযোগ্য, নিরাপদ software।</p>
+<p>ধরুন আপনি একটা "ডকুমেন্ট থেকে প্রশ্নোত্তর" ফিচার বানাচ্ছেন একটা ASP.NET Core backend-এ। পুরো প্রবাহ এই কোর্সের প্রতিটা অধ্যায়কে ছুঁয়ে যায়: ডকুমেন্ট আপলোড হলে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয় (অধ্যায় ৭-৯); ব্যবহারকারীর প্রশ্ন এলে backend সেই প্রশ্ন embed করে প্রাসঙ্গিক chunk retrieve করে (অধ্যায় ৮); একটা grounded prompt বানিয়ে LLM-কে পাঠানো হয়, context engineering নীতি মেনে শুধু প্রাসঙ্গিক অংশ কিউরেট করে পাঠানো হয় (অধ্যায় ৬), প্রয়োজনে একটা tool দিয়ে অতিরিক্ত ডেটা আনা হয় (অধ্যায় ৪,৫,১০,১১); output নিরাপত্তা ও PII guardrail দিয়ে যাচাই করা হয় (অধ্যায় ১৬); response streaming-এ ফেরত পাঠানো হয়, আর প্রতিটা call-এর token/cost/latency log হয় (অধ্যায় ১৭); নিয়মিত golden dataset-এর উপর eval চালিয়ে regression যাচাই করা হয় (অধ্যায় ১৫)। এই পুরো চিত্রটাই আসলে "AI Engineering" মানে কী তার সংক্ষিপ্ত রূপ — একটা LLM-কে ঘিরে বানানো নির্ভরযোগ্য, পর্যবেক্ষণযোগ্য, নিরাপদ software।</p>
 
 <h3>Microsoft.Extensions.AI ও Semantic Kernel — .NET-এ কোনটা কখন</h3>
 <p>উপরের হাতে-লেখা <code>IChatCompletionService</code> abstraction ধারণা বোঝার জন্য ভালো, কিন্তু বাস্তব প্রজেক্টে .NET ইকোসিস্টেমের নিজস্ব লাইব্রেরি ব্যবহার করা বেশি যুক্তিসঙ্গত। <span class="kw">Microsoft.Extensions.AI</span> একটা হালকা, provider-নিরপেক্ষ abstraction (<code>IChatClient</code>, embedding generator) দেয় এবং middleware-এর মতো function invocation, caching, telemetry যোগ করা যায়। <span class="kw">Semantic Kernel</span> তার উপরে plugin, agent ও orchestration-এর মতো বেশি ফিচার দেয়।</p>
@@ -1095,7 +1393,7 @@ Worker-এ concurrency সীমিত রাখুন (provider rate limit ম�
 </template>
 
 <template data-page="interview">
-<h2 class="title">১৮. Interview প্রশ্নোত্তর</h2>
+<h2 class="title">১৯. Interview প্রশ্নোত্তর</h2>
 <p class="lead">AI Engineering ইন্টারভিউতে বারবার আসা প্রশ্ন — basic ধারণা থেকে শুরু করে architecture-level trade-off পর্যন্ত, এই কোর্সের প্রতিটা অধ্যায় থেকে বাছাই করা।</p>
 
 <h3>১) একটা LLM আসলে কী করে, আর সে কি নিজে থেকে conversation "মনে রাখে"?</h3>
@@ -1197,7 +1495,7 @@ Documents → Chunk → Embedding → PostgreSQL + pgvector
 <span class="c">// Query (প্রতিটা প্রশ্নে)</span>
 User → ASP.NET Core API → AI Service → Query Embedding
      → pgvector similarity search → Relevant chunks → LLM API → Answer</pre>
-<p><b>ব্যাখ্যা:</b> GPT-এর মতো সাধারণ মডেল আপনার কোম্পানির Voucher API doc, GL mapping rule, বা internal policy জানে না। তাই আগে ডকুমেন্টগুলোকে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয়; ব্যবহারকারী প্রশ্ন করলে সেই প্রশ্নও embed হয়, similarity search-এ সবচেয়ে প্রাসঙ্গিক chunk আসে, আর সেগুলো context হিসেবে prompt-এ জুড়ে LLM-কে পাঠানো হয় (RAG অধ্যায়ে বিস্তারিত)। .NET-এ AI Service একটা DI-friendly abstraction হিসেবে বানালে (অধ্যায় ১৭) provider বদলানো ও টেস্ট করা সহজ হয়। কোম্পানির ঘন ঘন বদলানো ডেটার জন্য সাধারণত fine-tuning-এর আগে RAG-ই প্রথম পছন্দ।</p>
+<p><b>ব্যাখ্যা:</b> GPT-এর মতো সাধারণ মডেল আপনার কোম্পানির Voucher API doc, GL mapping rule, বা internal policy জানে না। তাই আগে ডকুমেন্টগুলোকে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয়; ব্যবহারকারী প্রশ্ন করলে সেই প্রশ্নও embed হয়, similarity search-এ সবচেয়ে প্রাসঙ্গিক chunk আসে, আর সেগুলো context হিসেবে prompt-এ জুড়ে LLM-কে পাঠানো হয় (RAG অধ্যায়ে বিস্তারিত)। .NET-এ AI Service একটা DI-friendly abstraction হিসেবে বানালে (অধ্যায় ১৮) provider বদলানো ও টেস্ট করা সহজ হয়। কোম্পানির ঘন ঘন বদলানো ডেটার জন্য সাধারণত fine-tuning-এর আগে RAG-ই প্রথম পছন্দ।</p>
 
 <h3>২২) AI-কে কি সরাসরি database query করতে দেওয়া উচিত, নাকি controlled tool দেওয়া উচিত?</h3>
 <pre><span class="c">// ঝুঁকিপূর্ণ: মডেল নিজে SQL বানিয়ে সরাসরি DB-তে চালাচ্ছে</span>
@@ -1443,6 +1741,52 @@ var reply = await client.GetResponseAsync("জানুয়ারি ২০২
 <h3>৫৮) Multi-agent system কখন সত্যিই দরকার, আর কখন single agent-ই ভালো?</h3>
 <pre>Orchestrator → [Research Agent] [SQL/Data Agent] [Writer Agent]  → সমন্বিত উত্তর</pre>
 <p><b>ব্যাখ্যা:</b> Multi-agent তখনই লাভজনক যখন কাজ স্পষ্টভাবে আলাদা বিশেষায়িত অংশে ভাগ হয় (আলাদা tool সেট, আলাদা prompt/context), বা একটা agent-এর context একাধিক বিষয়ে ফেঁপে গিয়ে মান কমছে, বা অংশগুলো সমান্তরালে চালানো যায়। দাম হলো বাড়তি LLM call (cost ও latency), agent-এর মধ্যে তথ্য হারানোর ঝুঁকি, আর ডিবাগ কঠিন হওয়া। তাই একটা ভালো tool সেট-সহ single agent দিয়ে শুরু করুন, বাস্তব bottleneck দেখলে তবেই ভাগ করুন (Multi-Agent অধ্যায়ে Orchestrator/Supervisor pattern দেখুন)।</p>
+
+<h3>৫৯) MCP কী, আর কেন দরকার?</h3>
+<pre>User → LLM(Host) → MCP Client → MCP Server → API / DB / Files</pre>
+<p><b>ব্যাখ্যা:</b> MCP (Model Context Protocol) হলো AI application ও বাইরের tool/data/service-এর মধ্যে যোগাযোগের একটা open standard। MCP ছাড়া প্রতিটা AI app × প্রতিটা সেবার জন্য আলাদা integration লিখতে হতো (N×M সমস্যা); MCP-তে একবার Server বানালে যেকোনো MCP-সাপোর্টেড Host তা ব্যবহার করতে পারে (MCP অধ্যায়)।</p>
+
+<h3>৬০) Function Calling আর MCP-র পার্থক্য কী?</h3>
+<pre>Function Calling → মডেল কীভাবে "এই function call করো" বলবে
+MCP              → সেই tool কোথায় থাকে, কীভাবে খুঁজে পাওয়া ও চালানো হয়</pre>
+<p><b>ব্যাখ্যা:</b> Function calling মডেলের ক্ষমতা — schema দেখে call প্রস্তাব করা। MCP একটা protocol — tool-এর তালিকা (<code>tools/list</code>), চালানো (<code>tools/call</code>), resources ও prompts-এর standard পথ। দুটো একসাথে কাজ করে: LLM function calling দিয়ে সিদ্ধান্ত নেয়, MCP সেই tool সরবরাহ ও execute করে।</p>
+
+<h3>৬১) MCP Host, Client ও Server কী?</h3>
+<pre>Host (Claude Desktop / আপনার chat app)
+ ├─ MCP Client A ──► Server A (Accounting, .NET)
+ └─ MCP Client B ──► Server B (GitHub)</pre>
+<p><b>ব্যাখ্যা:</b> Host হলো LLM-সহ AI application; Client হলো Host-এর ভেতরের অংশ যা একটা Server-এর সাথে ১:১ connection রাখে; Server tools/resources/prompts expose করে।</p>
+
+<h3>৬২) MCP-র Tools, Resources ও Prompts-এর পার্থক্য কী?</h3>
+<pre>Tool     → get_trial_balance()            (মডেল call করে, action/query)
+Resource → accounting://chart-of-accounts (read-only context)
+Prompt   → analyze_monthly_financial_report (reusable template)</pre>
+<p><b>ব্যাখ্যা:</b> Tool মডেল-নিয়ন্ত্রিত ও side effect থাকতে পারে; Resource ডেটা/ফাইল পড়ার জন্য; Prompt ব্যবহারকারী বেছে নেওয়া প্রস্তুত workflow।</p>
+
+<h3>৬৩) C#-এ সবচেয়ে সহজ MCP Server tool কীভাবে লিখবেন?</h3>
+<pre>[McpServerToolType]
+public class Tools(IAccountingService svc)
+{
+    [McpServerTool, Description("Customer-এর outstanding ফেরত দেয়। শুধু পড়ে।")]
+    public Task&lt;decimal&gt; GetOutstanding([Description("Customer id")] int customerId)
+        =&gt; svc.GetOutstandingAsync(customerId);
+}
+<span class="c">// Program.cs: builder.Services.AddMcpServer().WithStdioServerTransport().WithToolsFromAssembly();</span></pre>
+<p><b>ব্যাখ্যা:</b> official C# SDK (<code>ModelContextProtocol</code> package)-এ attribute দিয়ে মেথডকে tool বানানো যায়; <code>Description</code> মডেল পড়ে tool বাছাই করে। SDK-র API সংস্করণভেদে বদলায়, ডকুমেন্টেশন মিলিয়ে নিন।</p>
+
+<h3>৬৪) stdio আর HTTP transport-এ কোনটা কখন?</h3>
+<pre>stdio           → local child process, desktop/IDE, auth লাগে না
+Streamable HTTP → remote/shared service, OAuth/token, একাধিক user</pre>
+<p><b>ব্যাখ্যা:</b> stdio-তে Server-এর stdout শুধু protocol বার্তার জন্য — log লিখুন stderr-এ। Production-এ বহু ব্যবহারকারীর জন্য HTTP transport ও সঠিক authentication/authorization দরকার।</p>
+
+<h3>৬৫) MCP ব্যবহারে প্রধান security ঝুঁকি কী?</h3>
+<pre>ঝুঁকি: অতিরিক্ত permission · prompt injection (tool result-এ) · অবিশ্বস্ত server · destructive action</pre>
+<p><b>ব্যাখ্যা:</b> ব্যবহারকারীর আসল permission tool-এর ভেতরে যাচাই করুন, least privilege দিন, write/delete-এ human confirmation রাখুন, tool result-কে untrusted ডেটা ভাবুন, তৃতীয় পক্ষের MCP server যাচাই ছাড়া চালাবেন না, argument validate করুন এবং সব call audit log করুন (Safety অধ্যায়ের Excessive Agency)।</p>
+
+<h3>৬৬) একটা প্রশ্নে MCP + LLM + Tool Calling কীভাবে একসাথে চলে?</h3>
+<pre>১. Host: tools/list → ২. LLM-কে প্রশ্ন + schema → ৩. LLM: tool call প্রস্তাব
+৪. Host: tools/call → ৫. Server: DB query → ৬. result → LLM → ৭. চূড়ান্ত উত্তর</pre>
+<p><b>ব্যাখ্যা:</b> মডেল শুধু সিদ্ধান্ত নেয়; আসল execution MCP Server-এ হয়। একাধিক tool লাগলে ধাপ ৩–৬ ঘোরে — এটাই Agent loop (MCP অধ্যায়ের বাস্তব উদাহরণ)।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->
