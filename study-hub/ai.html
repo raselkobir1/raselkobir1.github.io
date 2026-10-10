@@ -132,6 +132,7 @@ const pages = [
   {id:"contextengineering", icon:"🗃️", title:"Context Engineering — Context Window সাজানো"},
   {id:"embeddings",   icon:"📐", title:"Embeddings ও Semantic Similarity"},
   {id:"vectordb",     icon:"🗂️", title:"Vector Database ও Retrieval"},
+  {id:"vectordbguide", icon:"🧲", title:"Vector Database — শূন্য থেকে পূর্ণ গাইড (Beginner-এর জন্য)"},
   {id:"rag",          icon:"📚", title:"RAG — Retrieval-Augmented Generation"},
   {id:"toolcalling",  icon:"🔧", title:"Function/Tool Calling ও Structured Output"},
   {id:"mcp",           icon:"🔌", title:"MCP — Model Context Protocol"},
@@ -144,6 +145,7 @@ const pages = [
   {id:"production",   icon:"🚀", title:"Production Engineering — Latency, Cost, Caching"},
   {id:"integration",  icon:"💜", title:"Backend/.NET Integration — বাস্তবে AI Feature বসানো"},
   {id:"realworld",    icon:"📈", title:"Model-কে বাস্তব Application-এ কাজে লাগানো — Prediction থেকে Production"},
+  {id:"forecasting",  icon:"🔮", title:"Time-Series Forecasting — ভবিষ্যৎ অনুমান (পূর্ণ কোডসহ)"},
   {id:"interview",    icon:"🎯", title:"Interview প্রশ্নোত্তর"},
 ];
 </script>
@@ -498,6 +500,8 @@ def cosine_similarity(a, b):
 
 <template data-page="vectordb">
 <h2 class="title">৮. Vector Database ও Retrieval</h2>
+<div class="callout why"><span class="tag">নতুন হলে আগে এটা পড়ুন</span>
+Vector DB একদম নতুন লাগলে এই অধ্যায়ের আগে বা পরে পরের অধ্যায় <b>"৯. Vector Database — শূন্য থেকে পূর্ণ গাইড"</b> পড়ে নিন — সেখানে vector কী, index কীভাবে কাজ করে, chunking, Chroma/pgvector/.NET-এর হাতে-কলমে উদাহরণ ও production-এর খুঁটিনাটি ধাপে ধাপে বোঝানো আছে।</div>
 <p class="lead">লাখো embedding-এর মধ্যে থেকে প্রতি query-তে সবচেয়ে কাছেরগুলো মিলিসেকেন্ডে খুঁজে বের করা একটা আলাদা ইঞ্জিনিয়ারিং সমস্যা — এখানেই vector database-এর ভূমিকা।</p>
 
 <h3>কেন Brute-Force যথেষ্ট নয়</h3>
@@ -556,8 +560,544 @@ LIMIT 5;</pre>
 HNSW ইনডেক্সে দুটো মূল knob: build-time-এ <code>m</code> (প্রতিটা node-এর সংযোগ সংখ্যা) ও <code>ef_construction</code>, আর query-time-এ <code>ef_search</code> (কতগুলো candidate পরীক্ষা করা হবে)। মান বাড়ালে recall বাড়ে, কিন্তু মেমরি, ইনডেক্স-নির্মাণের সময় ও query latency-ও বাড়ে। ডিফল্ট দিয়ে শুরু করে নিজের golden dataset-এ recall মেপে তবেই tune করুন। আর metadata filter (<code>WHERE</code>) যুক্ত করলে ANN ইনডেক্স অনুমোদিত ফলের কম সংখ্যক row ফেরত দিতে পারে — filter-সহ query-র ফল সংখ্যা ও recall আলাদাভাবে যাচাই করুন; এ বিষয়ে আপনার pgvector সংস্করণের ডকুমেন্টেশন দেখে নিন।</div>
 </template>
 
+<template data-page="vectordbguide">
+<h2 class="title">৯. Vector Database — শূন্য থেকে পূর্ণ গাইড (Beginner-এর জন্য)</h2>
+<p class="lead">আপনি যদি "Vector Database" শব্দটা শুনে ভাবেন <i>এটা আবার কী জিনিস, সাধারণ database থেকে আলাদা কেন?</i> — এই অধ্যায় আপনার জন্য। কোনো আগের জ্ঞান ধরে নিইনি: একদম গোড়া থেকে শুরু করে <b>কী, কেন, কীভাবে কাজ করে, কীভাবে ব্যবহার করবেন, AI-এর সাথে সম্পর্ক কী, কোথায় ভুল হয়</b> — সব ধাপে ধাপে, চালানো যায় এমন কোডসহ।</p>
+
+<div class="callout why"><span class="tag">অধ্যায় ৭ ও ৮-এর সাথে সম্পর্ক</span>
+অধ্যায় ৭ (Embeddings) ও ৮ (Vector Database ও Retrieval) আগে থেকেই আছে — সেগুলো সংক্ষিপ্ত ও কিছুটা অভিজ্ঞদের জন্য। এই অধ্যায় সেই একই বিষয়কে <b>একদম নতুনদের জন্য বিস্তারিতভাবে</b> বোঝায়: বুনিয়াদি ধারণা, ভেতরের কাজের পদ্ধতি (index), হাতে-কলমে তিনটা উদাহরণ (Chroma, PostgreSQL+pgvector, .NET), এবং production-এর খুঁটিনাটি। এই অধ্যায় পড়ে অধ্যায় ৮ আবার পড়লে সবকিছু আরও পরিষ্কার লাগবে।</div>
+
+<h3>১. সমস্যাটা দিয়ে শুরু — সাধারণ Search কেন যথেষ্ট নয়</h3>
+<p>ধরুন আপনার কোম্পানির policy ডকুমেন্টে লেখা আছে: <i>"আবেদনের ৭ দিনের মধ্যে টাকা ফেরত (refund) পাওয়া যাবে।"</i> একজন কর্মী search বক্সে লিখলেন: <b>"পেমেন্ট ফেরত নিতে চাই"</b>।</p>
+<table>
+<tr><th>পদ্ধতি</th><th>কীভাবে খোঁজে</th><th>ফল</th></tr>
+<tr><td>SQL <code>LIKE '%ফেরত%'</code> বা Full-text search</td><td>শব্দ হুবহু মিলছে কিনা</td><td>"পেমেন্ট ফেরত" লিখলে মিলতে পারে; কিন্তু <b>"money back"</b>, <b>"return"</b>, <b>"টাকা রিফান্ড"</b> লিখলে <b>কিছুই মেলে না</b> — অথচ অর্থ একই</td></tr>
+<tr><td>Vector search (অর্থ-ভিত্তিক)</td><td>শব্দ নয়, <b>অর্থ</b> কাছাকাছি কিনা</td><td>"টাকা ফেরত", "refund", "money back", "return policy" — সবগুলোই ওই ডকুমেন্টে পৌঁছায়</td></tr>
+</table>
+<div class="callout behind"><span class="tag">মূল ধারণা এক লাইনে</span>
+সাধারণ search <b>"শব্দ মিলেছে কিনা"</b> দেখে। Vector search <b>"অর্থ মিলেছে কিনা"</b> দেখে। এই অর্থ মাপার জাদুটাই হলো Vector Database-এর কাজ।</div>
+
+<h3>২. Vector আসলে কী — একদম গোড়া থেকে</h3>
+<h4>২.১ একটা সংখ্যার তালিকা = একটা "অবস্থান"</h4>
+<p><b>Vector</b> মানে স্রেফ কয়েকটা সংখ্যার তালিকা, যেমন <code>[3, 5]</code>। একটা ম্যাপে আপনার বাড়ির অবস্থান বোঝাতে দুটো সংখ্যা লাগে (দক্ষিণ-উত্তর, পূর্ব-পশ্চিম) — এটাই একটা ২-মাত্রার (2-dimensional) vector। দুই বাড়ির সংখ্যাগুলো কাছাকাছি মানে বাড়ি দুটো কাছাকাছি।</p>
+<div class="diagram"><pre>
+  উত্তর ↑
+        │      ● রাসেলের বাড়ি (3, 5)
+        │       ● পাশের বাড়ি (3.2, 5.1)     ← খুব কাছে = সদৃশ
+        │
+        │                          ● অন্য শহর (20, 1)   ← অনেক দূরে = ভিন্ন
+        └──────────────────────────→ পূর্ব
+</pre></div>
+<h4>২.২ লেখার অর্থকেও "অবস্থান" বানানো যায়</h4>
+<p>এখন কল্পনা করুন প্রতিটা বাক্যের একটা "অর্থের ম্যাপ"-এ অবস্থান আছে। "টাকা ফেরত" আর "money back" ম্যাপে খুব কাছাকাছি; "ভাউচার পোস্টিং" অনেক দূরে। এই অবস্থানের সংখ্যাগুলোই হলো <span class="kw">Embedding (vector)</span>।</p>
+<pre>"টাকা ফেরত পাওয়া যাবে"   →  [0.90, 0.10, 0.00]     <span class="c">// (সরলীকৃত ৩ সংখ্যা)</span>
+"money back policy"       →  [0.85, 0.15, 0.05]     <span class="c">// কাছাকাছি সংখ্যা = কাছাকাছি অর্থ</span>
+"ভাউচার পোস্টিং নিয়ম"     →  [0.10, 0.90, 0.10]     <span class="c">// ভিন্ন সংখ্যা = ভিন্ন অর্থ</span></pre>
+<p>বাস্তবে ৩টা নয়, সাধারণত <b>৩৮৪ থেকে ৩০৭২টা সংখ্যা</b> থাকে (এটাকে বলে <b>dimension</b> — যেমন OpenAI-এর একটা জনপ্রিয় embedding model ১৫৩৬ বা ৩০৭২ dimension দেয়)। বেশি dimension মানে অর্থের সূক্ষ্ম পার্থক্য ধরার ক্ষমতা বেশি, কিন্তু স্টোরেজ ও গণনাও বেশি।</p>
+<h4>২.৩ কে এই সংখ্যাগুলো বানায়? — Embedding Model</h4>
+<p><span class="kw">Embedding model</span> হলো একটা বিশেষ AI model, যে লেখা (বা ছবি, অডিও) নিয়ে তার অর্থের সংখ্যা-তালিকা (vector) ফেরত দেয়। এটা LLM (যে chat করে) থেকে আলাদা: embedding model কথা বলে না, শুধু "অর্থকে সংখ্যায় রূপ" দেয়। উদাহরণ: OpenAI <code>text-embedding-3-small</code>, Cohere embed, Google, এবং open-source যেমন <code>bge</code>, <code>e5</code>, <code>all-MiniLM</code> (বহুভাষিক বাংলা সমর্থনের জন্য multilingual model বাছুন)।</p>
+<pre>vector = embedding_model.embed("পেমেন্ট ফেরত নিতে চাই")
+<span class="c"># → [0.0132, -0.0451, 0.2210, ... ১৫৩৬টা সংখ্যা]</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake — ভিন্ন model-এর vector মেশানো</span>
+প্রতিটা embedding model তার নিজস্ব "ম্যাপ" বানায়। Model A-র vector আর Model B-র vector তুলনা করা অর্থহীন — যেন একটা ম্যাপে দূরত্ব মাপছেন কিলোমিটারে, আরেকটায় মাইলে। <b>ডকুমেন্ট ও প্রশ্ন — দুটোই একই model দিয়ে embed করতে হবে</b>, আর model বদলালে সব ডেটা আবার embed করতে হবে (১৩ নং অংশ দেখুন)।</div>
+
+<h3>৩. Vector Database কী?</h3>
+<p><span class="kw">Vector Database</span> এমন একটা database যা (১) vector-গুলো সংরক্ষণ করে, (২) সাথে মূল লেখা ও অতিরিক্ত তথ্য (metadata) রাখে, আর (৩) সবচেয়ে গুরুত্বপূর্ণ — <b>"এই vector-টার সবচেয়ে কাছের vector কোনগুলো?" এই প্রশ্নের উত্তর কোটি কোটি vector-এর মধ্যেও কয়েক মিলিসেকেন্ডে দেয়।</b></p>
+<div class="callout why"><span class="tag">উপমা — লাইব্রেরি</span>
+সাধারণ লাইব্রেরিতে বই <b>বর্ণানুক্রমে</b> সাজানো — আপনি নাম জানলে সহজে পাবেন (এটা সাধারণ SQL database: নির্দিষ্ট মান ধরে খোঁজা)। কিন্তু "যে বইগুলো অর্থনৈতিক মন্দা নিয়ে, নাম জানি না" — এটা খুঁজতে একজন বুদ্ধিমান গ্রন্থাগারিক লাগে, যে বইগুলো <b>বিষয়ের মিল</b> অনুযায়ী পাশাপাশি সাজিয়ে রেখেছে। Vector Database হলো ঠিক সেই গ্রন্থাগারিক: সব কিছু অর্থের কাছাকাছি-দূরত্ব অনুযায়ী সাজানো।</div>
+
+<h4>৩.১ সাধারণ Database-এর সাথে তুলনা (পরিচিত শব্দ দিয়ে বোঝা)</h4>
+<table>
+<tr><th>সাধারণ SQL ধারণা</th><th>Vector DB-তে সমতুল্য</th><th>ব্যাখ্যা</th></tr>
+<tr><td>Table</td><td><b>Collection</b> (Index/Table)</td><td>একই ধরনের vector-এর গ্রুপ</td></tr>
+<tr><td>Row</td><td><b>Point / Record</b></td><td>একটা ডেটা-একক: id + vector + payload</td></tr>
+<tr><td>Column (ডেটা)</td><td><b>Payload / Metadata</b></td><td>মূল লেখা, ডিপার্টমেন্ট, তারিখ, ইউজার ইত্যাদি</td></tr>
+<tr><td>Column (বিশেষ)</td><td><b>Vector field</b></td><td>অর্থের সংখ্যা-তালিকা</td></tr>
+<tr><td><code>WHERE dept='hr'</code></td><td><b>Metadata filter</b></td><td>শর্ত মেনে ফিল্টার</td></tr>
+<tr><td>B-tree Index</td><td><b>ANN Index</b> (HNSW, IVF)</td><td>দ্রুত খোঁজার কাঠামো — কিন্তু "হুবহু" নয়, "কাছাকাছি" খোঁজার জন্য</td></tr>
+<tr><td><code>SELECT ... WHERE id=5</code> (হুবহু মিল)</td><td><b>Similarity search / kNN query</b></td><td>"আমার vector-এর সবচেয়ে কাছের k টা কী?"</td></tr>
+</table>
+<div class="callout behind"><span class="tag">পর্দার পেছনে — একটা Record দেখতে কেমন</span>
+<pre>{
+  "id": "policy-refund-001#chunk-3",
+  "vector": [0.0132, -0.0451, 0.2210, ... ১৫৩৬টা],       <span class="c">// অর্থ (খোঁজার জন্য)</span>
+  "payload": {                                              <span class="c">// মূল তথ্য (দেখানোর ও ফিল্টারের জন্য)</span>
+    "text": "আবেদনের ৭ দিনের মধ্যে টাকা ফেরত পাওয়া যাবে...",
+    "doc_id": "policy-refund-001",
+    "dept": "finance",
+    "lang": "bn",
+    "updated_at": "2026-09-30"
+  }
+}</pre></div>
+
+<h3>৪. পুরো প্রবাহ — ধাপে ধাপে (Ingestion ও Query)</h3>
+<p>Vector DB-এর ব্যবহার সবসময় দুটো আলাদা পর্বে ভাগ: <b>(ক) ডেটা ঢোকানো (একবার/মাঝে মাঝে)</b> এবং <b>(খ) প্রশ্ন করা (প্রতিবার)</b>।</p>
+<div class="diagram"><pre>
+ (ক) INGESTION — ডেটা ঢোকানো (offline)
+ ┌────────┐   ┌──────────┐   ┌───────────────┐   ┌─────────────────────────┐
+ │ ডকুমেন্ট │ → │ Chunk করা │ → │ Embedding model│ → │ Vector DB-তে সংরক্ষণ       │
+ │ PDF/Doc │   │ (ছোট টুকরো)│   │ → vector       │   │ (vector + text + metadata) │
+ └────────┘   └──────────┘   └───────────────┘   └─────────────────────────┘
+
+ (খ) QUERY — প্রশ্ন করা (real-time)
+ ┌─────────┐   ┌───────────────┐   ┌──────────────────────┐   ┌──────────────────┐
+ │ ব্যবহারকারীর │ → │ একই Embedding   │ → │ Vector DB: সবচেয়ে কাছের │ → │ প্রাসঙ্গিক chunk     │
+ │ প্রশ্ন      │   │ model → vector  │   │ top-k vector খোঁজো      │   │ (→ LLM-কে পাঠানো)  │
+ └─────────┘   └───────────────┘   └──────────────────────┘   └──────────────────┘
+</pre></div>
+<h4>একটা ছোট উদাহরণ — হাতে-কলমে (সংখ্যাসহ)</h4>
+<p>ধরুন ৩টা ডকুমেন্ট (সরলতার জন্য ৩-সংখ্যার vector) আছে। ব্যবহারকারী প্রশ্ন করল: <i>"টাকা ফেরত পাব কীভাবে?"</i> যার vector <code>[0.88, 0.12, 0.02]</code>।</p>
+<table>
+<tr><th>Doc</th><th>লেখা</th><th>Vector</th><th>প্রশ্নের সাথে মিল (cosine)</th></tr>
+<tr><td>d1</td><td>Refund policy: ৭ দিনের মধ্যে টাকা ফেরত</td><td>[0.90, 0.10, 0.00]</td><td><b>≈ ০.৯৯৯৪</b> (প্রায় একই দিক)</td></tr>
+<tr><td>d3</td><td>Return ও money back নীতি</td><td>[0.85, 0.15, 0.05]</td><td><b>≈ ০.৯৯৮৬</b></td></tr>
+<tr><td>d2</td><td>Voucher posting নিয়ম</td><td>[0.10, 0.90, 0.10]</td><td>≈ ০.২৪ (ভিন্ন বিষয়)</td></tr>
+</table>
+<p>ফল: d1 ও d3 আসবে (এবং তারা শব্দে আলাদা হলেও অর্থে কাছাকাছি), d2 আসবে না। এটাই semantic search।</p>
+
+<h3>৫. "কাছাকাছি" মাপা হয় কীভাবে — Similarity ও Distance</h3>
+<p>দুটো vector কতটা কাছাকাছি তা মাপার কয়েকটা গাণিতিক উপায় আছে। নতুনদের জন্য সবচেয়ে গুরুত্বপূর্ণটা <span class="kw">Cosine Similarity</span> — এটা মাপে দুই vector-এর <b>দিক</b> কতটা এক (দৈর্ঘ্য নয়)।</p>
+<div class="diagram"><pre>
+  Cosine Similarity:   ১.০  = একই দিক (অর্থ হুবহু কাছাকাছি)
+                       ০.০  = সম্পর্কহীন (সমকোণ)
+                      −১.০  = উল্টো দিক (বিপরীত অর্থ)
+</pre></div>
+<pre>import math
+
+def cosine(a, b):
+    dot = sum(x * y for x, y in zip(a, b))                 <span class="c"># গুণফলের যোগ</span>
+    na  = math.sqrt(sum(x * x for x in a))                 <span class="c"># a-র দৈর্ঘ্য</span>
+    nb  = math.sqrt(sum(y * y for y in b))                 <span class="c"># b-র দৈর্ঘ্য</span>
+    return dot / (na * nb)
+
+docs = {
+    "d1": ("Refund policy: টাকা ফেরত পাওয়া যায় ৭ দিনের মধ্যে", [0.90, 0.10, 0.00]),
+    "d2": ("Voucher posting নিয়ম",                               [0.10, 0.90, 0.10]),
+    "d3": ("Return ও money back নীতি",                           [0.85, 0.15, 0.05]),
+}
+query = [0.88, 0.12, 0.02]
+
+ranked = sorted(((cosine(query, v), k, t) for k, (t, v) in docs.items()), reverse=True)
+for score, k, text in ranked:
+    print(f"{score:.4f}  {k}  {text}")</pre>
+<table>
+<tr><th>Metric</th><th>কী মাপে</th><th>কখন</th></tr>
+<tr><td><b>Cosine</b> (similarity/distance)</td><td>দিকের মিল</td><td>টেক্সট embedding-এর জন্য সবচেয়ে প্রচলিত — ডিফল্ট ধরে নিতে পারেন</td></tr>
+<tr><td><b>Dot Product (Inner Product)</b></td><td>দিক + দৈর্ঘ্য</td><td>vector আগে থেকে normalize (দৈর্ঘ্য=১) থাকলে cosine-এর সমান ও দ্রুত; কিছু model এটাই চায়</td></tr>
+<tr><td><b>Euclidean (L2)</b></td><td>সরলরেখার দূরত্ব</td><td>যেখানে দৈর্ঘ্যও অর্থবহ (কিছু image/অন্য embedding)</td></tr>
+</table>
+<div class="callout best"><span class="tag">নিয়ম — Embedding model-এর ডকুমেন্টেশন দেখুন</span>
+প্রতিটা model কোন metric-এর জন্য train হয়েছে তা বলা থাকে। সেই metric-ই Vector DB-র collection/index তৈরির সময় দিন। ভুল metric দিলে র‍্যাঙ্কিং নষ্ট হয় (অধ্যায় ৮-এ বিস্তারিত)।</div>
+
+<h3>৬. কেন বিশেষ Database লাগে — Brute Force থেকে ANN Index</h3>
+<h4>৬.১ সবচেয়ে সরল পদ্ধতি: সবার সাথে তুলনা (Brute Force / Flat)</h4>
+<p>উপরের কোডটাই আসলে brute force: প্রশ্নের vector-কে প্রতিটা ডকুমেন্ট-vector-এর সাথে তুলনা করে সাজানো। ১০০ ডকুমেন্টে চমৎকার, নিখুঁত ফল। কিন্তু ১ কোটি vector হলে প্রতিটা প্রশ্নে ১ কোটিবার গণনা — সেকেন্ড-মিনিট লাগে। ব্যবহারকারী অপেক্ষা করবে না।</p>
+<h4>৬.২ সমাধান: ANN — Approximate Nearest Neighbor</h4>
+<p>ধারণাটা চতুর: <b>"সবচেয়ে কাছের"-টা ১০০% নিখুঁত না-ও পেতে পারি, কিন্তু ~৯৫–৯৯% নিখুঁত উত্তর ১০০০ গুণ দ্রুত পেলে চলবে।</b> এই সামান্য নির্ভুলতা-ছাড়ের বিনিময়ে বিপুল গতি — এটাই ANN। এর জন্য ডেটাকে আগে থেকে একটা বিশেষ কাঠামোয় (<b>index</b>) সাজিয়ে রাখা হয়।</p>
+<table>
+<tr><th>Index</th><th>কীভাবে কাজ করে (উপমা)</th><th>সুবিধা</th><th>অসুবিধা</th></tr>
+<tr><td><span class="kw">Flat</span> (brute force)</td><td>প্রতিটা বাড়ির দরজায় দরজায় গিয়ে দেখা</td><td>১০০% নিখুঁত, সরল</td><td>ডেটা বাড়লে ধীর</td></tr>
+<tr><td><span class="kw">IVF</span> (Inverted File)</td><td>শহরকে এলাকায় ভাগ; প্রশ্নের কাছের ২-৩টা এলাকাতেই শুধু খোঁজা</td><td>কম মেমরি, দ্রুত</td><td>এলাকার সীমানার কাছের জিনিস মিস হতে পারে; আগে clustering (train) লাগে</td></tr>
+<tr><td><span class="kw">HNSW</span> (Hierarchical Navigable Small World)</td><td>বিমানে দেশ → মহাসড়কে শহর → গলিতে বাড়ি: উপরের স্তরে বড় লাফ, নিচে ছোট পদক্ষেপ</td><td>খুব দ্রুত ও উচ্চ recall; আজকের সবচেয়ে জনপ্রিয়</td><td>বেশি মেমরি; index বানাতে সময়</td></tr>
+<tr><td><span class="kw">PQ</span> / Quantization</td><td>vector-কে সংক্ষিপ্ত সংকেতে "compress" করা (ছবির JPEG-এর মতো)</td><td>মেমরি বহুগুণ কম</td><td>কিছু নির্ভুলতা কমে</td></tr>
+</table>
+<div class="diagram"><pre>
+ HNSW — স্তরভিত্তিক "গলি-মহাসড়ক" গ্রাফ
+
+ স্তর ২ (বিরল, বড় লাফ):   ●───────────────────────●
+                            │                       │
+ স্তর ১ (মাঝারি):          ●────●────────●────●─────●
+                            │    │        │    │     │
+ স্তর ০ (সব vector, ঘন):  ●─●─●─●─●─●─●─●─●─●─●─●─●─●─●
+
+ খোঁজা: উপরের স্তরে শুরু → লক্ষ্যের দিকে বড় বড় লাফে এগোও → নিচের স্তরে নেমে আরও কাছে → স্তর ০-তে চূড়ান্ত প্রতিবেশী
+</pre></div>
+<h4>৬.৩ Recall — ANN-এর নির্ভুলতা মাপকাঠি</h4>
+<p><span class="kw">Recall@k</span> = ANN যে k টা ফল দিল, তার মধ্যে আসল (brute-force) সেরা k-এর কতটা আছে। Recall ০.৯৫ মানে ৯৫% নিখুঁত। <b>Speed বনাম Recall</b> সবসময় একটা টানাপোড়েন — সেটিং দিয়ে আপনি ঠিক করেন কতটা গতি বা কতটা নির্ভুলতা চান।</p>
+<table>
+<tr><th>পরামিতি</th><th>কোন index</th><th>কাজ</th><th>বাড়ালে</th></tr>
+<tr><td><code>M</code></td><td>HNSW</td><td>প্রতিটা নোডের সংযোগ সংখ্যা</td><td>recall ↑, মেমরি ↑</td></tr>
+<tr><td><code>ef_construction</code></td><td>HNSW</td><td>index বানানোর সময় কতজন প্রার্থী দেখবে</td><td>index-এর মান ↑, বানানো ধীর</td></tr>
+<tr><td><code>ef_search</code></td><td>HNSW</td><td>query-র সময় কতজন প্রার্থী দেখবে</td><td>recall ↑, query ধীর</td></tr>
+<tr><td><code>nlist</code> / <code>nprobe</code></td><td>IVF</td><td>মোট এলাকা / query-তে কয়টা এলাকা দেখবে</td><td><code>nprobe</code> বাড়ালে recall ↑, ধীর</td></tr>
+</table>
+<div class="callout best"><span class="tag">ছোট ডেটায় ANN লাগবেই না</span>
+কয়েক হাজার–কয়েক লাখ vector পর্যন্ত Flat (brute force) প্রায়ই যথেষ্ট দ্রুত ও ১০০% নিখুঁত। ANN index শুরু করুন তখনই যখন latency সত্যিই সমস্যা হয়। অকালে জটিলতা বাড়াবেন না।</div>
+
+<h3>৭. Chunking — ডকুমেন্টকে ঠিকভাবে টুকরো করা (সবচেয়ে বেশি অবহেলিত ধাপ)</h3>
+<p>পুরো একটা ১০০ পৃষ্ঠার PDF-কে একটা vector-এ রূপ দিলে সেই vector সবকিছুর "গড় অর্থ" ধরে — নির্দিষ্ট প্রশ্নের উত্তর খোঁজা কঠিন। তাই ডকুমেন্টকে ছোট <b>chunk</b>-এ ভাগ করে প্রতিটার আলাদা vector বানানো হয়।</p>
+<table>
+<tr><th>Chunk-এর আকার</th><th>সমস্যা/সুবিধা</th></tr>
+<tr><td>খুব ছোট (১-২ বাক্য)</td><td>প্রসঙ্গ হারায় ("এটা" বলতে কী বোঝাচ্ছে বোঝা যায় না)</td></tr>
+<tr><td>খুব বড় (পুরো অধ্যায়)</td><td>অর্থ "পাতলা" হয়ে যায়; অপ্রাসঙ্গিক তথ্যও LLM-এ যায় (cost, ভুল)</td></tr>
+<tr><td>মাঝারি (~২০০–৮০০ token) + সামান্য overlap</td><td>সাধারণত ভালো শুরু; নিজের ডেটায় পরীক্ষা করে ঠিক করুন</td></tr>
+</table>
+<div class="diagram"><pre>
+ মূল লেখা:  [ বাক্য ১ বাক্য ২ বাক্য ৩ বাক্য ৪ বাক্য ৫ বাক্য ৬ ]
+
+ Overlap ছাড়া:   [বাক্য ১ বাক্য ২ বাক্য ৩] [বাক্য ৪ বাক্য ৫ বাক্য ৬]      ← ৩/৪ সীমানায় প্রসঙ্গ কেটে যায়
+ Overlap সহ:     [বাক্য ১ বাক্য ২ বাক্য ৩]
+                          [বাক্য ৩ বাক্য ৪ বাক্য ৫]
+                                    [বাক্য ৫ বাক্য ৬]                    ← সীমানার তথ্য দুই chunk-এই থাকে
+</pre></div>
+<pre>def chunk_text(text: str, size: int = 800, overlap: int = 120) -&gt; list[str]:
+    """অক্ষর-ভিত্তিক সরল chunker; paragraph/বাক্যের সীমানা মানলে আরও ভালো।"""
+    chunks, start = [], 0
+    while start &lt; len(text):
+        end = min(start + size, len(text))
+        chunks.append(text[start:end])
+        if end == len(text):
+            break
+        start = end - overlap            <span class="c"># পেছনে overlap পরিমাণ সরে এসে শুরু</span>
+    return chunks</pre>
+<table>
+<tr><th>Chunking কৌশল</th><th>কীভাবে</th><th>কখন</th></tr>
+<tr><td>Fixed-size</td><td>নির্দিষ্ট দৈর্ঘ্যে কাটা (উপরের কোড)</td><td>সবচেয়ে সরল শুরু</td></tr>
+<tr><td>Recursive (paragraph → বাক্য → শব্দ)</td><td>প্রথমে অনুচ্ছেদে ভাঙে, বড় হলে বাক্যে</td><td>সাধারণ লেখা — ভালো ডিফল্ট</td></tr>
+<tr><td>Structure-aware</td><td>Heading/ধারা/টেবিল অনুযায়ী কাটা</td><td>আইন, policy, API doc, Markdown</td></tr>
+<tr><td>Semantic</td><td>অর্থ বদলালে কাটা (embedding দিয়ে)</td><td>লম্বা অসংগঠিত লেখা; খরচ বেশি</td></tr>
+</table>
+<div class="callout best"><span class="tag">প্রতিটা chunk-এর সাথে metadata রাখুন</span>
+<code>doc_id</code>, <code>chunk_index</code>, উৎসের নাম/পৃষ্ঠা, section heading, ভাষা, তারিখ, অ্যাক্সেস-অধিকার (কে দেখতে পারবে)। এগুলো ছাড়া ফিল্টার, উৎস-উদ্ধৃতি (citation), আপডেট ও delete কঠিন হয়ে যায়। Chunk-এর আগে section-এর শিরোনাম লেখার সাথে জুড়ে embed করলেও প্রায়ই ফল ভালো হয়।</div>
+
+<h3>৮. হাতে-কলমে ১: Chroma — সবচেয়ে সহজ শুরু (Python)</h3>
+<p><span class="kw">Chroma</span> একটা হালকা, open-source Vector DB যা কোনো সার্ভার ছাড়াই আপনার Python প্রোগ্রামের ভেতরে চলে — শেখা ও prototype-এর জন্য আদর্শ।</p>
+<pre><span class="c"># pip install chromadb</span>
+import chromadb
+
+client = chromadb.PersistentClient(path="./chroma_store")        <span class="c"># ডিস্কে সংরক্ষণ — প্রোগ্রাম বন্ধ হলেও থাকবে</span>
+col = client.get_or_create_collection(
+    name="policies",
+    metadata={"hnsw:space": "cosine"},                             <span class="c"># distance metric ঠিক করে দিন</span>
+)
+
+<span class="c"># ১. ডেটা ঢোকানো — এখানে আমরা নিজেরা vector দিচ্ছি (বাস্তবে embedding model দিয়ে বানাবেন)</span>
+col.upsert(
+    ids=["d1", "d2", "d3"],
+    documents=["Refund policy: ৭ দিনের মধ্যে টাকা ফেরত", "Voucher posting নিয়ম", "Return ও money back নীতি"],
+    embeddings=[[0.90, 0.10, 0.00], [0.10, 0.90, 0.10], [0.85, 0.15, 0.05]],
+    metadatas=[{"dept": "finance"}, {"dept": "accounting"}, {"dept": "finance"}],
+)
+
+<span class="c"># ২. খোঁজা — সাথে metadata filter</span>
+res = col.query(
+    query_embeddings=[[0.88, 0.12, 0.02]],
+    n_results=2,
+    where={"dept": "finance"},                                     <span class="c"># শুধু finance বিভাগের মধ্যে খোঁজো</span>
+)
+print(res["ids"])          <span class="c"># [['d1', 'd3']]</span>
+print(res["documents"])
+print(res["distances"])    <span class="c"># cosine distance — ছোট = কাছের (১ − similarity)</span>
+
+<span class="c"># ৩. গণনা ও মোছা</span>
+print(col.count())
+col.delete(ids=["d2"])</pre>
+<p>আসল কাজে <code>embeddings=</code> বাদ দিয়ে শুধু <code>documents=</code> দিলে Chroma নিজের ডিফল্ট embedding model দিয়ে vector বানিয়ে নেয় (প্রথমবার model নামাতে ইন্টারনেট লাগে)। চাইলে নিজের embedding function বসানো যায়। <b>লক্ষ্য করুন:</b> <code>distances</code> হলো দূরত্ব — যত ছোট, তত কাছের; similarity নয়।</p>
+
+<h3>৯. হাতে-কলমে ২: PostgreSQL + pgvector — আপনার পরিচিত database-এই</h3>
+<p>আপনি যদি PostgreSQL ব্যবহার করেন, <span class="kw">pgvector</span> extension দিয়ে সেই database-এই vector সংরক্ষণ ও খোঁজা যায় — আলাদা নতুন সিস্টেম লাগে না। .NET/PostgreSQL টিমের জন্য এটাই প্রায়ই সবচেয়ে বাস্তবসম্মত শুরু।</p>
+<h4>৯.১ Table ও Index তৈরি</h4>
+<pre>CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE doc_chunks (
+    id          BIGSERIAL PRIMARY KEY,
+    doc_id      TEXT        NOT NULL,
+    chunk_index INT         NOT NULL,
+    dept        TEXT        NOT NULL,
+    content     TEXT        NOT NULL,
+    embedding   vector(1536) NOT NULL,              -- embedding model-এর dimension-এর সাথে মিলতে হবে
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (doc_id, chunk_index)
+);
+
+-- ANN index (HNSW) — cosine distance-এর জন্য
+CREATE INDEX idx_chunks_embedding
+    ON doc_chunks USING hnsw (embedding vector_cosine_ops)
+    WITH (m = 16, ef_construction = 64);
+
+-- ফিল্টারের জন্য সাধারণ index
+CREATE INDEX idx_chunks_dept ON doc_chunks (dept);</pre>
+<h4>৯.২ খোঁজা</h4>
+<pre>-- $1 = প্রশ্নের embedding (vector(1536))
+SET hnsw.ef_search = 100;                            -- recall ↔ speed টিউন (session-এ)
+
+SELECT doc_id, chunk_index, content,
+       1 - (embedding &lt;=&gt; $1) AS similarity        -- &lt;=&gt; = cosine distance; ১ − distance = similarity
+FROM   doc_chunks
+WHERE  dept = 'finance'                              -- metadata filter
+ORDER  BY embedding &lt;=&gt; $1                          -- সবচেয়ে কাছের আগে
+LIMIT  5;</pre>
+<table>
+<tr><th>Operator</th><th>Distance</th><th>Index operator class</th></tr>
+<tr><td><code>&lt;=&gt;</code></td><td>Cosine distance</td><td><code>vector_cosine_ops</code></td></tr>
+<tr><td><code>&lt;-&gt;</code></td><td>Euclidean (L2)</td><td><code>vector_l2_ops</code></td></tr>
+<tr><td><code>&lt;#&gt;</code></td><td>Negative inner product</td><td><code>vector_ip_ops</code></td></tr>
+</table>
+<div class="callout mistake"><span class="tag">Common mistake — Index ও Query-র operator না মেলানো</span>
+Index বানালেন <code>vector_cosine_ops</code> দিয়ে, কিন্তু query-তে <code>&lt;-&gt;</code> (L2) ব্যবহার করলেন — তখন PostgreSQL ওই index ব্যবহারই করে না, চুপচাপ ধীর brute-force করে। <code>EXPLAIN ANALYZE</code> দিয়ে দেখুন index ব্যবহার হচ্ছে কিনা।</div>
+<h4>৯.৩ Python থেকে ঢোকানো</h4>
+<pre><span class="c"># pip install psycopg[binary] pgvector openai</span>
+import psycopg
+from pgvector.psycopg import register_vector
+from openai import OpenAI
+
+oai = OpenAI()
+def embed(texts: list[str]) -&gt; list[list[float]]:
+    r = oai.embeddings.create(model="text-embedding-3-small", input=texts)   <span class="c"># 1536 dimension</span>
+    return [d.embedding for d in r.data]
+
+with psycopg.connect("postgresql://user:pass@localhost/appdb") as conn:
+    register_vector(conn)                                            <span class="c"># vector টাইপ চেনানো</span>
+    chunks = chunk_text(open("refund-policy.txt", encoding="utf-8").read())
+    vectors = embed(chunks)                                          <span class="c"># একসাথে অনেকগুলো (batch) — প্রতিটার জন্য আলাদা call নয়</span>
+    for i, (txt, vec) in enumerate(zip(chunks, vectors)):
+        conn.execute(
+            """INSERT INTO doc_chunks (doc_id, chunk_index, dept, content, embedding)
+               VALUES (%s, %s, %s, %s, %s)
+               ON CONFLICT (doc_id, chunk_index) DO UPDATE
+               SET content = EXCLUDED.content, embedding = EXCLUDED.embedding, updated_at = now()""",
+            ("policy-refund-001", i, "finance", txt, vec),
+        )
+
+    q = embed(["পেমেন্ট ফেরত নিতে চাই"])[0]
+    rows = conn.execute(
+        """SELECT content, 1 - (embedding &lt;=&gt; %s) AS sim
+           FROM doc_chunks WHERE dept = 'finance'
+           ORDER BY embedding &lt;=&gt; %s LIMIT 3""", (q, q)).fetchall()
+    for content, sim in rows:
+        print(round(sim, 3), content[:80])</pre>
+
+<h3>১০. হাতে-কলমে ৩: .NET (C#) থেকে pgvector</h3>
+<pre><span class="c">// dotnet add package Pgvector.EntityFrameworkCore   (Npgsql.EntityFrameworkCore.PostgreSQL সহ)</span>
+using Pgvector;
+using Pgvector.EntityFrameworkCore;
+
+public class DocChunk
+{
+    public long Id { get; set; }
+    public string DocId { get; set; } = "";
+    public int ChunkIndex { get; set; }
+    public string Dept { get; set; } = "";
+    public string Content { get; set; } = "";
+    [Column(TypeName = "vector(1536)")]
+    public Vector Embedding { get; set; } = null!;
+}
+
+public class AppDbContext(DbContextOptions&lt;AppDbContext&gt; o) : DbContext(o)
+{
+    public DbSet&lt;DocChunk&gt; Chunks =&gt; Set&lt;DocChunk&gt;();
+
+    protected override void OnModelCreating(ModelBuilder b)
+    {
+        b.HasPostgresExtension("vector");
+        b.Entity&lt;DocChunk&gt;()
+         .HasIndex(c =&gt; c.Embedding)
+         .HasMethod("hnsw")
+         .HasOperators("vector_cosine_ops")
+         .HasStorageParameter("m", 16)
+         .HasStorageParameter("ef_construction", 64);
+    }
+}
+
+<span class="c">// Program.cs</span>
+builder.Services.AddDbContext&lt;AppDbContext&gt;(o =&gt;
+    o.UseNpgsql(cs, npg =&gt; npg.UseVector()));                       <span class="c">// vector টাইপ সক্রিয়</span></pre>
+<pre><span class="c">// খোঁজা: প্রশ্নের embedding আগে তৈরি (IEmbeddingGenerator বা HTTP call দিয়ে) → float[]</span>
+float[] queryEmbedding = await embedder.EmbedAsync("পেমেন্ট ফেরত নিতে চাই", ct);
+var qv = new Vector(queryEmbedding);
+
+var hits = await db.Chunks
+    .Where(c =&gt; c.Dept == "finance")                                   <span class="c">// metadata filter</span>
+    .OrderBy(c =&gt; c.Embedding.CosineDistance(qv))                      <span class="c">// ছোট distance আগে</span>
+    .Take(5)
+    .Select(c =&gt; new { c.DocId, c.Content, Distance = c.Embedding.CosineDistance(qv) })
+    .ToListAsync(ct);</pre>
+<p>এই <code>hits</code>-ই পরে LLM-কে context হিসেবে পাঠানো হয় — পুরো RAG প্রবাহ অধ্যায় ১০ (RAG)-এর মতো। Embedding তৈরির জন্য .NET-এ <code>Microsoft.Extensions.AI</code>-এর <code>IEmbeddingGenerator</code> ব্যবহার করলে provider বদলানো সহজ থাকে (অধ্যায় ২০ দেখুন)।</p>
+
+<h3>১১. কোন Vector DB কখন — বাছাইয়ের গাইড</h3>
+<table>
+<tr><th>বিকল্প</th><th>ধরন</th><th>সবচেয়ে ভালো কখন</th><th>খেয়াল রাখুন</th></tr>
+<tr><td><span class="kw">pgvector</span> (PostgreSQL)</td><td>বিদ্যমান DB-র extension</td><td>আপনি ইতিমধ্যে PostgreSQL ব্যবহার করেন; কয়েক লাখ–কয়েক কোটি vector; SQL join/transaction/ফিল্টার একসাথে দরকার</td><td>অতি বিশাল scale বা অত্যন্ত কম latency-তে dedicated সেবা এগিয়ে থাকতে পারে</td></tr>
+<tr><td><span class="kw">Qdrant</span></td><td>Dedicated, open-source (cloud-ও আছে)</td><td>ভালো filter-সহ vector search; Rust-এ দ্রুত; সহজ API</td><td>আলাদা সিস্টেম চালাতে হয়</td></tr>
+<tr><td><span class="kw">Weaviate / Milvus</span></td><td>Dedicated, open-source</td><td>বড় scale, বিভিন্ন index, hybrid search</td><td>অপারেশনাল জটিলতা বেশি (Milvus)</td></tr>
+<tr><td><span class="kw">Pinecone</span></td><td>Fully managed (SaaS)</td><td>অপারেশন এড়িয়ে দ্রুত শুরু; scale নিয়ে চিন্তা নেই</td><td>খরচ; ডেটা বাইরে যায়; vendor-নির্ভরতা</td></tr>
+<tr><td><span class="kw">Azure AI Search / Elasticsearch / OpenSearch</span></td><td>Search engine + vector</td><td>keyword + vector hybrid search একই জায়গায়; আগে থেকে ব্যবহার করলে</td><td>ভারী; খরচ</td></tr>
+<tr><td><span class="kw">Redis</span></td><td>In-memory + vector</td><td>অতি কম latency, semantic cache</td><td>মেমরি ব্যয়বহুল</td></tr>
+<tr><td><span class="kw">Chroma</span></td><td>হালকা, embedded</td><td>শেখা, prototype, ছোট প্রজেক্ট</td><td>বড় production scale-এ অন্য বিকল্প ভাবুন</td></tr>
+<tr><td><span class="kw">FAISS</span></td><td><b>Library</b> (পূর্ণ database নয়)</td><td>গবেষণা, in-process দ্রুত ANN</td><td>persistence, filter, update নিজে সামলাতে হয়</td></tr>
+</table>
+<div class="callout why"><span class="tag">সিদ্ধান্তের সোজা নিয়ম</span>
+(১) শেখা/prototype → <b>Chroma</b>। (২) আপনার PostgreSQL আছে ও ডেটা মাঝারি → <b>pgvector</b> (সবচেয়ে কম নতুন জটিলতা)। (৩) বিশাল scale/বিশেষ filter/ঝামেলাহীন → <b>Qdrant বা Pinecone</b>। (৪) keyword + vector একসাথে ভারী ব্যবহার → <b>Elasticsearch/Azure AI Search</b>। প্রথমে সরলটা নিন; মাপা সমস্যা দেখা দিলেই বদলান।</div>
+
+<h3>১২. Metadata Filtering, Multi-tenancy ও Security</h3>
+<ul>
+<li><b>Filtering:</b> "শুধু finance বিভাগের", "২০২৫ সালের পরের", "বাংলা ভাষার" — metadata দিয়ে ফল সংকীর্ণ করা। (Qdrant/pgvector-এ filter আর vector search একসাথে চলে।)</li>
+<li><b>Hybrid search:</b> vector (অর্থ) + keyword/BM25 (হুবহু শব্দ) মিশিয়ে ফল — Invoice নম্বর, নাম, কোডের মতো "হুবহু" জিনিস vector একা মিস করতে পারে (অধ্যায় ৮ ও RRF)।</li>
+<li><b>Multi-tenancy (একাধিক গ্রাহক/কোম্পানি):</b> সহজ — প্রতিটা record-এ <code>tenant_id</code> রেখে <b>প্রতিটা query-তে বাধ্যতামূলক filter</b>। কঠোর বিচ্ছিন্নতা দরকার হলে প্রতি tenant-এর আলাদা collection/schema।</li>
+</ul>
+<div class="callout mistake"><span class="tag">Common mistake — Access Control ভুলে যাওয়া (গুরুতর নিরাপত্তা ত্রুটি)</span>
+HR-এর বেতন-নীতি ডকুমেন্ট আর সাধারণ policy একই Vector DB-তে থাকলে, শুধু "সবচেয়ে কাছের" দেখে ফল দিলে একজন সাধারণ কর্মী অন্যের গোপন ডকুমেন্টের অংশ দেখে ফেলতে পারে — LLM সেটা উত্তরে বলেও দিতে পারে। <b>প্রতিটা chunk-এ অ্যাক্সেস-অধিকার (role/user/tenant) metadata রাখুন, আর query-র সময় সেই ব্যবহারকারীর অধিকার দিয়ে filter বাধ্যতামূলক করুন</b> — LLM-এর উপর ছেড়ে দেবেন না (Safety অধ্যায় দেখুন)।</div>
+<div class="callout behind"><span class="tag">পর্দার পেছনে — Filter + ANN সমস্যা</span>
+ANN index আগে "কাছের ১০০ জন" খুঁজে তারপর filter করলে (<b>post-filter</b>), filter কঠোর হলে হাতে প্রায় কিছুই থাকে না। ভালো Vector DB filter-কে খোঁজার মধ্যেই (<b>pre/in-filter</b>) ঢোকায়। pgvector-এ কঠোর filter থাকলে <code>ef_search</code> বাড়ান বা filter-এর জন্য partition/আলাদা index ভাবুন; ফল কম এলে এটাই প্রথম সন্দেহ।</div>
+
+<h3>১৩. ডেটা বদলালে কী হবে — Update, Delete ও Re-embedding</h3>
+<p>ডকুমেন্ট স্থির থাকে না। Vector DB-তে "রক্ষণাবেক্ষণ" একটা বড় অংশ, যা tutorial-এ প্রায়ই বাদ যায়।</p>
+<table>
+<tr><th>ঘটনা</th><th>কী করবেন</th></tr>
+<tr><td>ডকুমেন্ট সম্পাদিত হলো</td><td><code>doc_id</code> ধরে পুরোনো সব chunk মুছে নতুন chunk আবার embed করে ঢোকান (বা chunk-hash তুলনা করে শুধু বদলানোগুলো)</td></tr>
+<tr><td>ডকুমেন্ট মুছতে হবে (আইনি/গোপনীয়তা)</td><td><code>doc_id</code> ধরে সব chunk delete — সম্পূর্ণ মুছেছে কিনা যাচাই করুন (backup/cache-সহ)</td></tr>
+<tr><td>Embedding model বদলাতে চান</td><td><b>সব ডেটা আবার embed</b> করতে হবে (ভিন্ন model-এর vector মেশে না)। নতুন collection/কলাম বানিয়ে সমান্তরালে ভরুন, চালু হলে সুইচ করুন, তারপর পুরোনোটা মুছুন। <code>embedding_model</code> ও ভার্সন metadata-তে রাখুন</td></tr>
+<tr><td>একই ডকুমেন্ট বারবার ঢুকছে</td><td>Idempotent ingestion: <code>(doc_id, chunk_index)</code> unique + <code>content_hash</code> — hash একই হলে আবার embed করবেন না (টাকা বাঁচে)</td></tr>
+</table>
+<pre><span class="c"># content_hash দিয়ে অপ্রয়োজনীয় re-embed এড়ানো</span>
+import hashlib
+def sha(t: str) -&gt; str: return hashlib.sha256(t.encode("utf-8")).hexdigest()
+
+<span class="c"># DB-তে আগের hash আছে কিনা দেখে: একই হলে skip, নইলে embed + upsert</span></pre>
+
+<h3>১৪. AI-এর সাথে Vector DB-র সম্পর্ক — কোথায় কোথায় কাজে লাগে</h3>
+<div class="diagram"><pre>
+                              ┌─────────────────────┐
+   ┌──────────────────────────│   Vector Database    │──────────────────────────┐
+   │                          └─────────────────────┘                          │
+   ▼                 ▼                 ▼                    ▼                    ▼
+ RAG            Semantic          Agent Long-term     Recommendation       Tool/Skill
+ (ডকুমেন্টে     Cache             Memory              ও Similar-item       Retrieval
+  প্রশ্নোত্তর)   (একই অর্থের       (পুরোনো কথা মনে      (এর মতো আরও          (শত শত tool থেকে
+                 প্রশ্নে পুরোনো     রাখা)                 কী আছে)              প্রাসঙ্গিকগুলো বাছা)
+                 উত্তর ফেরত)
+</pre></div>
+<table>
+<tr><th>ব্যবহার</th><th>কীভাবে Vector DB কাজ করে</th><th>কোন অধ্যায়</th></tr>
+<tr><td><span class="kw">RAG</span></td><td>প্রশ্নের কাছের chunk খুঁজে LLM-কে context দেয় — hallucination কমে, নিজস্ব ডেটায় উত্তর</td><td>RAG (অধ্যায় ১০)</td></tr>
+<tr><td><span class="kw">Semantic Cache</span></td><td>নতুন প্রশ্নের vector আগের প্রশ্নের কাছাকাছি হলে LLM call না করে পুরোনো উত্তর ফেরত — cost ও latency কমে</td><td>Production (cache অংশ)</td></tr>
+<tr><td><span class="kw">Agent Memory</span></td><td>পুরোনো conversation/সিদ্ধান্তের সারাংশ vector হিসেবে রেখে প্রাসঙ্গিকটা ফিরিয়ে আনা (long-term memory)</td><td>AI Agents</td></tr>
+<tr><td><span class="kw">Tool/Skill retrieval</span></td><td>একটা agent-এর ৫০০ tool থাকলে সব prompt-এ না দিয়ে প্রশ্নের সাথে মেলা ৫-১০টা বেছে দেওয়া</td><td>MCP, Agents</td></tr>
+<tr><td><span class="kw">Recommendation / Similar items</span></td><td>"এই invoice-এর মতো আগের invoice", "সদৃশ ticket", "পছন্দের মতো হোটেল"</td><td>Real-world model</td></tr>
+<tr><td><span class="kw">Duplicate / Near-duplicate শনাক্ত</span></td><td>প্রায় একই বিবরণের লেনদেন/ticket/vendor খুঁজে বের করা</td><td>—</td></tr>
+<tr><td><span class="kw">Classification by example (kNN)</span></td><td>নতুন voucher-এর বিবরণ কাছের পুরোনো voucher-এর account-এর মতো → সেই account প্রস্তাব</td><td>Real-world model</td></tr>
+<tr><td><span class="kw">Multimodal search</span></td><td>ছবি/অডিও-ও embed করে "ছবি দিয়ে ছবি খোঁজা" বা "লেখা দিয়ে ছবি"</td><td>Model Landscape</td></tr>
+</table>
+<div class="callout why"><span class="tag">কেন LLM-এর জন্য Vector DB এত গুরুত্বপূর্ণ</span>
+LLM-এর জ্ঞান train-এর সময় পর্যন্ত স্থির, আর context window সীমিত (অধ্যায় ৩)। Vector DB হলো LLM-এর <b>বাহ্যিক দীর্ঘমেয়াদি স্মৃতি</b>: আপনার কোটি কোটি শব্দের ডেটা থেকে প্রশ্নের সময় ঠিক যে কয়টা টুকরো দরকার শুধু সেগুলো বের করে LLM-কে দেওয়া — তাই মডেল বদলাতে/ফাইন-টিউন করতে হয় না, ডেটা সবসময় হালনাগাদ রাখা যায়, আর উৎস উদ্ধৃত করা যায়।</div>
+
+<h3>১৫. সুবিধা ও সীমাবদ্ধতা — সৎ মূল্যায়ন</h3>
+<div class="grid2">
+  <div class="box"><b>সুবিধা</b><br>• শব্দ নয়, <b>অর্থ</b> দিয়ে খোঁজা (ভাষা/প্রতিশব্দ নির্বিশেষে)<br>• কোটি কোটি ডেটায়ও মিলিসেকেন্ডে উত্তর (ANN)<br>• LLM-কে নিজস্ব, হালনাগাদ ডেটায় উত্তর দেওয়া (RAG)<br>• Fine-tuning ছাড়াই জ্ঞান যোগ/বদল<br>• টেক্সট, ছবি, অডিও — সবকিছুতেই কাজ করে<br>• উৎস-উদ্ধৃতি ও যাচাইযোগ্যতা</div>
+  <div class="box"><b>সীমাবদ্ধতা</b><br>• ফল "আনুমানিক" — ১০০% নিখুঁত নয় (ANN)<br>• হুবহু মিল (ID, কোড, নাম) vector একা দুর্বল — hybrid লাগে<br>• ভালো chunking ও embedding model ছাড়া ফল খারাপ<br>• স্টোরেজ ও মেমরি ব্যয়বহুল হতে পারে<br>• Model বদলালে সব আবার embed<br>• কেন এই ফল এল তা ব্যাখ্যা করা কঠিন</div>
+</div>
+<h4>কখন Vector DB লাগবে না</h4>
+<ul>
+<li><b>ডেটা ছোট:</b> পুরো ডকুমেন্ট LLM-এর context window-এ ঢুকে গেলে (কয়েক পৃষ্ঠা) retrieval-এর জটিলতা অপ্রয়োজনীয়।</li>
+<li><b>হুবহু/কাঠামোগত প্রশ্ন:</b> "Invoice #1042-এর amount কত?", "অক্টোবরের মোট sales" — এগুলো SQL-এর কাজ। Vector search অনুমান করে, SQL নিখুঁত উত্তর দেয়। (এসব ক্ষেত্রে LLM + SQL tool/MCP ব্যবহার করুন।)</li>
+<li><b>শুধু keyword search যথেষ্ট:</b> ব্যবহারকারীরা যদি সবসময় সঠিক পরিভাষায় খোঁজে, full-text search সরল ও সস্তা।</li>
+</ul>
+
+<h3>১৬. Performance ও খরচ — সংখ্যা দিয়ে বোঝা</h3>
+<h4>মেমরি/স্টোরেজের হিসাব</h4>
+<p>প্রতিটা সংখ্যা সাধারণত <code>float32</code> = ৪ বাইট। তাই: <b>ঠিক vector-এর আকার = vector-সংখ্যা × dimension × ৪ বাইট।</b></p>
+<pre>১০ লাখ chunk × ১৫৩৬ dimension × ৪ বাইট = ~৬.১ GB   (শুধু vector; index ও metadata আলাদা)
+১ কোটি chunk × ১৫৩৬ × ৪                  = ~৬১ GB
+১ কোটি chunk × ৭৬৮  × ৪                  = ~৩১ GB   (ছোট dimension → অর্ধেক)
+HNSW index-এর অতিরিক্ত মেমরি (গ্রাফ সংযোগ) আরও যোগ হয়</pre>
+<table>
+<tr><th>কৌশল</th><th>কীভাবে খরচ কমে</th><th>মূল্য</th></tr>
+<tr><td>ছোট dimension-এর model/ছেঁটে ফেলা</td><td>কিছু model dimension কমানোর সুবিধা দেয় (যেমন OpenAI <code>text-embedding-3</code> এ <code>dimensions</code> প্যারামিটার)</td><td>সামান্য নির্ভুলতা কমে</td></tr>
+<tr><td>Quantization (int8/binary/PQ)</td><td>সংখ্যাকে ছোট আকারে সংরক্ষণ — মেমরি ৪–৩২ গুণ কম</td><td>কিছু recall কমে; প্রায়ই rescoring দিয়ে পুষিয়ে নেওয়া যায়</td></tr>
+<tr><td>ডিস্ক-ভিত্তিক index</td><td>সব মেমরিতে না রেখে SSD-তে</td><td>কিছুটা ধীর</td></tr>
+<tr><td>অপ্রয়োজনীয় chunk ছাঁটা, ডুপ্লিকেট বাদ</td><td>কম ডেটা = কম খরচ ও ভালো ফল</td><td>—</td></tr>
+<tr><td>Batch embedding + hash দিয়ে re-embed এড়ানো</td><td>Embedding API খরচ কমে</td><td>—</td></tr>
+<tr><td>Semantic cache</td><td>বারবার একই প্রশ্নে LLM call বাঁচে</td><td>পুরোনো উত্তর দেওয়ার ঝুঁকি (TTL রাখুন)</td></tr>
+</table>
+<div class="callout best"><span class="tag">Latency-র বাজেট</span>
+একটা RAG অনুরোধের সময় = embedding (১০০–৩০০ms) + vector search (৫–৫০ms) + (রিরাঙ্ক) + LLM generation (সবচেয়ে বড় অংশ, সেকেন্ড)। অর্থাৎ vector search সাধারণত bottleneck <b>নয়</b> — তাই ছোট ডেটায় সরলটাই রাখুন, আর আসল সময় যায় LLM ও embedding-এ।</div>
+
+<h3>১৭. মান মাপা — আপনার Retrieval কি আসলে ভালো?</h3>
+<p>"চমৎকার লাগছে" যথেষ্ট নয়। একটা ছোট <b>golden set</b> বানান: ২০–১০০টা বাস্তব প্রশ্ন, প্রতিটার সঠিক উত্তর কোন chunk/doc-এ আছে তা হাতে চিহ্নিত।</p>
+<table>
+<tr><th>Metric</th><th>অর্থ</th></tr>
+<tr><td><b>Hit Rate@k / Recall@k</b></td><td>সঠিক chunk কি top-k-এর মধ্যে এসেছে? (প্রশ্নের কত শতাংশে)</td></tr>
+<tr><td><b>MRR</b> (Mean Reciprocal Rank)</td><td>সঠিক chunk কত উপরে এল? (১ম হলে ১, ২য় হলে ০.৫, ৩য় হলে ০.৩৩…)</td></tr>
+<tr><td><b>nDCG</b></td><td>একাধিক প্রাসঙ্গিক ফলের ক্রম কতটা ভালো</td></tr>
+</table>
+<pre>def hit_rate_at_k(golden, search_fn, k=5):
+    """golden = [(প্রশ্ন, সঠিক_doc_id), ...]; search_fn(প্রশ্ন, k) → doc_id-র তালিকা"""
+    hits = sum(1 for q, gold in golden if gold in search_fn(q, k))
+    return hits / len(golden)
+
+def mrr(golden, search_fn, k=10):
+    total = 0.0
+    for q, gold in golden:
+        ids = search_fn(q, k)
+        total += 1 / (ids.index(gold) + 1) if gold in ids else 0
+    return total / len(golden)
+
+<span class="c"># chunk size, overlap, embedding model, hybrid, reranker — প্রতিটা বদলে এই সংখ্যা তুলনা করুন</span></pre>
+<div class="callout why"><span class="tag">কেন দরকার</span>
+Retrieval ভালো না হলে LLM যত ভালোই হোক উত্তর খারাপ হবে (RAG-এর বেশিরভাগ ব্যর্থতা এখানেই)। Retrieval আর generation আলাদা করে মাপলে বোঝা যায় সমস্যা কোথায় — Evaluation অধ্যায়ের নীতি।</div>
+
+<h3>১৮. Common ভুল — নতুনরা যেখানে আটকে যায়</h3>
+<div class="callout mistake"><span class="tag">ভুল ১ — Query ও Document-এ ভিন্ন embedding model</span>
+দুটো আলাদা "ম্যাপ" — ফল অর্থহীন। সবসময় একই model (ও ভার্সন)।</div>
+<div class="callout mistake"><span class="tag">ভুল ২ — Chunk খুব বড়/ছোট বা overlap ছাড়া</span>
+গুরুত্বপূর্ণ তথ্য দুই chunk-এর সীমানায় কেটে যায়। মাঝারি আকার + overlap দিয়ে শুরু করে golden set-এ মেপে টিউন করুন।</div>
+<div class="callout mistake"><span class="tag">ভুল ৩ — Metric/Index-এর অমিল</span>
+Cosine-এর জন্য index বানিয়ে L2 দিয়ে query — index ব্যবহারই হয় না। Embedding model-এর প্রস্তাবিত metric-এ একই operator।</div>
+<div class="callout mistake"><span class="tag">ভুল ৪ — "সবসময় top-k দাও, যতই অপ্রাসঙ্গিক হোক"</span>
+Vector search সবসময় <i>কিছু একটা</i> "সবচেয়ে কাছের" ফেরত দেয়, এমনকি পুরো ডেটায় প্রাসঙ্গিক কিছু না থাকলেও। <b>Similarity threshold</b> রাখুন (যেমন ০.৭-এর নিচে বাদ) এবং কিছু না পেলে LLM-কে "জানি না" বলতে দিন — নইলে আজেবাজে context থেকে hallucination হয়।</div>
+<div class="callout mistake"><span class="tag">ভুল ৫ — শুধু vector, hybrid ছাড়া</span>
+"Invoice INV-1042", পণ্যের কোড, ব্যক্তির নাম — হুবহু শব্দে vector দুর্বল। BM25/keyword মিশিয়ে hybrid ও reranker ব্যবহার করুন।</div>
+<div class="callout mistake"><span class="tag">ভুল ৬ — Access control ও PII উপেক্ষা</span>
+প্রতিটা chunk-এ অনুমতি metadata ও query-তে বাধ্যতামূলক filter। ব্যক্তিগত তথ্য embed করার আগে মাস্ক বিবেচনা করুন; মুছতে হলে vector-ও মুছুন (অধ্যায় ১৮)।</div>
+<div class="callout mistake"><span class="tag">ভুল ৭ — Update/Delete/Re-embed-এর পরিকল্পনা নেই</span>
+ডেটা পুরোনো হয়, model বদলায় — শুরু থেকেই <code>doc_id</code>, <code>embedding_model</code>, <code>content_hash</code>, <code>updated_at</code> রাখুন।</div>
+<div class="callout mistake"><span class="tag">ভুল ৮ — Dimension না মেলা</span>
+Table <code>vector(1536)</code> কিন্তু model ৩০৭২ দেয় — insert error। Model বদলালে schema-ও বদলাতে হয়।</div>
+<div class="callout mistake"><span class="tag">ভুল ৯ — Index বানানোর সময় ও মেমরি অগ্রাহ্য</span>
+লক্ষ লক্ষ vector-এ HNSW index বানাতে সময় ও মেমরি লাগে; production-এ সরাসরি ভারী ডেটায় index বানালে লক কাজের উপর প্রভাব ফেলতে পারে — <code>CREATE INDEX CONCURRENTLY</code> ও সময়সূচি ভাবুন।</div>
+<div class="callout mistake"><span class="tag">ভুল ১০ — Retrieval না মেপে LLM/prompt-কে দোষ দেওয়া</span>
+আগে দেখুন সঠিক chunk আদৌ আসছে কিনা (golden set)। না এলে prompt বদলে লাভ নেই।</div>
+
+<h3>১৯. শব্দকোষ (Glossary) — নতুনদের জন্য</h3>
+<table>
+<tr><th>শব্দ</th><th>সহজ অর্থ</th></tr>
+<tr><td>Embedding / Vector</td><td>লেখা/ছবির অর্থের সংখ্যা-তালিকা</td></tr>
+<tr><td>Dimension</td><td>তালিকায় কয়টা সংখ্যা (যেমন ১৫৩৬)</td></tr>
+<tr><td>Chunk</td><td>ডকুমেন্টের ছোট টুকরো যার আলাদা vector থাকে</td></tr>
+<tr><td>Collection / Index (Vector DB-তে)</td><td>vector-এর গ্রুপ (table-এর মতো)</td></tr>
+<tr><td>Payload / Metadata</td><td>vector-এর সাথে রাখা অতিরিক্ত তথ্য (লেখা, বিভাগ, তারিখ)</td></tr>
+<tr><td>kNN</td><td>k-Nearest Neighbors — সবচেয়ে কাছের k টা (নিখুঁত)</td></tr>
+<tr><td>ANN</td><td>Approximate Nearest Neighbor — প্রায়-সেরা, কিন্তু অনেক দ্রুত</td></tr>
+<tr><td>HNSW / IVF / PQ</td><td>ANN index-এর কৌশল (গ্রাফ / এলাকা-ভাগ / সংকোচন)</td></tr>
+<tr><td>Recall</td><td>ANN কতটা নিখুঁত (আসল সেরাদের কত শতাংশ পেল)</td></tr>
+<tr><td>Top-k</td><td>সবচেয়ে কাছের k সংখ্যক ফল</td></tr>
+<tr><td>Cosine similarity</td><td>দুই vector-এর দিকের মিল (−১ থেকে ১)</td></tr>
+<tr><td>Normalize</td><td>vector-এর দৈর্ঘ্য ১ করা</td></tr>
+<tr><td>Hybrid search</td><td>vector + keyword search মেশানো</td></tr>
+<tr><td>Reranker</td><td>প্রথমে অনেক ফল এনে একটা মডেল দিয়ে ভালো করে সাজানো</td></tr>
+<tr><td>RAG</td><td>খুঁজে-আনা তথ্য দিয়ে LLM-কে উত্তর দেওয়ানো</td></tr>
+<tr><td>Quantization</td><td>vector ছোট আকারে সংরক্ষণ (মেমরি বাঁচাতে)</td></tr>
+<tr><td>Semantic cache</td><td>অর্থে একই প্রশ্নে পুরোনো উত্তর ফেরত</td></tr>
+</table>
+
+<h3>২০. শেখার Roadmap — ধাপে ধাপে</h3>
+<ol>
+<li><b>ধারণা:</b> embedding ও cosine similarity বোঝা (এই অধ্যায়ের ২ ও ৫ নং অংশ; ছোট সংখ্যা হাতে মিলিয়ে দেখুন)।</li>
+<li><b>ছোট প্রজেক্ট:</b> ১০–২০টা বাক্য Chroma-তে ঢুকিয়ে বিভিন্ন প্রশ্নে খুঁজুন (৮ নং অংশ)।</li>
+<li><b>আসল embedding model:</b> OpenAI বা open-source model দিয়ে vector বানান; বাংলা-ইংরেজি মিশিয়ে পরীক্ষা।</li>
+<li><b>নিজের ডেটা:</b> একটা PDF/policy chunk করে ঢুকিয়ে প্রশ্ন করুন; chunk size বদলে ফল দেখুন।</li>
+<li><b>pgvector:</b> আপনার PostgreSQL-এ extension, table, HNSW index (৯ নং অংশ); <code>EXPLAIN ANALYZE</code>।</li>
+<li><b>.NET:</b> EF Core + Pgvector দিয়ে খোঁজা (১০ নং অংশ)।</li>
+<li><b>RAG:</b> খুঁজে-আনা chunk LLM-কে দিয়ে উত্তর (RAG অধ্যায়)।</li>
+<li><b>মান মাপা:</b> golden set, hit-rate/MRR; hybrid ও reranker যোগ।</li>
+<li><b>Production:</b> update/delete/re-embed, access control, monitoring, খরচ।</li>
+</ol>
+<div class="callout best"><span class="tag">সংক্ষেপে মনে রাখুন</span>
+(১) <b>Vector = অর্থের সংখ্যা-তালিকা</b>; কাছাকাছি vector = কাছাকাছি অর্থ। (২) <b>Vector DB</b> = vector + text + metadata সংরক্ষণ ও "কাছের খোঁজা" দ্রুত করার database। (৩) দ্রুততার জন্য <b>ANN index (HNSW)</b>, ছোট ডেটায় brute force-ই যথেষ্ট। (৪) <b>Chunking</b> ও সঠিক <b>embedding model</b> ফলের মান ঠিক করে — query ও document-এ একই model। (৫) হুবহু/কাঠামোগত প্রশ্নে SQL, অর্থ-ভিত্তিক প্রশ্নে vector — দরকারে <b>hybrid</b>। (৬) অনুমতি-filter, update/re-embed, threshold ও মাপজোক — production-এর আসল কাজ। (৭) PostgreSQL থাকলে <b>pgvector</b> দিয়ে শুরু করুন।</div>
+</template>
+
 <template data-page="rag">
-<h2 class="title">৯. RAG — Retrieval-Augmented Generation</h2>
+<h2 class="title">১০. RAG — Retrieval-Augmented Generation</h2>
 <p class="lead">RAG হলো আজকের AI Engineering-এর সবচেয়ে ব্যবহৃত প্যাটার্ন — LLM-কে তার training data-র বাইরের, হালনাগাদ, বা প্রাইভেট জ্ঞান দিয়ে উত্তর দিতে সক্ষম করা, fine-tuning ছাড়াই।</p>
 
 <h3>সমস্যা — কেন RAG দরকার</h3>
@@ -657,7 +1197,7 @@ source/ডকুমেন্ট ID, version, তৈরির তারিখ, em
 </template>
 
 <template data-page="toolcalling">
-<h2 class="title">১০. Function/Tool Calling ও Structured Output</h2>
+<h2 class="title">১১. Function/Tool Calling ও Structured Output</h2>
 <p class="lead">LLM নিজে থেকে ডাটাবেস query করতে পারে না, API call করতে পারে না, বা real-time ডেটা আনতে পারে না। <span class="kw">Tool calling</span> এই সীমাবদ্ধতা ভাঙে — মডেলকে "কোন ফাংশন কল করা উচিত ও কী argument দিয়ে" তা বলার ক্ষমতা দিয়ে, বাস্তবায়ন আপনার code-এ রেখে।</p>
 
 <h3>কীভাবে কাজ করে — মডেল কখনো সরাসরি কোড চালায় না</h3>
@@ -713,7 +1253,7 @@ while (true) {
 </template>
 
 <template data-page="mcp">
-<h2 class="title">১১. MCP — Model Context Protocol</h2>
+<h2 class="title">১২. MCP — Model Context Protocol</h2>
 <p class="lead">LLM নিজে শুধু তার context-এর ভেতরের তথ্য নিয়ে উত্তর দেয়। <span class="kw">MCP (Model Context Protocol)</span> হলো AI-এর জন্য একটা <b>standard উপায়</b>, যার মাধ্যমে AI বাইরের Tool, Data ও Service-এর সাথে কথা বলতে পারে — প্রতিটা integration আলাদা করে বানানোর বদলে একটাই সাধারণ নিয়মে।</p>
 
 <div class="callout why"><span class="tag">কেন এখনই শেখা দরকার</span>
@@ -1010,7 +1550,7 @@ Console.WriteLine(reply.Text);</pre>
 </template>
 
 <template data-page="agents">
-<h2 class="title">১২. AI Agents ও Agentic Workflow</h2>
+<h2 class="title">১৩. AI Agents ও Agentic Workflow</h2>
 <p class="lead">যখন একটা LLM নিজে থেকে একাধিক ধাপে চিন্তা করে, tool ব্যবহার করে, ফলাফল দেখে পরবর্তী পদক্ষেপ ঠিক করে — মানুষ প্রতিটা ধাপে হস্তক্ষেপ না করেই — তখন সেটাকে একটা <span class="kw">AI Agent</span> বলা হয়।</p>
 
 <h3>Agent বনাম সাধারণ LLM Call — মূল পার্থক্য</h3>
@@ -1077,7 +1617,7 @@ Timeout, network ব্যর্থতা বা মডেলের পুনর
 </template>
 
 <template data-page="multiagent">
-<h2 class="title">১৩. Multi-Agent System ও Orchestration</h2>
+<h2 class="title">১৪. Multi-Agent System ও Orchestration</h2>
 <p class="lead">একটা একক agent যখন খুব বেশি দায়িত্ব সামলাতে গিয়ে বিভ্রান্ত হয়ে যায়, তখন কাজটাকে ভাগ করে একাধিক বিশেষায়িত agent-এর মধ্যে সমন্বয় করাটাই যুক্তিসঙ্গত হয়ে ওঠে।</p>
 
 <h3>কেন একটা Single Agent সবসময় যথেষ্ট নয়</h3>
@@ -1114,7 +1654,7 @@ Agent loop, tool-call parsing, retry, state management — এগুলো ন�
 </template>
 
 <template data-page="langchain">
-<h2 class="title">১৪. LangChain ও LangGraph — LLM Application Framework</h2>
+<h2 class="title">১৫. LangChain ও LangGraph — LLM Application Framework</h2>
 <p class="lead">আগের অধ্যায়গুলোতে আমরা prompt, RAG, tool calling, agent আলাদা আলাদা করে শিখেছি। <span class="kw">LangChain</span> হলো এই সব উপাদানকে একটা সাধারণ interface-এ জুড়ে দেওয়া framework, আর <span class="kw">LangGraph</span> হলো সেই উপাদান দিয়ে <b>stateful, বহু-ধাপের agent workflow</b> বানানোর low-level orchestration লাইব্রেরি। এই অধ্যায়ে দুটো কী, কেন লাগে, কীভাবে ব্যবহার করবেন, কখন করবেন না — সব একসাথে।</p>
 
 <div class="callout why"><span class="tag">কেন এখনই শেখা দরকার</span>
@@ -1496,7 +2036,7 @@ Checkpoint থেকে resume বা retry হলে একটা node আব�
 </template>
 
 <template data-page="finetuning">
-<h2 class="title">১৫. Fine-tuning বনাম RAG বনাম Prompting</h2>
+<h2 class="title">১৬. Fine-tuning বনাম RAG বনাম Prompting</h2>
 <p class="lead">AI Engineering-এ সবচেয়ে বেশি ভুল হওয়া সিদ্ধান্তগুলোর একটা: "মডেলকে আমার ডেটা শেখানোর জন্য fine-tune করব"। বেশিরভাগ ক্ষেত্রেই এটা ভুল টুল বাছাই।</p>
 
 <h3>তিনটা পদ্ধতির মূল পার্থক্য</h3>
@@ -1531,7 +2071,7 @@ Fine-tuning মূলত মডেলকে <b>নতুন প্যাটা�
 </template>
 
 <template data-page="evaluation">
-<h2 class="title">১৬. Evaluation ও Testing — LLM App Quality</h2>
+<h2 class="title">১৭. Evaluation ও Testing — LLM App Quality</h2>
 <p class="lead">একটা প্রথাগত software-এ unit test-এর input/output নির্দিষ্ট (deterministic)। একটা LLM feature-এ output প্রতিবার সামান্য বদলাতে পারে — তাই "কীভাবে টেস্ট করব" প্রশ্নটার উত্তর ভিন্নভাবে ভাবতে হয়।</p>
 
 <h3>Offline Evaluation — Golden Dataset দিয়ে</h3>
@@ -1571,7 +2111,7 @@ Fine-tuning মূলত মডেলকে <b>নতুন প্যাটা�
 </template>
 
 <template data-page="safety">
-<h2 class="title">১৭. Safety, Security ও Guardrails</h2>
+<h2 class="title">১৮. Safety, Security ও Guardrails</h2>
 <p class="lead">LLM-চালিত ফিচার প্রথাগত software-এর তুলনায় নতুন ধরনের আক্রমণ-তল (attack surface) খুলে দেয় — কারণ ইনপুট নিজেই "কোড"-এর মতো আচরণ প্রভাবিত করতে পারে। OWASP-এর LLM Top 10 এই ঝুঁকিগুলো ক্যাটাগরি করে।</p>
 
 <h3>OWASP Top 10 for LLM Applications (সংক্ষিপ্ত)</h3>
@@ -1612,7 +2152,7 @@ Tool-calling বা JSON mode-এর মতো structured API দিয়ে ou
 </template>
 
 <template data-page="production">
-<h2 class="title">১৮. Production Engineering — Latency, Cost, Caching</h2>
+<h2 class="title">১৯. Production Engineering — Latency, Cost, Caching</h2>
 <p class="lead">একটা LLM feature demo-তে ভালো কাজ করা আর হাজার হাজার ব্যবহারকারীর জন্য সাশ্রয়ী, দ্রুত, নির্ভরযোগ্যভাবে চালানো — দুইটা সম্পূর্ণ আলাদা চ্যালেঞ্জ।</p>
 
 <h3>Streaming — কেন perceived latency আসল latency-এর চেয়ে গুরুত্বপূর্ণ</h3>
@@ -1669,7 +2209,7 @@ Queue একটা buffer — হঠাৎ traffic spike হলেও LLM provid
 </template>
 
 <template data-page="integration">
-<h2 class="title">১৯. Backend/.NET Integration — বাস্তবে AI Feature বসানো</h2>
+<h2 class="title">২০. Backend/.NET Integration — বাস্তবে AI Feature বসানো</h2>
 <p class="lead">এখন পর্যন্ত শেখা সব ধারণা একটা বাস্তব ব্যাকএন্ড architecture-এ কীভাবে বসে — এই অধ্যায়ে সেটাই সংযুক্ত করা হবে, .NET-কেন্দ্রিক দৃষ্টিভঙ্গিতে।</p>
 
 <h3>Architecture Pattern — কখনো Frontend থেকে সরাসরি নয়</h3>
@@ -1728,7 +2268,7 @@ API key কখনো <code>appsettings.json</code>-এ commit করবেন �
 <p>প্রতিটা unit test-এ আসল LLM API call করা ধীর, ব্যয়বহুল, এবং flaky (output প্রতিবার বদলাতে পারে)। এর বদলে <code>IChatCompletionService</code> interface-টা mock করে বিজনেস লজিক (যেমন "AI response থেকে সঠিক field extract হচ্ছে কিনা") deterministic ভাবে টেস্ট করুন। প্রকৃত prompt quality/model behavior টেস্ট করার জন্য আলাদা, কম ঘনঘন চলা eval suite রাখুন (Evaluation অধ্যায়ে বর্ণিত golden dataset পদ্ধতিতে) — এই দুই স্তরের টেস্টিং একে অপরের বিকল্প নয়, পরিপূরক।</p>
 
 <h3>সবকিছু একসাথে — একটা এন্ড-টু-এন্ড ফিচারের চিত্র</h3>
-<p>ধরুন আপনি একটা "ডকুমেন্ট থেকে প্রশ্নোত্তর" ফিচার বানাচ্ছেন একটা ASP.NET Core backend-এ। পুরো প্রবাহ এই কোর্সের প্রতিটা অধ্যায়কে ছুঁয়ে যায়: ডকুমেন্ট আপলোড হলে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয় (অধ্যায় ৭-৯); ব্যবহারকারীর প্রশ্ন এলে backend সেই প্রশ্ন embed করে প্রাসঙ্গিক chunk retrieve করে (অধ্যায় ৮); একটা grounded prompt বানিয়ে LLM-কে পাঠানো হয়, context engineering নীতি মেনে শুধু প্রাসঙ্গিক অংশ কিউরেট করে পাঠানো হয় (অধ্যায় ৬), প্রয়োজনে একটা tool দিয়ে অতিরিক্ত ডেটা আনা হয় (অধ্যায় ৪,৫,১০,১১); output নিরাপত্তা ও PII guardrail দিয়ে যাচাই করা হয় (অধ্যায় ১৭); response streaming-এ ফেরত পাঠানো হয়, আর প্রতিটা call-এর token/cost/latency log হয় (অধ্যায় ১৮); নিয়মিত golden dataset-এর উপর eval চালিয়ে regression যাচাই করা হয় (অধ্যায় ১৬)। এই পুরো চিত্রটাই আসলে "AI Engineering" মানে কী তার সংক্ষিপ্ত রূপ — একটা LLM-কে ঘিরে বানানো নির্ভরযোগ্য, পর্যবেক্ষণযোগ্য, নিরাপদ software।</p>
+<p>ধরুন আপনি একটা "ডকুমেন্ট থেকে প্রশ্নোত্তর" ফিচার বানাচ্ছেন একটা ASP.NET Core backend-এ। পুরো প্রবাহ এই কোর্সের প্রতিটা অধ্যায়কে ছুঁয়ে যায়: ডকুমেন্ট আপলোড হলে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয় (অধ্যায় ৭-১০); ব্যবহারকারীর প্রশ্ন এলে backend সেই প্রশ্ন embed করে প্রাসঙ্গিক chunk retrieve করে (অধ্যায় ৮); একটা grounded prompt বানিয়ে LLM-কে পাঠানো হয়, context engineering নীতি মেনে শুধু প্রাসঙ্গিক অংশ কিউরেট করে পাঠানো হয় (অধ্যায় ৬), প্রয়োজনে একটা tool দিয়ে অতিরিক্ত ডেটা আনা হয় (অধ্যায় ৪,৫,১১,১২); output নিরাপত্তা ও PII guardrail দিয়ে যাচাই করা হয় (অধ্যায় ১৮); response streaming-এ ফেরত পাঠানো হয়, আর প্রতিটা call-এর token/cost/latency log হয় (অধ্যায় ১৯); নিয়মিত golden dataset-এর উপর eval চালিয়ে regression যাচাই করা হয় (অধ্যায় ১৭)। এই পুরো চিত্রটাই আসলে "AI Engineering" মানে কী তার সংক্ষিপ্ত রূপ — একটা LLM-কে ঘিরে বানানো নির্ভরযোগ্য, পর্যবেক্ষণযোগ্য, নিরাপদ software।</p>
 
 <h3>Microsoft.Extensions.AI ও Semantic Kernel — .NET-এ কোনটা কখন</h3>
 <p>উপরের হাতে-লেখা <code>IChatCompletionService</code> abstraction ধারণা বোঝার জন্য ভালো, কিন্তু বাস্তব প্রজেক্টে .NET ইকোসিস্টেমের নিজস্ব লাইব্রেরি ব্যবহার করা বেশি যুক্তিসঙ্গত। <span class="kw">Microsoft.Extensions.AI</span> একটা হালকা, provider-নিরপেক্ষ abstraction (<code>IChatClient</code>, embedding generator) দেয় এবং middleware-এর মতো function invocation, caching, telemetry যোগ করা যায়। <span class="kw">Semantic Kernel</span> তার উপরে plugin, agent ও orchestration-এর মতো বেশি ফিচার দেয়।</p>
@@ -1777,7 +2317,7 @@ Worker-এ concurrency সীমিত রাখুন (provider rate limit ম�
 </template>
 
 <template data-page="realworld">
-<h2 class="title">২০. Model-কে বাস্তব Application-এ কাজে লাগানো — Prediction থেকে Production</h2>
+<h2 class="title">২১. Model-কে বাস্তব Application-এ কাজে লাগানো — Prediction থেকে Production</h2>
 <p class="lead">এতক্ষণ আমরা LLM, RAG, agent শিখেছি। কিন্তু AI মানে শুধু chatbot নয়। আপনার application-এ <b>"পরের মাসে কত বিক্রি হবে?"</b>, <b>"এই Voucher-টা কি সন্দেহজনক?"</b>, <b>"কোন customer টাকা দিতে দেরি করবে?"</b> — এসব প্রশ্নের উত্তর দেয় <span class="kw">Prediction Model (ML Model)</span>। এই অধ্যায়ে ধাপে ধাপে দেখব: কোন সমস্যায় কোন model, কীভাবে আপনার app-এ বসাবেন, কীভাবে মাপবেন আসলেই লাভ হচ্ছে কিনা, আর কোথায় কোথায় মানুষ ভুল করে।</p>
 
 <div class="callout why"><span class="tag">এই অধ্যায় থেকে কী পাবেন</span>
@@ -2221,7 +2761,7 @@ Monitoring ও retraining ছাড়া model মাসের পর মাস
 <tr><td>২</td><td>Voucher-এ GL account প্রস্তাব</td><td>Classification (ছোট ML বা LLM)</td><td>মাঝারি</td><td>আগের voucher-এর description→account ডেটা; প্রস্তাব মোডে শুরু, accountant নিশ্চিত করবে</td></tr>
 <tr><td>৩</td><td>দেরিতে পরিশোধের ঝুঁকি</td><td>Classification (gradient boosting)</td><td>মাঝারি</td><td>এই অধ্যায়ের উদাহরণ</td></tr>
 <tr><td>৪</td><td>সন্দেহজনক transaction শনাক্ত</td><td>Anomaly Detection</td><td>মাঝারি–কঠিন</td><td>Isolation Forest দিয়ে শুরু; তালিকা মানুষ যাচাই করবে</td></tr>
-<tr><td>৫</td><td>Cash-flow/বিক্রির Forecast</td><td>Time-series</td><td>মাঝারি</td><td>সরল (গড়/seasonal naive) baseline, তারপর Prophet/ARIMA/বা gradient boosting</td></tr>
+<tr><td>৫</td><td>Cash-flow/বিক্রির Forecast</td><td>Time-series</td><td>মাঝারি</td><td>সরল (গড়/seasonal naive) baseline, তারপর Prophet/ARIMA/বা gradient boosting (পূর্ণ কোডসহ পরের অধ্যায় "Time-Series Forecasting"-এ)</td></tr>
 <tr><td>৬</td><td>Policy/ডকুমেন্ট থেকে প্রশ্নোত্তর</td><td>RAG</td><td>সহজ–মাঝারি</td><td>RAG অধ্যায় অনুযায়ী</td></tr>
 <tr><td>৭</td><td>Support ticket ক্যাটাগরি ও অগ্রাধিকার</td><td>LLM classification</td><td>সহজ</td><td>Structured output দিয়ে zero-shot, পরে মাপুন</td></tr>
 </table>
@@ -2242,8 +2782,507 @@ Monitoring ও retraining ছাড়া model মাসের পর মাস
 (১) <b>সমস্যা আগে, টুল পরে।</b> (২) <b>Baseline আগে, model পরে।</b> (৩) সংখ্যাভিত্তিক ডেটায় ক্লাসিক ML, ভাষায় LLM। (৪) Model একটা <b>সংকেত</b> — সিদ্ধান্তের ঝুঁকি অনুযায়ী মানুষকে লুপে রাখুন। (৫) Model ব্যর্থ হলেও app চলবে (fallback)। (৬) Deploy শেষ নয়, শুরু — monitor ও retrain। (৭) লাভ মাপুন ব্যবসায়িক সংখ্যায়, accuracy-তে নয়।</div>
 </template>
 
+<template data-page="forecasting">
+<h2 class="title">২২. Time-Series Forecasting — ভবিষ্যৎ অনুমান (পূর্ণ কোডসহ)</h2>
+<p class="lead">"আগামী ৬ মাসে revenue কত হবে?", "পরের সপ্তাহে কয়টা booking আসবে?", "কবে cash শেষ হয়ে যাবে?" — এসব প্রশ্নের উত্তর দেয় <span class="kw">Time-Series Forecasting</span>। এটা সাধারণ prediction-এর চেয়ে আলাদা, কারণ ডেটার <b>ক্রম (সময়) অর্থবহ</b> — আর সেই কারণেই বেশিরভাগ নতুন মানুষ এখানে ভুল করে। এই অধ্যায়ে ধারণা থেকে শুরু করে পূর্ণ, চালানো যায় এমন কোড, মূল্যায়ন, production-এ বসানো ও .NET থেকে ব্যবহার — সব ধাপে ধাপে।</p>
+
+<div class="callout why"><span class="tag">কেন আলাদা অধ্যায়</span>
+Accounting/ERP/Travel সিস্টেমে forecasting সবচেয়ে বেশি ব্যবসায়িক মূল্য দেয় এমন কাজগুলোর একটা: cash-flow পরিকল্পনা, বিক্রয় ও চাহিদা পূর্বাভাস, বাজেট, ক্ষমতা পরিকল্পনা। আর এখানে LLM নয়, ক্লাসিক পদ্ধতিই সাধারণত জেতে — তাই এটা আপনার AI টুলবক্সের অপরিহার্য অংশ (আগের "Model-কে বাস্তব Application-এ" অধ্যায়ের সাথে একসাথে পড়ুন)।</div>
+
+<h3>১. Time Series কী — আর কেন সাধারণ ML-এর মতো নয়</h3>
+<p>Time series হলো সময়ের ক্রমে সাজানো মান: মাসিক revenue, দৈনিক booking, ঘণ্টায় সার্ভার request। সাধারণ ML-এ প্রতিটা সারি স্বাধীন ধরা হয়; কিন্তু এখানে <b>আজকের মান গতকালের উপর নির্ভর করে</b> (autocorrelation)। তাই তিনটা নিয়ম বদলে যায়:</p>
+<ol>
+<li><b>ডেটা এলোমেলো (shuffle) করা যাবে না</b> — ক্রম নষ্ট হলে প্যাটার্নই নষ্ট।</li>
+<li><b>Train/Test ভাগ সময় অনুযায়ী</b> — অতীতে train, ভবিষ্যতে test; নইলে ভবিষ্যৎ-তথ্য leak করে।</li>
+<li><b>ভবিষ্যদ্বাণী মানে ভবিষ্যৎ প্রসারিত করা</b> — যে সময়ের ডেটা model দেখেনি সেখানে অনুমান।</li>
+</ol>
+
+<h3>২. Time Series-এর উপাদান — Trend, Seasonality, Noise</h3>
+<div class="diagram"><pre>
+ মূল সিরিজ  =  Trend  +  Seasonality  +  Noise (Residual)
+   (revenue)    (দীর্ঘমেয়াদি   (নিয়মিত পুনরাবৃত্তি:    (এলোমেলো,
+                 ঊর্ধ্ব/নিম্ন)   মাস, সপ্তাহ, ঈদ মৌসুম)   অনুমান-অযোগ্য)
+</pre></div>
+<table>
+<tr><th>উপাদান</th><th>অর্থ</th><th>বাস্তব উদাহরণ</th></tr>
+<tr><td><span class="kw">Trend</span></td><td>দীর্ঘমেয়াদি দিক</td><td>ব্যবসা বাড়ার সাথে revenue বছরে ১৫% বাড়ছে</td></tr>
+<tr><td><span class="kw">Seasonality</span></td><td>নির্দিষ্ট ব্যবধানে পুনরাবৃত্তি</td><td>ঈদ/ছুটির আগে travel booking বাড়ে; অর্থবছরের শেষে accounting কাজ বাড়ে; সপ্তাহান্তে অফিস সফটওয়্যার ব্যবহার কমে</td></tr>
+<tr><td><span class="kw">Cycle</span></td><td>অনির্দিষ্ট দৈর্ঘ্যের ওঠানামা (অর্থনৈতিক চক্র)</td><td>অর্থনীতির মন্দা-তেজি</td></tr>
+<tr><td><span class="kw">Noise</span></td><td>এলোমেলো ওঠানামা</td><td>একটা বড় অর্ডার হঠাৎ এল বা গেল</td></tr>
+<tr><td><span class="kw">Event/Holiday</span></td><td>নির্দিষ্ট ঘটনার প্রভাব</td><td>ঈদ, পহেলা বৈশাখ, প্রচার ক্যাম্পেইন, দাম বদল</td></tr>
+</table>
+<div class="callout behind"><span class="tag">পর্দার পেছনে — Forecast মানে আসলে কী</span>
+Model অতীত থেকে trend ও seasonality "শেখে" এবং সেগুলো ভবিষ্যতে প্রসারিত করে, noise বাদ দিয়ে। তাই forecast কখনো "ভবিষ্যৎ জানা" নয় — এটা "অতীতের প্যাটার্ন চলতে থাকলে কী হবে" তার অনুমান। প্যাটার্ন ভাঙলে (নতুন নীতি, মহামারি, বড় customer হারানো) forecast ভুল হবে — এটাই সীমাবদ্ধতা।</div>
+
+<h3>৩. Forecasting সমস্যার ধরন — শুরুতে ঠিক করুন</h3>
+<table>
+<tr><th>প্রশ্ন</th><th>বিকল্প</th></tr>
+<tr><td>কতদূর দেখবেন (horizon)?</td><td>পরের ১ ধাপ (short-term) বনাম ১২ মাস (long-term) — দূরে গেলে অনিশ্চয়তা বাড়ে</td></tr>
+<tr><td>কত ঘন ঘন (frequency)?</td><td>ঘণ্টা, দিন, সপ্তাহ, মাস — frequency অনুযায়ী seasonality আলাদা (দৈনিক ডেটায় সাপ্তাহিক+বার্ষিক)</td></tr>
+<tr><td>একটা সংখ্যা, না পরিসর?</td><td><b>Point forecast</b> (একটা মান) বনাম <b>Prediction interval</b> (৮০% সম্ভাবনায় এই পরিসরে) — ব্যবসায় পরিসরই বেশি কাজের</td></tr>
+<tr><td>কয়টা সিরিজ?</td><td>একটা (মোট revenue) বনাম হাজারটা (প্রতি product/customer) — পরেরটায় আলাদা কৌশল</td></tr>
+<tr><td>বাইরের কারণ আছে?</td><td>Univariate (শুধু অতীত মান) বনাম বাইরের চলক (exogenous: ছুটি, দাম, প্রচার)</td></tr>
+</table>
+
+<h3>৪. পুরো প্রক্রিয়া — ৯ ধাপ</h3>
+<div class="diagram"><pre>
+ ১ ব্যবসায়িক প্রশ্ন ও horizon → ২ ডেটা সংগ্রহ ও regular করা → ৩ অনুসন্ধান (plot, decompose)
+        ↓
+ ৪ Baseline (naive/seasonal naive) → ৫ Model প্রার্থী (ETS, SARIMA, ML...) → ৬ Backtest ও মূল্যায়ন
+        ↓
+ ৭ সেরা বাছাই + interval → ৮ Deploy (batch job + API) → ৯ Monitor ও Retrain
+</pre></div>
+
+<h3>৫. ধাপ ১–৩: ডেটা প্রস্তুত ও অনুসন্ধান</h3>
+<h4>লেনদেন থেকে time series বানানো</h4>
+<pre>-- SQL: মাসিক revenue (PostgreSQL)
+SELECT date_trunc('month', voucher_date)::date AS ds,
+       SUM(amount) AS revenue
+FROM   vouchers
+WHERE  voucher_type = 'SALES' AND status = 'POSTED'
+GROUP  BY 1 ORDER BY 1;</pre>
+<pre>import pandas as pd
+
+df = pd.read_sql(sql, conn, parse_dates=["ds"])
+s = df.set_index("ds")["revenue"].asfreq("MS")      <span class="c"># নিয়মিত মাসিক index — ফাঁকা মাস NaN হয়ে ধরা পড়ে</span>
+
+print(s.isna().sum(), "টা মাসের ডেটা নেই")
+s = s.fillna(0)            <span class="c"># বিক্রি না হলে ০ — কিন্তু সিস্টেম বন্ধ ছিল বলে ডেটা নেই হলে interpolate করুন</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake — অনিয়মিত ফাঁকা সময় উপেক্ষা</span>
+মাঝের কোনো মাসের সারিই না থাকলে model ভাবে মাসগুলো পরপর — seasonality (১২ মাস) সম্পূর্ণ ভুল হয়ে যায়। সবসময় <code>asfreq()</code>/<code>resample()</code> দিয়ে নিয়মিত index বানান। ফাঁকা মান ০ হবে (সত্যিই বিক্রি নেই), না interpolate (ডেটা হারিয়েছে) — এটা ব্যবসায়িক বিচার।</div>
+
+<h4>চালানোর জন্য নমুনা ডেটা (কোনো ফাইল ছাড়াই)</h4>
+<p>নিচের কোড একটা বাস্তবসদৃশ মাসিক revenue সিরিজ বানায় (trend + বার্ষিক seasonality + noise)। নিজের ডেটা থাকলে এই অংশ বাদ দিয়ে আগের <code>s</code> ব্যবহার করুন।</p>
+<pre><span class="c"># pip install pandas numpy statsmodels scikit-learn matplotlib joblib</span>
+import numpy as np, pandas as pd
+
+rng = np.random.default_rng(42)
+n = 48
+idx = pd.date_range("2022-01-01", periods=n, freq="MS")      <span class="c"># মাসের শুরু (Month Start)</span>
+t = np.arange(n)
+
+trend  = 1_000_000 + 15_000 * t                              <span class="c"># প্রতি মাসে ~১৫ হাজার বৃদ্ধি</span>
+season = 120_000 * np.sin(2 * np.pi * (t % 12) / 12)         <span class="c"># বার্ষিক ঢেউ</span>
+noise  = rng.normal(0, 40_000, n)
+s = pd.Series(trend + season + noise, index=idx, name="revenue")
+
+H = 6                                                         <span class="c"># আগামী ৬ মাস পূর্বাভাস করব</span>
+train, test = s.iloc[:-H], s.iloc[-H:]                        <span class="c"># সময়ের ক্রমে ভাগ — শেষ ৬ মাস test</span></pre>
+
+<h4>অনুসন্ধান — Decomposition ও Stationarity</h4>
+<pre>import matplotlib.pyplot as plt
+from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.tsa.stattools import adfuller
+
+seasonal_decompose(train, model="additive", period=12).plot()   <span class="c"># trend, seasonal, residual আলাদা করে দেখায়</span>
+plt.show()
+
+p_value = adfuller(train)[1]
+print("ADF p-value:", round(p_value, 3))
+<span class="c"># p &gt; 0.05 → সিরিজ non-stationary (trend আছে); ARIMA-তে differencing লাগে</span></pre>
+<p><b>Stationary</b> মানে সিরিজের গড় ও ভ্যারিয়েন্স সময়ের সাথে বদলায় না। ARIMA-পরিবারের model এটা ধরে নেয়; trend থাকলে সিরিজকে "differencing" (আজকের মান − গতকালের মান) করে stationary বানানো হয়। ETS ও ML model-এ এটা সরাসরি দরকার হয় না।</p>
+
+<h3>৬. ধাপ ৪: Baseline — সবচেয়ে গুরুত্বপূর্ণ ধাপ</h3>
+<p>জটিল model-এর আগে সরল পদ্ধতিগুলো চালান। অনেক সময় এগুলোই হারানো কঠিন।</p>
+<pre>def naive(train, h):               <span class="c"># শেষ মানই ভবিষ্যতেও</span>
+    return np.repeat(train.iloc[-1], h)
+
+def seasonal_naive(train, h, m=12):   <span class="c"># গত বছরের একই মাসের মান</span>
+    last = train.iloc[-m:].values
+    return np.tile(last, int(np.ceil(h / m)))[:h]
+
+def moving_average(train, h, w=3):    <span class="c"># শেষ w মাসের গড়</span>
+    return np.repeat(train.iloc[-w:].mean(), h)</pre>
+<div class="callout best"><span class="tag">নিয়ম — সরল baseline-কে না হারালে model ব্যবহার করবেন না</span>
+Seasonal naive ("গত বছর যা হয়েছিল, এবার তাই") seasonality প্রবল ও trend মৃদু হলে আশ্চর্য রকম শক্ত baseline। কিন্তু <b>জোরালো trend থাকলে</b> গত বছরের মান এ বছরের চেয়ে কম হয়, তখন সাধারণ naive বা moving average-ও এর চেয়ে ভালো করতে পারে — নিচের নমুনা ডেটায় ঠিক তা-ই হবে। তাই <b>সবগুলো baseline-এর সেরাটার সাথে</b> তুলনা করুন। জটিল model যদি তাকে স্পষ্টভাবে না ছাড়ায়, তার জটিলতা ও maintenance-এর খরচ অযৌক্তিক। এই তুলনাকে বলে <i>Forecast Value Added (FVA)</i>।</div>
+
+<h3>৭. মূল্যায়ন — Metric ও Backtesting</h3>
+<h4>Forecast Metric</h4>
+<table>
+<tr><th>Metric</th><th>সূত্র (ধারণা)</th><th>কখন</th><th>সতর্কতা</th></tr>
+<tr><td><b>MAE</b></td><td>গড় |আসল − অনুমান|</td><td>সহজে বোঝা যায়, একই একক (টাকা)</td><td>বিভিন্ন সিরিজ তুলনা করা যায় না</td></tr>
+<tr><td><b>RMSE</b></td><td>√(গড় ভুল²)</td><td>বড় ভুলকে বেশি শাস্তি দিতে চাইলে</td><td>outlier-সংবেদনশীল</td></tr>
+<tr><td><b>MAPE</b></td><td>গড় |ভুল / আসল| × ১০০%</td><td>ব্যবসার কাছে শতাংশে সহজ</td><td><b>আসল মান ০ বা ছোট হলে বিস্ফোরণ</b></td></tr>
+<tr><td><b>sMAPE</b></td><td>প্রতিসম শতাংশ ভুল</td><td>MAPE-র বিকল্প</td><td>তবু ০-র কাছে অস্থির</td></tr>
+<tr><td><b>MASE</b></td><td>MAE ÷ (seasonal naive-এর in-sample MAE)</td><td>বিভিন্ন সিরিজ তুলনা; &lt; ১ মানে ঐ সরল baseline-এর চেয়ে ভালো</td><td>—</td></tr>
+</table>
+<pre>def mae(y, p):   return float(np.mean(np.abs(np.asarray(y) - np.asarray(p))))
+def rmse(y, p):  return float(np.sqrt(np.mean((np.asarray(y) - np.asarray(p)) ** 2)))
+def mape(y, p):  y, p = np.asarray(y), np.asarray(p); return float(np.mean(np.abs((y - p) / y)) * 100)
+
+def mase(y, p, train, m=12):
+    scale = np.mean(np.abs(train.values[m:] - train.values[:-m]))   <span class="c"># seasonal-naive-এর in-sample ভুল</span>
+    return mae(y, p) / scale</pre>
+
+<h4>Backtesting — Rolling Origin (একবারের test নয়)</h4>
+<p>শুধু শেষ ৬ মাসে test করলে একটা ভাগ্যবান/দুর্ভাগা সময়ের উপর সিদ্ধান্ত হয়। তাই origin সরিয়ে সরিয়ে বহুবার পরীক্ষা করুন:</p>
+<div class="diagram"><pre>
+Fold 1: [ train ................ ][ test ]
+Fold 2: [ train ................... ][ test ]
+Fold 3: [ train ...................... ][ test ]     ← প্রতিবার train বড় হয়, test সামনে এগোয়
+</pre></div>
+<pre>def backtest(fit_forecast, s, h=3, n_folds=4):
+    """fit_forecast(train_series, h) -&gt; h টা পূর্বাভাস। গড় MAE ফেরত দেয়।"""
+    errs = []
+    for k in range(n_folds):
+        end = len(s) - h * (n_folds - k)
+        tr, te = s.iloc[:end], s.iloc[end:end + h]
+        errs.append(mae(te.values, fit_forecast(tr, h)))
+    return float(np.mean(errs))</pre>
+
+<h3>৮. ধাপ ৫: Model প্রার্থী — পূর্ণ কোড</h3>
+
+<h4>Model ১: Holt-Winters (ETS) — trend + seasonality-র ক্লাসিক</h4>
+<pre>from statsmodels.tsa.holtwinters import ExponentialSmoothing
+
+def holt_winters(train, h):
+    m = ExponentialSmoothing(train, trend="add", seasonal="add", seasonal_periods=12).fit()
+    return np.asarray(m.forecast(h))</pre>
+<p><b>কীভাবে কাজ করে:</b> সাম্প্রতিক ডেটাকে বেশি ওজন দিয়ে level, trend ও seasonality তিনটা আলাদাভাবে "মসৃণ" করে। দ্রুত, ব্যাখ্যাযোগ্য, ছোট ডেটায় ভালো। seasonality-র প্রভাব মানের সাথে বাড়লে <code>seasonal="mul"</code> (multiplicative) ব্যবহার করুন।</p>
+
+<h4>Model ২: SARIMA — ARIMA + Seasonality, সাথে prediction interval</h4>
+<pre>from statsmodels.tsa.statespace.sarimax import SARIMAX
+
+def sarima(train, h):
+    m = SARIMAX(train, order=(1, 1, 1), seasonal_order=(0, 1, 1, 12)).fit(disp=False)
+    return np.asarray(m.forecast(h))
+
+<span class="c"># Prediction interval সহ</span>
+m = SARIMAX(train, order=(1, 1, 1), seasonal_order=(0, 1, 1, 12)).fit(disp=False)
+fc = m.get_forecast(H)
+pred = fc.predicted_mean
+ci   = fc.conf_int(alpha=0.2)         <span class="c"># ৮০% পরিসর (alpha = ১ − ০.৮)</span>
+print(pd.concat([pred.rename("forecast"), ci], axis=1).round(0))</pre>
+<p><b>(p,d,q)(P,D,Q,m) কী?</b> <code>p</code>: কতগুলো অতীত মান নিয়ে autoregression; <code>d</code>: কতবার differencing (trend সরাতে); <code>q</code>: কতগুলো অতীত ভুলের moving average; বড় হাতের <code>P,D,Q</code> একই জিনিস seasonal স্তরে; <code>m</code>: seasonal দৈর্ঘ্য (মাসিকে ১২, দৈনিকে সপ্তাহের জন্য ৭)। সঠিক মান বাছাই করতে ACF/PACF plot দেখা যায়, বা auto-ARIMA টুল (<code>pmdarima</code>, <code>statsforecast</code>) স্বয়ংক্রিয়ভাবে খুঁজে দেয়।</p>
+
+<h4>Model ৩: Machine Learning (Gradient Boosting) — Lag Feature দিয়ে</h4>
+<p>ML model সময় বোঝে না — তাই সিরিজকে একটা সাধারণ টেবিলে রূপান্তর করতে হয়: প্রতিটা সারিতে <b>অতীতের মান (lag)</b>, <b>rolling গড়</b> ও <b>ক্যালেন্ডার feature (মাস)</b> থাকে।</p>
+<div class="callout mistake"><span class="tag">গুরুত্বপূর্ণ সীমাবদ্ধতা — Tree model Trend extrapolate করতে পারে না</span>
+Random Forest/Gradient Boosting মান "ভাগ করে" শেখে; train-এর সর্বোচ্চ মানের বাইরে যেতে পারে না। ফলে ক্রমবর্ধমান trend-এর সিরিজে ভবিষ্যৎ পূর্বাভাস সমতল হয়ে যায়। সমাধান: <b>আগে trend আলাদা করুন</b> (linear regression দিয়ে), তারপর শুধু অবশিষ্টাংশ (residual)-এ tree model চালান, শেষে trend যোগ করুন। নিচের কোড ঠিক তা-ই করে।</div>
+<pre>from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.linear_model import LinearRegression
+
+class DetrendedGBM:
+    """Linear trend + Gradient Boosting (residual-এ, lag feature সহ), recursive multi-step forecast।"""
+    def __init__(self, lags=(1, 2, 12)):
+        self.lags = lags
+
+    def _features(self, resid: pd.Series) -&gt; pd.DataFrame:
+        X = pd.DataFrame(index=resid.index)
+        for l in self.lags:
+            X[f"lag_{l}"] = resid.shift(l)          <span class="c"># l মাস আগের residual</span>
+        X["month"] = resid.index.month               <span class="c"># ক্যালেন্ডার/seasonality সংকেত</span>
+        return X
+
+    def fit(self, y: pd.Series):
+        self.freq = y.index.freq or pd.infer_freq(y.index)
+        t = np.arange(len(y)).reshape(-1, 1)
+        self.trend = LinearRegression().fit(t, y.values)          <span class="c"># ধাপ ১: trend</span>
+        resid = pd.Series(y.values - self.trend.predict(t), index=y.index)
+
+        X = self._features(resid)
+        ok = X.notna().all(axis=1)                                  <span class="c"># শুরুর যে সারিতে lag নেই সেগুলো বাদ</span>
+        self.gbm = GradientBoostingRegressor(
+            n_estimators=200, max_depth=2, learning_rate=0.05, random_state=0
+        ).fit(X[ok], resid[ok])                                     <span class="c"># ধাপ ২: residual শেখা</span>
+
+        self.resid, self.n = resid, len(y)
+        return self
+
+    def forecast(self, h: int) -&gt; pd.Series:
+        resid = self.resid.copy()
+        future = pd.date_range(resid.index[-1], periods=h + 1, freq=self.freq)[1:]
+        out = []
+        for i, ts in enumerate(future):
+            row = {f"lag_{l}": resid.iloc[-l] for l in self.lags}   <span class="c"># আগের (এমনকি আগে পূর্বাভাস করা) মান ব্যবহার</span>
+            row["month"] = ts.month
+            r = float(self.gbm.predict(pd.DataFrame([row]))[0])
+            resid.loc[ts] = r                                       <span class="c"># পূর্বাভাসকে সিরিজে যোগ — পরের ধাপের lag হবে</span>
+            trend_val = float(self.trend.predict([[self.n + i]])[0])
+            out.append(trend_val + r)                               <span class="c"># trend ফেরত যোগ</span>
+        return pd.Series(out, index=future)
+
+def gbm_forecast(train, h):
+    return DetrendedGBM().fit(train).forecast(h).values</pre>
+<div class="callout behind"><span class="tag">পর্দার পেছনে — Recursive বনাম Direct Forecasting</span>
+<b>Recursive:</b> এক ধাপের model দিয়ে পরের মান অনুমান করে সেটাকেই ইনপুট বানিয়ে পরেরটা অনুমান (উপরের কোড) — সরল, কিন্তু ভুল জমা হয়। <b>Direct:</b> প্রতিটা horizon (১ মাস পরে, ২ মাস পরে...) এর জন্য আলাদা model — ভুল জমে না, কিন্তু অনেক model। দীর্ঘ horizon-এ direct প্রায়ই ভালো।</div>
+
+<h4>সবগুলো তুলনা — Test সেট ও Backtest</h4>
+<pre>models = {
+    "Naive":          naive,
+    "Seasonal Naive": seasonal_naive,
+    "Moving Avg(3)":  moving_average,
+    "Holt-Winters":   holt_winters,
+    "SARIMA":         sarima,
+    "Trend+GBM":      gbm_forecast,
+}
+
+rows = []
+for name, fn in models.items():
+    pred = fn(train, H)
+    rows.append({
+        "model":    name,
+        "MAE":      mae(test, pred),
+        "RMSE":     rmse(test, pred),
+        "MAPE_%":   mape(test, pred),
+        "MASE":     mase(test, pred, train),
+        "Backtest_MAE": backtest(fn, s, h=3, n_folds=4),   <span class="c"># একাধিক origin-এ স্থিতিশীলতা</span>
+    })
+
+report = pd.DataFrame(rows).sort_values("Backtest_MAE").round(2)
+print(report.to_string(index=False))</pre>
+<div class="callout why"><span class="tag">নমুনা ফলাফল (seed 42; লাইব্রেরি version অনুযায়ী সংখ্যা সামান্য বদলাতে পারে)</span>
+<pre>         model       MAE  Backtest_MAE
+     Trend+GBM  ~38,000       ~35,000
+  Holt-Winters  ~23,000       ~39,000
+        SARIMA  ~37,000       ~53,000
+         Naive  ~97,000       ~80,000
+ Moving Avg(3) ~121,000      ~117,000
+Seasonal Naive ~172,000      ~173,000   <span class="c">← জোরালো trend-এ সবচেয়ে খারাপ</span></pre>
+লক্ষ্য করুন: <b>শুধু শেষ ৬ মাসের test-এ Holt-Winters সেরা, কিন্তু একাধিক fold-এর backtest-এ Trend+GBM সেরা।</b> একটা test সেটের উপর ভরসা করলে ভুল model বাছা হতো — এজন্যই rolling backtest জরুরি। (SARIMA চালানোর সময় ছোট fold-এ "Too few observations" EstimationWarning আসতে পারে — ডেটা কম বলে seasonal অংশের শুরুর মান শূন্য ধরা হয়; আরও ইতিহাস থাকলে এটা আসে না।)</div>
+<div class="callout best"><span class="tag">কীভাবে বিজয়ী বাছবেন</span>
+শুধু একটা test সেটের MAE নয়, <b>backtest-এর গড়</b> ও <b>স্থিতিশীলতা</b> দেখুন (কোনো fold-এ ভয়াবহ ব্যর্থ হয় কিনা)। MASE &lt; ১ হলে naive-এর চেয়ে ভালো। জয়ী model সবসময় সবচেয়ে জটিলটা নয় — সরল ও প্রায় সমান ভালো হলে সরলটাই নিন (ব্যাখ্যা ও maintenance সহজ)।</div>
+
+<h4>চূড়ান্ত Model: পুরো ডেটায় আবার Train ও ভবিষ্যৎ পূর্বাভাস</h4>
+<pre>best = DetrendedGBM().fit(s)                      <span class="c"># এবার test-সহ সব ডেটায় train (নির্বাচনের পর)</span>
+future_fc = best.forecast(H)                       <span class="c"># আসল ভবিষ্যৎ ৬ মাস</span>
+
+<span class="c"># Plot: ইতিহাস + পূর্বাভাস</span>
+ax = s.plot(label="actual", figsize=(10, 4))
+future_fc.plot(ax=ax, label="forecast", style="--")
+ax.legend(); plt.show()</pre>
+
+<h4>Prediction Interval — ML model-এ</h4>
+<p>ব্যবসার কাছে "২৫.৫ লক্ষ" নয়, "৮০% সম্ভাবনায় ২৩–২৮ লক্ষ" বেশি কাজের। ML model-এ interval পাওয়ার সহজ পথ: backtest-এর ভুল (residual) থেকে পরিসর তৈরি।</p>
+<pre><span class="c"># Backtest-এর ভুলের বণ্টন থেকে ৮০% পরিসর (empirical)</span>
+errors = []
+for k in range(4):
+    end = len(s) - 3 * (4 - k)
+    tr, te = s.iloc[:end], s.iloc[end:end + 3]
+    errors.extend(te.values - gbm_forecast(tr, 3))
+
+lo, hi = np.percentile(errors, [10, 90])           <span class="c"># মাঝের ৮০%</span>
+interval = pd.DataFrame({"forecast": future_fc,
+                         "lower": future_fc + lo,
+                         "upper": future_fc + hi}).round(0)
+print(interval)</pre>
+<p>বিকল্প: Gradient Boosting-এ <code>loss="quantile", alpha=0.1/0.9</code> দিয়ে নিচের ও উপরের সীমার আলাদা model, অথবা <i>conformal prediction</i>। মনে রাখবেন, interval দূরের horizon-এ স্বাভাবিকভাবেই চওড়া হয়।</p>
+
+<h3>৯. বিকল্প টুল — নিজে না লিখে লাইব্রেরি</h3>
+<table>
+<tr><th>টুল</th><th>বৈশিষ্ট্য</th><th>কখন</th></tr>
+<tr><td><span class="kw">Prophet</span></td><td>Trend + একাধিক seasonality + ছুটির দিন; ফাঁকা মান ও outlier সহনশীল; সরল API</td><td>ব্যবসায়িক ডেটা, ছুটি/ইভেন্ট প্রভাব গুরুত্বপূর্ণ</td></tr>
+<tr><td><span class="kw">statsforecast</span></td><td>খুব দ্রুত AutoETS/AutoARIMA/Theta; হাজার হাজার সিরিজে</td><td>অনেক সিরিজের statistical forecast</td></tr>
+<tr><td><span class="kw">sktime / darts</span></td><td>একই API-তে অনেক model, backtest ও ensemble</td><td>গবেষণা/তুলনা, ML+statistical মিশ্রণ</td></tr>
+<tr><td><span class="kw">LightGBM/XGBoost</span></td><td>Lag feature + বাইরের চলক সহ বহু-সিরিজ "global model"</td><td>অনেক সম্পর্কিত সিরিজ (প্রতি product), বাইরের কারণ বেশি</td></tr>
+<tr><td><span class="kw">Deep Learning (N-BEATS, TFT, LSTM)</span></td><td>জটিল প্যাটার্ন, বহু সিরিজ ও বহু চলক</td><td>বিপুল ডেটা; সাধারণত ক্লাসিকের চেয়ে বেশি লাভ নয়</td></tr>
+<tr><td><span class="kw">Foundation models (Chronos, TimesFM ইত্যাদি)</span></td><td>আগে-train করা model, zero-shot পূর্বাভাস — ডেটা কম হলেও চলে</td><td>দ্রুত পরীক্ষা; নিজের baseline-এর সাথে তুলনা করে নিন</td></tr>
+</table>
+<pre><span class="c"># Prophet উদাহরণ (pip install prophet)</span>
+from prophet import Prophet
+
+dfp = s.reset_index(); dfp.columns = ["ds", "y"]
+m = Prophet(yearly_seasonality=True, weekly_seasonality=False, daily_seasonality=False)
+m.add_country_holidays(country_name="BD")          <span class="c"># সরকারি ছুটি — দেশটা সমর্থিত কিনা যাচাই করুন; নইলে নিজের holidays DataFrame দিন (ঈদ ইত্যাদি)</span>
+m.fit(dfp)
+future = m.make_future_dataframe(periods=6, freq="MS")
+fc = m.predict(future)[["ds", "yhat", "yhat_lower", "yhat_upper"]].tail(6)
+
+<span class="c"># statsforecast উদাহরণ (pip install statsforecast) — API version অনুযায়ী সামান্য বদলাতে পারে</span>
+from statsforecast import StatsForecast
+from statsforecast.models import AutoETS, AutoARIMA, SeasonalNaive
+
+dfs = s.reset_index(); dfs.columns = ["ds", "y"]; dfs["unique_id"] = "revenue"
+sf = StatsForecast(models=[SeasonalNaive(season_length=12), AutoETS(season_length=12),
+                           AutoARIMA(season_length=12)], freq="MS")
+fc = sf.forecast(df=dfs, h=6, level=[80])</pre>
+<div class="callout why"><span class="tag">কোনটা শুরুতে নেবেন</span>
+(১) Seasonal naive baseline → (২) Holt-Winters/AutoETS → (৩) SARIMA বা Prophet → (৪) বাইরের কারণ বা বহু সিরিজ থাকলে LightGBM। Deep learning ও foundation model শেষে, এবং শুধু তখনই যখন সরল model সত্যিই যথেষ্ট নয় আর আপনার কাছে প্রচুর ডেটা আছে।</div>
+
+<h3>১০. বাইরের কারণ (Exogenous) ও ইভেন্ট — বাস্তবে সবচেয়ে বড় লাভ</h3>
+<p>বিশুদ্ধ অতীত-মানের model ঈদ বা প্রচারণার প্রভাব ধরতে পারে না, বিশেষ করে ঈদ প্রতি বছর ~১১ দিন এগিয়ে আসে বলে "মাস" দিয়ে seasonality মেলে না। সমাধান: ইভেন্টকে feature বানান।</p>
+<pre>exog = pd.DataFrame({
+    "eid_month":     [1 if d.month in (4, 6, 7) else 0 for d in s.index],   <span class="c"># উদাহরণ — প্রকৃত ঈদ-মাস বছর অনুযায়ী বসান</span>
+    "promo":         promo_flags,                                           <span class="c"># প্রচার ক্যাম্পেইন (ভবিষ্যতে জানা)</span>
+}, index=s.index)
+
+m = SARIMAX(train, exog=exog.loc[train.index], order=(1,1,1), seasonal_order=(0,1,1,12)).fit(disp=False)
+pred = m.forecast(H, exog=exog_future)            <span class="c"># ভবিষ্যতের exog-ও দিতে হবে</span></pre>
+<div class="callout mistake"><span class="tag">Common mistake — ভবিষ্যতে অজানা চলক ব্যবহার</span>
+Exogenous চলক শুধু তখনই ব্যবহারযোগ্য যখন <b>ভবিষ্যতেও তার মান জানা</b> (ক্যালেন্ডার, ছুটি, পরিকল্পিত প্রচার, নির্ধারিত দাম)। "পরের মাসের আবহাওয়া" বা "প্রতিযোগীর দাম" জানা না থাকলে সেটাও আগে অনুমান করতে হয় — তখন ভুল দ্বিগুণ হয়।</div>
+
+<h3>১১. অনেক সিরিজ একসাথে — Product/Customer/Branch অনুযায়ী</h3>
+<table>
+<tr><th>পদ্ধতি</th><th>কীভাবে</th><th>কখন</th></tr>
+<tr><td>প্রতিটার জন্য আলাদা model</td><td>লুপ চালিয়ে প্রতিটা সিরিজে ETS/ARIMA (statsforecast এটা দ্রুত করে)</td><td>সিরিজ কম/মাঝারি, প্রতিটার নিজস্ব আচরণ</td></tr>
+<tr><td><b>Global model</b></td><td>সব সিরিজ একত্রে এক LightGBM-এ (series_id, lag, ক্যালেন্ডার feature সহ)</td><td>হাজারো সিরিজ; প্রতিটার ডেটা কম; সিরিজগুলো সম্পর্কিত</td></tr>
+<tr><td>Hierarchical reconciliation</td><td>মোট = শাখার যোগফল — নিচ ও উপরের স্তরের পূর্বাভাস সামঞ্জস্যপূর্ণ করা</td><td>মোট revenue ও প্রতি শাখার revenue দুটোই দরকার</td></tr>
+<tr><td>Intermittent demand (Croston/TSB)</td><td>যেখানে বেশিরভাগ সময় ০ (মাঝেমধ্যে বিক্রি হয় এমন আইটেম)</td><td>ধীর-গতির স্টক, বিরল সেবা</td></tr>
+</table>
+
+<h3>১২. ধাপ ৮: Production-এ বসানো</h3>
+<p>Forecasting-এ সাধারণত <b>Batch</b> পদ্ধতিই সবচেয়ে উপযুক্ত: নির্দিষ্ট সময়ে (রাতে/মাসের শুরুতে) নতুন ডেটায় আবার fit করে পূর্বাভাস টেবিলে সংরক্ষণ; app শুধু পড়ে। কারণ পূর্বাভাস সবসময় তাৎক্ষণিক লাগে না, আর ভারী গণনা অনলাইন request-এ করা অনুচিত।</p>
+<div class="diagram"><pre>
+ [Scheduler: রাত ২টা]
+      ↓
+ [Python Forecast Job] ── ডেটা পড়ে (SQL) ── fit ── backtest মাপে ── পূর্বাভাস লেখে
+      ↓
+ [forecasts টেবিল]  ←── app/dashboard/API শুধু পড়ে (দ্রুত, নির্ভরযোগ্য)
+      ↓
+ [Accuracy Tracker]: পরে আসল মান এলে পূর্বাভাসের সাথে মিলিয়ে কর্মক্ষমতা মাপে
+</pre></div>
+
+<h4>পূর্বাভাস সংরক্ষণের টেবিল</h4>
+<pre>CREATE TABLE forecasts (
+    id              BIGSERIAL PRIMARY KEY,
+    series_name     TEXT        NOT NULL,        -- 'total_revenue', 'branch_12_revenue'
+    target_date     DATE        NOT NULL,        -- কোন মাসের পূর্বাভাস
+    forecast        NUMERIC     NOT NULL,
+    lower_80        NUMERIC,
+    upper_80        NUMERIC,
+    model_name      TEXT        NOT NULL,        -- 'detrended_gbm'
+    model_version   TEXT        NOT NULL,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (series_name, target_date, model_version, created_at)
+);</pre>
+
+<h4>নিয়মিত চালানোর Python Job</h4>
+<pre>import pandas as pd, numpy as np, joblib
+from sqlalchemy import create_engine, text
+
+MODEL_VERSION = "2026-10-detrended-gbm-v1"
+engine = create_engine("postgresql+psycopg://user:pass@db/accounting")
+
+def load_series() -&gt; pd.Series:
+    df = pd.read_sql(text("""
+        SELECT date_trunc('month', voucher_date)::date AS ds, SUM(amount) AS revenue
+        FROM vouchers WHERE voucher_type='SALES' AND status='POSTED' GROUP BY 1 ORDER BY 1
+    """), engine, parse_dates=["ds"])
+    return df.set_index("ds")["revenue"].asfreq("MS").fillna(0)
+
+def run(h=6):
+    s = load_series()
+    if len(s) &lt; 30:                                  <span class="c"># যথেষ্ট ইতিহাস না থাকলে চালাবেন না</span>
+        raise RuntimeError("Not enough history")
+
+    <span class="c"># ১. গুণমান যাচাই: backtest naive-এর চেয়ে ভালো না হলে সতর্কতা</span>
+    model_mae = backtest(gbm_forecast, s, h=3, n_folds=4)
+    base_mae  = backtest(seasonal_naive, s, h=3, n_folds=4)
+    if model_mae &gt; base_mae:
+        print("WARN: model seasonal-naive-কে হারাতে পারেনি — baseline ব্যবহার করুন")
+        fn = seasonal_naive; name = "seasonal_naive"
+    else:
+        fn = gbm_forecast;   name = "detrended_gbm"
+
+    <span class="c"># ২. পূর্বাভাস ও interval</span>
+    fc = pd.Series(fn(s, h), index=pd.date_range(s.index[-1], periods=h + 1, freq="MS")[1:])
+    errs = []
+    for k in range(4):
+        end = len(s) - 3 * (4 - k); errs.extend(s.iloc[end:end + 3].values - fn(s.iloc[:end], 3))
+    lo, hi = np.percentile(errs, [10, 90])
+
+    <span class="c"># ৩. সংরক্ষণ (model_version ও কোন model জিতেছে সহ)</span>
+    out = pd.DataFrame({"series_name": "total_revenue", "target_date": fc.index, "forecast": fc.values,
+                        "lower_80": fc.values + lo, "upper_80": fc.values + hi,
+                        "model_name": name, "model_version": MODEL_VERSION})
+    out.to_sql("forecasts", engine, if_exists="append", index=False)
+
+if __name__ == "__main__":
+    run()</pre>
+<div class="callout best"><span class="tag">Best practice — "Champion/Challenger" ও স্বয়ংক্রিয় fallback</span>
+উপরের job প্রতিবার backtest করে দেখে model সত্যিই baseline-কে হারাচ্ছে কিনা; না হারালে স্বয়ংক্রিয়ভাবে সরল baseline-এ ফেরে। এতে ডেটা বদলে model হঠাৎ খারাপ হলেও ভুল পূর্বাভাস ছড়ায় না। কোন model কোন পূর্বাভাস দিয়েছিল তাও সংরক্ষিত থাকে (audit)।</div>
+
+<h4>.NET থেকে পূর্বাভাস পড়া ও দেখানো</h4>
+<pre>public record ForecastPoint(DateOnly TargetDate, decimal Forecast, decimal? Lower80, decimal? Upper80, string ModelName);
+
+<span class="c">// Minimal API — latest পূর্বাভাস (প্রতিটা target_date-এর সর্বশেষ created_at)</span>
+app.MapGet("/api/forecast/revenue", async (AccountingDbContext db, CancellationToken ct) =&gt;
+{
+    var latest = await db.Forecasts
+        .Where(f =&gt; f.SeriesName == "total_revenue")
+        .GroupBy(f =&gt; f.TargetDate)
+        .Select(g =&gt; g.OrderByDescending(x =&gt; x.CreatedAt).First())
+        .OrderBy(f =&gt; f.TargetDate)
+        .Select(f =&gt; new ForecastPoint(f.TargetDate, f.Forecast, f.Lower80, f.Upper80, f.ModelName))
+        .ToListAsync(ct);
+    return Results.Ok(latest);
+});</pre>
+<p>Dashboard-এ forecast লাইনের চারপাশে ছায়াঘেরা ৮০% পরিসর দেখান, আর মডেলের নাম/তারিখ ছোট করে লিখুন — ব্যবহারকারী বুঝবে এটা অনিশ্চিত অনুমান, নিশ্চয়তা নয়।</p>
+
+<h3>১৩. ধাপ ৯: Monitoring ও Accuracy Tracking</h3>
+<p>পূর্বাভাসের সুবিধা: <b>আসল মান পরে নিজে থেকেই জানা যায়</b> — তাই কর্মক্ষমতা স্বয়ংক্রিয়ভাবে মাপা সহজ।</p>
+<pre>-- আসল মান এলে পূর্বাভাসের ভুল (মাস শেষে চালান)
+WITH actual AS (
+  SELECT date_trunc('month', voucher_date)::date AS target_date, SUM(amount) AS actual
+  FROM vouchers WHERE voucher_type='SALES' AND status='POSTED' GROUP BY 1
+),
+latest_fc AS (        -- মাস শুরুর আগে করা সর্বশেষ পূর্বাভাস
+  SELECT DISTINCT ON (target_date) target_date, forecast, lower_80, upper_80, model_name
+  FROM forecasts WHERE series_name='total_revenue' AND created_at &lt; target_date
+  ORDER BY target_date, created_at DESC
+)
+SELECT f.target_date, a.actual, f.forecast,
+       ROUND(ABS(a.actual - f.forecast) / NULLIF(a.actual,0) * 100, 1) AS ape_pct,
+       (a.actual BETWEEN f.lower_80 AND f.upper_80) AS inside_interval
+FROM latest_fc f JOIN actual a USING (target_date)
+ORDER BY f.target_date DESC;</pre>
+<ul>
+<li><b>Error ট্র্যাক:</b> গড় ভুল হঠাৎ বাড়লে alert (structural break বা ডেটা সমস্যা)।</li>
+<li><b>Interval coverage:</b> ৮০% পরিসরে আসল মান কি ~৮০% সময় পড়ছে? ৫০% পড়লে পরিসর খুব সরু (অতি-আত্মবিশ্বাসী)।</li>
+<li><b>Bias:</b> ভুল কি সবসময় এক দিকে (সবসময় বেশি অনুমান)? তাহলে সিস্টেমেটিক সমস্যা।</li>
+<li><b>Retrain:</b> নতুন মাসের ডেটা আসামাত্র আবার fit (batch job-ই এটা করে)।</li>
+<li><b>ঘটনা-পরবর্তী পর্যালোচনা:</b> বড় ভুলের মাসে কারণ লিখে রাখুন (নতুন নীতি, বড় customer) — পরে exogenous feature হতে পারে।</li>
+</ul>
+
+<h3>১৪. ব্যবসায়িক ব্যবহার — Forecast দিয়ে কী সিদ্ধান্ত নেবেন</h3>
+<table>
+<tr><th>ব্যবহার</th><th>পূর্বাভাসের কোন অংশ কাজে লাগে</th></tr>
+<tr><td>Cash-flow পরিকল্পনা</td><td><b>নিচের সীমা (lower bound)</b> — "খারাপ হলেও অন্তত এতটা"; ঝুঁকি-সতর্ক পরিকল্পনা</td></tr>
+<tr><td>বাজেট ও লক্ষ্য</td><td>Point forecast ও উপরের/নিচের সীমা</td></tr>
+<tr><td>Stock/ক্ষমতা পরিকল্পনা</td><td><b>উপরের সীমা (upper bound)</b> — চাহিদা বেশি হলেও যেন ঘাটতি না হয় (safety stock)</td></tr>
+<tr><td>Anomaly সনাক্তকরণ</td><td>আসল মান ৯৫% পরিসরের বাইরে গেলে সতর্কতা (forecast-ভিত্তিক anomaly detection)</td></tr>
+<tr><td>কর্মী/সহায়তা পরিকল্পনা</td><td>ঘণ্টা/দিন-ভিত্তিক চাহিদা পূর্বাভাস</td></tr>
+</table>
+<div class="callout best"><span class="tag">মানুষের override রাখুন</span>
+ব্যবসায়িক টিম এমন তথ্য জানে যা model জানে না (বড় চুক্তি আসছে, নীতি বদলাচ্ছে)। UI-তে model-এর পূর্বাভাস দেখিয়ে সংশোধনের সুযোগ দিন, সংশোধিত মানও সংরক্ষণ করুন — পরে মাপতে পারবেন মানুষ না model, কে বেশি নির্ভুল ("FVA")।</div>
+
+<h3>১৫. Common ভুল — যা forecasting প্রজেক্ট ডোবায়</h3>
+<div class="callout mistake"><span class="tag">Common mistake — Random Train/Test Split</span>
+Time series-এ shuffle করে ভাগ করলে ভবিষ্যতের তথ্য train-এ ঢোকে; test-এ অবিশ্বাস্য ভালো ফল আসে, production-এ ব্যর্থ। সবসময় সময়ের ক্রমে ভাগ ও rolling backtest।</div>
+<div class="callout mistake"><span class="tag">Common mistake — Baseline ছাড়া জটিল model</span>
+Seasonal naive-কে না হারিয়ে deep learning ব্যবহার — সবচেয়ে সাধারণ অপচয়। আগে baseline, FVA মাপুন।</div>
+<div class="callout mistake"><span class="tag">Common mistake — শুধু একটা সংখ্যা দেওয়া</span>
+Point forecast একা বিভ্রান্তিকর। সবসময় পরিসর দেখান এবং সেটা সিদ্ধান্তে ব্যবহার করুন (cash-এ নিচের, stock-এ উপরের সীমা)।</div>
+<div class="callout mistake"><span class="tag">Common mistake — MAPE-তে শূন্যের কাছাকাছি মান</span>
+আসল মান ০ বা খুব ছোট হলে MAPE অসীম/বিস্ফোরিত হয়। তখন MAE, RMSE বা MASE ব্যবহার করুন।</div>
+<div class="callout mistake"><span class="tag">Common mistake — Structural Break উপেক্ষা</span>
+মহামারি, নীতি পরিবর্তন, নতুন বাজারে প্রবেশ — অতীতের প্যাটার্ন ভেঙে যায়। অস্বাভাবিক সময়কে চিহ্নিত/বাদ দিন বা event feature করুন; ভাঙনের পর আগের ডেটায় অতিরিক্ত ভরসা করবেন না।</div>
+<div class="callout mistake"><span class="tag">Common mistake — Test সেট দেখে বারবার model বদলানো</span>
+বহু model ও সেটিং test সেটে চালিয়ে সেরাটা বাছলে test সেটেই "overfit" হয়। Hyperparameter বাছুন validation/backtest-এ; চূড়ান্ত test একবারই।</div>
+<div class="callout mistake"><span class="tag">Common mistake — অতিদূরের horizon-এ অতি-আস্থা</span>
+১২ মাস পরের পূর্বাভাস ১ মাস পরের মতো নির্ভুল নয়। Horizon বাড়লে interval চওড়া হবে — সেটা লুকাবেন না।</div>
+<div class="callout mistake"><span class="tag">Common mistake — অল্প ইতিহাসে জটিল seasonality</span>
+২ বছরের মাসিক ডেটায় ১২-মাসের seasonality ঠিকমতো শেখা যায় না (মাত্র ২টা নমুনা)। অন্তত ২–৩ চক্রের ডেটা চাই; কম থাকলে সরল model বা বাইরের ক্যালেন্ডার জ্ঞান ব্যবহার করুন।</div>
+<div class="callout best"><span class="tag">Best practice — চেকলিস্ট</span>
+(১) ব্যবসায়িক সিদ্ধান্ত ও horizon আগে ঠিক। (২) নিয়মিত frequency, ফাঁকা মান সচেতনভাবে সামলানো। (৩) Plot ও decompose করে ডেটা দেখা। (৪) Seasonal naive baseline। (৫) Rolling backtest, একাধিক metric (MAE+MASE)। (৬) Prediction interval। (৭) ঘটনা/ছুটি feature (ঈদ ইত্যাদি)। (৮) Batch job + টেবিল + model version সংরক্ষণ। (৯) আসল মানের সাথে স্বয়ংক্রিয় accuracy tracking ও baseline fallback। (১০) মানুষের override ও পর্যালোচনা।</div>
+
+<h3>১৬. শেখার Roadmap</h3>
+<ol>
+<li>Pandas time-series: datetime index, <code>resample</code>, <code>asfreq</code>, rolling, shift।</li>
+<li>Decomposition, stationarity, ACF/PACF-এর ধারণা।</li>
+<li>Baseline ও metric (MAE, MASE), rolling backtest নিজে লেখা।</li>
+<li>ETS ও SARIMA (statsmodels), তারপর Prophet।</li>
+<li>Lag feature দিয়ে ML (LightGBM), trend সামলানো, direct বনাম recursive।</li>
+<li>Exogenous চলক ও ছুটি; বহু-সিরিজ global model।</li>
+<li>Prediction interval ও conformal prediction।</li>
+<li>Production: batch job, forecasts টেবিল, accuracy tracking, .NET dashboard।</li>
+</ol>
+<div class="callout why"><span class="tag">সংক্ষেপে মনে রাখুন</span>
+Time series-এ <b>ক্রম পবিত্র</b> — shuffle নয়, ভবিষ্যৎ leak নয়। <b>Seasonal naive-কে না হারালে জটিল model লাগবে না।</b> Tree model trend extrapolate করে না — আগে detrend। সবসময় <b>পরিসরসহ</b> পূর্বাভাস দিন, আর আসল মানের সাথে মিলিয়ে নিজের পূর্বাভাসকে জবাবদিহি রাখুন।</div>
+</template>
+
 <template data-page="interview">
-<h2 class="title">২১. Interview প্রশ্নোত্তর</h2>
+<h2 class="title">২৩. Interview প্রশ্নোত্তর</h2>
 <p class="lead">AI Engineering ইন্টারভিউতে বারবার আসা প্রশ্ন — basic ধারণা থেকে শুরু করে architecture-level trade-off পর্যন্ত, এই কোর্সের প্রতিটা অধ্যায় থেকে বাছাই করা।</p>
 
 <h3>১) একটা LLM আসলে কী করে, আর সে কি নিজে থেকে conversation "মনে রাখে"?</h3>
@@ -2345,7 +3384,7 @@ Documents → Chunk → Embedding → PostgreSQL + pgvector
 <span class="c">// Query (প্রতিটা প্রশ্নে)</span>
 User → ASP.NET Core API → AI Service → Query Embedding
      → pgvector similarity search → Relevant chunks → LLM API → Answer</pre>
-<p><b>ব্যাখ্যা:</b> GPT-এর মতো সাধারণ মডেল আপনার কোম্পানির Voucher API doc, GL mapping rule, বা internal policy জানে না। তাই আগে ডকুমেন্টগুলোকে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয়; ব্যবহারকারী প্রশ্ন করলে সেই প্রশ্নও embed হয়, similarity search-এ সবচেয়ে প্রাসঙ্গিক chunk আসে, আর সেগুলো context হিসেবে prompt-এ জুড়ে LLM-কে পাঠানো হয় (RAG অধ্যায়ে বিস্তারিত)। .NET-এ AI Service একটা DI-friendly abstraction হিসেবে বানালে (অধ্যায় ১৯) provider বদলানো ও টেস্ট করা সহজ হয়। কোম্পানির ঘন ঘন বদলানো ডেটার জন্য সাধারণত fine-tuning-এর আগে RAG-ই প্রথম পছন্দ।</p>
+<p><b>ব্যাখ্যা:</b> GPT-এর মতো সাধারণ মডেল আপনার কোম্পানির Voucher API doc, GL mapping rule, বা internal policy জানে না। তাই আগে ডকুমেন্টগুলোকে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয়; ব্যবহারকারী প্রশ্ন করলে সেই প্রশ্নও embed হয়, similarity search-এ সবচেয়ে প্রাসঙ্গিক chunk আসে, আর সেগুলো context হিসেবে prompt-এ জুড়ে LLM-কে পাঠানো হয় (RAG অধ্যায়ে বিস্তারিত)। .NET-এ AI Service একটা DI-friendly abstraction হিসেবে বানালে (অধ্যায় ২০) provider বদলানো ও টেস্ট করা সহজ হয়। কোম্পানির ঘন ঘন বদলানো ডেটার জন্য সাধারণত fine-tuning-এর আগে RAG-ই প্রথম পছন্দ।</p>
 
 <h3>২২) AI-কে কি সরাসরি database query করতে দেওয়া উচিত, নাকি controlled tool দেওয়া উচিত?</h3>
 <pre><span class="c">// ঝুঁকিপূর্ণ: মডেল নিজে SQL বানিয়ে সরাসরি DB-তে চালাচ্ছে</span>
@@ -2644,7 +3683,7 @@ MCP → মডেল কীভাবে বাইরের সিস্টেম
 
 "আমাদের refund policy কী?"            → RAG  (ডকুমেন্ট থেকে উত্তর)
 "Triplover-এর এই মাসের revenue কত?"   → MCP tool (live ডেটা, API/DB call)</pre>
-<p><b>ব্যাখ্যা:</b> RAG একটা <b>technique</b>: আগে ডকুমেন্ট embedding করে vector DB-তে রাখা হয়, প্রশ্নে প্রাসঙ্গিক chunk খুঁজে prompt-এ দিয়ে উত্তর তৈরি হয় — মূলত অসংগঠিত লেখার জ্ঞান, সাধারণত শুধু পড়া, আর ডেটা index করা সময় পর্যন্তই হালনাগাদ। MCP একটা <b>protocol</b>: tool-এর তালিকা (<code>tools/list</code>), চালানো (<code>tools/call</code>), resources ও prompts-এর standard পথ — live ডেটা ও action (query, invoice তৈরি, ইমেইল) এর জন্য, যেখানে side effect থাকতে পারে। দুটো প্রতিদ্বন্দ্বী নয়, একসাথে চলে: RAG-এর retrieval-ই একটা MCP tool হতে পারে (<code>search_policy_docs(query)</code>), ফলে একই assistant policy ডকুমেন্ট (RAG) ও live accounting ডেটা (MCP tool) দুটোই ব্যবহার করে। ডকুমেন্টভিত্তিক উত্তর হলে RAG, live ডেটা বা কাজ করাতে হলে MCP tool, পুরো assistant-এ দুটোই (RAG অধ্যায় ৯, MCP অধ্যায় ১১)।</p>
+<p><b>ব্যাখ্যা:</b> RAG একটা <b>technique</b>: আগে ডকুমেন্ট embedding করে vector DB-তে রাখা হয়, প্রশ্নে প্রাসঙ্গিক chunk খুঁজে prompt-এ দিয়ে উত্তর তৈরি হয় — মূলত অসংগঠিত লেখার জ্ঞান, সাধারণত শুধু পড়া, আর ডেটা index করা সময় পর্যন্তই হালনাগাদ। MCP একটা <b>protocol</b>: tool-এর তালিকা (<code>tools/list</code>), চালানো (<code>tools/call</code>), resources ও prompts-এর standard পথ — live ডেটা ও action (query, invoice তৈরি, ইমেইল) এর জন্য, যেখানে side effect থাকতে পারে। দুটো প্রতিদ্বন্দ্বী নয়, একসাথে চলে: RAG-এর retrieval-ই একটা MCP tool হতে পারে (<code>search_policy_docs(query)</code>), ফলে একই assistant policy ডকুমেন্ট (RAG) ও live accounting ডেটা (MCP tool) দুটোই ব্যবহার করে। ডকুমেন্টভিত্তিক উত্তর হলে RAG, live ডেটা বা কাজ করাতে হলে MCP tool, পুরো assistant-এ দুটোই (RAG অধ্যায় ১০, MCP অধ্যায় ১২)।</p>
 
 <h3>৬৮) LangChain কী, আর কেন সরাসরি provider SDK ব্যবহার না করে এটা লাগতে পারে?</h3>
 <p><b>ব্যাখ্যা:</b> LangChain হলো LLM application-এর উপাদান (chat model, prompt template, tool, retriever, output parser) জোড়ার একটা framework, যার মূল সুবিধা provider-নিরপেক্ষ common interface ও বিশাল integration তালিকা। Provider বদলানো, RAG pipeline বানানো, tool calling লুপ ও tracing — এসব বারবার নিজে লিখতে হয় না। কিন্তু একটা সরল call বা ছোট প্রোজেক্টে সরাসরি SDK-ই সরল ও ডিবাগযোগ্য — abstraction-এর খরচ সুবিধার চেয়ে বেশি হয়ে যায়। উত্তরের মূল কথা: framework সুবিধা দেয় যখন provider switch, orchestration বা persistence সত্যিই দরকার (LangChain অধ্যায়ে বিস্তারিত)।</p>
@@ -2693,7 +3732,7 @@ config = {"recursion_limit": 15}     <span class="c">// সর্বোচ্চ
 Prompt→LLM→parse, সরল RAG         → LangChain বা কয়েক লাইন নিজের কোড
 শাখা + loop + approval + resume   → LangGraph
 .NET backend                       → Semantic Kernel / Microsoft.Extensions.AI / Agent Framework</pre>
-<p><b>ব্যাখ্যা:</b> সরল কাজে framework over-engineering — abstraction স্তর, API-র ঘন ঘন পরিবর্তন, ভারী dependency ও vendor lock-in-এর ঝুঁকি আছে। ডিবাগে "ভেতরে কী হচ্ছে" বোঝা কঠিন হলে LangSmith trace বা সরাসরি SDK কাজে লাগে। LangChain/LangGraph-এর প্রথম শ্রেণির সাপোর্ট Python ও JS/TS-এ; .NET টিমের স্বাভাবিক পছন্দ Semantic Kernel, <code>Microsoft.Extensions.AI</code> বা Microsoft Agent Framework। বাস্তবে মিশ্র architecture-ও চলে: ব্যবসায়িক সিস্টেম ASP.NET Core-এ, AI orchestration আলাদা Python (LangGraph + FastAPI) সার্ভিসে, আর দুইয়ের সংযোগ HTTP বা MCP দিয়ে (LangChain অধ্যায়ের .NET অংশ, MCP অধ্যায় ১১)।</p>
+<p><b>ব্যাখ্যা:</b> সরল কাজে framework over-engineering — abstraction স্তর, API-র ঘন ঘন পরিবর্তন, ভারী dependency ও vendor lock-in-এর ঝুঁকি আছে। ডিবাগে "ভেতরে কী হচ্ছে" বোঝা কঠিন হলে LangSmith trace বা সরাসরি SDK কাজে লাগে। LangChain/LangGraph-এর প্রথম শ্রেণির সাপোর্ট Python ও JS/TS-এ; .NET টিমের স্বাভাবিক পছন্দ Semantic Kernel, <code>Microsoft.Extensions.AI</code> বা Microsoft Agent Framework। বাস্তবে মিশ্র architecture-ও চলে: ব্যবসায়িক সিস্টেম ASP.NET Core-এ, AI orchestration আলাদা Python (LangGraph + FastAPI) সার্ভিসে, আর দুইয়ের সংযোগ HTTP বা MCP দিয়ে (LangChain অধ্যায়ের .NET অংশ, MCP অধ্যায় ১২)।</p>
 
 <h3>৭৬) আপনার application-এ AI/ML model বসানোর আগে কোন প্রশ্নগুলো করবেন? সব সমস্যায় কি LLM লাগে?</h3>
 <pre>১. ব্যবসায়িক সমস্যা ও সাফল্যের মাপকাঠি কী?
@@ -2726,6 +3765,59 @@ Skew    : training ও production-এর preprocessing/ডেটা আলাদ
 <h3>৮১) Production-এ model খারাপ হচ্ছে কিনা কীভাবে বুঝবেন? Data drift ও concept drift কী?</h3>
 <pre>prediction_log(features, prediction, model_version, predicted_at, actual_outcome, outcome_at)</pre>
 <p><b>ব্যাখ্যা:</b> Data drift = ইনপুট ডেটার বণ্টন বদলেছে; Concept drift = ইনপুট-ফলাফলের সম্পর্কই বদলেছে। প্রতিটা prediction সংরক্ষণ করে পরে আসল ফলাফলের সাথে মিলিয়ে কর্মক্ষমতা মাপুন; ইনপুট/আউটপুটের বণ্টন ও ফাঁকা মানের হার নজরে রাখুন; ব্যবসায়িক KPI-ও দেখুন। নতুন model shadow mode/canary/A-B test দিয়ে রোলআউট করুন, ভার্সন রেখে rollback-এর ব্যবস্থা রাখুন। লাভ মাপুন ব্যবসায়িক সংখ্যায় (সাশ্রয় − খরচ), শুধু accuracy-তে নয়।</p>
+
+<h3>৮২) Time-series forecasting সাধারণ ML prediction থেকে কীভাবে আলাদা? Train/test split কীভাবে করবেন?</h3>
+<pre>ভুল: random shuffle split          → ভবিষ্যতের তথ্য train-এ ঢোকে (leakage)
+ঠিক: সময়ের ক্রমে ভাগ + rolling-origin backtest
+
+Fold 1: [train.........][test]
+Fold 2: [train............][test]</pre>
+<p><b>ব্যাখ্যা:</b> Time series-এ আজকের মান অতীতের উপর নির্ভর করে (autocorrelation), তাই ডেটার ক্রম অর্থবহ। Shuffle করলে ক্রম নষ্ট হয় ও ভবিষ্যৎ-তথ্য leak করে — test-এ চমৎকার, production-এ ব্যর্থ। সঠিক পথ: অতীতে train, ভবিষ্যতে test, এবং origin সরিয়ে একাধিক fold-এ backtest, যাতে একটা ভাগ্যবান সময়ের উপর সিদ্ধান্ত না হয় (Forecasting অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৮৩) Time series-এর উপাদান কী কী? Stationarity কী আর কেন লাগে?</h3>
+<pre>series = trend + seasonality + noise   (+ event/holiday প্রভাব)</pre>
+<p><b>ব্যাখ্যা:</b> Trend = দীর্ঘমেয়াদি দিক; seasonality = নির্দিষ্ট ব্যবধানে পুনরাবৃত্তি (মাস, সপ্তাহ, ছুটি); noise = এলোমেলো অংশ। Stationary সিরিজের গড় ও ভ্যারিয়েন্স সময়ের সাথে বদলায় না — ARIMA-পরিবার এটা ধরে নেয়, তাই trend থাকলে differencing করা হয় (ADF test দিয়ে যাচাই)। ETS ও ML model-এ এটা সরাসরি দরকার হয় না।</p>
+
+<h3>৮৪) Forecasting-এ কোন baseline ধরবেন, আর জটিল model কখন ন্যায্য?</h3>
+<pre>naive            : শেষ মান   | seasonal naive: গত বছরের একই সময় | moving average</pre>
+<p><b>ব্যাখ্যা:</b> সরল baseline আগে চালান; জটিল model তখনই ন্যায্য যখন সবচেয়ে ভালো baseline-কে backtest-এ স্পষ্টভাবে ছাড়ায় (Forecast Value Added)। সতর্কতা: জোরালো trend থাকলে seasonal naive দুর্বল হতে পারে (গত বছরের মান কম), তাই সব baseline-এর সেরাটার সাথে তুলনা করুন। MASE &lt; ১ মানে সরল baseline-এর চেয়ে ভালো।</p>
+
+<h3>৮৫) Gradient Boosting/Random Forest দিয়ে forecast করলে ভবিষ্যৎ পূর্বাভাস সমতল হয়ে যায় কেন? সমাধান কী? Recursive বনাম direct?</h3>
+<pre>trend আলাদা করো (linear regression) → residual-এ tree model + lag feature → পূর্বাভাসে trend ফেরত যোগ</pre>
+<p><b>ব্যাখ্যা:</b> Tree model ডেটা ভাগ করে মান শেখে, train-এর সর্বোচ্চ মানের বাইরে যেতে পারে না — তাই ক্রমবর্ধমান trend extrapolate হয় না। সমাধান: আগে trend আলাদা করে শুধু residual-এ model চালানো, বা differencing। Multi-step-এ <b>recursive</b> (এক ধাপের model-এর পূর্বাভাস আবার ইনপুট — সরল, কিন্তু ভুল জমে) বনাম <b>direct</b> (প্রতি horizon-এর আলাদা model — ভুল জমে না, কিন্তু অনেক model); দীর্ঘ horizon-এ direct প্রায়ই ভালো।</p>
+
+<h3>৮৬) Forecast production-এ কীভাবে বসাবেন, আর ব্যবসার সিদ্ধান্তে এর পরিসর (interval) কীভাবে কাজে লাগে?</h3>
+<pre>Scheduler → Python job (fit, backtest, fallback) → forecasts টেবিল (model_version সহ)
+          → app/dashboard শুধু পড়ে → আসল মান এলে accuracy ও interval coverage মাপা</pre>
+<p><b>ব্যাখ্যা:</b> Forecasting সাধারণত batch: নিয়মিত নতুন ডেটায় আবার fit করে টেবিলে সংরক্ষণ, app শুধু পড়ে (দ্রুত, নির্ভরযোগ্য)। Job প্রতিবার backtest করে baseline-কে না হারালে স্বয়ংক্রিয়ভাবে baseline-এ ফেরে। Point forecast একা বিভ্রান্তিকর — cash-flow পরিকল্পনায় <b>নিচের সীমা</b>, stock/ক্ষমতায় <b>উপরের সীমা</b> ব্যবহার করুন। পূর্বাভাসের সুবিধা: আসল মান পরে নিজেই আসে, তাই error, bias ও interval coverage (৮০% পরিসরে ~৮০% আসল মান পড়ছে কিনা) স্বয়ংক্রিয়ভাবে মাপা যায়। ঈদের মতো চলমান ছুটি exogenous feature হিসেবে দিন (ভবিষ্যতে যা জানা থাকে কেবল তা)।</p>
+
+<h3>৮৭) Vector Database কী, আর সাধারণ SQL database বা full-text search থেকে এটা কীভাবে আলাদা?</h3>
+<pre>SQL / full-text : "শব্দ মিলেছে?"   → "money back" খুঁজলে "টাকা ফেরত" মেলে না
+Vector search   : "অর্থ মিলেছে?"    → দুটোই কাছাকাছি, তাই মেলে</pre>
+<p><b>ব্যাখ্যা:</b> Embedding model লেখার অর্থকে সংখ্যা-তালিকায় (vector) রূপ দেয়; অর্থ কাছাকাছি হলে vector-ও কাছাকাছি। Vector Database সেই vector-গুলো (সাথে মূল লেখা ও metadata) সংরক্ষণ করে এবং "এই vector-এর সবচেয়ে কাছের k টা কোনগুলো" প্রশ্নের উত্তর কোটি কোটি ডেটায়ও মিলিসেকেন্ডে দেয় (ANN index দিয়ে)। সাধারণ SQL হুবহু/কাঠামোগত শর্তে নিখুঁত, vector অর্থ-ভিত্তিক খোঁজায় ভালো — দুটো একে অপরের প্রতিযোগী নয়, প্রায়ই একসাথে (hybrid) ব্যবহৃত হয় (Vector DB গাইড অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৮৮) Embedding ও vector কী? ডকুমেন্ট ও প্রশ্ন একই embedding model দিয়ে কেন করতে হয়?</h3>
+<pre>"টাকা ফেরত পাওয়া যাবে" → [0.90, 0.10, 0.00, ... ১৫৩৬ সংখ্যা]
+"money back policy"     → [0.85, 0.15, 0.05, ...]    <span class="c">// কাছাকাছি সংখ্যা = কাছাকাছি অর্থ</span></pre>
+<p><b>ব্যাখ্যা:</b> Embedding হলো লেখার অর্থের সংখ্যা-তালিকা; dimension হলো তালিকার দৈর্ঘ্য। প্রতিটা embedding model নিজস্ব "অর্থের ম্যাপ" বানায়, তাই ভিন্ন model-এর vector তুলনা করা অর্থহীন (কিলোমিটার বনাম মাইল)। ডকুমেন্ট ও প্রশ্ন একই model (ও ভার্সন) দিয়ে embed করতে হয়, আর model বদলালে সব ডেটা আবার embed করতে হয় — নতুন collection সমান্তরালে ভরে সুইচ করা নিরাপদ পথ।</p>
+
+<h3>৮৯) ANN কী? HNSW ও IVF কীভাবে কাজ করে, আর recall বনাম speed-এর টানাপোড়েন কী?</h3>
+<pre>Flat/brute force : সবার সাথে তুলনা → নিখুঁত কিন্তু ধীর
+IVF  : ডেটাকে এলাকায় ভাগ; কাছের কয়েকটা এলাকাতেই খোঁজা (nprobe)
+HNSW : স্তরভিত্তিক গ্রাফ — উপরে বড় লাফ, নিচে ছোট পদক্ষেপ (ef_search)</pre>
+<p><b>ব্যাখ্যা:</b> ANN (Approximate Nearest Neighbor) সামান্য নির্ভুলতা ছেড়ে বিপুল গতি পায়। Recall@k বলে ANN আসল সেরা k-এর কত শতাংশ ধরল। HNSW-তে <code>M</code>, <code>ef_construction</code>, <code>ef_search</code> এবং IVF-এ <code>nlist</code>/<code>nprobe</code> বাড়ালে recall বাড়ে কিন্তু মেমরি/সময় বাড়ে। ছোট ডেটায় (কয়েক লাখ পর্যন্ত) flat প্রায়ই যথেষ্ট; ANN তখনই যখন latency সত্যিই সমস্যা। মেমরি কমাতে quantization (int8/binary/PQ)।</p>
+
+<h3>৯০) Chunking কেন দরকার? Chunk size ও overlap কীভাবে ঠিক করবেন?</h3>
+<pre>খুব ছোট → প্রসঙ্গ হারায় | খুব বড় → অর্থ পাতলা, অপ্রাসঙ্গিক তথ্যও LLM-এ যায়
+শুরু: ~২০০–৮০০ token + সামান্য overlap → golden set-এ মেপে টিউন</pre>
+<p><b>ব্যাখ্যা:</b> পুরো ডকুমেন্টের একটা vector সবকিছুর "গড় অর্থ" ধরে, নির্দিষ্ট প্রশ্নের উত্তর খোঁজা কঠিন হয়; তাই ছোট chunk-এ ভেঙে প্রতিটার আলাদা vector। Overlap রাখা হয় যাতে সীমানায় কেটে যাওয়া তথ্য দুই chunk-এই থাকে। Recursive বা structure-aware (heading/ধারা অনুযায়ী) chunking সাধারণত ভালো ডিফল্ট। প্রতিটা chunk-এ <code>doc_id</code>, chunk index, উৎস, ভাষা, তারিখ ও অ্যাক্সেস-অধিকার metadata রাখুন — ফিল্টার, citation, update ও delete-এর জন্য।</p>
+
+<h3>৯১) Production-এ Vector DB-র বড় ঝুঁকিগুলো কী? (access control, update, model বদল, threshold, মাপজোক)</h3>
+<pre>১. প্রতিটা chunk-এ অনুমতি metadata + query-তে বাধ্যতামূলক filter
+২. doc_id দিয়ে update/delete; content_hash দিয়ে অকারণ re-embed এড়ানো
+৩. similarity threshold — প্রাসঙ্গিক কিছু না থাকলে "জানি না"
+৪. golden set দিয়ে hit-rate@k / MRR মাপা</pre>
+<p><b>ব্যাখ্যা:</b> (১) শুধু "সবচেয়ে কাছের" দেখে ফল দিলে একজনের গোপন ডকুমেন্ট আরেকজন দেখে ফেলতে পারে — ফিল্টার LLM-এর উপর ছাড়বেন না। (২) Index ও query-র operator মেলান (cosine index + <code>&lt;-&gt;</code> হলে index ব্যবহার হয় না)। (৩) Vector search সবসময় কিছু একটা "সবচেয়ে কাছের" দেয়, তাই threshold ছাড়া অপ্রাসঙ্গিক context থেকে hallucination হয়। (৪) কঠোর filter থাকলে post-filtering-এ ফল কমে যায় — in-filter বা <code>ef_search</code> বাড়ান। (৫) হুবহু শব্দ (ID, কোড, নাম)-এ vector দুর্বল, hybrid + reranker ব্যবহার করুন। (৬) আগে retrieval মাপুন, তারপর prompt/LLM বদলান।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->
