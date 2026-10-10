@@ -143,6 +143,7 @@ const pages = [
   {id:"safety",       icon:"🛡️", title:"Safety, Security ও Guardrails"},
   {id:"production",   icon:"🚀", title:"Production Engineering — Latency, Cost, Caching"},
   {id:"integration",  icon:"💜", title:"Backend/.NET Integration — বাস্তবে AI Feature বসানো"},
+  {id:"realworld",    icon:"📈", title:"Model-কে বাস্তব Application-এ কাজে লাগানো — Prediction থেকে Production"},
   {id:"interview",    icon:"🎯", title:"Interview প্রশ্নোত্তর"},
 ];
 </script>
@@ -1775,8 +1776,474 @@ Worker-এ concurrency সীমিত রাখুন (provider rate limit ম�
 <p>তিনটা প্রজেক্ট বানিয়ে প্রতিটা ধাপ প্রয়োগ করুন: <b>(১)</b> Documentation AI Assistant (RAG), <b>(২)</b> Accounting AI Agent (যেমন "জানুয়ারির সর্বোচ্চ খরচ দেখাও" → agent আপনার accounting API কল করে), <b>(৩)</b> Production AI Financial Assistant (.NET + PostgreSQL + Redis + Kafka + LLM + RAG + Agent)। শুরুতে এড়িয়ে চলুন: গভীর গাণিতিক ML, scratch থেকে LLM training, TensorFlow/PyTorch-এ গভীরে যাওয়া, data science, আর একসাথে অনেকগুলো AI framework।</p>
 </template>
 
+<template data-page="realworld">
+<h2 class="title">২০. Model-কে বাস্তব Application-এ কাজে লাগানো — Prediction থেকে Production</h2>
+<p class="lead">এতক্ষণ আমরা LLM, RAG, agent শিখেছি। কিন্তু AI মানে শুধু chatbot নয়। আপনার application-এ <b>"পরের মাসে কত বিক্রি হবে?"</b>, <b>"এই Voucher-টা কি সন্দেহজনক?"</b>, <b>"কোন customer টাকা দিতে দেরি করবে?"</b> — এসব প্রশ্নের উত্তর দেয় <span class="kw">Prediction Model (ML Model)</span>। এই অধ্যায়ে ধাপে ধাপে দেখব: কোন সমস্যায় কোন model, কীভাবে আপনার app-এ বসাবেন, কীভাবে মাপবেন আসলেই লাভ হচ্ছে কিনা, আর কোথায় কোথায় মানুষ ভুল করে।</p>
+
+<div class="callout why"><span class="tag">এই অধ্যায় থেকে কী পাবেন</span>
+(১) কোন সমস্যায় কোন ধরনের model — একটা পরিষ্কার মানচিত্র। (২) আপনার নিজের application-এ AI লাগানোর সুযোগ কীভাবে খুঁজবেন। (৩) Idea থেকে Production পর্যন্ত ১০ ধাপের পুরো পথ। (৪) একটা সম্পূর্ণ উদাহরণ: Python-এ train → FastAPI → .NET-এ ব্যবহার। (৫) লাভ কীভাবে মাপবেন (ROI)। (৬) Monitoring, drift, retraining — যা বেশিরভাগ tutorial বলে না।</div>
+
+<h3>১. Model আসলে কী — সবচেয়ে সরল ভাষায়</h3>
+<p>একটা <b>model</b> হলো একটা গাণিতিক function যা অতীতের ডেটা থেকে একটা "প্যাটার্ন" শিখেছে, আর নতুন ইনপুট পেলে সেই প্যাটার্ন খাটিয়ে একটা আনুমানিক উত্তর দেয়।</p>
+<div class="diagram"><pre>
+ ┌──────── Training (একবার, অফলাইন) ────────┐        ┌──── Inference (বারবার, লাইভ) ────┐
+ │ অতীতের ডেটা + সঠিক উত্তর  ──→  Model শেখে │  ───→  │ নতুন ইনপুট ──→ Model ──→ ভবিষ্যদ্বাণী │
+ │ (১ লক্ষ invoice, কোনটা দেরিতে পরিশোধ হয়েছে)│        │ (নতুন invoice) (৭৮% দেরি হবে)      │
+ └──────────────────────────────────────────┘        └──────────────────────────────────┘
+</pre></div>
+<p>দুটো জিনিস আলাদা করে মনে রাখুন: <b>Training</b> ভারী, ধীর, সাধারণত data scientist/ML engineer করে, মাঝে মাঝে হয়। <b>Inference</b> হালকা, দ্রুত, আপনার application প্রতিটা request-এ করে। Application developer হিসেবে আপনার মূল কাজ <b>inference-কে নির্ভরযোগ্যভাবে app-এ জোড়া</b> এবং পুরো চক্রটা (ডেটা → train → deploy → monitor) চালু রাখা।</p>
+<div class="callout behind"><span class="tag">পর্দার পেছনে — Model আসলে একটা ফাইল</span>
+Train শেষে model হলো কিছু সংখ্যা (weight/parameter) ও গঠনের বর্ণনা — একটা ফাইল (<code>.joblib</code>, <code>.onnx</code>, <code>.pt</code>, <code>.safetensors</code>)। আপনার app সেই ফাইল লোড করে ইনপুট দিলে উত্তর পায়। কোনো জাদু নেই: ইনপুট (features) → গণনা → আউটপুট (সংখ্যা বা ক্যাটাগরি)।</div>
+
+<h3>২. কোন সমস্যায় কোন ধরনের Model — মানচিত্র</h3>
+<table>
+<tr><th>ধরন</th><th>প্রশ্ন যা সমাধান করে</th><th>আউটপুট</th><th>বাস্তব উদাহরণ (Accounting/ERP/Travel)</th></tr>
+<tr><td><span class="kw">Classification</span></td><td>এটা কোন ক্যাটাগরির?</td><td>লেবেল + সম্ভাবনা</td><td>Voucher-এ কোন GL account বসবে; support ticket-এর ক্যাটাগরি; invoice দেরিতে পরিশোধ হবে কিনা (হ্যাঁ/না)</td></tr>
+<tr><td><span class="kw">Regression</span></td><td>সংখ্যাটা কত হবে?</td><td>একটা সংখ্যা</td><td>পরের মাসের revenue; একটা flight booking-এর সম্ভাব্য দাম; ডেলিভারির সময়</td></tr>
+<tr><td><span class="kw">Time-series Forecasting</span></td><td>সময়ের সাথে ভবিষ্যতে কী হবে?</td><td>ভবিষ্যৎ মানের সিরিজ</td><td>Cash-flow forecast; মাসিক বিক্রি; সার্ভার load</td></tr>
+<tr><td><span class="kw">Anomaly Detection</span></td><td>কোনটা স্বাভাবিকের থেকে অদ্ভুত?</td><td>Anomaly score</td><td>সন্দেহজনক Voucher/transaction; hotel-এর অস্বাভাবিক বুকিং প্যাটার্ন; fraud</td></tr>
+<tr><td><span class="kw">Clustering / Segmentation</span></td><td>কোন জিনিসগুলো একই ধরনের? (label ছাড়াই)</td><td>গ্রুপ</td><td>Customer segmentation; supplier গ্রুপিং</td></tr>
+<tr><td><span class="kw">Recommendation / Ranking</span></td><td>কাকে কী দেখাব/কোনটা আগে?</td><td>সাজানো তালিকা</td><td>"আপনার জন্য প্রস্তাবিত রুট/হোটেল"; কোন overdue invoice আগে ফলো-আপ করবেন</td></tr>
+<tr><td><span class="kw">NLP (ছোট/বিশেষায়িত)</span></td><td>লেখা বুঝে সিদ্ধান্ত</td><td>লেবেল/তথ্য</td><td>Sentiment; ইমেইল থেকে তথ্য বের করা</td></tr>
+<tr><td><span class="kw">Computer Vision / OCR</span></td><td>ছবি/স্ক্যান পড়া</td><td>টেক্সট/অবজেক্ট</td><td>Invoice/রসিদ স্ক্যান করে amount, তারিখ, vendor বের করা; পাসপোর্ট পড়া</td></tr>
+<tr><td><span class="kw">Speech</span></td><td>কণ্ঠ ↔ লেখা</td><td>টেক্সট/অডিও</td><td>কল সেন্টারের রেকর্ডিং ট্রান্সক্রাইব</td></tr>
+<tr><td><span class="kw">Generative (LLM)</span></td><td>লেখা/কোড/সারাংশ তৈরি, প্রশ্নোত্তর</td><td>টেক্সট</td><td>এই কোর্সের বাকি অংশ — RAG, agent, assistant</td></tr>
+</table>
+<div class="callout best"><span class="tag">গুরুত্বপূর্ণ বোঝাপড়া — "Predictive" আর "Generative" আলাদা টুল</span>
+প্রতিটা সমস্যায় LLM লাগে না — আর অনেক সমস্যায় LLM-ই <b>ভুল ও দামী</b> বাছাই। "পরের মাসের revenue কত হবে?" একটা forecasting model-এর কাজ (সংখ্যাভিত্তিক, সস্তা, পরিমাপযোগ্য); LLM এখানে অনুমান করে বানিয়ে বলবে। বিপরীতে "এই ইমেইলের মূল অনুরোধ কী?" LLM-এর জন্য চমৎকার। সঠিক টুল বাছাই করাই আসল দক্ষতা।</div>
+
+<h3>৩. Model ব্যবহারের ৪টা পথ — Build, Fine-tune, Pre-trained, API</h3>
+<table>
+<tr><th>পথ</th><th>কী</th><th>কখন</th><th>খরচ/ঝুঁকি</th></tr>
+<tr><td><span class="kw">১. Hosted API ব্যবহার</span></td><td>OpenAI/Claude/Azure AI/Google/AWS-এর তৈরি service ডাকা (OCR, speech, LLM, vision, translation)</td><td>সাধারণ, সুপরিচিত কাজ; দ্রুত শুরু দরকার; নিজস্ব ডেটা কম</td><td>প্রতি call-এ খরচ; ডেটা বাইরে যায় (privacy ভাবুন); vendor-নির্ভরতা</td></tr>
+<tr><td><span class="kw">২. Pre-trained model নিজে host</span></td><td>Hugging Face-এর মতো জায়গা থেকে open model নামিয়ে নিজের সার্ভারে চালানো</td><td>ডেটা বাইরে পাঠানো যাবে না; প্রচুর ভলিউম; খরচ নিয়ন্ত্রণ</td><td>GPU/ops খরচ; আপনাকেই scale ও monitor করতে হবে</td></tr>
+<tr><td><span class="kw">৩. নিজের ডেটায় Train (ML)</span></td><td>আপনার নিজস্ব ঐতিহাসিক ডেটা দিয়ে scikit-learn/XGBoost/LightGBM ইত্যাদিতে model বানানো</td><td>সমস্যাটা আপনার ডেটারই নির্দিষ্ট প্যাটার্ন (দেরিতে পরিশোধ, churn, forecast) — কোনো বাইরের API এটা জানে না</td><td>ভালো মানের ডেটা লাগে; ML দক্ষতা; maintenance</td></tr>
+<tr><td><span class="kw">৪. Fine-tune</span></td><td>বিদ্যমান model-কে নিজের ডেটায় আরও শেখানো</td><td>Fine-tuning অধ্যায় দেখুন — prompting/RAG যথেষ্ট না হলে</td><td>ডেটা সংগ্রহ, train, মূল্যায়ন — ধাপগুলো ব্যয়বহুল</td></tr>
+</table>
+<div class="callout why"><span class="tag">সিদ্ধান্ত নেওয়ার সোজা নিয়ম</span>
+<b>প্রশ্ন ১:</b> কাজটা কি সাধারণ (ছবি থেকে লেখা, অনুবাদ, সারাংশ)? → Hosted API দিয়ে শুরু করুন।<br>
+<b>প্রশ্ন ২:</b> উত্তরটা কি আপনার কোম্পানির নিজস্ব ডেটার প্যাটার্নের উপর নির্ভর করে (কোন customer দেরি করে, কোন ধরনের transaction সন্দেহজনক)? → নিজের ডেটায় Train করুন (পথ ৩)।<br>
+<b>প্রশ্ন ৩:</b> প্রথমে কি সাধারণ নিয়ম (<code>if</code> শর্ত) দিয়ে ৮০% সমস্যা মেটে? → তাহলে ML লাগবে না, আপাতত নিয়মই ভালো।</div>
+
+<h3>৪. আপনার Application-এ AI-এর সুযোগ কীভাবে খুঁজবেন</h3>
+<p>অনেকে "আমি AI লাগাব" দিয়ে শুরু করে — এটা উল্টো পথ। সঠিক পথ: <b>ব্যবসায়িক ব্যথা (pain point) আগে, টুল পরে</b>। নিজেকে এই ৫টা প্রশ্ন করুন:</p>
+<ol>
+<li><b>কোথায় মানুষ বারবার একই সিদ্ধান্ত নেয়?</b> (কোন account-এ বসবে, কোন ticket কার কাছে যাবে) → Classification।</li>
+<li><b>কোথায় মানুষ হাতে হাতে ডেটা টাইপ/কপি করে?</b> (invoice থেকে amount তোলা) → OCR/Extraction।</li>
+<li><b>কোথায় "যদি আগে জানতাম" বলে আফসোস হয়?</b> (দেরিতে পরিশোধ, stock শেষ, churn) → Prediction।</li>
+<li><b>কোথায় অস্বাভাবিক কিছু ধরা কঠিন?</b> (লাখো transaction-এর মধ্যে সন্দেহজনক) → Anomaly Detection।</li>
+<li><b>কোথায় মানুষ তথ্য খুঁজে হয়রান হয়?</b> (policy, ডকুমেন্ট) → RAG/Search।</li>
+</ol>
+<p>তারপর প্রতিটা সুযোগকে মূল্যায়ন করুন এই ছক দিয়ে:</p>
+<table>
+<tr><th>প্রশ্ন</th><th>ভালো লক্ষণ</th></tr>
+<tr><td>ব্যবসায়িক প্রভাব</td><td>টাকা/সময় সাশ্রয় বা আয় বৃদ্ধি স্পষ্টভাবে মাপা যায়</td></tr>
+<tr><td>ডেটা আছে?</td><td>পর্যাপ্ত ঐতিহাসিক ডেটা, সঠিক লেবেলসহ (যেমন কোন invoice আসলেই দেরি হয়েছিল)</td></tr>
+<tr><td>ভুলের মূল্য</td><td>ভুল হলে ক্ষতি সহনীয় বা মানুষ যাচাই করতে পারে</td></tr>
+<tr><td>নিয়মে মেটে না?</td><td>সরল <code>if/else</code> যথেষ্ট নয় — প্যাটার্ন জটিল</td></tr>
+<tr><td>ফিডব্যাক লুপ</td><td>পরে জানা যায় ভবিষ্যদ্বাণী ঠিক ছিল কিনা (ফলাফল ফিরে আসে)</td></tr>
+</table>
+<div class="callout best"><span class="tag">প্রথম প্রজেক্ট বাছাই — "ছোট ও নিরাপদ" থেকে শুরু</span>
+এমন একটা ব্যবহার বেছে নিন যেখানে model শুধু <b>পরামর্শ</b> দেয়, চূড়ান্ত সিদ্ধান্ত মানুষের (যেমন "এই Voucher-এর জন্য GL account প্রস্তাব: ৪১০১ (৯২% নিশ্চিত)")। ভুল হলে ক্ষতি কম, আস্থা তৈরি হয়, আর আসল ডেটা জমে।</div>
+
+<h3>৫. Idea থেকে Production — ১০ ধাপের পুরো পথ</h3>
+<div class="diagram"><pre>
+ ১ সমস্যা ও লক্ষ্য → ২ ডেটা যাচাই → ৩ Baseline (সরল নিয়ম) → ৪ পথ বাছাই
+        ↓
+ ৫ ডেটা প্রস্তুত → ৬ Train ও মূল্যায়ন → ৭ প্যাকেজ → ৮ Deploy ও Integrate
+        ↓
+ ৯ Monitor (drift, কর্মক্ষমতা) → ১০ ফিডব্যাক ও Retrain ──┐
+        ▲──────────────────────────────────────────────────┘
+</pre></div>
+
+<h4>ধাপ ১ — সমস্যা ও সাফল্যের মাপকাঠি ঠিক করুন</h4>
+<p>"AI দিয়ে কিছু একটা করব" নয়। স্পষ্ট করে লিখুন: <i>"দেরিতে পরিশোধ হবে এমন invoice আগে থেকে চিহ্নিত করে ফলো-আপ করলে ৩০ দিনের বেশি পুরোনো বকেয়া ২০% কমানো।"</i> এখানে ব্যবসায়িক লক্ষ্য (বকেয়া কমানো) ও প্রযুক্তিগত প্রশ্ন (পরিশোধ-দেরি classification) আলাদা করে ধরা আছে।</p>
+
+<h4>ধাপ ২ — ডেটা যাচাই করুন</h4>
+<ul>
+<li><b>পরিমাণ:</b> ক্লাসিক ML-এ কয়েক হাজার সারি সাধারণত শুরু করার জন্য যথেষ্ট; deep learning-এ আরও বেশি লাগে।</li>
+<li><b>লেবেল:</b> প্রতিটা সারিতে "সঠিক উত্তর" আছে কি? (invoice-এর প্রকৃত পরিশোধ তারিখ)</li>
+<li><b>মান:</b> ফাঁকা মান, ভুল এন্ট্রি, ডুপ্লিকেট।</li>
+<li><b>প্রতিনিধিত্ব:</b> ডেটা কি আজকের বাস্তবতার মতো? (৫ বছর আগের ব্যবসা মডেল আজ খাটবে না)</li>
+<li><b>অনুমতি/গোপনীয়তা:</b> ব্যক্তিগত ডেটা ব্যবহারের বৈধতা।</li>
+</ul>
+<div class="callout mistake"><span class="tag">Common mistake — "ডেটা পরে দেখব"</span>
+প্রজেক্টের ৭০–৮০% সময়ই যায় ডেটা সংগ্রহ, পরিষ্কার ও যাচাইয়ে। ডেটা না থাকলে বা লেবেল ভুল হলে সবচেয়ে আধুনিক model-ও ব্যর্থ — "Garbage in, garbage out"।</div>
+
+<h4>ধাপ ৩ — Baseline বানান (সবচেয়ে বেশি এড়িয়ে যাওয়া ধাপ)</h4>
+<p>Model বানানোর আগে সবচেয়ে সরল পদ্ধতি চালান: "যে customer গত ৩ বারে দেরি করেছে, তাকে আবার দেরির সম্ভাবনাময় ধরো।" এই সরল নিয়মের ফলাফলই আপনার <b>baseline</b>। ML model কেবল তখনই ন্যায্য যখন baseline-কে স্পষ্টভাবে ছাড়িয়ে যায়। অনেক সময় সরল নিয়মই ৯০% কাজ করে দেয়, আর ML-এর জটিলতা অপ্রয়োজনীয়।</p>
+
+<h4>ধাপ ৪ — পথ বাছাই (পূর্বের সিদ্ধান্ত নিয়ম অনুযায়ী)</h4>
+<p>API, pre-trained, নিজে train, না fine-tune — ৩ নং অংশের ছক দেখে ঠিক করুন।</p>
+
+<h4>ধাপ ৫ — ডেটা প্রস্তুত ও Feature Engineering</h4>
+<p><b>Feature</b> হলো model-এর ইনপুট কলাম। কাঁচা ডেটা থেকে অর্থবহ feature বানানোই প্রায়ই model-এর চেয়ে বেশি গুরুত্বপূর্ণ।</p>
+<table>
+<tr><th>কাঁচা ডেটা</th><th>ভালো Feature</th></tr>
+<tr><td>invoice তারিখ, due তারিখ</td><td><code>payment_terms_days</code>, <code>invoice_month</code>, <code>is_month_end</code></td></tr>
+<tr><td>customer-এর পুরোনো invoice-এর তালিকা</td><td><code>avg_delay_days_last_6</code>, <code>late_count_last_6</code></td></tr>
+<tr><td>amount</td><td><code>amount</code>, <code>amount / customer_avg_amount</code></td></tr>
+<tr><td>customer তৈরির তারিখ</td><td><code>customer_age_months</code></td></tr>
+</table>
+<ul>
+<li>ফাঁকা মান পূরণ (median/mode) বা আলাদা চিহ্ন।</li>
+<li>Category-কে সংখ্যায় রূপান্তর (One-Hot/Ordinal)।</li>
+<li>দরকারে scale করা (লিনিয়ার model, distance-ভিত্তিক model-এ)।</li>
+</ul>
+<div class="callout mistake"><span class="tag">Common mistake — Data Leakage (ভবিষ্যতের তথ্য ঢুকে যাওয়া)</span>
+Train-এর সময় এমন feature ব্যবহার করা যা <b>ভবিষ্যদ্বাণীর মুহূর্তে জানা থাকত না</b> — যেমন "আসল পরিশোধের তারিখ" দিয়ে "দেরি হবে কিনা" শেখানো। Test-এ নিখুঁত ফল আসে (৯৯% accuracy!), কিন্তু production-এ ভেঙে পড়ে। নিজেকে প্রশ্ন করুন: "ভবিষ্যদ্বাণী করার মুহূর্তে এই তথ্য কি আমার হাতে থাকবে?" এছাড়া ডেটা ভাগ করার সময় <b>সময়ের ক্রম মানুন</b> (পুরোনো ডেটায় train, নতুন ডেটায় test) — এলোমেলো ভাগ করলে ভবিষ্যৎ থেকে অতীতে তথ্য চুইয়ে যায়।</div>
+
+<h4>ধাপ ৬ — Train ও মূল্যায়ন</h4>
+<p>ডেটা ভাগ করুন: <b>Train</b> (শেখার জন্য), <b>Validation</b> (সেটিং/hyperparameter বাছতে), <b>Test</b> (শেষে একবার, নিরপেক্ষ পরীক্ষা)। কখনো Test সেট দেখে model বদলাবেন না।</p>
+<h4>কোন metric কখন</h4>
+<table>
+<tr><th>সমস্যা</th><th>Metric</th><th>অর্থ</th></tr>
+<tr><td rowspan="4">Classification</td><td><b>Accuracy</b></td><td>মোট কত শতাংশ ঠিক — <b>ভারসাম্যহীন ডেটায় বিভ্রান্তিকর</b></td></tr>
+<tr><td><b>Precision</b></td><td>যেগুলোকে "হ্যাঁ" বললাম, তার কত শতাংশ আসলেই হ্যাঁ (মিথ্যা সতর্কতা কম চাইলে)</td></tr>
+<tr><td><b>Recall</b></td><td>আসল "হ্যাঁ"-এর কত শতাংশ ধরতে পারলাম (কিছু মিস করা ব্যয়বহুল হলে — fraud)</td></tr>
+<tr><td><b>F1 / ROC-AUC / PR-AUC</b></td><td>Precision-Recall ভারসাম্য / threshold-নিরপেক্ষ মান</td></tr>
+<tr><td>Regression/Forecast</td><td><b>MAE, RMSE, MAPE</b></td><td>গড় ভুল কত (MAE সহজে বোঝা যায়; RMSE বড় ভুলকে বেশি শাস্তি দেয়; MAPE শতাংশে)</td></tr>
+</table>
+<div class="callout why"><span class="tag">উদাহরণ — Accuracy কেন প্রতারণা করে</span>
+১০,০০০ transaction-এর মধ্যে ১০টা fraud। একটা "বোকা" model যদি সবকিছুকেই "fraud নয়" বলে, তার accuracy <b>৯৯.৯%</b> — কিন্তু একটা fraud-ও ধরেনি (Recall = ০)। তাই fraud/anomaly-তে Precision ও Recall দেখুন, accuracy নয়।</div>
+<h4>Threshold — "৭০% সম্ভাবনা"-কে সিদ্ধান্তে রূপ দেওয়া</h4>
+<p>Classification model সাধারণত একটা <b>সম্ভাবনা</b> (০–১) দেয়। কোথায় কেটে "হ্যাঁ/না" ধরবেন সেটা <b>ব্যবসায়িক সিদ্ধান্ত</b>, প্রযুক্তিগত নয়:</p>
+<table>
+<tr><th>Threshold</th><th>ফল</th><th>কখন</th></tr>
+<tr><td>কম (০.৩)</td><td>বেশি ধরে (Recall বেশি), কিন্তু অনেক মিথ্যা সতর্কতা (Precision কম)</td><td>মিস করা অত্যন্ত ব্যয়বহুল (fraud, নিরাপত্তা)</td></tr>
+<tr><td>বেশি (০.৮)</td><td>যা ধরে তা প্রায় নিশ্চিত (Precision বেশি), কিন্তু অনেক মিস হয়</td><td>মিথ্যা সতর্কতার খরচ বেশি (প্রতিটা সতর্কতায় মানুষের সময় যায়)</td></tr>
+</table>
+
+<h4>ধাপ ৭ — প্যাকেজ করুন</h4>
+<p>Train শেষে model ফাইলে সংরক্ষণ করুন — <b>preprocessing সহ</b> (পরে দেখুন কেন)। ফরম্যাট বাছাই:</p>
+<table>
+<tr><th>ফরম্যাট</th><th>কোথায় চলে</th><th>মন্তব্য</th></tr>
+<tr><td><code>joblib/pickle</code></td><td>শুধু Python</td><td>সহজ; কিন্তু অবিশ্বস্ত ফাইল লোড করা বিপজ্জনক (code চলতে পারে)</td></tr>
+<tr><td><span class="kw">ONNX</span></td><td>Python, <b>C#/.NET</b>, Java, C++...</td><td>ভাষা-নিরপেক্ষ ফরম্যাট; .NET-এ সরাসরি চালানোর জন্য আদর্শ</td></tr>
+<tr><td><code>safetensors / .pt</code></td><td>PyTorch/deep learning</td><td>বড় neural model-এর জন্য</td></tr>
+<tr><td>ML.NET <code>.zip</code></td><td>.NET</td><td>পুরোটাই C#-এ train ও চালানো</td></tr>
+</table>
+
+<h4>ধাপ ৮ — Deploy ও Application-এ Integrate</h4>
+<p>পরের অংশে বিস্তারিত (৬ ও ৭ নং অংশ)।</p>
+
+<h4>ধাপ ৯ ও ১০ — Monitor ও Retrain</h4>
+<p>Model Deploy-এর পর কাজ শেষ নয়, শুরু। বিস্তারিত ৯ নং অংশে।</p>
+
+<h3>৬. সম্পূর্ণ উদাহরণ — "দেরিতে পরিশোধ হবে কিনা" Predict করা</h3>
+<p>পরিস্থিতি: আপনার Accounting API-তে invoice তৈরি হলে আমরা বলতে চাই এই invoice-টা দেরিতে পরিশোধ হওয়ার সম্ভাবনা কত। তাহলে finance টিম আগে থেকে ফলো-আপ করতে পারবে।</p>
+
+<h4>ধাপ A — Python-এ Train (data scientist/ML engineer বা আপনি)</h4>
+<pre><span class="c"># pip install pandas scikit-learn joblib</span>
+import pandas as pd, joblib
+from sklearn.compose import ColumnTransformer
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.metrics import classification_report, roc_auc_score
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
+
+df = pd.read_csv("invoices_history.csv").sort_values("invoice_date")   <span class="c"># সময়ের ক্রমে সাজান</span>
+
+NUM = ["amount", "payment_terms_days", "avg_delay_days_last_6", "late_count_last_6", "customer_age_months"]
+CAT = ["customer_segment"]
+X, y = df[NUM + CAT], df["paid_late"]            <span class="c"># y: ১ = দেরিতে পরিশোধ, ০ = সময়মতো</span>
+
+<span class="c"># সময় অনুযায়ী ভাগ: পুরোনো ৮০% train, নতুন ২০% test (leakage এড়াতে এলোমেলো নয়)</span>
+cut = int(len(df) * 0.8)
+X_tr, X_te, y_tr, y_te = X.iloc[:cut], X.iloc[cut:], y.iloc[:cut], y.iloc[cut:]
+
+pre = ColumnTransformer([("cat", OneHotEncoder(handle_unknown="ignore"), CAT)], remainder="passthrough")
+model = Pipeline([("pre", pre), ("clf", GradientBoostingClassifier())])   <span class="c"># preprocessing + model একসাথে</span>
+model.fit(X_tr, y_tr)
+
+proba = model.predict_proba(X_te)[:, 1]
+print("ROC-AUC:", roc_auc_score(y_te, proba))
+print(classification_report(y_te, proba &gt; 0.5))
+
+joblib.dump(model, "late_payment_v1.joblib")</pre>
+<div class="callout best"><span class="tag">Best practice — Pipeline ব্যবহার করুন (Training-Serving Skew এড়াতে)</span>
+Preprocessing (encoding, scaling) যদি Training-এ এক রকম আর Production-এ আলাদা কোডে লেখা হয়, তাহলে ছোট্ট অমিল model-কে নীরবে ভুল করায় — একে <b>training-serving skew</b> বলে। scikit-learn <code>Pipeline</code>-এ preprocessing ও model একসাথে সংরক্ষণ করলে এই ঝুঁকি কমে, কারণ production-এ যে ফাইল লোড হবে তাতেই preprocessing-ও আছে।</div>
+
+<h4>ধাপ B — FastAPI দিয়ে Model-কে একটা API বানান (Python Microservice)</h4>
+<pre>from fastapi import FastAPI
+from pydantic import BaseModel
+import joblib, pandas as pd
+
+MODEL_VERSION = "late_payment_v1"
+model = joblib.load(f"{MODEL_VERSION}.joblib")      <span class="c"># startup-এ একবার লোড, প্রতি request-এ নয়</span>
+app = FastAPI()
+
+class InvoiceFeatures(BaseModel):                    <span class="c"># ইনপুট validation — ভুল ইনপুট এখানেই আটকাবে</span>
+    amount: float
+    payment_terms_days: int
+    avg_delay_days_last_6: float
+    late_count_last_6: int
+    customer_age_months: int
+    customer_segment: str
+
+@app.post("/predict/late-payment")
+def predict(f: InvoiceFeatures):
+    row = pd.DataFrame([f.model_dump()])
+    p = float(model.predict_proba(row)[0, 1])
+    return {"late_probability": round(p, 3), "model_version": MODEL_VERSION}</pre>
+<p>Python কোর্সের FastAPI অধ্যায়ের সাথে এটা সরাসরি যুক্ত। <code>model_version</code> সবসময় response-এ ফেরত দিন — পরে কোন model কী বলেছিল তা ট্র্যাক করতে কাজে লাগবে।</p>
+
+<h4>ধাপ C — .NET Application থেকে ব্যবহার</h4>
+<pre>public record LatePaymentRequest(decimal Amount, int PaymentTermsDays, double AvgDelayDaysLast6,
+                                 int LateCountLast6, int CustomerAgeMonths, string CustomerSegment);
+public record LatePaymentResponse(double LateProbability, string ModelVersion);
+
+public interface ILatePaymentPredictor
+{
+    Task&lt;LatePaymentResponse?&gt; PredictAsync(LatePaymentRequest req, CancellationToken ct);
+}
+
+public class HttpLatePaymentPredictor(HttpClient http, ILogger&lt;HttpLatePaymentPredictor&gt; log)
+    : ILatePaymentPredictor
+{
+    public async Task&lt;LatePaymentResponse?&gt; PredictAsync(LatePaymentRequest req, CancellationToken ct)
+    {
+        try
+        {
+            var res = await http.PostAsJsonAsync("/predict/late-payment", req, ct);
+            res.EnsureSuccessStatusCode();
+            return await res.Content.ReadFromJsonAsync&lt;LatePaymentResponse&gt;(cancellationToken: ct);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+        {
+            log.LogWarning(ex, "Prediction service unavailable — fallback");
+            return null;                       <span class="c">// model বন্ধ থাকলেও মূল business flow থামবে না</span>
+        }
+    }
+}
+
+<span class="c">// Program.cs — timeout ছোট রাখুন, resilience handler যোগ করুন</span>
+builder.Services.AddHttpClient&lt;ILatePaymentPredictor, HttpLatePaymentPredictor&gt;(c =&gt;
+{
+    c.BaseAddress = new Uri("http://ml-service:8000");
+    c.Timeout = TimeSpan.FromSeconds(2);
+}).AddStandardResilienceHandler();   <span class="c">// Microsoft.Extensions.Http.Resilience: retry, circuit breaker, timeout</span></pre>
+<p>এবার Invoice তৈরির সার্ভিসে ব্যবহার:</p>
+<pre>var pred = await predictor.PredictAsync(ToRequest(invoice), ct);
+
+invoice.LateRisk = pred switch
+{
+    null                          =&gt; RiskLevel.Unknown,   <span class="c">// model পাওয়া না গেলে — স্বাভাবিক flow</span>
+    { LateProbability: &gt;= 0.7 }   =&gt; RiskLevel.High,
+    { LateProbability: &gt;= 0.4 }   =&gt; RiskLevel.Medium,
+    _                             =&gt; RiskLevel.Low
+};
+invoice.LateProbability = pred?.LateProbability;
+invoice.ModelVersion    = pred?.ModelVersion;      <span class="c">// audit ও পরে মূল্যায়নের জন্য সংরক্ষণ</span>
+await db.SaveChangesAsync(ct);</pre>
+<div class="callout best"><span class="tag">Best practice — Model ব্যর্থ হলে business flow যেন না থামে</span>
+Prediction একটা <b>সহায়ক সংকেত</b>। ML service ডাউন থাকলে invoice তৈরি আটকে যাওয়া চলবে না — timeout ছোট রাখুন, fallback দিন (<code>Unknown</code>), circuit breaker বসান। এটাই AI-কে "nice to have" থেকে নির্ভরযোগ্য উপাদান বানায়।</div>
+
+<h4>ধাপ D (বিকল্প) — Python সার্ভিস ছাড়াই সরাসরি .NET-এ: ONNX</h4>
+<p>আলাদা Python সার্ভিস রাখতে না চাইলে model-কে ONNX-এ রূপান্তর করে .NET-এর ভেতরেই চালানো যায় — কম latency, কম অবকাঠামো।</p>
+<pre><span class="c"># Python: রূপান্তর (সরলতার জন্য শুধু সংখ্যাসূচক feature-এর model ধরা হলো)</span>
+<span class="c"># pip install skl2onnx onnxruntime</span>
+from skl2onnx import convert_sklearn
+from skl2onnx.common.data_types import FloatTensorType
+
+onx = convert_sklearn(num_only_model, initial_types=[("input", FloatTensorType([None, 4]))],
+                      options={id(num_only_model): {"zipmap": False}})   <span class="c"># probability সরাসরি array হিসেবে</span>
+open("late_payment.onnx", "wb").write(onx.SerializeToString())</pre>
+<pre><span class="c">// C#: dotnet add package Microsoft.ML.OnnxRuntime</span>
+using Microsoft.ML.OnnxRuntime;
+using Microsoft.ML.OnnxRuntime.Tensors;
+
+<span class="c">// InferenceSession ভারী ও thread-safe — Singleton হিসেবে একবার তৈরি করুন</span>
+var session = new InferenceSession("late_payment.onnx");
+
+var input = new DenseTensor&lt;float&gt;(new float[] { 25000f, 30f, 4.5f, 2f }, new[] { 1, 4 });
+using var results = session.Run(new[] { NamedOnnxValue.CreateFromTensor("input", input) });
+
+var probs = results.First(r =&gt; r.Name == "probabilities").AsTensor&lt;float&gt;();
+float lateProbability = probs[0, 1];</pre>
+<div class="callout behind"><span class="tag">কোনটা কখন — Python service বনাম ONNX in-process</span>
+<b>Python service:</b> model বদলানো সহজ (শুধু সার্ভিস আপডেট), বিভিন্ন ভাষার app একই model ব্যবহার করতে পারে, সব Python লাইব্রেরি পাওয়া যায়; কিন্তু অতিরিক্ত network hop ও একটা আলাদা সার্ভিস সামলাতে হয়। <b>ONNX in-process:</b> দ্রুত, নেটওয়ার্ক নেই, deploy সহজ; কিন্তু সব model/preprocessing সহজে ONNX-এ রূপান্তরযোগ্য নয়, আর model বদলাতে app redeploy (বা ফাইল হট-রিলোড) লাগে। .NET-এ আরেকটা পথ <span class="kw">ML.NET</span> — সম্পূর্ণ C#-এ train ও predict।</div>
+
+<h3>৬.৫ গুরুত্বপূর্ণ ML ধারণা — যা না জানলে ভুল হয়</h3>
+<table>
+<tr><th>ধারণা</th><th>অর্থ</th><th>লক্ষণ ও প্রতিকার</th></tr>
+<tr><td><span class="kw">Overfitting</span></td><td>Model train ডেটা মুখস্থ করে ফেলেছে, নতুন ডেটায় ভালো করে না</td><td>Train-এ ৯৮%, test-এ ৭০% — সরল model, কম feature, বেশি ডেটা, regularization, cross-validation</td></tr>
+<tr><td><span class="kw">Underfitting</span></td><td>Model এত সরল যে প্যাটার্নই ধরতে পারেনি</td><td>Train ও test দুটোতেই খারাপ — ভালো feature, জটিল model</td></tr>
+<tr><td><span class="kw">Cross-validation</span></td><td>ডেটাকে কয়েক ভাগে ভেঙে ঘুরিয়ে train/test করে স্থিতিশীল মূল্যায়ন (সময়ভিত্তিক ডেটায় <code>TimeSeriesSplit</code>)</td><td>একটা ভাগ্যবান test সেটের ধোঁকা এড়ায়</td></tr>
+<tr><td><span class="kw">Class Imbalance</span></td><td>একটা ক্লাস খুব কম (fraud ০.১%)</td><td><code>class_weight="balanced"</code>, oversampling/undersampling, PR-AUC দিয়ে মাপা, threshold টিউন</td></tr>
+<tr><td><span class="kw">Cold Start</span></td><td>নতুন customer/আইটেমের ইতিহাস নেই, তাই prediction দুর্বল</td><td>সরল নিয়ম/গড় দিয়ে fallback, ইতিহাস জমলে model ব্যবহার</td></tr>
+<tr><td><span class="kw">Calibration</span></td><td>"৮০%" বললে সত্যিই ৮০% ক্ষেত্রে ঘটে কিনা</td><td>Probability-কে টাকার হিসাবে ব্যবহার করলে calibration যাচাই করুন</td></tr>
+<tr><td><span class="kw">Hyperparameter</span></td><td>Train শুরুর আগে ঠিক করা সেটিং (গাছের গভীরতা, learning rate)</td><td>Validation সেট বা cross-validation দিয়ে বাছুন; test সেট ছোঁবেন না</td></tr>
+</table>
+<div class="callout why"><span class="tag">Feature Store — বড় হলে কেন লাগে</span>
+একই feature (যেমন <code>avg_delay_days_last_6</code>) training-এ এক কোডে আর production-এ আরেক কোডে হিসাব হলে skew হয়। বড় সিস্টেমে একটা <b>feature store</b> (Feast ইত্যাদি) একই সংজ্ঞা দুই জায়গায় সরবরাহ করে। ছোট শুরুতে লাগে না — তবে feature-হিসাবের কোড একটাই জায়গায় রাখুন, কপি করবেন না।</div>
+
+<h3>৭. Integration Pattern — Model-কে app-এর কোথায় বসাবেন</h3>
+<table>
+<tr><th>Pattern</th><th>কীভাবে কাজ করে</th><th>কখন ব্যবহার</th><th>উদাহরণ</th></tr>
+<tr><td><span class="kw">Real-time (Synchronous)</span></td><td>User request আসে → model call → উত্তর সাথে সাথে</td><td>ব্যবহারকারীর সামনে তাৎক্ষণিক ফলাফল দরকার; model দ্রুত</td><td>Voucher লেখার সময় GL account প্রস্তাব</td></tr>
+<tr><td><span class="kw">Batch (Scheduled)</span></td><td>নির্দিষ্ট সময়ে (রাতে) সব ডেটা score করে ফলাফল DB-তে সংরক্ষণ</td><td>তাৎক্ষণিক দরকার নেই; ভলিউম বেশি; খরচ কম রাখতে চান</td><td>প্রতি রাতে সব open invoice-এর দেরির ঝুঁকি score করে dashboard-এ দেখানো</td></tr>
+<tr><td><span class="kw">Async / Event-driven</span></td><td>Event (Kafka/RabbitMQ) আসে → worker model চালায় → ফলাফল আরেক event/DB-তে</td><td>সময়সাপেক্ষ (OCR, বড় ফাইল); user অপেক্ষা করবে না</td><td>Invoice PDF আপলোড → queue → OCR+extraction → পরে ফলাফল notify</td></tr>
+<tr><td><span class="kw">Precomputed Column</span></td><td>Score আগেই DB কলামে রাখা; app শুধু পড়ে</td><td>বারবার একই score দরকার; read-heavy</td><td>Customer লিস্টে "churn risk" কলাম</td></tr>
+<tr><td><span class="kw">Human-in-the-loop</span></td><td>Model প্রস্তাব দেয়; confidence কম হলে মানুষের কাছে যায়</td><td>ভুলের ঝুঁকি আছে; ধাপে ধাপে স্বয়ংক্রিয়তা বাড়াতে চান</td><td>৯৫%+ নিশ্চিত হলে auto-post, নইলে accountant-এর অনুমোদন</td></tr>
+</table>
+<div class="callout best"><span class="tag">Confidence-ভিত্তিক স্বয়ংক্রিয়তা — "Automation Ladder"</span>
+<code>≥ ০.৯৫ → স্বয়ংক্রিয় · ০.৭০–০.৯৫ → প্রস্তাব, মানুষ নিশ্চিত করবে · &lt; ০.৭০ → সম্পূর্ণ ম্যানুয়াল।</code> এভাবে model যেখানে নিশ্চিত শুধু সেখানেই কাজ করে, বাকিটা মানুষের কাছে যায় — আর মানুষের সংশোধন ভবিষ্যতের training ডেটা হয়ে যায়।</div>
+
+<h3>৭.৫ Serving-এর বাস্তব বিষয় — Latency, Caching, Scale</h3>
+<ul>
+<li><b>Model একবার লোড করুন:</b> startup-এ লোড, প্রতি request-এ নয় (ফাইল পড়া ধীর)। ONNX <code>InferenceSession</code> ও joblib model দুটোই এভাবে।</li>
+<li><b>Batch করুন:</b> ১০০০ সারির score একসাথে এক call-এ পাঠান — প্রতি সারিতে আলাদা HTTP call অনেক ধীর। ML model vectorized চলে বলে batch-এ অনেক দ্রুত।</li>
+<li><b>Cache করুন:</b> একই ইনপুটে একই উত্তর হলে (customer-এর মাসিক score) Redis/DB-তে রাখুন, প্রতিবার model ডাকবেন না।</li>
+<li><b>Timeout ও resilience:</b> ছোট timeout, retry সীমিত, circuit breaker, fallback — model ডাউনে app থামবে না।</li>
+<li><b>Scale:</b> ক্লাসিক ML সাধারণত CPU-তেই চলে; একাধিক instance ও load balancer। বড় deep learning/LLM-এ GPU ও আলাদা serving (vLLM, Triton) লাগে।</li>
+<li><b>Input validation:</b> Pydantic/DTO দিয়ে ভুল ইনপুট আটকান; অস্বাভাবিক মান (ঋণাত্মক amount) model-কে পাঠাবেন না।</li>
+<li><b>ভার্সনিং:</b> model ফাইলের নামে ভার্সন (<code>late_payment_v3</code>), response ও DB-তে সংরক্ষণ।</li>
+</ul>
+<h4>ML.NET — সম্পূর্ণ C#-এ train ও predict (সংক্ষিপ্ত চিত্র)</h4>
+<pre><span class="c">// dotnet add package Microsoft.ML</span>
+public class InvoiceData  { public float Amount; public float AvgDelayDays; public bool PaidLate; }
+public class LatePrediction { [ColumnName("PredictedLabel")] public bool IsLate; public float Probability; }
+
+var ml = new MLContext(seed: 1);
+var data = ml.Data.LoadFromTextFile&lt;InvoiceData&gt;("invoices.csv", hasHeader: true, separatorChar: ',');
+var split = ml.Data.TrainTestSplit(data, testFraction: 0.2);
+
+var pipeline = ml.Transforms.Concatenate("Features", nameof(InvoiceData.Amount), nameof(InvoiceData.AvgDelayDays))
+    .Append(ml.BinaryClassification.Trainers.FastTree(labelColumnName: nameof(InvoiceData.PaidLate)));
+
+var model = pipeline.Fit(split.TrainSet);
+var metrics = ml.BinaryClassification.Evaluate(model.Transform(split.TestSet), nameof(InvoiceData.PaidLate));
+ml.Model.Save(model, split.TrainSet.Schema, "late.zip");
+
+<span class="c">// ASP.NET Core-এ: Microsoft.Extensions.ML-এর PredictionEnginePool (thread-safe) ব্যবহার করুন,
+// PredictionEngine সরাসরি share করবেন না — সেটা thread-safe নয়।</span></pre>
+<p>ML.NET তাদের জন্য ভালো যারা Python ছাড়াই C#-এ সবকিছু রাখতে চান; তবে ML ইকোসিস্টেমের বেশিরভাগ লাইব্রেরি ও উদাহরণ Python-এ, তাই জটিল কাজে Python-এ train করে ONNX-এ রূপান্তরের পথও জনপ্রিয়।</p>
+
+<h3>৮. Pre-trained ও Hosted Model ব্যবহার — Train ছাড়াই লাভ</h3>
+<p>সব সমস্যায় নিজে train করতে হয় না। অনেক সাধারণ কাজের জন্য তৈরি model আছে:</p>
+<table>
+<tr><th>কাজ</th><th>বিকল্প</th></tr>
+<tr><td>Invoice/রসিদ থেকে তথ্য (OCR + extraction)</td><td>Azure AI Document Intelligence, AWS Textract, Google Document AI, অথবা vision-সক্ষম LLM + structured output</td></tr>
+<tr><td>লেখা থেকে sentiment/ক্যাটাগরি/তথ্য</td><td>LLM + structured output (zero-shot), অথবা ছোট fine-tuned model</td></tr>
+<tr><td>Search ও similarity</td><td>Embedding model + vector DB (Embeddings ও Vector DB অধ্যায়)</td></tr>
+<tr><td>Speech-to-text</td><td>Whisper (open), বা cloud speech API</td></tr>
+<tr><td>অনুবাদ</td><td>Cloud translation API বা LLM</td></tr>
+<tr><td>Open model host করা</td><td>Hugging Face থেকে model; Ollama/vLLM দিয়ে নিজের সার্ভারে</td></tr>
+</table>
+<pre><span class="c">// উদাহরণ: LLM দিয়ে অসংগঠিত লেখা থেকে structured ডেটা — কোনো train ছাড়াই (Tool Calling অধ্যায়ের structured output)</span>
+Input : "Triplover থেকে ১৫ অক্টোবর ২০২৬-এ ৫০,০০০ টাকার পেমেন্ট এসেছে, রেফ INV-1042"
+Output: { "customer":"Triplover", "date":"2026-10-15", "amount":50000, "currency":"BDT", "invoice_ref":"INV-1042" }</pre>
+<div class="callout why"><span class="tag">LLM বনাম নিজের ML model — কোনটা কখন (গুরুত্বপূর্ণ)</span>
+<b>LLM জিতে:</b> ভাষা বোঝা, অসংগঠিত টেক্সট, কম/শূন্য labeled ডেটা, দ্রুত prototype, প্রতিনিয়ত বদলানো ক্যাটাগরি।<br>
+<b>নিজের ML model জিতে:</b> সংখ্যাভিত্তিক/টেবিল ডেটা (দেরি, churn, forecast, fraud), প্রচুর ভলিউমে কম খরচ ও কম latency, নির্ধারিত ও পরিমাপযোগ্য নির্ভুলতা, ডেটা বাইরে না পাঠানো।<br>
+টেবিল ডেটার prediction-এ সাধারণত gradient boosting (XGBoost/LightGBM) LLM-এর চেয়ে সস্তা, দ্রুত ও বেশি নির্ভুল।</div>
+
+<h3>৯. Production-এ Model — Monitoring, Drift ও Retraining</h3>
+<p>সাধারণ software একবার ঠিকভাবে লিখলে ঠিক থাকে। <b>Model সময়ের সাথে নীরবে খারাপ হয়ে যায়</b>, কারণ পৃথিবী বদলায় কিন্তু model-এর শেখা প্যাটার্ন বদলায় না।</p>
+<table>
+<tr><th>সমস্যা</th><th>অর্থ</th><th>উদাহরণ</th></tr>
+<tr><td><span class="kw">Data Drift</span></td><td>ইনপুট ডেটার বণ্টন বদলে গেছে</td><td>নতুন বাজারে ঢুকেছেন; invoice-এর গড় amount হঠাৎ বেড়েছে</td></tr>
+<tr><td><span class="kw">Concept Drift</span></td><td>ইনপুট ও ফলাফলের সম্পর্কটাই বদলে গেছে</td><td>অর্থনৈতিক সংকটে আগে ভালো customer-রাও দেরি করছে</td></tr>
+<tr><td><span class="kw">Training-Serving Skew</span></td><td>Training ও production-এর ডেটা/প্রক্রিয়ায় অমিল</td><td>Production-এ নতুন category যা train-এ ছিল না</td></tr>
+<tr><td><span class="kw">Data Pipeline ভাঙা</span></td><td>উৎস ডেটার ফরম্যাট বদলে গেছে</td><td>একটা কলাম হঠাৎ সবসময় null আসছে</td></tr>
+</table>
+<h4>কী monitor করবেন</h4>
+<ol>
+<li><b>অপারেশনাল:</b> latency, error rate, timeout, throughput (সাধারণ সার্ভিসের মতোই)।</li>
+<li><b>ডেটা:</b> ইনপুটের বণ্টন (গড়, ফাঁকা মানের হার, নতুন category) — train ডেটার সাথে তুলনা।</li>
+<li><b>Prediction:</b> আউটপুটের বণ্টন (হঠাৎ সব prediction "উচ্চ ঝুঁকি" হয়ে গেলে কিছু ভেঙেছে)।</li>
+<li><b>কর্মক্ষমতা:</b> আসল ফলাফল জানা গেলে (পরে invoice আসলে দেরিতে পরিশোধ হলো কিনা) accuracy/precision/recall পুনরায় হিসাব — এজন্য <b>প্রতিটা prediction সংরক্ষণ করুন</b> এবং পরে সঠিক উত্তরের সাথে মেলান।</li>
+<li><b>ব্যবসায়িক KPI:</b> আসল লক্ষ্য — বকেয়া কি আসলে কমছে?</li>
+</ol>
+<pre>prediction_log(id, entity_id, features_json, prediction, model_version, predicted_at,
+               actual_outcome NULL, outcome_at NULL)
+<span class="c">-- পরে actual_outcome ভরলে model-এর প্রকৃত কর্মক্ষমতা মাপা যায় — এটাই feedback loop-এর ভিত্তি</span></pre>
+<h4>Retraining কখন ও কীভাবে</h4>
+<ul>
+<li><b>সময়ভিত্তিক:</b> নির্দিষ্ট বিরতিতে (মাসিক/ত্রৈমাসিক) নতুন ডেটায় আবার train।</li>
+<li><b>ট্রিগারভিত্তিক:</b> drift বা কর্মক্ষমতা সীমার নিচে নামলে।</li>
+<li>নতুন model সরাসরি production-এ নয় — আগে পুরোনোটার সাথে তুলনা।</li>
+</ul>
+<h4>নিরাপদে নতুন Model রোলআউট</h4>
+<table>
+<tr><th>কৌশল</th><th>কীভাবে</th></tr>
+<tr><td><span class="kw">Shadow mode</span></td><td>নতুন model লাইভ ডেটায় চলে ও ফলাফল সংরক্ষিত হয়, কিন্তু ব্যবহারকারীকে দেখানো হয় না — পুরোনোর সাথে তুলনা করার জন্য</td></tr>
+<tr><td><span class="kw">Canary</span></td><td>মোট ট্রাফিকের ৫% নতুন model-এ, ঠিক থাকলে ধীরে বাড়ানো</td></tr>
+<tr><td><span class="kw">A/B test</span></td><td>দুটো model/পদ্ধতি পাশাপাশি চালিয়ে ব্যবসায়িক ফলাফল তুলনা</td></tr>
+<tr><td><span class="kw">Rollback</span></td><td>model-কে ভার্সন করে রাখুন; খারাপ হলে এক ক্লিকে আগের ভার্সনে ফেরা</td></tr>
+</table>
+<p>এই পুরো চক্রের (train → registry → deploy → monitor → retrain) নাম <span class="kw">MLOps</span>। টুল: MLflow (experiment tracking ও model registry), DVC (ডেটা ভার্সন), Evidently (drift report) — তবে ছোট শুরুতে একটা prediction log টেবিল ও মাসিক retrain স্ক্রিপ্টই যথেষ্ট।</p>
+
+<h3>১০. লাভ কীভাবে মাপবেন — ROI ও Business Case</h3>
+<p>Model-এর "accuracy ৮৫%" ব্যবসার কাছে অর্থহীন। ব্যবসা জানতে চায়: <b>এতে টাকা/সময় কত বাঁচল বা আয় কত বাড়ল?</b></p>
+<div class="callout why"><span class="tag">একটা সরল হিসাব (সংখ্যাগুলো উদাহরণ মাত্র)</span>
+মাসে ১০,০০০ invoice, ২০% (২,০০০টি) দেরিতে পরিশোধ হয়। Model-এ Recall ৬০% → ১,২০০টি আগেই ধরা পড়ে। ধরুন সময়মতো ফলো-আপ করলে তার অর্ধেক (৬০০টি) সময়ে পরিশোধ হয়, আর প্রতিটা দেরির খরচ (মূলধনের সুদ + প্রশাসনিক) গড়ে ৫০০ টাকা। <br>
+<b>সাশ্রয় = ৬০০ × ৫০০ = ৩,০০,০০০ টাকা/মাস।</b> <br>
+<b>খরচ</b> = ফলো-আপে মানুষের সময় (Precision-এর কারণে কিছু অকারণ ফলো-আপ) + সার্ভার + রক্ষণাবেক্ষণ। <br>
+<b>নিট লাভ = সাশ্রয় − খরচ।</b> এই হিসাব মিললেই প্রজেক্ট ন্যায্য।</div>
+<h4>মাপার পদ্ধতি</h4>
+<ol>
+<li><b>Baseline-এর সাথে তুলনা:</b> সরল নিয়ম বনাম model — আসল উন্নতি কতটুকু?</li>
+<li><b>A/B test:</b> একদল customer-এ model-ভিত্তিক ফলো-আপ, আরেকদলে স্বাভাবিক — বকেয়া তুলনা।</li>
+<li><b>ব্যবসায়িক KPI ট্র্যাক:</b> বকেয়ার গড় দিন, সংগ্রহের হার, ম্যানুয়াল কাজের ঘণ্টা।</li>
+<li><b>লুকানো খরচ ধরুন:</b> ডেটা প্রস্তুত, ইঞ্জিনিয়ারিং সময়, monitoring, retraining, মিথ্যা সতর্কতায় নষ্ট সময়।</li>
+</ol>
+
+<h3>১১. Explainability, Fairness ও Privacy — আর্থিক/ব্যবসায়িক সিস্টেমে বিশেষ গুরুত্বপূর্ণ</h3>
+<ul>
+<li><b>Explainability (ব্যাখ্যাযোগ্যতা):</b> "কেন এই invoice উচ্চ ঝুঁকি?" — ব্যবহারকারী ও অডিটর জানতে চাইবে। ব্যাখ্যা দেওয়ার টুল: feature importance, <span class="kw">SHAP</span>। সরল model (linear, shallow tree) স্বভাবতই বেশি ব্যাখ্যাযোগ্য; জটিল model-এর জন্য SHAP-এর মতো টুল লাগে। UI-তে দেখান: "ঝুঁকি বেশি কারণ: গত ৬ মাসে ৪ বার দেরি, গড় ১২ দিন"।</li>
+<li><b>Fairness/Bias:</b> ঐতিহাসিক ডেটায় পক্ষপাত থাকলে model সেটা শিখে বাড়িয়ে দেয়। ঋণ, নিয়োগ, মূল্য নির্ধারণের মতো সিদ্ধান্তে বিশেষ সতর্ক থাকুন; সংবেদনশীল বৈশিষ্ট্য (ধর্ম, লিঙ্গ ইত্যাদি) ও তাদের প্রক্সি feature এড়ান বা যাচাই করুন।</li>
+<li><b>Privacy:</b> ব্যক্তিগত ডেটা (PII) train ডেটায় ও hosted API-তে পাঠানোর আগে মাস্ক/অজ্ঞাতনামা করুন; আইনি বাধ্যবাধকতা (ডেটা সংরক্ষণ, সম্মতি) মানুন (Safety অধ্যায়ের PII অংশ)।</li>
+<li><b>Audit trail:</b> কোন model ভার্সন, কোন ইনপুটে, কী ফলাফল দিল — আর্থিক সিস্টেমে এই রেকর্ড অপরিহার্য।</li>
+</ul>
+
+<h3>১২. সাধারণ ভুল — যা বেশিরভাগ প্রজেক্টকে ডোবায়</h3>
+<div class="callout mistake"><span class="tag">Common mistake — Problem ছাড়াই Model</span>
+"AI আছে তাই ব্যবহার করি" — ব্যবসায়িক সমস্যা ও মাপকাঠি ছাড়া শুরু করলে demo চমৎকার হয়, কিন্তু কারও কাজে লাগে না। সবসময় ব্যবসায়িক ব্যথা ও লক্ষ্য মাপ দিয়ে শুরু করুন।</div>
+<div class="callout mistake"><span class="tag">Common mistake — Baseline ছাড়া ML</span>
+সরল নিয়ম যা পারে তার চেয়ে model কতটা ভালো তা না জানলে জটিলতার খরচ ন্যায্য কিনা বোঝা যায় না।</div>
+<div class="callout mistake"><span class="tag">Common mistake — Notebook-এ ভালো, Production-এ ব্যর্থ</span>
+Data leakage, training-serving skew, লাইভ ডেটার ভিন্নতা — notebook-এর ৯৫% production-এ ৬০% হয়ে যায়। সময়ের ক্রমে ভাগ করুন, preprocessing একসাথে প্যাকেজ করুন, shadow mode-এ আগে পরীক্ষা করুন।</div>
+<div class="callout mistake"><span class="tag">Common mistake — Probability-কে নিশ্চয়তা ভাবা</span>
+"৮০% দেরি হবে" মানে ১০০% নয় — ২০% ক্ষেত্রে ভুল। UI ও প্রক্রিয়া এমন করুন যেন ভুল ভবিষ্যদ্বাণীতেও ক্ষতি না হয়। এছাড়া কিছু model-এর "সম্ভাবনা" আসলে calibrated নয় (৮০% বললেই ৮০% সত্যি হয় না) — প্রয়োজনে calibration যাচাই করুন।</div>
+<div class="callout mistake"><span class="tag">Common mistake — Deploy করে ভুলে যাওয়া</span>
+Monitoring ও retraining ছাড়া model মাসের পর মাস নীরবে খারাপ হয়, কেউ টের পায় না। Prediction log ও আসল ফলাফলের সাথে মেলানো শুরু থেকেই রাখুন।</div>
+<div class="callout mistake"><span class="tag">Common mistake — সব সমস্যায় LLM</span>
+সংখ্যাভিত্তিক prediction-এ LLM দামী, ধীর ও অনির্ভরযোগ্য। টেবিল ডেটায় ক্লাসিক ML, ভাষায় LLM।</div>
+<div class="callout mistake"><span class="tag">Common mistake — অবিশ্বস্ত model ফাইল লোড করা</span>
+<code>pickle/joblib</code> ফাইল লোড করলে ভেতরের কোড চলতে পারে — অজানা উৎস থেকে নামানো ফাইল কখনো সরাসরি লোড করবেন না। নিরাপদ ফরম্যাট (ONNX, safetensors) বা যাচাইকৃত উৎস ব্যবহার করুন; Hugging Face থেকে নামানো model-এর লাইসেন্সও দেখে নিন।</div>
+
+<h3>১৩. আপনার জন্য বাস্তব প্রস্তাবিত শুরুর তালিকা (Accounting/ERP/Travel context)</h3>
+<table>
+<tr><th>#</th><th>Use case</th><th>ধরন</th><th>কঠিনতা</th><th>প্রথমে কী করবেন</th></tr>
+<tr><td>১</td><td>Invoice/রসিদ থেকে তথ্য বের করা</td><td>Hosted OCR/LLM Vision</td><td>সহজ</td><td>Document Intelligence বা vision LLM-এ ২০টা নমুনা চালিয়ে নির্ভুলতা মাপুন; human review রাখুন</td></tr>
+<tr><td>২</td><td>Voucher-এ GL account প্রস্তাব</td><td>Classification (ছোট ML বা LLM)</td><td>মাঝারি</td><td>আগের voucher-এর description→account ডেটা; প্রস্তাব মোডে শুরু, accountant নিশ্চিত করবে</td></tr>
+<tr><td>৩</td><td>দেরিতে পরিশোধের ঝুঁকি</td><td>Classification (gradient boosting)</td><td>মাঝারি</td><td>এই অধ্যায়ের উদাহরণ</td></tr>
+<tr><td>৪</td><td>সন্দেহজনক transaction শনাক্ত</td><td>Anomaly Detection</td><td>মাঝারি–কঠিন</td><td>Isolation Forest দিয়ে শুরু; তালিকা মানুষ যাচাই করবে</td></tr>
+<tr><td>৫</td><td>Cash-flow/বিক্রির Forecast</td><td>Time-series</td><td>মাঝারি</td><td>সরল (গড়/seasonal naive) baseline, তারপর Prophet/ARIMA/বা gradient boosting</td></tr>
+<tr><td>৬</td><td>Policy/ডকুমেন্ট থেকে প্রশ্নোত্তর</td><td>RAG</td><td>সহজ–মাঝারি</td><td>RAG অধ্যায় অনুযায়ী</td></tr>
+<tr><td>৭</td><td>Support ticket ক্যাটাগরি ও অগ্রাধিকার</td><td>LLM classification</td><td>সহজ</td><td>Structured output দিয়ে zero-shot, পরে মাপুন</td></tr>
+</table>
+<p>লক্ষ্য করুন কয়েকটা সরাসরি ready API/LLM দিয়ে শুরু করা যায়, কয়েকটায় নিজের ডেটায় ছোট ML model লাগে — আপনার ব্যবসার ধরন অনুযায়ী এই মিশ্র পদ্ধতিই বাস্তবসম্মত।</p>
+
+<h3>১৪. শেখার Roadmap — Application Developer হিসেবে</h3>
+<ol>
+<li><b>ML-এর বুনিয়াদ:</b> classification/regression/overfitting, train-validation-test, metric (precision/recall/MAE)।</li>
+<li><b>Python ডেটা টুল:</b> pandas, scikit-learn; একটা CSV থেকে নিজে একটা model train করুন (Python কোর্স দেখুন)।</li>
+<li><b>Gradient boosting:</b> XGBoost/LightGBM — টেবিল ডেটার প্রধান হাতিয়ার।</li>
+<li><b>Serving:</b> FastAPI দিয়ে model API; তারপর .NET থেকে ডাকা (এই অধ্যায়ের উদাহরণ)।</li>
+<li><b>ONNX / ML.NET:</b> .NET-এ সরাসরি inference।</li>
+<li><b>Monitoring ও MLOps:</b> prediction log, drift, MLflow।</li>
+<li><b>Explainability:</b> SHAP।</li>
+<li><b>ব্যবসায়িক মাপ:</b> A/B test ও ROI হিসাব।</li>
+</ol>
+<div class="callout best"><span class="tag">সংক্ষেপে মনে রাখুন</span>
+(১) <b>সমস্যা আগে, টুল পরে।</b> (২) <b>Baseline আগে, model পরে।</b> (৩) সংখ্যাভিত্তিক ডেটায় ক্লাসিক ML, ভাষায় LLM। (৪) Model একটা <b>সংকেত</b> — সিদ্ধান্তের ঝুঁকি অনুযায়ী মানুষকে লুপে রাখুন। (৫) Model ব্যর্থ হলেও app চলবে (fallback)। (৬) Deploy শেষ নয়, শুরু — monitor ও retrain। (৭) লাভ মাপুন ব্যবসায়িক সংখ্যায়, accuracy-তে নয়।</div>
+</template>
+
 <template data-page="interview">
-<h2 class="title">২০. Interview প্রশ্নোত্তর</h2>
+<h2 class="title">২১. Interview প্রশ্নোত্তর</h2>
 <p class="lead">AI Engineering ইন্টারভিউতে বারবার আসা প্রশ্ন — basic ধারণা থেকে শুরু করে architecture-level trade-off পর্যন্ত, এই কোর্সের প্রতিটা অধ্যায় থেকে বাছাই করা।</p>
 
 <h3>১) একটা LLM আসলে কী করে, আর সে কি নিজে থেকে conversation "মনে রাখে"?</h3>
@@ -2227,6 +2694,38 @@ Prompt→LLM→parse, সরল RAG         → LangChain বা কয়েক
 শাখা + loop + approval + resume   → LangGraph
 .NET backend                       → Semantic Kernel / Microsoft.Extensions.AI / Agent Framework</pre>
 <p><b>ব্যাখ্যা:</b> সরল কাজে framework over-engineering — abstraction স্তর, API-র ঘন ঘন পরিবর্তন, ভারী dependency ও vendor lock-in-এর ঝুঁকি আছে। ডিবাগে "ভেতরে কী হচ্ছে" বোঝা কঠিন হলে LangSmith trace বা সরাসরি SDK কাজে লাগে। LangChain/LangGraph-এর প্রথম শ্রেণির সাপোর্ট Python ও JS/TS-এ; .NET টিমের স্বাভাবিক পছন্দ Semantic Kernel, <code>Microsoft.Extensions.AI</code> বা Microsoft Agent Framework। বাস্তবে মিশ্র architecture-ও চলে: ব্যবসায়িক সিস্টেম ASP.NET Core-এ, AI orchestration আলাদা Python (LangGraph + FastAPI) সার্ভিসে, আর দুইয়ের সংযোগ HTTP বা MCP দিয়ে (LangChain অধ্যায়ের .NET অংশ, MCP অধ্যায় ১১)।</p>
+
+<h3>৭৬) আপনার application-এ AI/ML model বসানোর আগে কোন প্রশ্নগুলো করবেন? সব সমস্যায় কি LLM লাগে?</h3>
+<pre>১. ব্যবসায়িক সমস্যা ও সাফল্যের মাপকাঠি কী?
+২. পর্যাপ্ত, লেবেলযুক্ত ডেটা আছে?
+৩. সরল নিয়ম (baseline) দিয়ে কতটা মেটে?
+৪. ভুলের মূল্য কত — মানুষ যাচাই করবে?</pre>
+<p><b>ব্যাখ্যা:</b> আগে ব্যবসায়িক ব্যথা ও মাপকাঠি, তারপর টুল। সংখ্যাভিত্তিক/টেবিল ডেটার prediction (দেরিতে পরিশোধ, churn, forecast, fraud)-এ ক্লাসিক ML (gradient boosting) সস্তা, দ্রুত ও পরিমাপযোগ্য; LLM ভাষা বোঝা, অসংগঠিত টেক্সট ও কম labeled ডেটার কাজে ভালো। তাই "সব সমস্যায় LLM" ভুল ধারণা — সঠিক টুল বাছাই-ই মূল দক্ষতা (Real-world অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৭৭) Idea থেকে production পর্যন্ত ML প্রজেক্টের ধাপগুলো বলুন।</h3>
+<pre>সমস্যা → ডেটা যাচাই → baseline → পথ বাছাই → ডেটা প্রস্তুত
+→ train ও মূল্যায়ন → প্যাকেজ → deploy/integrate → monitor → retrain</pre>
+<p><b>ব্যাখ্যা:</b> সবচেয়ে বেশি এড়িয়ে যাওয়া ধাপ baseline (model তা ছাড়িয়ে যায় কিনা), আর deploy-পরবর্তী monitor/retrain — কারণ model সময়ের সাথে নীরবে খারাপ হয়। প্রজেক্টের বেশিরভাগ সময়ই যায় ডেটা প্রস্তুতে।</p>
+
+<h3>৭৮) Data leakage কী? Training-serving skew থেকে এটা কীভাবে আলাদা? কীভাবে এড়াবেন?</h3>
+<pre>Leakage : feature-এ ভবিষ্যতের তথ্য (আসল পরিশোধ তারিখ) ঢুকেছে → test-এ ৯৯%, production-এ ভাঙে
+Skew    : training ও production-এর preprocessing/ডেটা আলাদা</pre>
+<p><b>ব্যাখ্যা:</b> Leakage-এ ভবিষ্যদ্বাণীর মুহূর্তে অজানা তথ্য train-এ ব্যবহার হয়; Skew-তে train ও লাইভ ডেটার প্রক্রিয়ায় অমিল থাকে। এড়ানোর উপায়: "ভবিষ্যদ্বাণীর মুহূর্তে এই তথ্য কি জানা থাকত?" যাচাই, সময়ের ক্রমে train/test ভাগ (এলোমেলো নয়), এবং preprocessing ও model একই <code>Pipeline</code>-এ সংরক্ষণ।</p>
+
+<h3>৭৯) Fraud detection-এ accuracy কেন বিভ্রান্তিকর? কোন metric দেখবেন, আর threshold কীভাবে ঠিক করবেন?</h3>
+<pre>১০,০০০ transaction-এ ১০টা fraud। সবকিছুকে "fraud নয়" বললে accuracy = ৯৯.৯%, Recall = ০</pre>
+<p><b>ব্যাখ্যা:</b> ভারসাম্যহীন ডেটায় accuracy ধোঁকা দেয়। Precision (যা ধরলাম তার কত শতাংশ সত্যি) ও Recall (আসল fraud-এর কত শতাংশ ধরলাম), এবং F1/PR-AUC দেখুন। Threshold একটা ব্যবসায়িক সিদ্ধান্ত: মিস করা ব্যয়বহুল হলে কম threshold (Recall বেশি, মিথ্যা সতর্কতা বেশি); মিথ্যা সতর্কতায় মানুষের সময়ের খরচ বেশি হলে বেশি threshold।</p>
+
+<h3>৮০) একটা trained model-কে ASP.NET Core application-এ কীভাবে ব্যবহার করবেন? কোন পথ কখন?</h3>
+<pre>১. Python FastAPI microservice  → .NET HttpClient (+timeout, resilience, fallback)
+২. ONNX Runtime in-process       → .NET-এর ভেতরেই inference
+৩. ML.NET                         → পুরোটাই C#
+৪. Batch scoring → DB column      → রাতে score করে সংরক্ষণ</pre>
+<p><b>ব্যাখ্যা:</b> Python service-এ model বদলানো সহজ ও বহু ভাষার app একই model ব্যবহার করতে পারে, কিন্তু অতিরিক্ত network hop ও service সামলাতে হয়। ONNX in-process দ্রুত ও সরল deploy, কিন্তু সব model সহজে রূপান্তরযোগ্য নয়। তাৎক্ষণিক উত্তর না লাগলে batch ও precomputed column সবচেয়ে সস্তা। সব ক্ষেত্রে: ছোট timeout, circuit breaker, আর model ডাউন থাকলে business flow যেন না থামে। <code>InferenceSession</code> Singleton রাখুন। অবিশ্বস্ত pickle/joblib ফাইল লোড করবেন না।</p>
+
+<h3>৮১) Production-এ model খারাপ হচ্ছে কিনা কীভাবে বুঝবেন? Data drift ও concept drift কী?</h3>
+<pre>prediction_log(features, prediction, model_version, predicted_at, actual_outcome, outcome_at)</pre>
+<p><b>ব্যাখ্যা:</b> Data drift = ইনপুট ডেটার বণ্টন বদলেছে; Concept drift = ইনপুট-ফলাফলের সম্পর্কই বদলেছে। প্রতিটা prediction সংরক্ষণ করে পরে আসল ফলাফলের সাথে মিলিয়ে কর্মক্ষমতা মাপুন; ইনপুট/আউটপুটের বণ্টন ও ফাঁকা মানের হার নজরে রাখুন; ব্যবসায়িক KPI-ও দেখুন। নতুন model shadow mode/canary/A-B test দিয়ে রোলআউট করুন, ভার্সন রেখে rollback-এর ব্যবস্থা রাখুন। লাভ মাপুন ব্যবসায়িক সংখ্যায় (সাশ্রয় − খরচ), শুধু accuracy-তে নয়।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->
