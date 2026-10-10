@@ -137,6 +137,7 @@ const pages = [
   {id:"mcp",           icon:"🔌", title:"MCP — Model Context Protocol"},
   {id:"agents",       icon:"🤖", title:"AI Agents ও Agentic Workflow"},
   {id:"multiagent",   icon:"🕸️", title:"Multi-Agent System ও Orchestration"},
+  {id:"langchain",    icon:"🦜", title:"LangChain ও LangGraph — LLM Application Framework"},
   {id:"finetuning",   icon:"🎛️", title:"Fine-tuning বনাম RAG বনাম Prompting"},
   {id:"evaluation",   icon:"📊", title:"Evaluation ও Testing — LLM App Quality"},
   {id:"safety",       icon:"🛡️", title:"Safety, Security ও Guardrails"},
@@ -1099,7 +1100,7 @@ Timeout, network ব্যর্থতা বা মডেলের পুনর
 <table>
 <tr><th>Framework</th><th>ইকোসিস্টেম</th><th>বৈশিষ্ট্য</th></tr>
 <tr><td><span class="kw">Semantic Kernel</span></td><td>.NET-native (C#), Python/Java-ও সমর্থিত</td><td>Microsoft-এর SDK, plugin/tool abstraction, .NET DI-এর সাথে স্বাভাবিক সংযোগ — .NET backend টিমের জন্য প্রথম পছন্দ</td></tr>
-<tr><td><span class="kw">LangGraph</span></td><td>Python/JS</td><td>Agent workflow-কে একটা explicit state graph হিসেবে মডেল করে — জটিল, শাখাযুক্ত workflow-এ predictable</td></tr>
+<tr><td><span class="kw">LangGraph</span></td><td>Python/JS</td><td>Agent workflow-কে একটা explicit state graph হিসেবে মডেল করে — জটিল, শাখাযুক্ত workflow-এ predictable (বিস্তারিত পরের অধ্যায় "LangChain ও LangGraph"-এ)</td></tr>
 <tr><td><span class="kw">AutoGen / CrewAI</span></td><td>Python</td><td>Multi-agent conversation/role-play প্যাটার্নে জোর দেয় — দ্রুত prototype করার জন্য জনপ্রিয়</td></tr>
 </table>
 <div class="callout why"><span class="tag">Framework দরকার কেন — নিজে থেকে সব লেখা যায় না?</span>
@@ -1111,8 +1112,390 @@ Agent loop, tool-call parsing, retry, state management — এগুলো ন�
 প্রতিটা অতিরিক্ত agent মানেই অতিরিক্ত LLM call, অতিরিক্ত latency, আর অতিরিক্ত জায়গা যেখানে ভুল বোঝাবুঝি হতে পারে (একটা sub-agent ভুল তথ্য ফেরত দিলে supervisor সেটাই সত্য ধরে নিতে পারে)। "একাধিক agent ব্যবহার করলেই ভালো ফল" এই ধারণা ভুল — একটা ভালো-ডিজাইন করা single agent প্রায়ই একটা দুর্বলভাবে সমন্বিত multi-agent সিস্টেমের চেয়ে বেশি নির্ভরযোগ্য ও সস্তা।</div>
 </template>
 
+<template data-page="langchain">
+<h2 class="title">১৪. LangChain ও LangGraph — LLM Application Framework</h2>
+<p class="lead">আগের অধ্যায়গুলোতে আমরা prompt, RAG, tool calling, agent আলাদা আলাদা করে শিখেছি। <span class="kw">LangChain</span> হলো এই সব উপাদানকে একটা সাধারণ interface-এ জুড়ে দেওয়া framework, আর <span class="kw">LangGraph</span> হলো সেই উপাদান দিয়ে <b>stateful, বহু-ধাপের agent workflow</b> বানানোর low-level orchestration লাইব্রেরি। এই অধ্যায়ে দুটো কী, কেন লাগে, কীভাবে ব্যবহার করবেন, কখন করবেন না — সব একসাথে।</p>
+
+<div class="callout why"><span class="tag">কেন এখনই শেখা দরকার</span>
+AI Engineer-এর চাকরির বিজ্ঞপ্তি বা interview-তে LangChain/LangGraph প্রায় নিয়মিত আসে। শুধু নামই নয় — "কখন framework ব্যবহার করবেন, আর কখন সরাসরি SDK-ই যথেষ্ট" এই বিচারবুদ্ধিটাই আসল পরীক্ষা। তাই আগে সমস্যাটা বুঝি, তারপর টুল।</div>
+
+<h3>সমস্যাটা কী ছিল — Framework কেন এলো</h3>
+<p>একটা বাস্তব LLM application-এ শুধু "prompt পাঠাও, উত্তর নাও" থাকে না। থাকে: prompt template, বিভিন্ন provider (OpenAI, Anthropic, Gemini, local মডেল), document loading, chunking, embedding, vector store, retrieval, tool calling, output parsing, memory, retry, streaming, tracing। প্রতিটা provider-এর SDK আলাদা, response format আলাদা, tool-call schema আলাদা। নিজে সব জুড়তে গেলে একই glue code বারবার লিখতে হয়।</p>
+<table>
+<tr><th>সমস্যা</th><th>Framework ছাড়া</th><th>LangChain/LangGraph-এ</th></tr>
+<tr><td>Provider বদলানো</td><td>প্রতিটা SDK-র আলাদা কোড, আলাদা response parsing</td><td>একই chat model interface — মডেলের নাম বদলালেই হয়</td></tr>
+<tr><td>RAG pipeline</td><td>loader, splitter, embedder, vector DB client নিজে জোড়া</td><td>ready-made integration ও <code>retriever</code> interface</td></tr>
+<tr><td>Tool calling লুপ</td><td>schema বানানো, tool-call parse, execute, result ফেরত — নিজে লেখা</td><td><code>@tool</code> ডেকোরেটর ও তৈরি agent loop</td></tr>
+<tr><td>বহু-ধাপ workflow</td><td>if/else ও while-loop-এর জট, state হাতে সামলানো</td><td>LangGraph-এ state, node, edge — স্পষ্ট ও checkpoint-যোগ্য</td></tr>
+<tr><td>Debug ও observability</td><td>নিজে log বসানো</td><td>LangSmith trace — প্রতিটা ধাপের input/output/token/latency</td></tr>
+</table>
+
+<h3>LangChain আর LangGraph — সম্পর্ক কী?</h3>
+<p>দুটোই একই কোম্পানি (LangChain Inc.)-র তৈরি, একই ইকোসিস্টেমের অংশ, কিন্তু কাজ আলাদা স্তরের:</p>
+<div class="diagram"><pre>
+┌──────────────────────── LangSmith ────────────────────────┐
+│   Tracing • Evaluation • Monitoring  (সবকিছুর উপর নজর)      │
+└────────────────────────────────────────────────────────────┘
+┌──────────────────────── LangChain ────────────────────────┐
+│  Chat models • Prompts • Tools • Retrievers • Parsers     │
+│  create_agent(...)   ← সহজ, high-level agent               │
+│              │ (ভেতরে ভিত্তি হিসেবে চলে)                    │
+│              ▼                                             │
+│  ┌──────────────────── LangGraph ──────────────────────┐  │
+│  │ State • Nodes • Edges • Checkpointer • Interrupt     │  │
+│  │ (নিয়ন্ত্রণযোগ্য, durable agent runtime)               │  │
+│  └──────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────┘
+</pre></div>
+<table>
+<tr><th></th><th>LangChain</th><th>LangGraph</th></tr>
+<tr><td>মূল কাজ</td><td>উপাদান (model, prompt, tool, retriever) ও সেগুলোর common interface</td><td>বহু-ধাপ, stateful workflow-এর orchestration (graph)</td></tr>
+<tr><td>স্তর</td><td>High-level — দ্রুত শুরু</td><td>Low-level — পূর্ণ নিয়ন্ত্রণ</td></tr>
+<tr><td>কেমন লাগে</td><td>"কয়েক লাইনে agent/RAG chain"</td><td>"প্রতিটা ধাপ ও রাস্তা আমি ঠিক করি"</td></tr>
+<tr><td>একা ব্যবহার</td><td>হ্যাঁ</td><td>হ্যাঁ — LangChain ছাড়াও চলে</td></tr>
+<tr><td>একসাথে</td><td colspan="2">LangChain-এর আধুনিক agent আসলে LangGraph runtime-এর উপর চলে — তাই persistence, streaming, human-in-the-loop সহজে পাওয়া যায়</td></tr>
+</table>
+<div class="callout behind"><span class="tag">পর্দার পেছনে — এক প্যাকেজ নয়, কয়েকটা</span>
+<code>langchain-core</code> (মূল abstraction: Runnable, message, tool), <code>langchain</code> (agent ও high-level API), <code>langgraph</code> (graph runtime), আর provider-ভিত্তিক partner package যেমন <code>langchain-openai</code>, <code>langchain-anthropic</code>। এই বিভাজনের কারণে শুধু যা দরকার তাই install করা যায়, আর provider বদলালে শুধু partner package বদলায়। LangChain-এর API বছরে বছরে বেশ বদলেছে (পুরোনো <code>LLMChain</code>, <code>AgentExecutor</code> এখন legacy) — তাই tutorial দেখলে তারিখ ও version মিলিয়ে নিন।</div>
+
+<h3>LangChain-এর মূল উপাদান</h3>
+<table>
+<tr><th>উপাদান</th><th>কাজ</th><th>আগের কোন অধ্যায়ের সাথে সম্পর্ক</th></tr>
+<tr><td><span class="kw">Chat Model</span></td><td>যেকোনো provider-এর LLM-কে একই interface-এ ডাকা</td><td>Foundation, Model Landscape</td></tr>
+<tr><td><span class="kw">Messages</span></td><td><code>SystemMessage</code>, <code>HumanMessage</code>, <code>AIMessage</code>, <code>ToolMessage</code></td><td>Prompt Engineering</td></tr>
+<tr><td><span class="kw">Prompt Template</span></td><td>ভেরিয়েবলসহ পুনঃব্যবহারযোগ্য prompt</td><td>Prompt Engineering, Context Engineering</td></tr>
+<tr><td><span class="kw">Output Parser / Structured Output</span></td><td>মডেলের উত্তরকে JSON/Pydantic অবজেক্টে রূপ দেওয়া</td><td>Tool Calling ও Structured Output</td></tr>
+<tr><td><span class="kw">Document Loader + Text Splitter</span></td><td>PDF/ওয়েব/DB থেকে লেখা এনে chunk করা</td><td>RAG</td></tr>
+<tr><td><span class="kw">Embeddings + Vector Store + Retriever</span></td><td>chunk-কে vector করে জমানো ও similarity search</td><td>Embeddings, Vector DB</td></tr>
+<tr><td><span class="kw">Tool</span></td><td>মডেল যে function ডাকতে পারে</td><td>Tool Calling, MCP</td></tr>
+<tr><td><span class="kw">Runnable</span></td><td>সব উপাদানের common interface: <code>invoke</code>, <code>stream</code>, <code>batch</code> (async-ও আছে)</td><td>—</td></tr>
+</table>
+
+<h3>প্রথম উদাহরণ — Chat Model ও Prompt Template</h3>
+<pre><span class="c"># pip install langchain langchain-openai</span>
+from langchain.chat_models import init_chat_model
+from langchain_core.prompts import ChatPromptTemplate
+
+model = init_chat_model("gpt-4o-mini", temperature=0)   <span class="c"># provider বদলাতে শুধু নাম বদলান</span>
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "তুমি একজন হিসাবরক্ষণ সহকারী। সংক্ষেপে বাংলায় উত্তর দাও।"),
+    ("human", "{question}"),
+])
+
+chain = prompt | model                      <span class="c"># LCEL — নিচে ব্যাখ্যা</span>
+print(chain.invoke({"question": "Trial Balance কী?"}).content)</pre>
+<p>একই কাজ সরাসরি OpenAI SDK দিয়ে করা যায়। লাভটা বোঝা যায় যখন provider বদলান বা বড় pipeline বানান — তখন এই common interface মূল্য দেয়।</p>
+
+<h3>LCEL — Chain বানানোর পাইপলাইন সিনট্যাক্স</h3>
+<p><span class="kw">LCEL (LangChain Expression Language)</span> হলো <code>|</code> অপারেটর দিয়ে Runnable জোড়ার পদ্ধতি — Unix pipe-এর মতো, এক ধাপের output পরের ধাপের input।</p>
+<pre>from langchain_core.output_parsers import StrOutputParser
+
+chain = prompt | model | StrOutputParser()      <span class="c"># prompt → LLM → সাধারণ string</span>
+
+chain.invoke({"question": "Voucher কী?"})             <span class="c"># একটা input</span>
+chain.batch([{"question": "Ledger?"}, {"question": "Journal?"}])   <span class="c"># সমান্তরালে অনেকগুলো</span>
+for chunk in chain.stream({"question": "Balance Sheet?"}):         <span class="c"># token ধরে ধরে streaming</span>
+    print(chunk, end="")</pre>
+<div class="callout best"><span class="tag">LCEL-এর সুবিধা</span>
+একই chain-এ <code>invoke</code>, <code>stream</code>, <code>batch</code>, <code>ainvoke</code> বিনা বাড়তি কোডে কাজ করে; parallel ধাপ (<code>RunnableParallel</code>), fallback (<code>.with_fallbacks()</code>), retry (<code>.with_retry()</code>) সহজে যোগ করা যায়, আর LangSmith-এ প্রতিটা ধাপ আলাদা দেখা যায়।</div>
+
+<h3>Structured Output — মডেলের উত্তর টাইপ-নিরাপদ অবজেক্টে</h3>
+<pre>from pydantic import BaseModel, Field
+
+class Invoice(BaseModel):
+    customer: str
+    amount: float = Field(description="মোট টাকার অঙ্ক")
+    currency: str
+
+structured = model.with_structured_output(Invoice)
+inv = structured.invoke("Triplover-কে ২৫,৫০,০০০ BDT-র invoice পাঠাও")
+print(inv.customer, inv.amount)       <span class="c"># Invoice অবজেক্ট — string parsing লাগেনি</span></pre>
+<p>এটা আগের "Tool Calling ও Structured Output" অধ্যায়ের ধারণাই — LangChain শুধু provider-ভেদে একই API দেয়।</p>
+
+<h3>Tool বানানো ও Agent চালানো</h3>
+<pre>from langchain.tools import tool
+from langchain.agents import create_agent
+
+@tool
+def get_revenue(customer: str, from_date: str, to_date: str) -&gt; float:
+    """একজন customer-এর নির্দিষ্ট সময়ের মোট revenue ফেরত দেয়।"""   <span class="c"># docstring-ই মডেলকে বলে tool-টা কী করে</span>
+    return accounting_api.revenue(customer, from_date, to_date)
+
+agent = create_agent(model, tools=[get_revenue],
+                     system_prompt="তুমি একজন accounting assistant।")
+
+result = agent.invoke({"messages": [("user", "Triplover-এর অক্টোবর মাসের revenue কত?")]})
+print(result["messages"][-1].content)</pre>
+<div class="callout behind"><span class="tag">পর্দার পেছনে — agent loop</span>
+<code>create_agent</code> ভেতরে সেই একই লুপ চালায় যা Agents অধ্যায়ে দেখেছেন: মডেল ভাবে → tool call প্রস্তাব করে → framework tool চালায় → ফলাফল মডেলকে ফেরত দেয় → লুপ চলে যতক্ষণ না মডেল চূড়ান্ত উত্তর দেয়। মডেল নিজে কিছু execute করে না — framework করে (Tool Calling অধ্যায়ের নীতি)। পুরোনো কোডে <code>langgraph.prebuilt.create_react_agent</code> বা <code>AgentExecutor</code> দেখলে বুঝবেন একই ধারণার আগের সংস্করণ।</div>
+
+<h3>RAG — LangChain দিয়ে পুরো pipeline</h3>
+<pre>from langchain_community.document_loaders import PyPDFLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
+from langchain_core.vectorstores import InMemoryVectorStore
+
+<span class="c"># ১. Ingestion (একবার)</span>
+docs   = PyPDFLoader("refund-policy.pdf").load()
+chunks = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=120).split_documents(docs)
+store  = InMemoryVectorStore.from_documents(chunks, OpenAIEmbeddings())   <span class="c"># production-এ pgvector/Qdrant ইত্যাদি</span>
+retriever = store.as_retriever(search_kwargs={"k": 4})
+
+<span class="c"># ২. Query (প্রতি প্রশ্নে)</span>
+def format_docs(docs): return "\n\n".join(d.page_content for d in docs)
+
+rag_prompt = ChatPromptTemplate.from_template(
+    "শুধু নিচের context থেকে উত্তর দাও। না পেলে 'জানি না' বলো।\n\nContext:\n{context}\n\nপ্রশ্ন: {question}")
+
+rag_chain = ({"context": retriever | format_docs, "question": lambda x: x}
+             | rag_prompt | model | StrOutputParser())
+
+print(rag_chain.invoke("Refund কত দিনের মধ্যে পাওয়া যায়?"))</pre>
+<p>এখানে RAG অধ্যায়ের প্রতিটা ধাপ (load → chunk → embed → store → retrieve → generate) এক লাইনে একটা করে উপাদান। চাইলে retriever-কে hybrid search, reranker বা metadata filter দিয়ে বদলানো যায় — chain-এর বাকি অংশ একই থাকে।</p>
+
+<h3>LangChain-এর সীমাবদ্ধতা — কখন যথেষ্ট নয়</h3>
+<p>সরল chain/agent-এ LangChain চমৎকার। কিন্তু workflow জটিল হলে — শাখা (branch), লুপ, মানুষের অনুমোদনের জন্য থামা, ব্যর্থ হলে মাঝপথ থেকে আবার শুরু, একাধিক agent-এর সমন্বয় — তখন শুধু <code>|</code> chain বা এক-লাইনের agent যথেষ্ট নয়। ঠিক এখানেই <span class="kw">LangGraph</span>।</p>
+
+<h3>LangGraph — Workflow-কে Graph হিসেবে ভাবুন</h3>
+<p>LangGraph agent workflow-কে একটা <b>directed graph</b> হিসেবে মডেল করে। কোনো hidden loop নেই — আপনি স্পষ্ট করে বলে দেন কোন ধাপ আছে, কোন ধাপের পর কোনটা, কোথায় শাখা।</p>
+<table>
+<tr><th>ধারণা</th><th>অর্থ</th><th>উপমা</th></tr>
+<tr><td><span class="kw">State</span></td><td>পুরো workflow জুড়ে বহন করা শেয়ার্ড ডেটা (message, ফলাফল, counter...)</td><td>একটা ফাইল যা এক টেবিল থেকে আরেক টেবিলে যায়</td></tr>
+<tr><td><span class="kw">Node</span></td><td>একটা ধাপ — সাধারণ function; state পড়ে, state-এর আপডেট ফেরত দেয়</td><td>একটা কাউন্টার/ডেস্ক</td></tr>
+<tr><td><span class="kw">Edge</span></td><td>ধাপ থেকে ধাপে যাওয়ার সংযোগ</td><td>রাস্তা</td></tr>
+<tr><td><span class="kw">Conditional Edge</span></td><td>state দেখে পরের ধাপ বাছাই করা — branching ও loop এভাবেই হয়</td><td>চৌরাস্তার সিগন্যাল</td></tr>
+<tr><td><span class="kw">START / END</span></td><td>প্রবেশ ও প্রস্থান বিন্দু</td><td>—</td></tr>
+<tr><td><span class="kw">Reducer</span></td><td>একাধিক node যখন একই state ফিল্ড আপডেট করে, তখন কীভাবে মেলাবে (যেমন list-এ append)</td><td>বহু জনের নোট একটা খাতায় জোড়া</td></tr>
+<tr><td><span class="kw">Checkpointer</span></td><td>প্রতিটা ধাপের পর state সংরক্ষণ — থামা, পুনরায় শুরু, "time travel"</td><td>গেমের save point</td></tr>
+</table>
+<div class="diagram"><pre>
+START → [classify] ──(refund?)──→ [check_order] → [approve?] ──(হ্যাঁ)──→ [issue_refund] → END
+            │                                          │
+            └──(general?)──→ [answer_faq] → END        └──(না)──→ [escalate_human] → END
+</pre></div>
+
+<h3>প্রথম LangGraph — State, Node, Edge</h3>
+<pre># pip install langgraph
+from typing import TypedDict
+from langgraph.graph import StateGraph, START, END
+
+class State(TypedDict):
+    question: str
+    intent: str
+    answer: str
+
+def classify(state: State):
+    <span class="c"># বাস্তবে এখানে LLM call হবে; সরলতার জন্য কীওয়ার্ড দেখছি</span>
+    intent = "refund" if "refund" in state["question"].lower() else "faq"
+    return {"intent": intent}                    <span class="c"># শুধু বদলানো ফিল্ড ফেরত দিন</span>
+
+def handle_refund(state: State):  return {"answer": "Refund প্রক্রিয়া শুরু হয়েছে।"}
+def handle_faq(state: State):     return {"answer": "এটা একটা সাধারণ প্রশ্ন — FAQ দেখুন।"}
+
+def route(state: State) -&gt; str:                  <span class="c"># conditional edge-এর সিদ্ধান্ত</span>
+    return "handle_refund" if state["intent"] == "refund" else "handle_faq"
+
+g = StateGraph(State)
+g.add_node("classify", classify)
+g.add_node("handle_refund", handle_refund)
+g.add_node("handle_faq", handle_faq)
+
+g.add_edge(START, "classify")
+g.add_conditional_edges("classify", route)       <span class="c"># route-এর ফেরত নামের node-এ যাবে</span>
+g.add_edge("handle_refund", END)
+g.add_edge("handle_faq", END)
+
+app = g.compile()
+print(app.invoke({"question": "আমি refund চাই"})["answer"])</pre>
+<p>লক্ষ্য করুন: কোনো LLM-ই অপরিহার্য নয় — LangGraph আসলে একটা <b>general workflow engine</b>। LLM হলো একটা node-এর ভেতরের উপাদান মাত্র।</p>
+
+<h3>Agent-কে LangGraph-এ নিজে বানানো (ReAct লুপ)</h3>
+<p>Agents অধ্যায়ের লুপটা এখন স্পষ্ট graph — <code>agent</code> node মডেল ডাকে, tool call থাকলে <code>tools</code> node-এ যায়, ফলাফল নিয়ে আবার <code>agent</code>-এ ফেরে, না থাকলে শেষ।</p>
+<pre>from typing import Annotated
+from langgraph.graph.message import add_messages
+from langgraph.prebuilt import ToolNode, tools_condition
+
+class AgentState(TypedDict):
+    messages: Annotated[list, add_messages]      <span class="c"># reducer: নতুন message পুরোনোর সাথে জোড়া হয়, মুছে যায় না</span>
+
+model_with_tools = model.bind_tools([get_revenue])
+
+def agent(state: AgentState):
+    return {"messages": [model_with_tools.invoke(state["messages"])]}
+
+g = StateGraph(AgentState)
+g.add_node("agent", agent)
+g.add_node("tools", ToolNode([get_revenue]))     <span class="c"># tool call execute করে ToolMessage বানায়</span>
+g.add_edge(START, "agent")
+g.add_conditional_edges("agent", tools_condition) <span class="c"># tool call থাকলে → "tools", নইলে → END</span>
+g.add_edge("tools", "agent")                      <span class="c"># ফলাফল নিয়ে আবার মডেলের কাছে — এটাই লুপ</span>
+app = g.compile()</pre>
+<div class="diagram"><pre>
+ START → [agent] ──(tool call আছে)──→ [tools] ─┐
+            ▲                                    │
+            └────────────────────────────────────┘
+            │
+       (tool call নেই) → END
+</pre></div>
+
+<h3>LangGraph-এর আসল শক্তি — যা সাধারণ chain পারে না</h3>
+<h4>১. Persistence ও Checkpointer — কথোপকথন ও অগ্রগতি মনে রাখা</h4>
+<pre>from langgraph.checkpoint.memory import InMemorySaver     <span class="c"># production-এ Postgres/Redis checkpointer</span>
+
+app = g.compile(checkpointer=InMemorySaver())
+cfg = {"configurable": {"thread_id": "customer-42"}}      <span class="c"># thread_id = একটা আলাদা conversation</span>
+
+app.invoke({"messages": [("user", "আমার নাম রাসেল")]}, cfg)
+app.invoke({"messages": [("user", "আমার নাম কী?")]}, cfg)   <span class="c"># একই thread → আগের কথা মনে আছে</span></pre>
+<p>প্রতিটা ধাপের পর state সংরক্ষিত হয়। ফলে server restart হলেও মাঝপথ থেকে চালু করা যায়, আর একই <code>thread_id</code>-তে conversation চলতে থাকে। (Short-term memory = thread-এর state; long-term memory-র জন্য আলাদা store ব্যবহার করা হয় — Agents অধ্যায়ের Memory ছক দেখুন।)</p>
+
+<h4>২. Human-in-the-loop — ঝুঁকিপূর্ণ কাজে থেমে অনুমোদন নেওয়া</h4>
+<pre>from langgraph.types import interrupt, Command
+
+def issue_refund(state):
+    ok = interrupt({"action": "refund", "amount": state["amount"]})   <span class="c"># এখানে থামে, মানুষের উত্তরের অপেক্ষা</span>
+    if ok != "approve":
+        return {"answer": "Refund বাতিল।"}
+    return {"answer": f"{state['amount']} টাকা refund সম্পন্ন।"}
+
+<span class="c"># প্রথম রান: interrupt-এ এসে থামে (state checkpoint-এ সংরক্ষিত)</span>
+app.invoke({"amount": 5000}, cfg)
+
+<span class="c"># ম্যানেজার অনুমোদন দিলে, একই thread-এ চালু</span>
+app.invoke(Command(resume="approve"), cfg)</pre>
+<div class="callout best"><span class="tag">Best practice — payment/delete/email-এর আগে interrupt</span>
+Agents অধ্যায়ে আলোচিত human-in-the-loop checkpoint-এর সবচেয়ে সরল বাস্তবায়ন এটাই। প্রস্তাবটা state-এ থাকে, মানুষ দেখে অনুমোদন বা বাতিল করে, workflow ঠিক সেখান থেকেই চলে। (মনে রাখবেন, resume করলে interrupt-এর আগের অংশ আবার চলে — তাই ওই অংশের side effect idempotent রাখুন।)</div>
+
+<h4>৩. Streaming</h4>
+<pre>for step in app.stream({"messages": [("user", "Triplover-এর revenue?")]}, cfg, stream_mode="updates"):
+    print(step)       <span class="c"># প্রতিটা node শেষ হলেই তার আপডেট — UI-তে "ডেটা আনছি..." দেখানো যায়</span></pre>
+
+<h4>৪. Time travel ও Debug</h4>
+<p>Checkpoint-গুলো ইতিহাস হিসেবে থাকে — কোনো পুরোনো ধাপে ফিরে state বদলে আবার চালানো যায়। "এই ধাপে ভুল সিদ্ধান্ত নিল কেন" খুঁজে বের করতে এবং বিকল্প পথ পরীক্ষা করতে এটা খুব কাজের।</p>
+
+<h4>৫. Parallel execution ও Map-Reduce</h4>
+<p>একটা node থেকে একাধিক node-এ একসাথে যাওয়া যায় (fan-out), তারপর ফলাফল reducer দিয়ে একত্র (fan-in)। যেমন ১০টা ডকুমেন্ট সমান্তরালে সারাংশ করে শেষে একটা চূড়ান্ত সারাংশ (<code>Send</code> API দিয়ে ডায়নামিক সংখ্যক branch)।</p>
+
+<h4>৬. Subgraph — graph-এর ভেতরে graph</h4>
+<p>একটা ছোট graph-কে আরেকটা graph-এর node হিসেবে বসানো যায়। এতে বড় workflow মডিউলার থাকে এবং প্রতিটা বিশেষায়িত agent নিজস্ব state নিয়ে আলাদাভাবে পরীক্ষা করা যায়।</p>
+
+<h3>Multi-Agent — LangGraph-এ Supervisor Pattern</h3>
+<div class="diagram"><pre>
+                 ┌──────────────┐
+   START ──────→ │  Supervisor   │ ←──────────────┐
+                 └──────┬───────┘                  │ (কাজ শেষ হলে ফেরত)
+          ┌─────────────┼─────────────┐            │
+          ▼             ▼             ▼            │
+    [Research]     [Billing]      [Support] ───────┘
+                       │
+                       ▼ (সব শেষ হলে) → END
+</pre></div>
+<p>Multi-Agent অধ্যায়ের Supervisor pattern এখানে সরাসরি graph: supervisor একটা node যে conditional edge দিয়ে বাছাই করে কোন sub-agent চলবে; প্রতিটা sub-agent নিজেই একটা node (বা subgraph) যা শেষে supervisor-এ ফেরে। Handoff (এক agent থেকে সরাসরি আরেক agent-এ নিয়ন্ত্রণ দেওয়া) <code>Command(goto=...)</code> দিয়ে করা যায়।</p>
+
+<h3>Workflow বনাম Agent — LangGraph-এ দুটোই</h3>
+<p>Agents অধ্যায়ের "Workflow বনাম Agent" পার্থক্য LangGraph-এ খুব স্পষ্ট: যে graph-এর পথ আগে থেকে নির্ধারিত (ধাপ A → B → C) সেটা <b>workflow</b>; যেখানে মডেল conditional edge-এ পরের ধাপ ঠিক করে সেটা <b>agent</b>। একই graph-এ দুটো মিশিয়েও ব্যবহার করা যায় — বেশিরভাগ ধাপ নির্ধারিত, শুধু একটা জায়গায় মডেল সিদ্ধান্ত নেয়। এটাই production-এ সবচেয়ে নির্ভরযোগ্য ধরন।</p>
+
+<h3>MCP, Deployment ও অন্যান্য প্রয়োজনীয় বিষয়</h3>
+<h4>MCP Tool-কে LangChain/LangGraph-এ ব্যবহার</h4>
+<p>MCP অধ্যায়ে বানানো server-এর tool আলাদা করে আবার লিখতে হয় না। <code>langchain-mcp-adapters</code> প্যাকেজ MCP server-এর tool-কে LangChain tool-এ রূপান্তর করে, ফলে একই .NET Accounting MCP Server যেকোনো LangChain agent বা LangGraph node থেকে ব্যবহার করা যায়।</p>
+<pre>from langchain_mcp_adapters.client import MultiServerMCPClient
+
+client = MultiServerMCPClient({
+    "accounting": {"url": "http://localhost:5000/mcp", "transport": "streamable_http"},
+})
+tools  = await client.get_tools()                 <span class="c"># MCP tool → LangChain tool</span>
+agent  = create_agent(model, tools=tools)</pre>
+<h4>দীর্ঘ conversation — message trim/summarize</h4>
+<p>Thread যত বাড়ে, state-এর <code>messages</code> তত ফোলে। Context Engineering অধ্যায়ের নীতি মেনে model call-এর আগে একটা node বা middleware-এ পুরোনো message ছেঁটে ফেলুন (<code>trim_messages</code>) বা সারাংশ করে প্রতিস্থাপন করুন। শুধু প্রদর্শনের জন্য পুরো ইতিহাস আলাদা রেখে model-কে ছাঁটা অংশ দিন।</p>
+<h4>Deployment</h4>
+<ul>
+<li><b>নিজে host:</b> compiled graph-কে FastAPI endpoint-এ মুড়ে দিন (<code>app.ainvoke</code>/<code>astream</code>), checkpointer হিসেবে Postgres। সবচেয়ে বেশি নিয়ন্ত্রণ, .NET ও বাকি সিস্টেমের সাথে সহজে মেলে।</li>
+<li><b>LangGraph-এর নিজস্ব server/platform:</b> long-running run, queue, streaming ও persistence তৈরি পাওয়া যায়, আর LangGraph Studio দিয়ে graph দেখে debug করা যায়। সুবিধা আছে, তবে প্ল্যাটফর্মের সাথে বাঁধা পড়ার বিষয়টা মাথায় রাখুন।</li>
+</ul>
+<h4>Testing</h4>
+<p>Node সাধারণ function বলে প্রতিটা node আলাদা unit test করা যায় (মডেল mock করে)। পুরো graph-এর জন্য golden dataset ও trajectory eval চালান (Evaluation অধ্যায়); LangSmith dataset বা নিজের harness দুটোই চলে।</p>
+
+<h3>কখন কোনটা — সিদ্ধান্তের ছক</h3>
+<table>
+<tr><th>পরিস্থিতি</th><th>বাছাই</th></tr>
+<tr><td>একটা প্রশ্ন, একটা LLM call</td><td>সরাসরি provider SDK — framework লাগবে না</td></tr>
+<tr><td>Prompt → LLM → parse, বা সরল RAG</td><td>LangChain (LCEL chain) অথবা নিজের কয়েক লাইন কোড</td></tr>
+<tr><td>কয়েকটা tool সহ সাধারণ agent</td><td>LangChain <code>create_agent</code></td></tr>
+<tr><td>শাখা, loop, retry, human approval, দীর্ঘস্থায়ী/ resume-যোগ্য workflow</td><td>LangGraph</td></tr>
+<tr><td>বহু agent-এর সমন্বয়, audit trail দরকার</td><td>LangGraph (supervisor/subgraph) + LangSmith</td></tr>
+<tr><td>.NET backend, Python নয়</td><td>Semantic Kernel বা Microsoft Agent Framework (নিচে দেখুন)</td></tr>
+</table>
+<div class="callout best"><span class="tag">নীতি — সরল থেকে শুরু</span>
+Agents অধ্যায়ের নীতিই এখানে: সাধারণ call → chain → agent → graph। প্রতিটা স্তরে abstraction ও শেখার খরচ বাড়ে। যে সমস্যা ২০ লাইনের কোডে মেটে সেটার জন্য graph বানানো over-engineering।</div>
+
+<h3>LangSmith — Observability ও Evaluation</h3>
+<p><span class="kw">LangSmith</span> হলো LangChain ইকোসিস্টেমের tracing, evaluation ও monitoring প্ল্যাটফর্ম। দুটো environment variable বসালেই (<code>LANGSMITH_TRACING=true</code> ও API key) প্রতিটা run-এর পুরো trace দেখা যায় — কোন node চলল, কোন prompt গেল, কোন tool কী ফেরত দিল, কত token ও কত সময় লাগল। এটা Evaluation ও Production অধ্যায়ের trajectory-ভিত্তিক agent মূল্যায়নের জন্য খুবই কাজের: ব্যর্থ trace থেকে সরাসরি dataset-এ test case যোগ করে regression চালানো যায়। LangSmith-ই একমাত্র উপায় নয় — OpenTelemetry-ভিত্তিক বা অন্য observability টুলও চলে।</p>
+
+<h3>.NET ডেভেলপারের জন্য — এটা কীভাবে খাপ খায়</h3>
+<p>LangChain ও LangGraph-এর প্রথম শ্রেণির (official) সংস্করণ <b>Python ও JavaScript/TypeScript</b>-এ। .NET-এর জন্য সমতুল্য ও বেশি স্বাভাবিক পছন্দ:</p>
+<table>
+<tr><th>প্রয়োজন</th><th>Python ইকোসিস্টেম</th><th>.NET সমতুল্য</th></tr>
+<tr><td>Model abstraction</td><td>LangChain chat model</td><td><code>Microsoft.Extensions.AI</code> (<code>IChatClient</code>)</td></tr>
+<tr><td>Tool/plugin ও agent</td><td><code>@tool</code>, <code>create_agent</code></td><td>Semantic Kernel plugin/agent, Microsoft Agent Framework</td></tr>
+<tr><td>Graph workflow</td><td>LangGraph</td><td>Agent Framework-এর workflow, বা নিজের state machine</td></tr>
+<tr><td>Tool protocol</td><td>MCP adapter</td><td>C# MCP SDK (MCP অধ্যায় দেখুন)</td></tr>
+</table>
+<p>বাস্তব architecture-এ প্রায়ই মিশ্র হয়: মূল ব্যবসায়িক সিস্টেম ASP.NET Core-এ, আর AI orchestration একটা আলাদা Python সার্ভিসে (LangGraph + FastAPI — Python কোর্সের FastAPI অধ্যায় দেখুন), যা HTTP দিয়ে .NET API-র সাথে কথা বলে অথবা সেই API-কে MCP server হিসেবে expose করে ব্যবহার করে। দুই ইকোসিস্টেমের মধ্যে ভাগাভাগি করার সবচেয়ে পরিষ্কার সীমানা হলো এই MCP/HTTP boundary।</p>
+
+<h3>একটা বাস্তব উদাহরণ — Accounting Assistant</h3>
+<p>লক্ষ্য: "Triplover-এর অক্টোবরের revenue কত, আর যদি গত মাসের চেয়ে ২০% কমে থাকে তাহলে finance ম্যানেজারকে ইমেইল পাঠাও।"</p>
+<div class="diagram"><pre>
+START → [understand]  (LLM: প্রশ্ন বিশ্লেষণ, customer/সময় বের করা)
+          ↓
+        [fetch_data]  (tool: get_revenue × ২ মাস, MCP/.NET API থেকে)
+          ↓
+        [compare]     (সাধারণ কোড: % পরিবর্তন হিসাব — LLM নয়, কারণ গণিত নির্ভুল হওয়া দরকার)
+          ↓
+     (২০%+ কমেছে?) ──না──→ [respond] → END
+          │ হ্যাঁ
+          ▼
+   [draft_email] (LLM) → [interrupt: ম্যানেজার অনুমোদন] → [send_email] → [respond] → END
+</pre></div>
+<p>লক্ষ্য করুন: সব ধাপে LLM নেই। গণনা সাধারণ কোডে, ঝুঁকিপূর্ণ ইমেইল পাঠানোর আগে মানুষের অনুমোদন, আর পুরো প্রবাহ checkpoint-এ সংরক্ষিত। এটাই "predictable workflow-এর ভেতরে সীমিত LLM সিদ্ধান্ত" — LangGraph-এর আদর্শ ব্যবহার।</p>
+
+<h3>সুবিধা ও অসুবিধা — সৎ মূল্যায়ন</h3>
+<div class="grid2">
+  <div class="box"><b>সুবিধা</b><br>• Provider-নিরপেক্ষ common interface<br>• বিশাল integration তালিকা (vector store, loader, tool)<br>• LangGraph-এ persistence, human-in-the-loop, streaming তৈরি পাওয়া যায়<br>• LangSmith-এর trace ও eval<br>• বড় community ও প্রচুর উদাহরণ</div>
+  <div class="box"><b>অসুবিধা</b><br>• Abstraction স্তর বেশি — ডিবাগে কখনো "ভেতরে কী হচ্ছে" বোঝা কঠিন<br>• API বারবার বদলেছে; পুরোনো tutorial বিভ্রান্ত করে<br>• সরল কাজে over-engineering<br>• ডিপেন্ডেন্সি ভারী, ইকোসিস্টেমের সাথে বাঁধা পড়ার ঝুঁকি<br>• .NET-এ প্রথম শ্রেণির সাপোর্ট নেই</div>
+</div>
+
+<h3>Common ভুল ও সতর্কতা</h3>
+<div class="callout mistake"><span class="tag">Common mistake — সবকিছুতেই framework</span>
+একটা সাধারণ summarize বা classification-এর জন্য LangChain install করে ১০টা abstraction শেখা। সরাসরি SDK call সরল, দ্রুত, ও ডিবাগ করা সহজ। Framework নিন যখন তার সুবিধা (provider switch, orchestration, persistence) সত্যিই লাগবে।</div>
+<div class="callout mistake"><span class="tag">Common mistake — Graph-এ সীমাহীন loop</span>
+Agent লুপে <code>agent ↔ tools</code> কখনো থামতে না চাইলে cost অসীমভাবে বাড়ে। LangGraph-এ <code>recursion_limit</code> (config-এ) বসান, state-এ নিজস্ব step counter রাখুন, আর সর্বোচ্চ iteration পার হলে নিরাপদ fallback node-এ পাঠান (Agents অধ্যায়ের guardrail)।</div>
+<div class="callout mistake"><span class="tag">Common mistake — State-এ সবকিছু ঢোকানো</span>
+State-এ বিশাল ডকুমেন্ট বা অপ্রয়োজনীয় message জমালে প্রতিটা ধাপে context ফুলে যায়, cost ও latency বাড়ে, আর checkpoint বড় হয়। শুধু যা পরের ধাপের দরকার তা রাখুন; বড় ডেটা বাইরে রেখে state-এ রেফারেন্স (id) রাখুন; দীর্ঘ conversation-এ পুরোনো message trim/summarize করুন (Context Engineering অধ্যায়)।</div>
+<div class="callout mistake"><span class="tag">Common mistake — Side effect-সহ node-কে retry-নিরাপদ না বানানো</span>
+Checkpoint থেকে resume বা retry হলে একটা node আবার চলতে পারে। payment বা ইমেইল পাঠানোর node idempotent না হলে দ্বিগুণ কাজ হবে — idempotency key ব্যবহার করুন (Agents অধ্যায়ে বিস্তারিত)।</div>
+<div class="callout mistake"><span class="tag">Common mistake — Memory ও Persistence গুলিয়ে ফেলা</span>
+<code>InMemorySaver</code> process বন্ধ হলে সব হারায় — শুধু development-এর জন্য। Production-এ database-ভিত্তিক checkpointer (Postgres ইত্যাদি) ব্যবহার করুন, আর <code>thread_id</code> ব্যবহারকারী/session অনুযায়ী ঠিকভাবে আলাদা রাখুন, নইলে একজনের conversation আরেকজনের কাছে ফাঁস হতে পারে।</div>
+<div class="callout best"><span class="tag">Best practice — চেকলিস্ট</span>
+(১) আগে সরল সমাধান, দরকারে graph। (২) Version pin করুন ও migration note পড়ুন। (৩) LLM-এর কাজ আর সাধারণ কোডের কাজ আলাদা node-এ রাখুন — গণিত/validation কোডে। (৪) Tool-এর নাম ও docstring স্পষ্ট রাখুন। (৫) ঝুঁকিপূর্ণ ধাপে interrupt। (৬) <code>recursion_limit</code> ও cost cap। (৭) শুরু থেকে tracing চালু রাখুন ও golden dataset দিয়ে eval করুন। (৮) Tool/prompt injection প্রতিরোধ — Safety অধ্যায়ের নিয়ম framework-এ গেলেও প্রযোজ্য।</div>
+
+<h3>শেখার roadmap</h3>
+<ol>
+<li>সরাসরি provider SDK দিয়ে একটা chat + tool call বুঝুন (Tool Calling অধ্যায়)।</li>
+<li>LangChain: chat model, prompt template, <code>|</code> chain, structured output।</li>
+<li>LangChain RAG: loader → splitter → vector store → retriever → chain।</li>
+<li><code>create_agent</code> দিয়ে tool সহ agent, তারপর LangSmith trace দেখা।</li>
+<li>LangGraph: State/Node/Edge, conditional edge, নিজে ReAct লুপ বানানো।</li>
+<li>Checkpointer, <code>thread_id</code>, human-in-the-loop (<code>interrupt</code>/<code>Command</code>)।</li>
+<li>Supervisor multi-agent, subgraph, parallel fan-out।</li>
+<li>Eval dataset + LangSmith দিয়ে regression, তারপর deploy (FastAPI)।</li>
+</ol>
+<div class="callout why"><span class="tag">সংক্ষেপে মনে রাখুন</span>
+<b>LangChain</b> = উপাদান ও common interface (model, prompt, tool, retriever)। <b>LangGraph</b> = সেই উপাদান দিয়ে stateful, নিয়ন্ত্রণযোগ্য, resume-যোগ্য workflow (graph)। <b>LangSmith</b> = দেখা ও মাপা। তিনটাই ঐচ্ছিক — সমস্যার জটিলতা যতটুকু দাবি করে, ততটুকুই নিন।</div>
+</template>
+
 <template data-page="finetuning">
-<h2 class="title">১৪. Fine-tuning বনাম RAG বনাম Prompting</h2>
+<h2 class="title">১৫. Fine-tuning বনাম RAG বনাম Prompting</h2>
 <p class="lead">AI Engineering-এ সবচেয়ে বেশি ভুল হওয়া সিদ্ধান্তগুলোর একটা: "মডেলকে আমার ডেটা শেখানোর জন্য fine-tune করব"। বেশিরভাগ ক্ষেত্রেই এটা ভুল টুল বাছাই।</p>
 
 <h3>তিনটা পদ্ধতির মূল পার্থক্য</h3>
@@ -1147,7 +1530,7 @@ Fine-tuning মূলত মডেলকে <b>নতুন প্যাটা�
 </template>
 
 <template data-page="evaluation">
-<h2 class="title">১৫. Evaluation ও Testing — LLM App Quality</h2>
+<h2 class="title">১৬. Evaluation ও Testing — LLM App Quality</h2>
 <p class="lead">একটা প্রথাগত software-এ unit test-এর input/output নির্দিষ্ট (deterministic)। একটা LLM feature-এ output প্রতিবার সামান্য বদলাতে পারে — তাই "কীভাবে টেস্ট করব" প্রশ্নটার উত্তর ভিন্নভাবে ভাবতে হয়।</p>
 
 <h3>Offline Evaluation — Golden Dataset দিয়ে</h3>
@@ -1187,7 +1570,7 @@ Fine-tuning মূলত মডেলকে <b>নতুন প্যাটা�
 </template>
 
 <template data-page="safety">
-<h2 class="title">১৬. Safety, Security ও Guardrails</h2>
+<h2 class="title">১৭. Safety, Security ও Guardrails</h2>
 <p class="lead">LLM-চালিত ফিচার প্রথাগত software-এর তুলনায় নতুন ধরনের আক্রমণ-তল (attack surface) খুলে দেয় — কারণ ইনপুট নিজেই "কোড"-এর মতো আচরণ প্রভাবিত করতে পারে। OWASP-এর LLM Top 10 এই ঝুঁকিগুলো ক্যাটাগরি করে।</p>
 
 <h3>OWASP Top 10 for LLM Applications (সংক্ষিপ্ত)</h3>
@@ -1228,7 +1611,7 @@ Tool-calling বা JSON mode-এর মতো structured API দিয়ে ou
 </template>
 
 <template data-page="production">
-<h2 class="title">১৭. Production Engineering — Latency, Cost, Caching</h2>
+<h2 class="title">১৮. Production Engineering — Latency, Cost, Caching</h2>
 <p class="lead">একটা LLM feature demo-তে ভালো কাজ করা আর হাজার হাজার ব্যবহারকারীর জন্য সাশ্রয়ী, দ্রুত, নির্ভরযোগ্যভাবে চালানো — দুইটা সম্পূর্ণ আলাদা চ্যালেঞ্জ।</p>
 
 <h3>Streaming — কেন perceived latency আসল latency-এর চেয়ে গুরুত্বপূর্ণ</h3>
@@ -1285,7 +1668,7 @@ Queue একটা buffer — হঠাৎ traffic spike হলেও LLM provid
 </template>
 
 <template data-page="integration">
-<h2 class="title">১৮. Backend/.NET Integration — বাস্তবে AI Feature বসানো</h2>
+<h2 class="title">১৯. Backend/.NET Integration — বাস্তবে AI Feature বসানো</h2>
 <p class="lead">এখন পর্যন্ত শেখা সব ধারণা একটা বাস্তব ব্যাকএন্ড architecture-এ কীভাবে বসে — এই অধ্যায়ে সেটাই সংযুক্ত করা হবে, .NET-কেন্দ্রিক দৃষ্টিভঙ্গিতে।</p>
 
 <h3>Architecture Pattern — কখনো Frontend থেকে সরাসরি নয়</h3>
@@ -1344,7 +1727,7 @@ API key কখনো <code>appsettings.json</code>-এ commit করবেন �
 <p>প্রতিটা unit test-এ আসল LLM API call করা ধীর, ব্যয়বহুল, এবং flaky (output প্রতিবার বদলাতে পারে)। এর বদলে <code>IChatCompletionService</code> interface-টা mock করে বিজনেস লজিক (যেমন "AI response থেকে সঠিক field extract হচ্ছে কিনা") deterministic ভাবে টেস্ট করুন। প্রকৃত prompt quality/model behavior টেস্ট করার জন্য আলাদা, কম ঘনঘন চলা eval suite রাখুন (Evaluation অধ্যায়ে বর্ণিত golden dataset পদ্ধতিতে) — এই দুই স্তরের টেস্টিং একে অপরের বিকল্প নয়, পরিপূরক।</p>
 
 <h3>সবকিছু একসাথে — একটা এন্ড-টু-এন্ড ফিচারের চিত্র</h3>
-<p>ধরুন আপনি একটা "ডকুমেন্ট থেকে প্রশ্নোত্তর" ফিচার বানাচ্ছেন একটা ASP.NET Core backend-এ। পুরো প্রবাহ এই কোর্সের প্রতিটা অধ্যায়কে ছুঁয়ে যায়: ডকুমেন্ট আপলোড হলে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয় (অধ্যায় ৭-৯); ব্যবহারকারীর প্রশ্ন এলে backend সেই প্রশ্ন embed করে প্রাসঙ্গিক chunk retrieve করে (অধ্যায় ৮); একটা grounded prompt বানিয়ে LLM-কে পাঠানো হয়, context engineering নীতি মেনে শুধু প্রাসঙ্গিক অংশ কিউরেট করে পাঠানো হয় (অধ্যায় ৬), প্রয়োজনে একটা tool দিয়ে অতিরিক্ত ডেটা আনা হয় (অধ্যায় ৪,৫,১০,১১); output নিরাপত্তা ও PII guardrail দিয়ে যাচাই করা হয় (অধ্যায় ১৬); response streaming-এ ফেরত পাঠানো হয়, আর প্রতিটা call-এর token/cost/latency log হয় (অধ্যায় ১৭); নিয়মিত golden dataset-এর উপর eval চালিয়ে regression যাচাই করা হয় (অধ্যায় ১৫)। এই পুরো চিত্রটাই আসলে "AI Engineering" মানে কী তার সংক্ষিপ্ত রূপ — একটা LLM-কে ঘিরে বানানো নির্ভরযোগ্য, পর্যবেক্ষণযোগ্য, নিরাপদ software।</p>
+<p>ধরুন আপনি একটা "ডকুমেন্ট থেকে প্রশ্নোত্তর" ফিচার বানাচ্ছেন একটা ASP.NET Core backend-এ। পুরো প্রবাহ এই কোর্সের প্রতিটা অধ্যায়কে ছুঁয়ে যায়: ডকুমেন্ট আপলোড হলে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয় (অধ্যায় ৭-৯); ব্যবহারকারীর প্রশ্ন এলে backend সেই প্রশ্ন embed করে প্রাসঙ্গিক chunk retrieve করে (অধ্যায় ৮); একটা grounded prompt বানিয়ে LLM-কে পাঠানো হয়, context engineering নীতি মেনে শুধু প্রাসঙ্গিক অংশ কিউরেট করে পাঠানো হয় (অধ্যায় ৬), প্রয়োজনে একটা tool দিয়ে অতিরিক্ত ডেটা আনা হয় (অধ্যায় ৪,৫,১০,১১); output নিরাপত্তা ও PII guardrail দিয়ে যাচাই করা হয় (অধ্যায় ১৭); response streaming-এ ফেরত পাঠানো হয়, আর প্রতিটা call-এর token/cost/latency log হয় (অধ্যায় ১৮); নিয়মিত golden dataset-এর উপর eval চালিয়ে regression যাচাই করা হয় (অধ্যায় ১৬)। এই পুরো চিত্রটাই আসলে "AI Engineering" মানে কী তার সংক্ষিপ্ত রূপ — একটা LLM-কে ঘিরে বানানো নির্ভরযোগ্য, পর্যবেক্ষণযোগ্য, নিরাপদ software।</p>
 
 <h3>Microsoft.Extensions.AI ও Semantic Kernel — .NET-এ কোনটা কখন</h3>
 <p>উপরের হাতে-লেখা <code>IChatCompletionService</code> abstraction ধারণা বোঝার জন্য ভালো, কিন্তু বাস্তব প্রজেক্টে .NET ইকোসিস্টেমের নিজস্ব লাইব্রেরি ব্যবহার করা বেশি যুক্তিসঙ্গত। <span class="kw">Microsoft.Extensions.AI</span> একটা হালকা, provider-নিরপেক্ষ abstraction (<code>IChatClient</code>, embedding generator) দেয় এবং middleware-এর মতো function invocation, caching, telemetry যোগ করা যায়। <span class="kw">Semantic Kernel</span> তার উপরে plugin, agent ও orchestration-এর মতো বেশি ফিচার দেয়।</p>
@@ -1393,7 +1776,7 @@ Worker-এ concurrency সীমিত রাখুন (provider rate limit ম�
 </template>
 
 <template data-page="interview">
-<h2 class="title">১৯. Interview প্রশ্নোত্তর</h2>
+<h2 class="title">২০. Interview প্রশ্নোত্তর</h2>
 <p class="lead">AI Engineering ইন্টারভিউতে বারবার আসা প্রশ্ন — basic ধারণা থেকে শুরু করে architecture-level trade-off পর্যন্ত, এই কোর্সের প্রতিটা অধ্যায় থেকে বাছাই করা।</p>
 
 <h3>১) একটা LLM আসলে কী করে, আর সে কি নিজে থেকে conversation "মনে রাখে"?</h3>
@@ -1495,7 +1878,7 @@ Documents → Chunk → Embedding → PostgreSQL + pgvector
 <span class="c">// Query (প্রতিটা প্রশ্নে)</span>
 User → ASP.NET Core API → AI Service → Query Embedding
      → pgvector similarity search → Relevant chunks → LLM API → Answer</pre>
-<p><b>ব্যাখ্যা:</b> GPT-এর মতো সাধারণ মডেল আপনার কোম্পানির Voucher API doc, GL mapping rule, বা internal policy জানে না। তাই আগে ডকুমেন্টগুলোকে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয়; ব্যবহারকারী প্রশ্ন করলে সেই প্রশ্নও embed হয়, similarity search-এ সবচেয়ে প্রাসঙ্গিক chunk আসে, আর সেগুলো context হিসেবে prompt-এ জুড়ে LLM-কে পাঠানো হয় (RAG অধ্যায়ে বিস্তারিত)। .NET-এ AI Service একটা DI-friendly abstraction হিসেবে বানালে (অধ্যায় ১৮) provider বদলানো ও টেস্ট করা সহজ হয়। কোম্পানির ঘন ঘন বদলানো ডেটার জন্য সাধারণত fine-tuning-এর আগে RAG-ই প্রথম পছন্দ।</p>
+<p><b>ব্যাখ্যা:</b> GPT-এর মতো সাধারণ মডেল আপনার কোম্পানির Voucher API doc, GL mapping rule, বা internal policy জানে না। তাই আগে ডকুমেন্টগুলোকে chunk করে embedding বানিয়ে pgvector-এ জমা রাখা হয়; ব্যবহারকারী প্রশ্ন করলে সেই প্রশ্নও embed হয়, similarity search-এ সবচেয়ে প্রাসঙ্গিক chunk আসে, আর সেগুলো context হিসেবে prompt-এ জুড়ে LLM-কে পাঠানো হয় (RAG অধ্যায়ে বিস্তারিত)। .NET-এ AI Service একটা DI-friendly abstraction হিসেবে বানালে (অধ্যায় ১৯) provider বদলানো ও টেস্ট করা সহজ হয়। কোম্পানির ঘন ঘন বদলানো ডেটার জন্য সাধারণত fine-tuning-এর আগে RAG-ই প্রথম পছন্দ।</p>
 
 <h3>২২) AI-কে কি সরাসরি database query করতে দেওয়া উচিত, নাকি controlled tool দেওয়া উচিত?</h3>
 <pre><span class="c">// ঝুঁকিপূর্ণ: মডেল নিজে SQL বানিয়ে সরাসরি DB-তে চালাচ্ছে</span>
@@ -1795,6 +2178,55 @@ MCP → মডেল কীভাবে বাইরের সিস্টেম
 "আমাদের refund policy কী?"            → RAG  (ডকুমেন্ট থেকে উত্তর)
 "Triplover-এর এই মাসের revenue কত?"   → MCP tool (live ডেটা, API/DB call)</pre>
 <p><b>ব্যাখ্যা:</b> RAG একটা <b>technique</b>: আগে ডকুমেন্ট embedding করে vector DB-তে রাখা হয়, প্রশ্নে প্রাসঙ্গিক chunk খুঁজে prompt-এ দিয়ে উত্তর তৈরি হয় — মূলত অসংগঠিত লেখার জ্ঞান, সাধারণত শুধু পড়া, আর ডেটা index করা সময় পর্যন্তই হালনাগাদ। MCP একটা <b>protocol</b>: tool-এর তালিকা (<code>tools/list</code>), চালানো (<code>tools/call</code>), resources ও prompts-এর standard পথ — live ডেটা ও action (query, invoice তৈরি, ইমেইল) এর জন্য, যেখানে side effect থাকতে পারে। দুটো প্রতিদ্বন্দ্বী নয়, একসাথে চলে: RAG-এর retrieval-ই একটা MCP tool হতে পারে (<code>search_policy_docs(query)</code>), ফলে একই assistant policy ডকুমেন্ট (RAG) ও live accounting ডেটা (MCP tool) দুটোই ব্যবহার করে। ডকুমেন্টভিত্তিক উত্তর হলে RAG, live ডেটা বা কাজ করাতে হলে MCP tool, পুরো assistant-এ দুটোই (RAG অধ্যায় ৯, MCP অধ্যায় ১১)।</p>
+
+<h3>৬৮) LangChain কী, আর কেন সরাসরি provider SDK ব্যবহার না করে এটা লাগতে পারে?</h3>
+<p><b>ব্যাখ্যা:</b> LangChain হলো LLM application-এর উপাদান (chat model, prompt template, tool, retriever, output parser) জোড়ার একটা framework, যার মূল সুবিধা provider-নিরপেক্ষ common interface ও বিশাল integration তালিকা। Provider বদলানো, RAG pipeline বানানো, tool calling লুপ ও tracing — এসব বারবার নিজে লিখতে হয় না। কিন্তু একটা সরল call বা ছোট প্রোজেক্টে সরাসরি SDK-ই সরল ও ডিবাগযোগ্য — abstraction-এর খরচ সুবিধার চেয়ে বেশি হয়ে যায়। উত্তরের মূল কথা: framework সুবিধা দেয় যখন provider switch, orchestration বা persistence সত্যিই দরকার (LangChain অধ্যায়ে বিস্তারিত)।</p>
+
+<h3>৬৯) LangChain আর LangGraph-এর পার্থক্য ও সম্পর্ক কী?</h3>
+<pre>LangChain  → উপাদান + high-level API   (create_agent, chain, retriever)
+LangGraph  → stateful workflow runtime  (State, Node, Edge, Checkpointer)
+LangSmith  → tracing, eval, monitoring</pre>
+<p><b>ব্যাখ্যা:</b> LangChain উপাদান ও দ্রুত শুরুর high-level API দেয়; LangGraph বহু-ধাপ, stateful workflow-কে স্পষ্ট graph হিসেবে নিয়ন্ত্রণ করার low-level runtime। দুটো একই ইকোসিস্টেমের এবং LangGraph একা ব্যবহারও করা যায়। আধুনিক LangChain agent আসলে LangGraph runtime-এর উপর চলে, ফলে persistence, streaming ও human-in-the-loop পাওয়া যায়। সরল agent-এ LangChain, শাখা/loop/অনুমোদন/resume লাগলে LangGraph; LangSmith দুটোর উপর observability দেয়।</p>
+
+<h3>৭০) LCEL কী? <code>prompt | model | parser</code> আসলে কী করে?</h3>
+<pre>chain = prompt | model | StrOutputParser()
+chain.invoke({...}); chain.stream({...}); chain.batch([...])</pre>
+<p><b>ব্যাখ্যা:</b> LCEL (LangChain Expression Language) হলো <code>|</code> দিয়ে Runnable জোড়ার পদ্ধতি — এক ধাপের output পরের ধাপের input। প্রতিটা Runnable-এর একই interface (<code>invoke</code>, <code>stream</code>, <code>batch</code>, async সংস্করণ), তাই জোড়া chain-ও আপনাআপনি streaming, batching, retry (<code>.with_retry()</code>), fallback (<code>.with_fallbacks()</code>) ও LangSmith tracing পায়। সীমা: শাখা, লুপ ও state জটিল হলে chain অস্বস্তিকর — তখন LangGraph।</p>
+
+<h3>৭১) LangGraph-এর State, Node, Edge, Conditional Edge ও Reducer ব্যাখ্যা করুন।</h3>
+<pre>class AgentState(TypedDict):
+    messages: Annotated[list, add_messages]   <span class="c">// reducer</span>
+
+g.add_node("agent", agent_fn)                  <span class="c">// state পড়ে → আপডেট ফেরত দেয়</span>
+g.add_conditional_edges("agent", tools_condition)  <span class="c">// state দেখে পরের node বাছাই</span></pre>
+<p><b>ব্যাখ্যা:</b> State হলো workflow জুড়ে শেয়ার্ড ডেটা; Node হলো একটা সাধারণ function যা state পড়ে এবং শুধু বদলানো অংশ ফেরত দেয়; Edge ধাপের ক্রম; Conditional Edge state দেখে পথ বাছে — branching ও loop এভাবেই হয়। Reducer ঠিক করে একাধিক আপডেট কীভাবে মিশবে: যেমন <code>add_messages</code> নতুন message পুরোনোর সাথে জোড়ে, মুছে ফেলে না; reducer না থাকলে নতুন মান পুরোনোকে ওভাররাইট করে। এই স্পষ্টতাই LangGraph-কে predictable ও ডিবাগযোগ্য করে (LangGraph অংশে বিস্তারিত)।</p>
+
+<h3>৭২) LangGraph-এ checkpointer ও <code>thread_id</code> কী কাজ করে? Production-এ কী সতর্কতা?</h3>
+<pre>app = g.compile(checkpointer=PostgresSaver(...))     <span class="c">// production: persistent store</span>
+cfg = {"configurable": {"thread_id": "user-42-session-7"}}
+app.invoke(input, cfg)</pre>
+<p><b>ব্যাখ্যা:</b> Checkpointer প্রতিটা ধাপের পর state সংরক্ষণ করে; <code>thread_id</code> একটা আলাদা conversation/run-কে চিহ্নিত করে। ফলে একই thread-এ কথোপকথন চলতে থাকে (short-term memory), server restart-এর পর মাঝপথ থেকে resume করা যায়, human-in-the-loop-এ থেমে থাকা যায়, আর অতীত checkpoint থেকে debug বা "time travel" সম্ভব। সতর্কতা: <code>InMemorySaver</code> শুধু development-এর, production-এ DB-ভিত্তিক checkpointer; <code>thread_id</code> ব্যবহারকারী অনুযায়ী আলাদা না হলে ডেটা মিশে বা ফাঁস হতে পারে; resume-এ node আবার চলতে পারে বলে side effect idempotent রাখুন।</p>
+
+<h3>৭৩) LangGraph-এ human-in-the-loop কীভাবে বানাবেন? কেন দরকার?</h3>
+<pre>def issue_refund(state):
+    decision = interrupt({"action": "refund", "amount": state["amount"]})
+    if decision != "approve": return {"answer": "বাতিল"}
+    ...
+app.invoke(Command(resume="approve"), cfg)    <span class="c">// একই thread-এ চালু</span></pre>
+<p><b>ব্যাখ্যা:</b> ঝুঁকিপূর্ণ কাজে (payment, ডেটা মোছা, বাইরে ইমেইল) agent শুধু প্রস্তাব করবে, মানুষ অনুমোদন দেবে — এটা Agents অধ্যায়ের guardrail। LangGraph-এ <code>interrupt()</code> workflow থামিয়ে state checkpoint-এ রাখে; পরে <code>Command(resume=...)</code> দিয়ে ঠিক সেখান থেকে চলে। এর জন্য checkpointer আবশ্যক। মনে রাখুন resume-এ interrupt-এর আগের কোড আবার চলে, তাই সেই অংশে side effect না রাখা বা idempotent রাখা জরুরি।</p>
+
+<h3>৭৪) LangGraph-এ ReAct agent নিজে কীভাবে বানাবেন? সীমাহীন loop কীভাবে ঠেকাবেন?</h3>
+<pre>START → agent → (tool call?) ─হ্যাঁ→ tools → agent
+                       └─না→ END
+config = {"recursion_limit": 15}     <span class="c">// সর্বোচ্চ ধাপ, পেরোলে error</span></pre>
+<p><b>ব্যাখ্যা:</b> <code>agent</code> node tool-bound মডেল ডাকে, <code>tools_condition</code> দেখে tool call আছে কিনা — থাকলে <code>ToolNode</code> তা execute করে ফলাফল state-এ জুড়ে আবার <code>agent</code>-এ ফেরে; না থাকলে শেষ। অসীম loop ঠেকাতে <code>recursion_limit</code>, state-এ নিজস্ব step counter, token/cost cap, ও সীমা পার হলে নিরাপদ fallback node রাখুন (Agents অধ্যায়ের guardrail)। Tool-এর নাম/বিবরণ স্পষ্ট না হলে মডেল ভুল tool বেছে লুপে আটকে যেতে পারে।</p>
+
+<h3>৭৫) LangChain/LangGraph কখন ব্যবহার করবেন না? আর .NET টিম কী করবে?</h3>
+<pre>সরল call/summarize/classify      → সরাসরি SDK
+Prompt→LLM→parse, সরল RAG         → LangChain বা কয়েক লাইন নিজের কোড
+শাখা + loop + approval + resume   → LangGraph
+.NET backend                       → Semantic Kernel / Microsoft.Extensions.AI / Agent Framework</pre>
+<p><b>ব্যাখ্যা:</b> সরল কাজে framework over-engineering — abstraction স্তর, API-র ঘন ঘন পরিবর্তন, ভারী dependency ও vendor lock-in-এর ঝুঁকি আছে। ডিবাগে "ভেতরে কী হচ্ছে" বোঝা কঠিন হলে LangSmith trace বা সরাসরি SDK কাজে লাগে। LangChain/LangGraph-এর প্রথম শ্রেণির সাপোর্ট Python ও JS/TS-এ; .NET টিমের স্বাভাবিক পছন্দ Semantic Kernel, <code>Microsoft.Extensions.AI</code> বা Microsoft Agent Framework। বাস্তবে মিশ্র architecture-ও চলে: ব্যবসায়িক সিস্টেম ASP.NET Core-এ, AI orchestration আলাদা Python (LangGraph + FastAPI) সার্ভিসে, আর দুইয়ের সংযোগ HTTP বা MCP দিয়ে (LangChain অধ্যায়ের .NET অংশ, MCP অধ্যায় ১১)।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->
