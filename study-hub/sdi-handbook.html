@@ -147,954 +147,530 @@ const pages = [
 
 <template data-page="scale">
 <h2 class="title">১. Scale from Zero to Millions — এক সার্ভার থেকে কোটি ব্যবহারকারী</h2>
-<p class="lead">এই অধ্যায়ে আমরা একটা সিস্টেম <b>একজন ব্যবহারকারী</b> থেকে শুরু করে ধাপে ধাপে <b>লাখ-কোটি ব্যবহারকারী</b> পর্যন্ত বড় করব। প্রতিটা ধাপে একটাই প্রশ্ন: <i>"এখন কোন জিনিসটা প্রথমে ভাঙবে, আর তার সবচেয়ে সরল সমাধান কী?"</i> পরের সব অধ্যায়ের (Rate Limiter থেকে YouTube) ভিত্তি এই অধ্যায়ের building block-গুলো — তাই এখানে সময় দিন।</p>
+<p class="lead">একজন ব্যবহারকারী থেকে শুরু করে ধাপে ধাপে লাখ-কোটিতে পৌঁছানো। প্রতিটা ধাপে একটাই প্রশ্ন: <i>"এখন কী প্রথমে ভাঙবে, আর তার সরলতম সমাধান কী?"</i> পরের সব অধ্যায়ের building block এখানেই।</p>
 
 <div class="callout why"><span class="tag">কেন এই অধ্যায়</span>
-System Design interview-তে আপনাকে কেউ "Redis বসাও" বলে দেবে না। আপনাকে নিজে বলতে হবে <b>কেন</b> Redis, <b>কখন</b> sharding, <b>কেন</b> আগে replication। এই অধ্যায়ের পুরো শিক্ষা একটাই: প্রতিটা component একটা নির্দিষ্ট <b>সমস্যার</b> উত্তর। সমস্যা না দেখিয়ে component বসানো হলো over-engineering — interviewer-রা এটাকে red flag ধরেন।</div>
+প্রতিটা component একটা নির্দিষ্ট <b>সমস্যার</b> উত্তর। সমস্যা না দেখিয়ে Redis/Kafka/sharding বসানোই over-engineering — interviewer-দের প্রধান red flag।</div>
 
-<h3>১.১ ধাপ ০ — সব কিছু এক সার্ভারে</h3>
-<p>প্রথম দিনে আপনার ERP-র একটা ছোট web app আছে। Web server, database, background job, file — সব একটা মেশিনে। এটা <b>খারাপ নয়</b>; শুরুতে এটাই সঠিক। প্রথমে request-এর পুরো পথটা বুঝে নিন:</p>
+<h3>১.১ ধাপ ০–১ — এক সার্ভার, তারপর Web ও Data tier আলাদা</h3>
 <div class="diagram"><pre>
- ব্যবহারকারী (Browser / Mobile App)
-      │ ১. api.myerp.com লিখল
-      ▼
-   [ DNS ]  ── ২. IP ফেরত দেয়: 15.125.23.214
-      │
-      ▼ ৩. HTTP/HTTPS request সরাসরি ওই IP-তে
- ┌────────────────────────────┐
- │  একটাই সার্ভার              │
- │  Web App + DB + Cache + Job │
- └────────────────────────────┘
-      │ ৪. HTML (web) অথবা JSON (mobile/API) ফেরত
-      ▼
-   ব্যবহারকারী
+ User ─► DNS (নাম → IP) ─► Web Server (App + DB + Cache সব একসাথে) ─► HTML / JSON
 </pre></div>
-<ul>
-<li><b>DNS</b> সাধারণত তৃতীয় পক্ষের (Cloudflare, Route 53, GoDaddy) সেবা — আপনার সার্ভারে চলে না। কাজ: নাম → IP।</li>
-<li>Client দুই ধরনের: <b>Web</b> (server-side logic + browser-এর HTML/JS) আর <b>Mobile</b> (HTTP + সাধারণত JSON)। দুটোই একই API-তে আঘাত করে।</li>
-</ul>
-
-<h3>১.২ ধাপ ১ — Web tier আর Data tier আলাদা করা</h3>
-<p>ব্যবহারকারী বাড়লে প্রথম পদক্ষেপ: <b>database-কে আলাদা সার্ভারে</b> সরানো। কেন? Web server CPU-ভারী (request প্রসেসিং), database মূলত RAM ও disk I/O-ভারী। একসাথে রাখলে একটা অন্যটার resource খায়, আর আলাদা না করলে দুটোকে <b>আলাদাভাবে scale</b> করা যায় না।</p>
-
-<h4>SQL না NoSQL — কীভাবে বাছবেন</h4>
+<p>শুরুতে এটাই ঠিক। ব্যবহারকারী বাড়লে <b>DB আলাদা সার্ভারে</b> সরান — web CPU-ভারী, DB RAM/disk-ভারী; আলাদা না করলে আলাদাভাবে scale করা যায় না।</p>
 <table>
-<tr><th></th><th>Relational (SQL Server, PostgreSQL, MySQL)</th><th>Non-relational (DynamoDB, Cassandra, MongoDB, Redis, Neo4j)</th></tr>
-<tr><td>ডেটার গঠন</td><td>টেবিল, row, স্থির schema</td><td>Key-value / Document / Column / Graph</td></tr>
-<tr><td>Join</td><td>স্বাভাবিক ও শক্তিশালী</td><td>সাধারণত নেই — ডেটা denormalize করতে হয়</td></tr>
-<tr><td>Transaction (ACID)</td><td>চমৎকার (Accounting/Payment-এ অপরিহার্য)</td><td>সীমিত বা প্রতি-document স্তরে</td></tr>
-<tr><td>Scale-out</td><td>কঠিন (sharding নিজে করতে হয়)</td><td>সহজাতভাবে অনুবান্ধব</td></tr>
-<tr><td>কখন বাছবেন</td><td><b>ডিফল্ট পছন্দ।</b> সম্পর্কযুক্ত ডেটা, consistency জরুরি</td><td>অতি-কম latency, বিশাল ডেটা, unstructured/semi-structured, শুধু serialize/deserialize</td></tr>
+<tr><th></th><th>SQL (SQL Server, PostgreSQL)</th><th>NoSQL (DynamoDB, Cassandra, MongoDB, Redis)</th></tr>
+<tr><td>Join / ACID</td><td>শক্তিশালী — payment/accounting-এ অপরিহার্য</td><td>সীমিত; denormalize করতে হয়</td></tr>
+<tr><td>Scale-out</td><td>কঠিন (sharding নিজে)</td><td>সহজাত</td></tr>
+<tr><td>কখন</td><td><b>ডিফল্ট</b></td><td>অতি-কম latency, বিশাল/unstructured ডেটা, শুধু serialize-deserialize</td></tr>
 </table>
-<div class="callout best"><span class="tag">Best Practice</span>
-"NoSQL ফ্যাশনেবল" — এই যুক্তিতে NoSQL বাছবেন না। Interview-তে নিয়ম: <b>সম্পর্কযুক্ত ও লেনদেনভিত্তিক ডেটা → SQL দিয়ে শুরু করুন</b>; যখন সুনির্দিষ্ট কারণ (scale, latency, ডেটার আকার) দেখাতে পারবেন তখনই NoSQL আনুন — এবং সেই কারণটা মুখে বলুন।</div>
 
-<h3>১.৩ ধাপ ২ — Vertical বনাম Horizontal Scaling</h3>
+<h3>১.২ ধাপ ২ — Vertical বনাম Horizontal, Load Balancer</h3>
 <table>
-<tr><th></th><th>Vertical (Scale Up)</th><th>Horizontal (Scale Out)</th></tr>
-<tr><td>কী</td><td>একই মেশিনে বেশি CPU/RAM/Disk</td><td>আরও মেশিন যোগ করা</td></tr>
-<tr><td>সুবিধা</td><td>সরল — code বদলাতে হয় না</td><td>প্রায় সীমাহীন; একটা মরলেও বাকিরা চলে</td></tr>
-<tr><td>অসুবিধা</td><td><b>Hardware-এর সীমা আছে</b>; দাম লাফিয়ে বাড়ে; <b>Single Point of Failure</b></td><td>জটিলতা — load balancing, state, consistency</td></tr>
-<tr><td>কখন</td><td>ছোট traffic, দ্রুত সমাধান দরকার</td><td>বড় scale ও high availability</td></tr>
+<tr><th></th><th>Vertical (scale up)</th><th>Horizontal (scale out)</th></tr>
+<tr><td>সুবিধা</td><td>সরল, code বদলায় না</td><td>প্রায় সীমাহীন; একটা মরলে বাকিরা চলে</td></tr>
+<tr><td>অসুবিধা</td><td>hardware সীমা, দাম লাফায়, <b>SPOF</b></td><td>জটিলতা: LB, state, consistency</td></tr>
 </table>
-<p>একটা আসল তথ্য মনে রাখুন: অনেক বিখ্যাত সাইট দীর্ঘদিন <b>অল্প সার্ভারে</b> চলেছে (Stack Overflow ২০১৩-তে মাসে ১ কোটির বেশি unique visitor নিয়ে মাত্র একটা master DB-তে চলত)। মানে vertical scaling-ও অনেক দূর যায় — তাই "শুরুতেই microservice আর Kubernetes" দরকার নেই। কিন্তু <b>failover নেই</b> — এই দুর্বলতা দূর করতে হলে horizontal-এ যেতেই হবে।</p>
-
-<h3>১.৪ ধাপ ৩ — Load Balancer</h3>
-<p>দুটো সমস্যা: (১) একটাই web server মরলে সাইট বন্ধ; (২) একসাথে অনেক ব্যবহারকারী এলে সেই সার্ভার ধীর হয়ে যায়। সমাধান: সামনে <b>Load Balancer (LB)</b> — আগত traffic একাধিক web server-এ ভাগ করে।</p>
 <div class="diagram"><pre>
-                       ┌──────────► Web Server 1  (private IP 10.0.1.11)
- User ──► [ Load Balancer ] ──────► Web Server 2  (private IP 10.0.1.12)
-        public IP          └──────► Web Server 3  (নতুন যোগ হলে অটো পায়)
-
- • Client শুধু LB-র public IP চেনে; web server সরাসরি পৌঁছানো যায় না → নিরাপত্তা বাড়ে
- • LB ↔ server যোগাযোগ private IP-তে (শুধু নেটওয়ার্কের ভেতরে পৌঁছানো যায়)
+                    ┌──► Web Server 1 (private IP)
+ User ─► [ Load Balancer ] ──► Web Server 2          Server 1 মরলে health check ধরে,
+        (public IP)  └──► Web Server 3 (নতুন)        সব traffic বাকিদের কাছে যায়
 </pre></div>
-<ul>
-<li>Server 1 মরলে LB health check-এ ধরে ফেলে ও সব traffic Server 2-তে পাঠায় → <b>availability</b> বাড়ল।</li>
-<li>Traffic বাড়লে শুধু pool-এ নতুন সার্ভার যোগ করুন; LB নিজে থেকে তাকে request দেওয়া শুরু করবে।</li>
-</ul>
-<div class="callout behind"><span class="tag">পর্দার পেছনে</span>
-LB-র সামনেও একটা SPOF থাকে — LB নিজে মরলে? Production-এ তাই LB-ও জোড়ায় (active-passive বা active-active) চলে, অথবা cloud-এর managed LB (Azure Load Balancer/Application Gateway, AWS ALB) ব্যবহার হয়, যা নিজেই redundant। বিস্তারিত: <a href="scalability.html" style="color:var(--accent2)">Scalability কোর্সের Load Balancer অধ্যায়</a>।</div>
+<p>Client শুধু LB-র IP চেনে, web server সরাসরি পৌঁছানো যায় না (নিরাপত্তা)। LB-ও জোড়ায়/managed হওয়া চাই, নইলে সে-ই SPOF। বিস্তারিত: <a href="scalability.html" style="color:var(--accent2)">Scalability কোর্স</a>।</p>
 
-<h3>১.৫ ধাপ ৪ — Database Replication</h3>
-<p>Web tier এখন ঠিক, কিন্তু database এখনও একটা — আবার SPOF, আর সব read/write তার উপর। সমাধান <b>replication</b>: একটা <b>primary</b> (বইয়ে master) যেখানে সব <b>write</b> যায়, আর একাধিক <b>replica</b> (বইয়ে slave) যারা primary থেকে ডেটার কপি নেয় ও শুধু <b>read</b> সার্ভ করে।</p>
+<h3>১.৩ ধাপ ৩ — Database Replication</h3>
 <div class="diagram"><pre>
-   Write (INSERT/UPDATE/DELETE) ──►  [ Primary DB ]
-                                          │  replication (সাধারণত async)
-                         ┌────────────────┼────────────────┐
-                         ▼                ▼                ▼
-                   [ Replica 1 ]    [ Replica 2 ]    [ Replica 3 ]
-   Read (SELECT) ──────────►  ভাগ হয়ে যায় replica-গুলোতে
+ Write ──► [ Primary ] ──async replication──► [ Replica 1 ] [ Replica 2 ] ◄── Read (ভাগ হয়ে)
 </pre></div>
-<p><b>কেন কাজ করে:</b> বেশিরভাগ অ্যাপে read : write অনুপাত অনেক বেশি (১০:১ বা ১০০:১), তাই replica বাড়ালে read ক্ষমতা সহজে বাড়ে।</p>
-<table>
-<tr><th>সুবিধা</th><th>ব্যাখ্যা</th></tr>
-<tr><td>Performance</td><td>Read সমান্তরালে অনেক replica-য় ভাগ হয়</td></tr>
-<tr><td>Reliability</td><td>এক ডেটা-সেন্টারে দুর্যোগ হলেও অন্য জায়গায় কপি থাকে</td></tr>
-<tr><td>High availability</td><td>একটা DB নামলেও অন্যটা থেকে সার্ভিস চলে</td></tr>
-</table>
-<h4>Failure হলে কী হয়</h4>
-<ul>
-<li><b>একটা replica মরলে:</b> read অন্য replica-য় যায়; একটাই থাকলে সাময়িকভাবে primary-তে; পরে নতুন replica বসে।</li>
-<li><b>Primary মরলে:</b> একটা replica-কে <b>promote</b> করা হয়। বাস্তবে এটা কঠিন — কারণ replica-তে সর্বশেষ কিছু write না-ও পৌঁছে থাকতে পারে (<b>replication lag</b>)। সেই হারানো ডেটা recovery script দিয়ে মেলাতে হয়।</li>
-</ul>
-<div class="callout mistake"><span class="tag">সাধারণ ভুল — Replication Lag ভুলে যাওয়া</span>
-ব্যবহারকারী প্রোফাইল আপডেট করল (primary-তে লেখা হলো), পরের সেকেন্ডে পেজ রিফ্রেশে replica থেকে পুরোনো ডেটা দেখল — "আমার পরিবর্তন সেভ হয়নি!"। এই সমস্যার নাম <b>read-your-writes</b> violation। সমাধান: সদ্য-লেখা ডেটার জন্য কিছুক্ষণ primary থেকে পড়া, বা ব্যবহারকারীর session-এ "last write time" রেখে সেই সময় পর্যন্ত primary-তে read পাঠানো।</div>
+<p>Read:write অনুপাত সাধারণত ১০:১ বা বেশি, তাই replica বাড়িয়ে read scale ও availability পাওয়া যায়। Replica মরলে read অন্যদের কাছে যায়; <b>primary মরলে একটা replica promote</b> হয় — কিন্তু সর্বশেষ কিছু write তাতে না-ও পৌঁছে থাকতে পারে।</p>
+<div class="callout mistake"><span class="tag">সাধারণ ভুল — Replication Lag</span>
+ব্যবহারকারী প্রোফাইল সেভ করল (primary), পরের read গেল replica-য় → পুরোনো ডেটা: <b>read-your-writes</b> ভঙ্গ। সমাধান: সদ্য-লেখা ডেটা কিছুক্ষণ primary থেকে পড়া, বা session-এ "last write time" রেখে সেই পর্যন্ত primary-তে পাঠানো।</div>
 
-<h3>১.৬ ধাপ ৫ — Cache</h3>
-<p>এখন প্রতিটা পেজ লোডে একাধিক DB query চলে। অনেক query-র ফলাফল বারবার একই। তাই <b>Cache</b> — memory-তে (Redis/Memcached) সাময়িকভাবে ফলাফল রাখা, যাতে পরের বার DB-তে যেতেই না হয়। Memory ও disk-এর গতির পার্থক্য প্রায় ১০০-১০,০০০ গুণ (পরের অধ্যায়ে দেখব)।</p>
+<h3>১.৪ ধাপ ৪ — Cache ও CDN</h3>
 <div class="diagram"><pre>
- Request ─► Web Server ─► ১. Cache-এ আছে? ──হ্যাঁ (hit)──► সরাসরি ফেরত
-                               │ না (miss)
-                               ▼
-                        ২. DB থেকে পড়ো ─► ৩. Cache-এ রাখো (TTL সহ) ─► ফেরত
+ Request ─► Cache আছে? ──হ্যাঁ──► ফেরত
+                │ না
+                └─► DB থেকে পড়ো ─► Cache-এ রাখো (TTL সহ) ─► ফেরত      ← Cache-Aside
 </pre></div>
-<div class="callout behind"><span class="tag">পরিভাষা — "read-through" না "cache-aside"?</span>
-উপরের প্রবাহে <b>অ্যাপ নিজে</b> cache চেক করে, miss হলে DB-তে যায়, তারপর নিজে cache ভরে। শিল্পে এই প্যাটার্নের প্রচলিত নাম <b>Cache-Aside (Lazy Loading)</b>। আর প্রকৃত <b>Read-Through</b> মানে cache লাইব্রেরি নিজেই miss-এ DB থেকে লোড করে — অ্যাপ শুধু cache-কে জিজ্ঞেস করে। Interview-তে প্রবাহ ঠিক বললেই চলে; নাম নিয়ে বিতর্কে গেলে "আমি cache-aside বলছি" বলে এগোন। বিস্তারিত কৌশল (write-through, write-back): <a href="systemdesign.html" style="color:var(--accent2)">System Design কোর্সের Caching অধ্যায়</a>।</div>
-
-<h4>C# উদাহরণ — Cache-Aside (IDistributedCache + Redis)</h4>
+<p>এই প্যাটার্নের প্রচলিত নাম <b>Cache-Aside</b> (বইয়ে "read-through" বলা হয়েছে; প্রকৃত read-through-এ cache নিজেই DB থেকে লোড করে)। বিস্তারিত: <a href="systemdesign.html" style="color:var(--accent2)">Caching অধ্যায়</a>।</p>
 <pre>
-<span class="c">// Program.cs</span>
-builder.Services.AddStackExchangeRedisCache(o =&gt; o.Configuration = "localhost:6379");
-
-<span class="c">// Service</span>
 public async Task&lt;ProductDto?&gt; GetProductAsync(int id, CancellationToken ct)
 {
     var key = $"product:{id}";
-    var cached = await _cache.GetStringAsync(key, ct);
-    if (cached is not null)                                   <span class="c">// ১. hit</span>
-        return JsonSerializer.Deserialize&lt;ProductDto&gt;(cached);
+    var cached = await _cache.GetStringAsync(key, ct);              <span class="c">// IDistributedCache + Redis</span>
+    if (cached is not null) return JsonSerializer.Deserialize&lt;ProductDto&gt;(cached);
 
-    var product = await _db.Products.FindAsync(new object[] { id }, ct);  <span class="c">// ২. miss → DB</span>
-    if (product is null) return null;
-
-    var dto = product.ToDto();
-    await _cache.SetStringAsync(key, JsonSerializer.Serialize(dto),       <span class="c">// ৩. cache ভরো</span>
+    var p = await _db.Products.FindAsync(new object[] { id }, ct);  <span class="c">// miss → DB</span>
+    if (p is null) return null;
+    var dto = p.ToDto();
+    await _cache.SetStringAsync(key, JsonSerializer.Serialize(dto),
         new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10) }, ct);
     return dto;
-}
-
-<span class="c">// ডেটা বদলালে — stale এড়াতে cache মুছে দিন</span>
-public async Task UpdateProductAsync(Product p, CancellationToken ct)
-{
-    await _db.SaveChangesAsync(ct);
-    await _cache.RemoveAsync($"product:{p.Id}", ct);
-}</pre>
-
-<h4>Cache ব্যবহারের পাঁচটা বিবেচনা</h4>
+}   <span class="c">// ডেটা বদলালে: SaveChanges-এর পর _cache.RemoveAsync(key)</span></pre>
 <table>
-<tr><th>বিষয়</th><th>প্রশ্ন / নিয়ম</th></tr>
-<tr><td>কখন cache</td><td>ডেটা <b>ঘনঘন পড়া হয়, কদাচিৎ বদলায়</b>। Cache volatile — রিস্টার্টে সব হারায়, তাই একমাত্র কপি হিসেবে রাখবেন না।</td></tr>
-<tr><td>Expiration (TTL)</td><td>খুব ছোট TTL = DB-তে বারবার যাওয়া; খুব বড় TTL = বাসি (stale) ডেটা। ডেটার ধরন দেখে ঠিক করুন।</td></tr>
-<tr><td>Consistency</td><td>DB আর cache একই transaction-এ আপডেট হয় না → অমিল সম্ভব। Multi-region-এ আরও কঠিন।</td></tr>
-<tr><td>Failure</td><td>একটা cache সার্ভার = SPOF। একাধিক node/AZ রাখুন; memory কিছুটা বাড়তি (over-provision) রাখুন।</td></tr>
-<tr><td>Eviction</td><td>Cache ভরে গেলে কী সরবে? <b>LRU</b> (সবচেয়ে পুরোনো-ব্যবহৃত) সবচেয়ে জনপ্রিয়; LFU (কম-ব্যবহৃত), FIFO-ও আছে।</td></tr>
+<tr><th>বিবেচনা</th><th>নিয়ম</th></tr>
+<tr><td>কখন</td><td>ঘনঘন পড়া, কদাচিৎ বদলায়; cache volatile — একমাত্র কপি নয়</td></tr>
+<tr><td>TTL</td><td>খুব ছোট = DB-তে বারবার; খুব বড় = stale</td></tr>
+<tr><td>Consistency</td><td>DB ও cache এক transaction-এ নয় → অমিল সম্ভব</td></tr>
+<tr><td>Failure / Eviction</td><td>একাধিক node; ভরলে <b>LRU</b> (জনপ্রিয়), LFU, FIFO</td></tr>
 </table>
-<div class="callout mistake"><span class="tag">সাধারণ ভুল — Cache Stampede</span>
-জনপ্রিয় একটা key (ধরুন Eid-এর ticket তালিকা) এক মুহূর্তে expire হলো; হাজার request একসাথে miss করে সবাই DB-তে ছুটল → DB বসে গেল। প্রতিরোধ: TTL-এ random jitter যোগ, একই key-র জন্য একটা request-ই DB থেকে লোড করবে (lock/single-flight), বা expire হওয়ার আগেই background-এ refresh।</div>
+<div class="callout mistake"><span class="tag">Cache Stampede</span>
+জনপ্রিয় key (Eid-এর ticket তালিকা) এক মুহূর্তে expire → হাজার request একসাথে DB-তে → DB বসে যায়। প্রতিরোধ: TTL-এ random jitter, একই key-র জন্য একটাই request লোড করবে (single-flight/lock), expire-এর আগে background refresh।</div>
+<p><b>CDN</b> — static content (image, CSS, JS, video) ব্যবহারকারীর <b>নিকটতম edge</b> থেকে পৌঁছায়; miss হলে origin (S3/Blob) থেকে এনে TTL পর্যন্ত cache করে। মনে রাখুন: খরচ (কম-ব্যবহৃত asset বাইরে রাখুন), CDN-ডাউনে origin fallback, ও invalidation — <b>ফাইলের নামে hash/version</b> (<code>app.3fa9c.js</code>) সবচেয়ে নির্ভরযোগ্য।</p>
 
-<h3>১.৭ ধাপ ৬ — CDN</h3>
-<p><b>CDN (Content Delivery Network)</b> হলো বিশ্বজুড়ে ছড়ানো সার্ভারের জাল, যারা <b>static content</b> (image, CSS, JS, video) ব্যবহারকারীর <b>সবচেয়ে কাছের</b> সার্ভার থেকে পৌঁছে দেয়। দূরত্ব যত কম, লোড তত দ্রুত — আলোর গতিরও একটা সীমা আছে, ঢাকা থেকে ক্যালিফোর্নিয়া ঘুরে আসতেই শত মিলিসেকেন্ড লাগে।</p>
-<div class="diagram"><pre>
- User A ──► CDN Edge (ঢাকা/সিঙ্গাপুর) ──miss?──► Origin (আপনার সার্ভার / S3 / Blob Storage)
-                 ▲  ◄── ফাইল + TTL header ──────────┘
-                 │ cache করে রাখে
- User B ──► একই Edge ──► hit! (origin-এ যেতেই হলো না)
-</pre></div>
-<table>
-<tr><th>বিবেচনা</th><th>কী করবেন</th></tr>
-<tr><td>খরচ</td><td>CDN থেকে ডেটা আসা-যাওয়ায় বিল হয়। কম-ব্যবহৃত asset CDN-এ রাখা অপচয়।</td></tr>
-<tr><td>Expiry</td><td>খুব ছোট = বারবার origin-এ; খুব বড় = পুরোনো ফাইল। <code>Cache-Control: max-age</code> দিয়ে নিয়ন্ত্রণ।</td></tr>
-<tr><td>Fallback</td><td>CDN down হলে client origin থেকে নিতে পারবে কি? ভেবে রাখুন।</td></tr>
-<tr><td>Invalidation</td><td>মেয়াদ শেষের আগে সরাতে: CDN-এর invalidate API, অথবা <b>versioning</b> — <code>app.js?v=42</code> বা <code>app.3fa9c.js</code> (hash-নামের ফাইল সবচেয়ে নির্ভরযোগ্য)।</td></tr>
-</table>
-<p>এই পর্যায়ে নকশা: static ফাইল web server থেকে CDN-এ সরে গেল (web server হালকা), আর DB-র চাপ cache কমাল।</p>
-
-<h3>১.৮ ধাপ ৭ — Stateless Web Tier</h3>
-<p>Web tier-কে সত্যিকারের horizontal scale করতে হলে <b>state</b> (যেমন login session, shopping cart) সার্ভারের ভেতর থেকে বের করে আনতে হবে।</p>
+<h3>১.৫ ধাপ ৫ — Stateless Web Tier ও Multi Data Center</h3>
 <table>
 <tr><th></th><th>Stateful</th><th>Stateless</th></tr>
-<tr><td>Session কোথায়</td><td>নির্দিষ্ট সার্ভারের memory-তে</td><td>বাইরের shared store-এ (Redis, DB)</td></tr>
-<tr><td>Request routing</td><td>একই ব্যবহারকারী <b>একই সার্ভারে</b> যেতে বাধ্য (sticky session)</td><td>যেকোনো সার্ভারে যেতে পারে</td></tr>
-<tr><td>সার্ভার যোগ/বাদ</td><td>কঠিন — session হারানোর ঝুঁকি</td><td>সহজ</td></tr>
-<tr><td>সার্ভার crash</td><td>ওই সার্ভারের ব্যবহারকারীরা logout/ডেটা হারায়</td><td>অন্য সার্ভার সঙ্গে সঙ্গে সামলায়</td></tr>
-<tr><td>Auto-scaling</td><td>জটিল</td><td>সহজ — load দেখে সার্ভার বাড়াও/কমাও</td></tr>
+<tr><td>Session কোথায়</td><td>সার্ভারের memory-তে</td><td>বাইরের shared store-এ (Redis/DB)</td></tr>
+<tr><td>Routing</td><td>sticky session বাধ্যতামূলক</td><td>যেকোনো সার্ভারে</td></tr>
+<tr><td>Crash / Auto-scale</td><td>session হারায়, scale কঠিন</td><td>সহজ — load দেখে সার্ভার বাড়ে-কমে</td></tr>
 </table>
-<div class="diagram"><pre>
- Stateful :  User A ─► Server 1 (A-র session)      Server 2-তে গেলে ⇒ "আপনি লগইন করেননি"
- Stateless:  User A ─► যেকোনো Server ─► [ Redis / Session Store ] থেকে A-র session পড়ে
-</pre></div>
-<p>ASP.NET Core-এ এর মানে: <code>InMemory</code> session বা in-process <code>MemoryCache</code>-এ গুরুত্বপূর্ণ state না রাখা; JWT বা <code>AddStackExchangeRedisCache</code> + distributed session ব্যবহার করা। Stateless হলে <b>Auto-scaling</b> সম্ভব — CPU/request সংখ্যা দেখে সার্ভার স্বয়ংক্রিয়ভাবে বাড়ে-কমে।</p>
+<p>ASP.NET Core-এ: in-process session/<code>MemoryCache</code>-এ গুরুত্বপূর্ণ state নয়; JWT বা Redis-ভিত্তিক distributed session। এরপর বিশ্বজুড়ে ব্যবহারকারী হলে <b>GeoDNS</b> নিকটতম data center-এ পাঠায়, একটা বন্ধ হলে সব traffic অন্যটায় যায়। চ্যালেঞ্জ: data sync (সাধারণত async → eventual consistency), সব জায়গায় একই deploy (automation)।</p>
 
-<h3>১.৯ ধাপ ৮ — একাধিক Data Center</h3>
-<p>ব্যবহারকারী বিভিন্ন দেশে ছড়ালে দূরের ব্যবহারকারী ধীর অভিজ্ঞতা পায়, আর একটা ডেটা-সেন্টার বন্ধ হলে পুরো সাইট বন্ধ। সমাধান: একাধিক data center ও <b>GeoDNS</b> — ব্যবহারকারীর অবস্থান দেখে DNS তাকে সবচেয়ে কাছের data center-এর IP দেয়।</p>
+<h3>১.৬ ধাপ ৬ — Message Queue ও Observability</h3>
 <div class="diagram"><pre>
- স্বাভাবিক:   ইউরোপের user ─► DC-Frankfurt        এশিয়ার user ─► DC-Singapore
- DC-Singapore বন্ধ:  সব traffic ─► DC-Frankfurt   (GeoDNS রাউটিং বদলে দেয়)
+ Web (Producer) ─► [ Queue ] ─► Worker 1..N        ব্যবহারকারী সঙ্গে সঙ্গে "202 Accepted" পায়;
+ queue বড় হলে worker বাড়াও, খালি থাকলে কমাও      ধীর কাজ (ছবি, PDF, email) পরে হয়
 </pre></div>
+<p>সুবিধা: <b>decoupling</b>, আলাদা scaling, spike শুষে নেওয়া। টুল: <a href="rabbitmq.html" style="color:var(--accent2)">RabbitMQ</a>, <a href="kafka-mastery-bangla.html" style="color:var(--accent2)">Kafka</a>, Azure Service Bus। বড় সিস্টেমে তিনটা অপরিহার্য: <b>Logging</b> (Serilog → Seq/ELK), <b>Metrics</b> (host, tier, business — Prometheus/Grafana), <b>Automation</b> (CI/CD)।</p>
+
+<h3>১.৭ ধাপ ৭ — Database Sharding</h3>
+<p>Replication read scale করে; <b>write ও মোট ডেটার আকার</b> তখনও এক primary-তে। Sharding ডেটা ভেঙে আলাদা DB-তে রাখে (schema একই, ডেটা আলাদা): <code>shard = hash(user_id) % 4</code>। <b>Sharding key</b> বাছাই সবচেয়ে বড় সিদ্ধান্ত — ডেটা সমানভাবে ছড়াবে ও বেশিরভাগ query এক shard-এ থাকবে।</p>
 <table>
-<tr><th>চ্যালেঞ্জ</th><th>সমাধান-দিক</th></tr>
-<tr><td>Traffic redirection</td><td>GeoDNS / global load balancer</td></tr>
-<tr><td>Data synchronization</td><td>Data center-গুলোর মধ্যে ডেটা replicate (সাধারণত asynchronous, তাই eventual consistency)। failover-এ ডেটা না থাকলে ব্যবহারকারী বিভ্রান্ত হবে।</td></tr>
-<tr><td>Test ও deployment</td><td>সব জায়গায় একই রকম deploy — automation অপরিহার্য</td></tr>
-</table>
-
-<h3>১.১০ ধাপ ৯ — Message Queue</h3>
-<p>এখনও সব কিছু <b>synchronous</b> — অ্যাপ একটা কাজ করে উত্তরের অপেক্ষায় বসে থাকে। কিন্তু কিছু কাজ ধীর (ছবি প্রসেসিং, ইমেইল, PDF রিপোর্ট)। <b>Message Queue</b> প্রযোজক (producer) আর ভোক্তাকে (consumer) আলাদা করে: producer queue-তে কাজ রেখে সঙ্গে সঙ্গে ব্যবহারকারীকে "গ্রহণ করা হয়েছে" বলে দেয়; worker-রা নিজের গতিতে queue থেকে তুলে কাজ করে।</p>
-<div class="diagram"><pre>
- Web Server (Producer) ─► [ Queue: job1, job2, job3 ... ] ─► Worker 1
-        │                                                  ─► Worker 2   (queue বড় হলে worker বাড়াও,
-        └─ সঙ্গে সঙ্গে ব্যবহারকারীকে 202 Accepted                          খালি থাকলে কমাও)
-</pre></div>
-<p><b>মূল সুবিধা:</b> (১) <b>decoupling</b> — Consumer বন্ধ থাকলেও producer কাজ জমা দিতে পারে, উল্টোটাও সত্য; (২) <b>আলাদা scaling</b> — producer ও consumer নিজ নিজ প্রয়োজনে scale হয়; (৩) <b>buffer</b> — হঠাৎ traffic spike queue শুষে নেয়। টুল: RabbitMQ, Azure Service Bus, Amazon SQS, Kafka — আমাদের <a href="rabbitmq.html" style="color:var(--accent2)">RabbitMQ</a> ও <a href="kafka-mastery-bangla.html" style="color:var(--accent2)">Kafka</a> কোর্সে বিস্তারিত আছে।</p>
-
-<h3>১.১১ ধাপ ১০ — Logging, Metrics ও Automation</h3>
-<p>ছোট সাইটে এগুলো "ভালো অভ্যাস"; বড় সিস্টেমে <b>অপরিহার্য</b> — কারণ ১০০ সার্ভারের কোনটায় কী হচ্ছে চোখে দেখে ধরা অসম্ভব।</p>
-<table>
-<tr><th>স্তম্ভ</th><th>কী</th><th>উদাহরণ</th></tr>
-<tr><td>Logging</td><td>Error ও ঘটনার রেকর্ড, কেন্দ্রীয়ভাবে জমা</td><td>Serilog → Seq/ELK/Application Insights</td></tr>
-<tr><td>Metrics</td><td>Host (CPU, RAM, disk I/O), tier-wise (DB-র গড় latency), ব্যবসায়িক (DAU, retention, revenue)</td><td>Prometheus + Grafana, Azure Monitor</td></tr>
-<tr><td>Automation</td><td>CI/CD — প্রতি commit-এ build/test/deploy স্বয়ংক্রিয়</td><td>GitHub Actions, Azure DevOps</td></tr>
-</table>
-
-<h3>১.১২ ধাপ ১১ — Database Sharding</h3>
-<p>ডেটা প্রতিদিন বাড়ে; replication <b>read</b> scale করে, কিন্তু <b>write</b> ও মোট ডেটার আকার তখনও একটা primary-র উপর নির্ভর করে। এই সীমা ভাঙতে <b>Sharding</b> (horizontal partitioning): ডেটা ভেঙে ছোট ছোট অংশ (shard) বানিয়ে আলাদা আলাদা DB সার্ভারে রাখা। সব shard-এর schema একই, ডেটা আলাদা।</p>
-<div class="diagram"><pre>
- shard_id = hash(user_id) % 4          ( বইয়ের উদাহরণ: user_id % 4 )
-
- user_id=1001 → 1001 % 4 = 1 ─► Shard 1
- user_id=1002 → 1002 % 4 = 2 ─► Shard 2
- user_id=1004 → 1004 % 4 = 0 ─► Shard 0        প্রতিটা shard নিজে আবার replicate হতে পারে
-</pre></div>
-<p><b>Sharding key</b> বাছাই সবচেয়ে গুরুত্বপূর্ণ সিদ্ধান্ত। ভালো key: (১) ডেটা <b>সমানভাবে</b> ছড়ায়, (২) বেশিরভাগ query একটা shard-এই সীমাবদ্ধ থাকে।</p>
-<table>
-<tr><th>Sharding-এর নতুন সমস্যা</th><th>ব্যাখ্যা</th><th>উপশম</th></tr>
-<tr><td>Resharding</td><td>shard ভরে গেলে বা অসমান বণ্টনে একটা shard আগে ভরলে ফাংশন বদলে ডেটা সরাতে হয়। <code>% 4</code> থেকে <code>% 5</code> করলে প্রায় সব ডেটার জায়গা বদলে যায়!</td><td><b>Consistent Hashing</b> (অধ্যায় ৫-এ আসছে)</td></tr>
-<tr><td>Celebrity / Hotspot</td><td>একজন বিখ্যাত ব্যবহারকারীর ডেটা একটা shard-এ জমে সেটা ওভারলোড করে</td><td>hot key-র জন্য আলাদা shard, আরও ভাগ, বা cache</td></tr>
-<tr><td>Join ও denormalization</td><td>Shard পেরিয়ে JOIN কঠিন/ধীর</td><td>Denormalize করে এক টেবিলেই query চালানো</td></tr>
+<tr><th>নতুন সমস্যা</th><th>উপশম</th></tr>
+<tr><td><b>Resharding</b> — <code>%4</code> থেকে <code>%5</code> করলে প্রায় সব ডেটার জায়গা বদলায়</td><td><a href="#" data-go="consistenthash" style="color:var(--accent2)">Consistent Hashing (অধ্যায় ৫)</a></td></tr>
+<tr><td><b>Celebrity / Hotspot</b> — এক shard ওভারলোড</td><td>hot key-র আলাদা shard, আরও ভাগ, cache</td></tr>
+<tr><td><b>Cross-shard Join</b></td><td>denormalize</td></tr>
 </table>
 <div class="callout best"><span class="tag">Best Practice</span>
-Sharding <b>শেষ অস্ত্র</b> — এর আগে index, query tuning, cache, read replica, vertical scaling, archival সব ফুরালে তবেই। কারণ sharding-এ cross-shard transaction, জটিল reporting, resharding-এর ঝামেলা চিরস্থায়ী। কিছু কাজ (যেমন session, লগ, leaderboard) NoSQL-এ সরিয়ে relational DB-র ভার কমানো যায়।</div>
+Sharding <b>শেষ অস্ত্র</b> — আগে index, query tuning, cache, replica, vertical scaling, archival। নইলে cross-shard transaction ও resharding-এর ঝামেলা চিরস্থায়ী।</div>
 
-<h3>১.১৩ পুরো ছবি — চূড়ান্ত architecture</h3>
+<h3>১.৮ চূড়ান্ত Architecture</h3>
 <div class="diagram"><pre>
-                          [ DNS / GeoDNS ]
-                                 │
-        ┌────────────────────────┴────────────────────────┐
-        ▼                                                 ▼
- [ CDN: static ]                                   (অন্য Data Center, একইভাবে)
+                   [ DNS / GeoDNS ] ──► (অন্য Data Center, একইভাবে)
+                          │
+   [ CDN: static ] ◄──────┤
+                   [ Load Balancer ] ─► Web Servers (stateless, auto-scale)
+                                              │
+        ┌─────────────────────┬──────────────┴────────┐
+   [ Redis Cache ]    [ Session / NoSQL ]       [ Message Queue ] ─► Workers
         │
- [ Load Balancer ] ──► Web Servers (stateless, auto-scale)
-                              │
-          ┌───────────────────┼─────────────────────┐
-          ▼                   ▼                     ▼
-   [ Cache: Redis ]   [ Session/NoSQL ]      [ Message Queue ] ─► Workers
-          │                                                            │
-          ▼                                                            ▼
-   [ Sharded DBs: প্রতিটায় Primary + Replicas ] ◄────────────────────┘
-
-   পাশে সবসময়:  Logging • Metrics • Alerting • CI/CD Automation
+   [ Sharded DBs — প্রতিটায় Primary + Replicas ]
+   পাশে সবসময়: Logging • Metrics • Alerting • CI/CD
 </pre></div>
-
-<h3>১.১৪ আট নীতির সারাংশ (মুখস্থ নয়, কারণসহ বুঝুন)</h3>
+<h4>আট নীতি</h4>
 <ol>
-<li><b>Web tier stateless রাখুন</b> — যাতে যেকোনো সার্ভার যেকোনো request সামলাতে পারে।</li>
-<li><b>প্রতিটা স্তরে redundancy</b> — কোথাও SPOF থাকবে না।</li>
-<li><b>যতটা সম্ভব cache</b> — সবচেয়ে সস্তা performance জয়।</li>
-<li><b>একাধিক data center</b> — দূরত্ব ও দুর্যোগ থেকে রক্ষা।</li>
-<li><b>Static asset CDN-এ</b>।</li>
-<li><b>Data tier shard করুন</b> — যখন লাগবে।</li>
-<li><b>Tier ভেঙে স্বাধীন service বানান</b> — যখন দল ও সিস্টেম বড় হবে।</li>
-<li><b>Monitor ও automate করুন</b> — যা মাপা যায় না তা ঠিক করা যায় না।</li>
+<li>Web tier <b>stateless</b>।</li>
+<li>প্রতি স্তরে <b>redundancy</b> — SPOF নয়।</li>
+<li>যতটা সম্ভব <b>cache</b>।</li>
+<li><b>একাধিক data center</b>।</li>
+<li>Static asset <b>CDN-এ</b>।</li>
+<li>Data tier <b>shard</b> — যখন লাগবে।</li>
+<li>Tier ভেঙে <b>service</b> — যখন দল/সিস্টেম বড় হবে।</li>
+<li><b>Monitor ও automate</b>।</li>
 </ol>
 
-<h3>১.১৫ Interview প্রশ্নোত্তর</h3>
-<div class="card"><b>প্র১. ১০ লাখ ব্যবহারকারীর সিস্টেম আপনি কীভাবে ধাপে ধাপে বাড়াবেন?</b>
-<p>এক সার্ভার → web/DB আলাদা → load balancer + একাধিক stateless web server → DB replication → cache + CDN → message queue → একাধিক data center → sharding। প্রতিটা ধাপে আগে <b>bottleneck বলুন</b> (যেমন "DB read-ই এখন সীমা"), তারপর সমাধান। কোনো ধাপ বিনা কারণে আনবেন না।</p></div>
-<div class="card"><b>প্র২. Stateless কেন এত জরুরি?</b>
-<p>State সার্ভারে থাকলে request নির্দিষ্ট সার্ভারে আটকে যায় (sticky session) — তখন সার্ভার বাড়ানো-কমানো, auto-scaling, crash-recovery সবই কঠিন। State shared store-এ গেলে সব সার্ভার সমান ও বদলযোগ্য।</p></div>
-<div class="card"><b>প্র৩. Replication আর Sharding-এর পার্থক্য কী?</b>
-<p>Replication = <b>একই ডেটার কপি</b> বহু জায়গায় → read scale ও availability। Sharding = <b>ডেটাকে ভাগ</b> করে বহু জায়গায় → write ও মোট storage scale। বড় সিস্টেমে দুটোই একসাথে: প্রতিটা shard-এর আবার primary + replica।</p></div>
-<div class="card"><b>প্র৪. Primary ডাউন হলে কী হয়? কী ঝুঁকি?</b>
-<p>একটা replica-কে promote করা হয়। ঝুঁকি: async replication-এ সর্বশেষ write হারিয়ে যেতে পারে; দুটো সার্ভার নিজেকে primary ভাবলে <b>split-brain</b>। এ জন্য consensus-ভিত্তিক leader election ও fencing লাগে (<a href="distsys.html" style="color:var(--accent2)">Distributed Systems কোর্স</a>)।</p></div>
+<h3>১.৯ Interview প্রশ্নোত্তর</h3>
+<div class="card"><b>প্র১. ১০ লাখ ব্যবহারকারীর সিস্টেম ধাপে ধাপে কীভাবে বাড়াবেন?</b>
+<p>এক সার্ভার → web/DB আলাদা → LB + stateless web → replication → cache + CDN → queue → multi-DC → sharding। প্রতি ধাপে আগে <b>bottleneck বলুন</b> ("DB read-ই এখন সীমা"), তারপর সমাধান।</p></div>
+<div class="card"><b>প্র২. Stateless কেন জরুরি?</b>
+<p>State সার্ভারে থাকলে request নির্দিষ্ট সার্ভারে আটকায় (sticky session) — scale, crash-recovery, auto-scaling কঠিন। Shared store-এ গেলে সব সার্ভার সমান ও বদলযোগ্য।</p></div>
+<div class="card"><b>প্র৩. Replication বনাম Sharding?</b>
+<p>Replication = <b>একই ডেটার কপি</b> → read scale ও availability। Sharding = <b>ডেটা ভাগ</b> → write ও storage scale। বড় সিস্টেমে দুটোই: প্রতি shard-এ primary + replica।</p></div>
+<div class="card"><b>প্র৪. Primary ডাউন হলে ঝুঁকি কী?</b>
+<p>Replica promote হয়; ঝুঁকি: async-এ শেষ write হারানো, আর দুই সার্ভার নিজেকে primary ভাবলে <b>split-brain</b> — তাই leader election ও fencing (<a href="distsys.html" style="color:var(--accent2)">Distributed Systems</a>)।</p></div>
 <div class="card"><b>প্র৫. Cache-এ stale ডেটা এড়াবেন কীভাবে?</b>
-<p>লেখার সময় cache invalidate/update, যুক্তিসংগত TTL, গুরুত্বপূর্ণ ডেটায় write-through, আর ছোট stale সহনীয় কিনা তা ব্যবসার সঙ্গে আলোচনা করে ঠিক করা। (Payment-এর balance cache করা বিপজ্জনক; পণ্য তালিকা cache করা নিরাপদ।)</p></div>
-<div class="card"><b>প্র৬. Sharding key হিসেবে <code>created_at</code> বাছলে কী সমস্যা?</b>
-<p>নতুন সব write সর্বশেষ shard-এ জমে → <b>hotspot</b>; পুরোনো shard অলস। ভালো key (যেমন <code>user_id</code>-এর hash) লেখা ও পড়া সমানভাবে ছড়ায়।</p></div>
+<p>লেখায় invalidate, যুক্তিসঙ্গত TTL, গুরুত্বপূর্ণ ডেটায় write-through; কতটা stale সহনীয় তা ব্যবসার সাথে ঠিক করুন (balance cache বিপজ্জনক, পণ্য-তালিকা নিরাপদ)।</p></div>
+<div class="card"><b>প্র৬. Sharding key <code>created_at</code> হলে কী সমস্যা?</b>
+<p>সব নতুন write সর্বশেষ shard-এ জমে → <b>hotspot</b>, পুরোনো shard অলস। <code>user_id</code>-এর hash লেখা-পড়া সমানভাবে ছড়ায়।</p></div>
 </template>
 
 <template data-page="estimation">
 <h2 class="title">২. Back-of-the-Envelope Estimation — হিসাব কষে design যাচাই</h2>
-<p class="lead">Interview-তে প্রায়ই শোনা যায়: <i>"কত QPS হবে? কত storage লাগবে? কয়টা সার্ভার?"</i> এখানে নিখুঁত উত্তর কেউ চায় না — চায় আপনার <b>চিন্তার প্রক্রিয়া</b>: ধারণা (assumption) লেখা, গোল সংখ্যা ধরা, একক (unit) ঠিক রাখা, আর হিসাব থেকে design-এর সিদ্ধান্ত বের করা। এই অধ্যায় সেই দক্ষতা তৈরি করে।</p>
+<p class="lead">Interview-তে "কত QPS? কত storage? কয়টা সার্ভার?" — এখানে নিখুঁত উত্তর কেউ চায় না; চায় আপনার <b>প্রক্রিয়া</b>: assumption লেখা, গোল সংখ্যা ধরা, একক ঠিক রাখা, আর হিসাব থেকে design-সিদ্ধান্ত বের করা।</p>
 
 <div class="callout why"><span class="tag">কেন এই অধ্যায়</span>
-হিসাব ছাড়া design অন্ধকারে ঢিল ছোড়া। "১ কোটি ব্যবহারকারী" শুনে যে বলে "Redis cluster দরকার" আর যে হিসাব করে দেখে "peak ৭,০০০ QPS — এক Redis-ই যথেষ্ট" — দ্বিতীয়জন ভুল ও অপচয় দুটোই এড়ায়। Estimation আপনাকে বলে দেয় <b>কোথায় জটিলতা সত্যিই দরকার</b>।</div>
+"১ কোটি ব্যবহারকারী" শুনে "Redis cluster দরকার" বলা আর হিসাব করে "peak ৭,০০০ QPS — এক Redis-ই যথেষ্ট" বলার পার্থক্য হলো ভুল ও অপচয়ের পার্থক্য। Estimation বলে দেয় <b>জটিলতা কোথায় সত্যিই দরকার</b>।</div>
 
-<h3>২.১ ভিত্তি ১ — ২-এর ঘাত (Power of Two)</h3>
-<p>Distributed system-এ ডেটা বিশাল হলেও হিসাবের গোড়ায় আছে কয়েকটা একক। এগুলো মুখস্থ রাখুন:</p>
+<h3>২.১ ভিত্তি — ২-এর ঘাত ও বাংলা/আন্তর্জাতিক গণনা</h3>
 <table>
-<tr><th>ঘাত</th><th>আনুমানিক মান</th><th>পুরো নাম</th><th>সংক্ষেপ</th></tr>
-<tr><td>2<sup>10</sup></td><td>১ হাজার (Thousand)</td><td>Kilobyte</td><td>KB</td></tr>
-<tr><td>2<sup>20</sup></td><td>১ মিলিয়ন (১০ লাখ)</td><td>Megabyte</td><td>MB</td></tr>
-<tr><td>2<sup>30</sup></td><td>১ বিলিয়ন (১০০ কোটি)</td><td>Gigabyte</td><td>GB</td></tr>
-<tr><td>2<sup>40</sup></td><td>১ ট্রিলিয়ন</td><td>Terabyte</td><td>TB</td></tr>
-<tr><td>2<sup>50</sup></td><td>১ কোয়াড্রিলিয়ন</td><td>Petabyte</td><td>PB</td></tr>
+<tr><th>ঘাত</th><th>মান</th><th>একক</th><th>বাংলা</th></tr>
+<tr><td>2<sup>10</sup></td><td>১ Thousand</td><td>KB</td><td>১ হাজার</td></tr>
+<tr><td>2<sup>20</sup></td><td>১ Million</td><td>MB</td><td>১০ লাখ</td></tr>
+<tr><td>2<sup>30</sup></td><td>১ Billion</td><td>GB</td><td>১০০ কোটি</td></tr>
+<tr><td>2<sup>40</sup></td><td>১ Trillion</td><td>TB</td><td>১ লাখ কোটি</td></tr>
+<tr><td>2<sup>50</sup></td><td>১ Quadrillion</td><td>PB</td><td>—</td></tr>
 </table>
-<p>একটা ASCII অক্ষর = ১ byte = ৮ bit। আর হিসাবের সময় <b>প্রতি ধাপে ১,০০০ গুণ</b> ধরে নিন (KB → MB → GB → TB → PB) — ১,০২৪ নিয়ে মাথা ঘামানোর দরকার নেই।</p>
-
-<h4>"কত শূন্য?" — বাংলা বনাম আন্তর্জাতিক গণনা</h4>
-<p>আমরা বাংলায় লাখ-কোটি বলি; আন্তর্জাতিক হিসাব হাজার-মিলিয়ন-বিলিয়নে। Interview ইংরেজিতে, তাই এই রূপান্তর রপ্ত রাখুন:</p>
-<table>
-<tr><th>আন্তর্জাতিক</th><th>সংখ্যা</th><th>বাংলা</th></tr>
-<tr><td>1 Thousand</td><td>10<sup>3</sup></td><td>১ হাজার</td></tr>
-<tr><td>1 Million</td><td>10<sup>6</sup></td><td>১০ লাখ</td></tr>
-<tr><td>1 Billion</td><td>10<sup>9</sup></td><td>১০০ কোটি</td></tr>
-<tr><td>1 Trillion</td><td>10<sup>12</sup></td><td>১ লাখ কোটি</td></tr>
-</table>
+<p>হিসাবে প্রতি ধাপে <b>১,০০০ গুণ</b> ধরুন। ১ ASCII অক্ষর = ১ byte।</p>
 <div class="callout mistake"><span class="tag">সাধারণ ভুল</span>
-"৩ কোটি ব্যবহারকারী" মাথায় ৩০ মিলিয়ন না ধরে ৩ মিলিয়ন ধরে ফেলা — হিসাব ১০ গুণ বিগড়ে যায়। হিসাব শুরুর আগে বাংলা সংখ্যা ইংরেজি এককে রূপান্তর করে <b>বোর্ডে লিখে</b> নিন।</div>
+"৩ কোটি" কে ৩ মিলিয়ন ধরা — হিসাব ১০ গুণ বিগড়ে যায়। শুরুতেই বাংলা সংখ্যা ইংরেজি এককে রূপান্তর করে বোর্ডে লিখুন।</div>
 
-<h3>২.২ ভিত্তি ২ — প্রতিটা প্রোগ্রামারের জানা Latency সংখ্যা</h3>
-<p>Jeff Dean (Google) এই সংখ্যাগুলো জনপ্রিয় করেছেন। সঠিক মান হার্ডওয়্যারভেদে বদলায় (এগুলো পুরোনো, আজকের মেশিন দ্রুততর), কিন্তু <b>আপেক্ষিক পার্থক্য</b>টাই আসল শিক্ষা।</p>
+<h3>২.২ ভিত্তি — Latency সংখ্যা</h3>
+<p>সঠিক মান হার্ডওয়্যারভেদে বদলায়; শেখার বিষয় <b>অনুপাত</b>।</p>
 <table>
-<tr><th>অপারেশন</th><th>আনুমানিক সময়</th><th>"মানুষের সময়ে" (১ ns = ১ সেকেন্ড ধরলে)</th></tr>
-<tr><td>L1 cache reference</td><td>0.5 ns</td><td>আধ সেকেন্ড</td></tr>
-<tr><td>Branch mispredict</td><td>5 ns</td><td>৫ সেকেন্ড</td></tr>
-<tr><td>L2 cache reference</td><td>7 ns</td><td>৭ সেকেন্ড</td></tr>
-<tr><td>Mutex lock/unlock</td><td>100 ns</td><td>~১.৭ মিনিট</td></tr>
-<tr><td>Main memory (RAM) reference</td><td>100 ns</td><td>~১.৭ মিনিট</td></tr>
-<tr><td>১ KB compress (Zippy)</td><td>10 µs</td><td>~২.৮ ঘণ্টা</td></tr>
-<tr><td>১ Gbps নেটওয়ার্কে ২ KB পাঠানো</td><td>20 µs</td><td>~৫.৫ ঘণ্টা</td></tr>
-<tr><td>RAM থেকে ১ MB ক্রমানুসারে পড়া</td><td>250 µs</td><td>~৩ দিন</td></tr>
-<tr><td>একই data center-এ round trip</td><td>500 µs</td><td>~৬ দিন</td></tr>
-<tr><td>Disk seek</td><td>10 ms</td><td>~৪ মাস</td></tr>
-<tr><td>নেটওয়ার্ক থেকে ১ MB ক্রমানুসারে পড়া</td><td>10 ms</td><td>~৪ মাস</td></tr>
-<tr><td>Disk থেকে ১ MB ক্রমানুসারে পড়া</td><td>30 ms</td><td>~১ বছর</td></tr>
-<tr><td>প্যাকেট CA → নেদারল্যান্ডস → CA</td><td>150 ms</td><td>~৫ বছর</td></tr>
+<tr><th>অপারেশন</th><th>সময়</th></tr>
+<tr><td>L1 cache / L2 cache</td><td>0.5 ns / 7 ns</td></tr>
+<tr><td>Mutex lock, RAM reference</td><td>100 ns</td></tr>
+<tr><td>১ KB compress</td><td>10 µs</td></tr>
+<tr><td>১ Gbps-এ ২ KB পাঠানো</td><td>20 µs</td></tr>
+<tr><td>RAM থেকে ১ MB sequential পড়া</td><td>250 µs</td></tr>
+<tr><td>একই data center-এ round trip</td><td>500 µs</td></tr>
+<tr><td>Disk seek / নেটওয়ার্ক থেকে ১ MB পড়া</td><td>10 ms</td></tr>
+<tr><td>Disk থেকে ১ MB sequential পড়া</td><td>30 ms</td></tr>
+<tr><td>প্যাকেট CA → নেদারল্যান্ডস → CA</td><td>150 ms</td></tr>
 </table>
-<p class="lead">একক: 1 ms = 1,000 µs = 1,000,000 ns। (ns = nanosecond, µs = microsecond, ms = millisecond)</p>
-<div class="callout behind"><span class="tag">তৃতীয় কলামটা কেন দিলাম</span>
-সংখ্যা মুখস্থ করা কঠিন, কিন্তু অনুপাত অনুভব করা সহজ: <b>RAM-এ পৌঁছানো যদি ১.৭ মিনিট হয়, disk seek ৪ মাস!</b> এই অনুভূতি থেকেই জন্ম নেয় cache, index, sequential write, batching-এর মতো সব optimization।</div>
-
-<h4>এই সংখ্যাগুলো থেকে পাঁচটা সিদ্ধান্ত</h4>
+<p>(1 ms = 1,000 µs = 1,000,000 ns।) অনুভূতি: RAM-এ পৌঁছানো ১ সেকেন্ড ধরলে disk seek ~১ লাখ সেকেন্ড (≈ ১ দিনের বেশি)। এ থেকে পাঁচ সিদ্ধান্ত:</p>
 <ol>
-<li><b>Memory দ্রুত, disk ধীর</b> → hot data RAM/cache-এ রাখুন (Redis)।</li>
-<li><b>Disk seek এড়ান</b> → random access বদলে sequential access; database-এ index; log-structured storage (Kafka, LSM-tree) এ কারণেই দ্রুত।</li>
-<li><b>সরল compression দ্রুত</b> → CPU সস্তা, নেটওয়ার্ক/ডিস্ক দামি — compress করে পাঠানো/রাখা লাভজনক।</li>
-<li><b>পাঠানোর আগে compress করুন</b> → gzip/Brotli (ASP.NET Core-এ <code>UseResponseCompression</code>)।</li>
-<li><b>Data center-গুলো দূরে দূরে, মাঝের যাত্রা ধীর</b> → cross-region call যত কম, তত ভালো; একটা request-এ cross-region ১০টা call মানে ১.৫ সেকেন্ড শুধু বাতাসে!</li>
+<li>Memory দ্রুত, disk ধীর → hot data cache-এ।</li>
+<li>Disk seek এড়ান → sequential access, index; Kafka/LSM-tree তাই দ্রুত।</li>
+<li>Compression সস্তা → পাঠানো/রাখার আগে compress (<code>UseResponseCompression</code>)।</li>
+<li>Cross-region call ধীর → একটা request-এ ১০টা cross-region call = ১.৫ সেকেন্ড, design ভুল।</li>
+<li>Cache hit (&lt;১ ms) বনাম DB query (১০+ ms) — cache-এর উপযোগিতার প্রমাণ।</li>
 </ol>
 
-<h3>২.৩ ভিত্তি ৩ — Availability (Nines)</h3>
-<p><b>High availability</b> মানে সিস্টেম দীর্ঘ সময় ধরে চালু থাকার ক্ষমতা, শতাংশে মাপা। <b>SLA (Service Level Agreement)</b> হলো সেবাদাতা ও গ্রাহকের মধ্যে লিখিত চুক্তি — কত % uptime নিশ্চিত। বড় cloud provider-দের (AWS, Google, Azure) SLA সাধারণত <b>৯৯.৯% বা তার উপরে</b>।</p>
+<h3>২.৩ ভিত্তি — Availability (Nines)</h3>
 <table>
-<tr><th>Availability %</th><th>দিনে downtime</th><th>বছরে downtime</th><th>ডাকনাম</th></tr>
-<tr><td>99%</td><td>~14.4 মিনিট</td><td>~3.65 দিন</td><td>two nines</td></tr>
-<tr><td>99.9%</td><td>~1.44 মিনিট</td><td>~8.8 ঘণ্টা</td><td>three nines</td></tr>
-<tr><td>99.99%</td><td>~8.6 সেকেন্ড</td><td>~52.6 মিনিট</td><td>four nines</td></tr>
-<tr><td>99.999%</td><td>~0.86 সেকেন্ড</td><td>~5.26 মিনিট</td><td>five nines</td></tr>
-<tr><td>99.9999%</td><td>~0.086 সেকেন্ড</td><td>~31.5 সেকেন্ড</td><td>six nines</td></tr>
+<tr><th>%</th><th>দিনে downtime</th><th>বছরে downtime</th></tr>
+<tr><td>99%</td><td>~14.4 মিনিট</td><td>~3.65 দিন</td></tr>
+<tr><td>99.9%</td><td>~1.44 মিনিট</td><td>~8.8 ঘণ্টা</td></tr>
+<tr><td>99.99%</td><td>~8.6 সেকেন্ড</td><td>~52.6 মিনিট</td></tr>
+<tr><td>99.999%</td><td>~0.86 সেকেন্ড</td><td>~5.26 মিনিট</td></tr>
 </table>
-<div class="callout best"><span class="tag">নিজে বের করার সূত্র</span>
-বছরে downtime = (১০০ − availability%) ÷ ১০০ × ৫,২৫,৬০০ মিনিট। যেমন ৯৯.৯৯% → ০.০১% × ৫,২৫,৬০০ ≈ <b>৫২.৬ মিনিট</b>। টেবিল ভুলে গেলেও এই সূত্র আপনাকে বাঁচাবে।</div>
-<h4>দুটো গুরুত্বপূর্ণ বাস্তবতা</h4>
+<p>সূত্র: বছরে downtime = (১০০ − %) ÷ ১০০ × ৫,২৫,৬০০ মিনিট। <b>SLA</b> = গ্রাহককে দেওয়া লিখিত uptime-চুক্তি; বড় cloud provider-রা সাধারণত ≥ ৯৯.৯%।</p>
 <ul>
-<li><b>প্রতিটা অতিরিক্ত "৯" দশ গুণ কঠিন ও দামি।</b> ৯৯.৯% থেকে ৯৯.৯৯%-এ যেতে redundancy, automation, monitoring, on-call সবকিছু উন্নত করতে হয়।</li>
-<li><b>Serial উপাদানে availability গুণ হয়।</b> যদি আপনার API (99.9%) → DB (99.9%) → তৃতীয় পক্ষের Payment Gateway (99.9%) পরপর নির্ভরশীল হয়, মোট ≈ 0.999³ ≈ <b>99.7%</b> — প্রতিটা নির্ভরতা মোটকে কমায়। উল্টো দিকে <b>parallel redundancy</b> (দুটো স্বাধীন ৯৯% সার্ভার, যে কোনো একটা চললেই হবে) মোট বাড়ায়: 1 − (0.01 × 0.01) = <b>99.99%</b>।</li>
+<li><b>Serial নির্ভরতায় গুণ হয়:</b> API (99.9%) → DB (99.9%) → Payment Gateway (99.9%) ≈ 0.999³ ≈ <b>99.7%</b> — প্রতিটা নির্ভরতা মোট কমায়।</li>
+<li><b>Parallel redundancy বাড়ায়:</b> দুটো স্বাধীন ৯৯% সার্ভার = 1 − 0.01² = <b>99.99%</b>।</li>
+<li>প্রতিটা অতিরিক্ত "৯" দশ গুণ কঠিন ও দামি।</li>
 </ul>
 
 <h3>২.৪ হিসাবের পদ্ধতি — ৫ ধাপ</h3>
 <div class="diagram"><pre>
-  ১. Assumption লেখো      ─► MAU, DAU, কে কতবার কী করে, ডেটার আকার, retention
-  ২. Traffic (QPS)        ─► দৈনিক request ÷ ৮৬,৪০০  →  Peak = ২–১০ × গড়
-  ৩. Storage              ─► record সংখ্যা × record আকার × সংরক্ষণকাল
-  ৪. Bandwidth / Cache    ─► QPS × response আকার;  hot data ≈ ২০% (80/20 নিয়ম)
-  ৫. Server সংখ্যা        ─► Peak QPS ÷ এক সার্ভারের ক্ষমতা  (+ redundancy)
+ ১. Assumption লেখো   ─► MAU, DAU, কে কতবার কী করে, ডেটার আকার, retention
+ ২. Traffic (QPS)     ─► দৈনিক request ÷ ৮৬,৪০০ ;  Peak = ২–১০ × গড়
+ ৩. Storage           ─► record সংখ্যা × আকার × সংরক্ষণকাল
+ ৪. Bandwidth / Cache ─► QPS × response আকার ;  hot data ≈ ২০% (80/20)
+ ৫. Server সংখ্যা     ─► Peak QPS ÷ এক সার্ভারের ক্ষমতা (+ redundancy)
 </pre></div>
-<h4>কাজে লাগা ধ্রুব সংখ্যা</h4>
 <table>
-<tr><th>ধ্রুবক</th><th>মান</th><th>ব্যবহার</th></tr>
-<tr><td>১ দিন</td><td>৮৬,৪০০ সেকেন্ড ≈ <b>~১০<sup>5</sup> সেকেন্ড</b></td><td>দৈনিক ÷ ১০⁵ = আনুমানিক QPS (দ্রুত হিসাব)</td></tr>
-<tr><td>১ মাস</td><td>~২৫ লক্ষ (2.5 × 10<sup>6</sup>) সেকেন্ড</td><td>মাসিক volume → QPS</td></tr>
-<tr><td>১ বছর</td><td>~৩ কোটি (3 × 10<sup>7</sup>) সেকেন্ড বা ৩৬৫ দিন</td><td>বছরের storage</td></tr>
-<tr><td>Peak</td><td>গড়ের ২–১০ গুণ</td><td>সাধারণ ২ গুণ; Eid/Black Friday/ক্রিকেট ম্যাচে ১০ গুণ বা বেশি</td></tr>
-<tr><td>Read : Write</td><td>সোশ্যাল/কনটেন্ট ১০০:১; লেনদেনভিত্তিক ১০:১</td><td>cache ও replica সিদ্ধান্ত</td></tr>
+<tr><th>ধ্রুবক</th><th>মান</th></tr>
+<tr><td>১ দিন</td><td>৮৬,৪০০ সেকেন্ড ≈ <b>~১০<sup>5</sup></b> (দ্রুত QPS = দৈনিক ÷ ১০⁵)</td></tr>
+<tr><td>১ বছর</td><td>~৩ কোটি সেকেন্ড (৩৬৫ দিন)</td></tr>
+<tr><td>Peak</td><td>সাধারণ ২× ; Eid/Black Friday/ম্যাচে ১০× বা বেশি</td></tr>
+<tr><td>Read : Write</td><td>সোশ্যাল ১০০:১ ; লেনদেনভিত্তিক ১০:১</td></tr>
 </table>
 
-<h3>২.৫ কাজের উদাহরণ ১ — Twitter-ধরনের QPS ও Storage</h3>
-<p>(সংখ্যাগুলো শেখার জন্য ধরা, আসল Twitter-এর নয়।)</p>
-<p><b>ধারণা:</b> ৩০ কোটি MAU; ৫০% প্রতিদিন সক্রিয়; প্রতিজন দিনে ২টা টুইট; ১০% টুইটে media (গড় ১ MB); ডেটা ৫ বছর রাখা হবে।</p>
+<h3>২.৫ উদাহরণ ১ — Twitter-ধরনের QPS ও Storage</h3>
+<p>(শেখার জন্য ধরা সংখ্যা।) ৩০ কোটি MAU; ৫০% দৈনিক সক্রিয়; দিনে ২ টুইট; ১০% টুইটে media (১ MB); ৫ বছর রাখা।</p>
 <pre>
-DAU           = 300M × 50%                     = 150M
-Tweet QPS     = 150M × 2 ÷ 86,400              ≈ 3,500
-Peak QPS      = 2 × 3,500                      ≈ 7,000
-
-Media / দিন   = 150M × 2 × 10% × 1 MB = 30M MB = 30 TB / দিন
-৫ বছরে media  = 30 TB × 365 × 5                ≈ 55 PB
+DAU          = 300M × 50%               = 150M
+Tweet QPS    = 150M × 2 ÷ 86,400        ≈ 3,500      Peak ≈ 7,000
+Media/দিন    = 150M × 2 × 10% × 1 MB    = 30 TB
+৫ বছরে       = 30 TB × 365 × 5          ≈ 55 PB
 </pre>
-<p><b>এখান থেকে design-এর সিদ্ধান্ত:</b> ৭,০০০ write QPS একটা সার্ভারে অসম্ভব না হলেও একাধিক সার্ভার ও queue লাগবে; ৫৫ PB মানে media কোনোভাবেই DB-তে নয় — <b>object storage (S3/Blob) + CDN</b>। দেখুন, হিসাব একটা architectural সিদ্ধান্ত বলে দিল!</p>
+<p><b>সিদ্ধান্ত:</b> ৭,০০০ write QPS-এ একাধিক সার্ভার ও queue; ৫৫ PB মানে media DB-তে নয় — <b>object storage (S3/Blob) + CDN</b>।</p>
 
-<h3>২.৬ কাজের উদাহরণ ২ — Eid-এর বাস/ট্রেন টিকিট সিস্টেম (আমাদের নিজস্ব প্রেক্ষাপট)</h3>
-<p><b>ধারণা:</b> ২০ লাখ DAU; প্রতিজন দিনে গড়ে ১০টা search ও ০.৫টা বুকিং; একটা বুকিং record ≈ ২ KB; ডেটা ৫ বছর; search response ≈ ২০ KB; Eid-এর আগে peak = গড়ের ১০ গুণ; একটা app server ≈ ৫০০ QPS সামলায়।</p>
+<h3>২.৬ উদাহরণ ২ — Eid-এর বাস/ট্রেন টিকিট সিস্টেম</h3>
+<p>২০ লাখ DAU; দিনে ১০ search ও ০.৫ বুকিং; বুকিং record ২ KB; ৫ বছর; search response ২০ KB; Eid-peak = ১০×; এক সার্ভার ৫০০ QPS।</p>
 <pre>
-<span class="c">// ১. Traffic</span>
-Search / দিন   = 2M × 10                      = 20M
-Search QPS     = 20M ÷ 86,400                 ≈ 230
-Peak search    = 230 × 10                     ≈ 2,300
-
-Booking / দিন  = 2M × 0.5                     = 1M
-Booking QPS    = 1M ÷ 86,400                  ≈ 12     (peak ≈ 120)
-
-<span class="c">// ২. Storage (শুধু booking record)</span>
-১ দিন          = 1M × 2 KB                    = 2 GB
-৫ বছর          = 2 GB × 365 × 5               ≈ 3.65 TB       ← একটা DB-তেই ধরে!
-
-<span class="c">// ৩. Bandwidth (peak, শুধু search response)</span>
-2,300 × 20 KB                                  ≈ 46 MB/s  ≈ 370 Mbps
-
-<span class="c">// ৪. Server</span>
-Peak 2,300 ÷ 500                              ≈ 5 টা  → redundancy সহ ৮–১০ টা
+Search QPS   = 2M × 10 ÷ 86,400   ≈ 230      Peak ≈ 2,300
+Booking QPS  = 2M × 0.5 ÷ 86,400  ≈ 12       Peak ≈ 120
+Storage      = 1M × 2 KB = 2 GB/দিন → × 365 × 5 ≈ 3.65 TB
+Bandwidth    = 2,300 × 20 KB      ≈ 46 MB/s ≈ 370 Mbps
+Server       = 2,300 ÷ 500        ≈ 5 → redundancy সহ ৮–১০
 </pre>
 <div class="callout best"><span class="tag">হিসাব থেকে সিদ্ধান্ত</span>
 <ul style="margin:6px 0">
-<li><b>Write মাত্র ~১২০ QPS peak</b> → single primary PostgreSQL/SQL Server যথেষ্ট; শুরুতে sharding অপ্রয়োজনীয়। ৩.৬৫ TB-ও সামলানো যায়।</li>
-<li><b>Search ২,৩০০ QPS</b> → এখানেই চাপ। Search ফলাফল (route + তারিখ ধরে) Redis-এ cache করুন; ঘনঘন বদলায় না, hot route কয়েকটাই (৮০/২০ নিয়ম)।</li>
-<li><b>৩৭০ Mbps</b> → compression ও CDN-এর কারণ পাওয়া গেল।</li>
-<li>বুকিং-এ <b>double-booking</b> এড়ানো (seat lock/idempotency) — এটা estimation নয়, correctness-এর প্রশ্ন; হিসাব দেখাল যে সেটা সামলাতে বিশাল ক্লাস্টার লাগবে না, <b>সঠিক transaction</b> লাগবে।</li>
+<li><b>Write peak ~১২০ QPS, ৩.৬৫ TB</b> → single primary DB যথেষ্ট; sharding এখনই নয়।</li>
+<li><b>Search ২,৩০০ QPS</b> → route+তারিখ ধরে Redis cache; hot route কয়েকটাই (80/20)। Cache ≈ ১০ লাখ unique × ২০% × ২০ KB ≈ <b>৪ GB</b> — এক Redis-এ ধরে।</li>
+<li><b>৩৭০ Mbps</b> → compression ও CDN।</li>
+<li>Double-booking এড়ানো scale নয়, <b>correctness</b>-এর প্রশ্ন: সঠিক transaction/seat lock লাগবে, বিশাল cluster নয়।</li>
 </ul></div>
 
-<h3>২.৭ কাজের উদাহরণ ৩ — Cache কত বড় লাগবে?</h3>
-<p>৮০/২০ নিয়ম: ২০% ডেটা ৮০% request পায়। ধরুন দৈনিক ২ কোটি search; প্রতিটা response ২০ KB; আমরা সবচেয়ে জনপ্রিয় ২০% unique ফলাফল cache করব। যদি দিনে unique ফলাফল ধরা হয় ১০ লাখ:</p>
-<pre>
-Cache = 1M × 20% × 20 KB = 200,000 × 20 KB = 4 GB
-</pre>
-<p>৪ GB — একটা সাধারণ Redis instance-এ হেসে ধরে। ফলাফল: cache বিনিয়োগ ছোট, লাভ বিশাল।</p>
+<h3>২.৭ Interview টিপস</h3>
+<ul>
+<li><b>গোল করুন:</b> <code>99987 ÷ 9.1</code> নয়, <code>100,000 ÷ 10</code>। ৩,৪৭২ নয়, ৩,৫০০।</li>
+<li><b>Assumption ও একক লিখুন:</b> "৫" নয়, "৫ MB"।</li>
+<li><b>জোরে ভাবুন, আর হিসাবকে সিদ্ধান্তে বদলান:</b> "অতএব CDN দরকার / sharding এখনই নয়।"</li>
+<li><b>Sanity check:</b> ফল অবাস্তব হলে কোথাও শূন্য ভুল।</li>
+<li><b>সাধারণ ভুল:</b> Peak ভোলা; replication/backup ও index-এর জায়গা না ধরা; অতি-নির্ভুলতা।</li>
+</ul>
 
-<h3>২.৮ Interview-তে টিপস</h3>
-<table>
-<tr><th>টিপ</th><th>কেন / কীভাবে</th></tr>
-<tr><td>গোল করুন (Rounding)</td><td><code>99987 ÷ 9.1</code> কষতে বসবেন না; <code>100,000 ÷ 10 = 10,000</code> বলুন। নির্ভুলতা কেউ চায় না।</td></tr>
-<tr><td>Assumption লিখুন</td><td>বোর্ডের এক কোণে। পরে সংখ্যা বদলালে একটা জায়গা পাল্টালেই হবে — আর interviewer দেখবে আপনি শৃঙ্খলাবদ্ধ।</td></tr>
-<tr><td>একক লিখুন</td><td>"৫" নয়, "৫ MB"। একক গুলিয়ে ফেলা সবচেয়ে সাধারণ ভুল।</td></tr>
-<tr><td>চিন্তা জোরে বলুন</td><td>"পিক ধরছি ২ গুণ কারণ…" — প্রক্রিয়াই মূল্যায়ন হয়।</td></tr>
-<tr><td>হিসাবকে সিদ্ধান্তে বদলান</td><td>সংখ্যা বের করে থেমে যাবেন না — "অতএব sharding এখনই দরকার নেই / CDN দরকার" বলুন।</td></tr>
-<tr><td>Sanity check</td><td>ফল অবাস্তব লাগলে (ধরুন ১ টা সার্ভার ১০ লক্ষ QPS) ধরে নিন কোথাও শূন্য ভুল হয়েছে।</td></tr>
-</table>
-<p>প্রায়ই জিজ্ঞাসিত হিসাব: <b>QPS, Peak QPS, Storage, Cache size, Bandwidth, Server সংখ্যা</b>। প্রতিটার জন্য ২-৩টা নিজের উদাহরণ কষে অভ্যাস করুন — এটা অনুশীলনেই আসে।</p>
-
-<div class="callout mistake"><span class="tag">সাধারণ ভুল</span>
-(১) Peak ভুলে গিয়ে শুধু গড় QPS দিয়ে সার্ভার গোনা। (২) Replication ও backup-এর storage ধরতে ভুলে যাওয়া (৩ কপি = ৩ গুণ)। (৩) শুধু ডেটা ধরে index-এর জায়গা না ধরা (প্রায়ই ডেটার ২০-৫০%)। (৪) <b>অতি-নির্ভুলতা</b>: ৩,৪৭২.২২ QPS লেখা — ৩,৫০০ লিখুন।</div>
-
-<h3>২.৯ অনুশীলনী — নিজে করুন</h3>
+<h3>২.৮ অনুশীলনী</h3>
 <ol>
-<li>১ কোটি DAU-র একটা chat app; প্রতিজন দিনে ৪০টা মেসেজ পাঠায়, প্রতিটা ১০০ byte, ২ বছর রাখা হবে। QPS ও storage কত?</li>
-<li>URL shortener: দিনে ১০ কোটি নতুন URL; read:write = ১০:১; ১০ বছর। লেখা ও পড়ার QPS ও storage?</li>
-<li>একটা সিস্টেম তিনটা serial service-এ নির্ভর করে — ৯৯.৯৫%, ৯৯.৯%, ৯৯.৯%। মোট availability কত? বছরে কত মিনিট downtime?</li>
+<li>১ কোটি DAU chat app; দিনে ৪০ মেসেজ, প্রতিটা ১০০ byte, ২ বছর। QPS ও storage?</li>
+<li>URL shortener: দিনে ১০ কোটি নতুন URL; read:write = ১০:১; ১০ বছর। QPS ও storage?</li>
+<li>তিন serial service: ৯৯.৯৫%, ৯৯.৯%, ৯৯.৯%। মোট availability ও বার্ষিক downtime?</li>
 </ol>
 <details style="margin:12px 0"><summary style="cursor:pointer;color:var(--accent2)">উত্তর দেখুন</summary>
 <pre>
-১. ১০M × ৪০ = ৪০০M মেসেজ/দিন → ৪০০M ÷ ১০⁵ ≈ ৪,০০০ QPS (peak ≈ ৮,০০০)
-   storage = ৪০০M × ১০০ B = ৪০ GB/দিন → × ৩৬৫ × ২ ≈ ২৯ TB
-২. write = ১০⁸ ÷ ১০⁵ ≈ ১,০০০ QPS; read ≈ ১০,০০০ QPS
-   ১০ বছর = ১০⁸ × ৩৬৫ × ১০ = ৩.৬৫ × ১০¹¹ record; ৫০০ B/record ধরলে ≈ ১৮২ TB
-৩. ০.৯৯৯৫ × ০.৯৯৯ × ০.৯৯৯ ≈ ০.৯৯৭৫ = ৯৯.৭৫%
-   downtime ≈ ০.২৫% × ৫,২৫,৬০০ ≈ ১,৩০০ মিনিট ≈ ২২ ঘণ্টা/বছর
+১. ৪০০M মেসেজ/দিন → ≈ ৪,০০০ QPS (peak ≈ ৮,০০০); ৪০ GB/দিন → × ৩৬৫ × ২ ≈ ২৯ TB
+২. write ≈ ১,০০০ QPS; read ≈ ১০,০০০ QPS; ৩.৬৫ × ১০¹¹ record × ১০০ B ≈ ৩৬.৫ TB
+   (৫০০ B/record ধরলে ≈ ১৮২ TB)
+৩. ০.৯৯৯৫ × ০.৯৯৯ × ০.৯৯৯ ≈ ৯৯.৭৫% → ০.২৫% × ৫,২৫,৬০০ ≈ ১,৩০০ মিনিট ≈ ২২ ঘণ্টা/বছর
 </pre></details>
 
-<h3>২.১০ Interview প্রশ্নোত্তর</h3>
+<h3>২.৯ Interview প্রশ্নোত্তর</h3>
 <div class="card"><b>প্র১. Estimation-এ নিখুঁততা কেন চাওয়া হয় না?</b>
-<p>উদ্দেশ্য হলো <b>order of magnitude</b> বোঝা — ১০০ QPS নাকি ১,০০,০০০ QPS, কারণ দুটোর architecture সম্পূর্ণ আলাদা। ১০-২০% ভুলে সিদ্ধান্ত বদলায় না।</p></div>
-<div class="card"><b>প্র২. দৈনিক সংখ্যা থেকে দ্রুত QPS বের করার কৌশল?</b>
-<p>১ দিন ≈ ১০⁵ সেকেন্ড ধরে ভাগ। যেমন ১০ কোটি request/দিন ≈ ১,০০০ QPS। এরপর peak-এর জন্য ২-১০ গুণ।</p></div>
-<div class="card"><b>প্র৩. ৯৯.৯৯% SLA-র অর্থ কী? কীভাবে অর্জন করবেন?</b>
-<p>বছরে ~৫২ মিনিট downtime-র বেশি নয়। মানুষের হাতে manual recovery সম্ভব নয় — তাই redundancy (একাধিক AZ), auto-failover, health check, canary/blue-green deploy, ভালো monitoring ও on-call দরকার।</p></div>
-<div class="card"><b>প্র৪. হিসাব করে দেখলেন storage ৫ PB — এরপর কী?</b>
-<p>এটা প্রমাণ করে ডেটা সাধারণ DB-র জন্য নয়: object storage (S3/Blob), হট-কোল্ড tiering, compression, retention policy ও archival নিয়ে ভাবতে হবে। আর কত ডেটা সত্যিই রাখা দরকার সেই ব্যবসায়িক প্রশ্নও তোলা উচিত।</p></div>
+<p>উদ্দেশ্য <b>order of magnitude</b> — ১০০ QPS নাকি ১,০০,০০০ QPS, কারণ architecture সম্পূর্ণ আলাদা। ১০-২০% ভুলে সিদ্ধান্ত বদলায় না।</p></div>
+<div class="card"><b>প্র২. দৈনিক সংখ্যা থেকে দ্রুত QPS?</b>
+<p>১ দিন ≈ ১০⁵ সেকেন্ড ধরে ভাগ; যেমন ১০ কোটি/দিন ≈ ১,০০০ QPS। তারপর peak-এর জন্য ২–১০ গুণ।</p></div>
+<div class="card"><b>প্র৩. ৯৯.৯৯% SLA মানে কী, কীভাবে অর্জন?</b>
+<p>বছরে ~৫২ মিনিটের বেশি downtime নয়। Manual recovery সম্ভব নয় — একাধিক AZ, auto-failover, health check, canary/blue-green deploy, monitoring ও on-call লাগে।</p></div>
+<div class="card"><b>প্র৪. হিসাবে storage ৫ PB এলে?</b>
+<p>সাধারণ DB-র জন্য নয়: object storage, hot-cold tiering, compression, retention/archival। কত ডেটা সত্যিই রাখা দরকার সেই ব্যবসায়িক প্রশ্নও তুলুন।</p></div>
 <div class="card"><b>প্র৫. Latency সংখ্যা কেন জানা দরকার?</b>
-<p>এগুলো design-এর "বাস্তবতা-যাচাই": যেমন একটা request-এ ১০টা cross-region call = ১.৫ সেকেন্ড, তাই design ভুল; আবার cache hit (~১ ms-এর কম) ও DB query (~১০+ ms) পার্থক্য cache-এর উপযোগিতা প্রমাণ করে।</p></div>
+<p>এগুলো design-এর বাস্তবতা-যাচাই: cross-region call-এর যোগফল, cache hit বনাম DB query — দেখে বোঝা যায় কোন design টিকবে।</p></div>
 </template>
 
 <template data-page="framework">
 <h2 class="title">৩. System Design Interview-এর Framework — ৪ ধাপের কৌশল</h2>
-<p class="lead">"Design YouTube" — এক লাইনের প্রশ্ন, যেটা বানাতে হাজার হাজার প্রকৌশলীর বছর লেগেছে। ৪৫ মিনিটে কেউ তা আশা করে না। তাহলে interview-র উদ্দেশ্য কী? এই অধ্যায়ে সেটা বুঝব, আর একটা পুনরাবৃত্তিযোগ্য <b>৪ ধাপের কাঠামো</b> শিখব যা বাকি সব অধ্যায়ে আমরা ব্যবহার করব।</p>
+<p class="lead">"Design YouTube" — ৪৫ মিনিটে কেউ পুরো সিস্টেম আশা করে না। Interview আসলে দুজন সহকর্মীর একটা অস্পষ্ট সমস্যা একসাথে সমাধানের সিমুলেশন: চূড়ান্ত design-এর চেয়ে <b>প্রক্রিয়া</b> বেশি গুরুত্বপূর্ণ। এই অধ্যায়ের ৪ ধাপের কাঠামো বাকি সব অধ্যায়ে ব্যবহার হবে।</p>
 
 <div class="callout why"><span class="tag">কেন এই অধ্যায়</span>
-ভালো প্রযুক্তিজ্ঞান থাকার পরও অনেকে fail করেন — কারণ তারা কাঠামোহীনভাবে ঝাঁপিয়ে পড়েন, বা এক জায়গায় আটকে সময় শেষ করেন। Framework আপনার <b>নির্ভরযোগ্য মানচিত্র</b>: চাপে মাথা গুলিয়ে গেলেও আপনি জানেন এখন কোন ধাপে আছেন ও পরেরটা কী।</div>
+Framework চাপের মধ্যে আপনার মানচিত্র — গুলিয়ে গেলেও জানেন এখন কোন ধাপে আছেন ও পরেরটা কী।</div>
 
-<h3>৩.১ Interview আসলে কী যাচাই করে?</h3>
-<p>এটা কুইজ নয়, <b>দুজন সহকর্মীর একটা অস্পষ্ট সমস্যা নিয়ে একসাথে সমাধান খোঁজার সিমুলেশন</b>। কোনো একক "সঠিক উত্তর" নেই; চূড়ান্ত design-এর চেয়ে <b>প্রক্রিয়া</b> বেশি গুরুত্বপূর্ণ। Interviewer সাধারণত এই সংকেতগুলো খোঁজেন:</p>
+<h3>৩.১ Interviewer কী যাচাই করেন</h3>
 <table>
-<tr><th>দক্ষতা</th><th>তিনি যা দেখেন</th></tr>
-<tr><td>Requirement-এর অস্পষ্টতা মোকাবিলা</td><td>প্রশ্ন করেন কি? ধারণা (assumption) স্পষ্ট করেন কি?</td></tr>
-<tr><td>Technical design</td><td>সঠিক building block বাছেন? trade-off বোঝেন?</td></tr>
-<tr><td>Communication</td><td>চিন্তা জোরে বলেন? পরিষ্কারভাবে বোঝান?</td></tr>
-<tr><td>Collaboration</td><td>Feedback নেন? নাকি একাই বলে যান?</td></tr>
-<tr><td>Prioritization</td><td>সবচেয়ে গুরুত্বপূর্ণ অংশটা আগে ধরেন?</td></tr>
-<tr><td>চাপের মধ্যে আচরণ</td><td>আটকে গেলে হাল ছাড়েন, নাকি সাহায্য চান ও এগোন?</td></tr>
+<tr><th>দক্ষতা</th><th>সংকেত</th></tr>
+<tr><td>অস্পষ্টতা সামলানো</td><td>প্রশ্ন করেন কি? assumption স্পষ্ট করেন কি?</td></tr>
+<tr><td>Technical design</td><td>সঠিক building block ও trade-off বোঝেন কি?</td></tr>
+<tr><td>Communication ও collaboration</td><td>চিন্তা জোরে বলেন, feedback নেন, নাকি একাই বলে যান?</td></tr>
+<tr><td>Prioritization</td><td>গুরুত্বপূর্ণ অংশ আগে ধরেন কি?</td></tr>
 </table>
-<h4>যা দেখলে interviewer-রা লাল পতাকা (red flag) তোলেন</h4>
-<ul>
-<li><b>Over-engineering:</b> ৫০০ ব্যবহারকারীর সিস্টেমে Kafka + Kubernetes + ৫টা microservice। Design-এর "সৌন্দর্য" দেখাতে গিয়ে খরচ ও জটিলতা ভুলে যাওয়া — বাস্তবে অনেক কোম্পানি এর চড়া মূল্য দেয়।</li>
-<li><b>একগুঁয়েমি / সংকীর্ণ মন:</b> একটা সমাধানে অন্ধভাবে লেগে থাকা, feedback-এ প্রতিরক্ষামূলক হয়ে যাওয়া।</li>
-<li><b>না জেনে লাফ দেওয়া:</b> প্রশ্ন না করে সোজা সমাধানে ঢোকা।</li>
-</ul>
+<div class="callout mistake"><span class="tag">Red Flag</span>
+<b>Over-engineering</b> (৫০০ ব্যবহারকারীর জন্য Kafka + Kubernetes), <b>একগুঁয়েমি</b> (feedback-এ প্রতিরক্ষামূলক), আর <b>না ভেবে লাফ দেওয়া</b> — ক্লাসের "জিমি"-র মতো প্রশ্ন শেষ হতে না হতে উত্তর দেওয়া। দ্রুত উত্তরে কোনো বোনাস নেই; না-বুঝে উত্তর মানে ভুল সিস্টেম।</div>
 
-<h3>৩.২ চারটা ধাপ ও সময়ের ভাগ (৪৫ মিনিটের জন্য মোটামুটি)</h3>
+<h3>৩.২ চার ধাপ ও সময়ের ভাগ (৪৫ মিনিট)</h3>
 <div class="diagram"><pre>
- ┌──────────────────────────────────────────────────────────────────┐
- │ ধাপ ১: সমস্যা বোঝা ও Scope ঠিক করা                    ৩–১০ মিনিট │
- ├──────────────────────────────────────────────────────────────────┤
- │ ধাপ ২: High-level design ও Interviewer-এর সম্মতি       ১০–১৫ মিনিট│
- ├──────────────────────────────────────────────────────────────────┤
- │ ধাপ ৩: Deep dive (গুরুত্বপূর্ণ component-গুলো)          ১০–২৫ মিনিট│
- ├──────────────────────────────────────────────────────────────────┤
- │ ধাপ ৪: Wrap-up (bottleneck, recap, ভবিষ্যৎ)             ৩–৫ মিনিট │
- └──────────────────────────────────────────────────────────────────┘
- সময় প্রশ্ন ও interviewer-এর আগ্রহ অনুযায়ী নমনীয়; পরিধি যত বড়, ধাপ ২-৩ তত বেশি সময় পায়।
+ ধাপ ১: সমস্যা বোঝা ও Scope ঠিক করা                ৩–১০ মিনিট
+ ধাপ ২: High-level design ও interviewer-এর সম্মতি   ১০–১৫ মিনিট
+ ধাপ ৩: Deep dive (গুরুত্বপূর্ণ component)            ১০–২৫ মিনিট
+ ধাপ ৪: Wrap-up (bottleneck, recap, ভবিষ্যৎ)          ৩–৫ মিনিট
 </pre></div>
 
-<h3>৩.৩ ধাপ ১ — সমস্যা বুঝুন ও Design Scope ঠিক করুন</h3>
-<div class="callout mistake"><span class="tag">"জিমি" হবেন না</span>
-ক্লাসে যে ছাত্রটা শিক্ষকের প্রশ্ন শেষ হতে না হতেই হাত তুলে উত্তর দেয় — প্রশ্ন বুঝুক বা না বুঝুক। System design interview-তে জিমি হওয়া সবচেয়ে বড় লাল পতাকা। এখানে দ্রুত উত্তরে কোনো পুরস্কার নেই; <b>না-বুঝে দেওয়া উত্তর = ভুল সিস্টেম ডিজাইন।</b></div>
-<p>থামুন, ভাবুন, প্রশ্ন করুন। Interviewer হয় সরাসরি উত্তর দেবেন, নয়তো বলবেন "তুমি ধরে নাও" — তখন ধারণাটা <b>বোর্ডে লিখে রাখুন</b>।</p>
-
-<h4>কোন ধরনের প্রশ্ন করবেন — চেকলিস্ট</h4>
+<h3>৩.৩ ধাপ ১ — সমস্যা বুঝুন ও Scope ঠিক করুন</h3>
+<p>থামুন, প্রশ্ন করুন, assumption বোর্ডে লিখুন। প্রশ্নের চেকলিস্ট:</p>
 <table>
-<tr><th>বিভাগ</th><th>প্রশ্নের নমুনা</th></tr>
-<tr><td>Feature / Scope</td><td>ঠিক কোন কোন ফিচার বানাব? কোনটা বাদ? (MVP কী?)</td></tr>
-<tr><td>Users ও Scale</td><td>কত ব্যবহারকারী (MAU/DAU)? ৩/৬/১২ মাসে কত বাড়বে? read বেশি না write?</td></tr>
-<tr><td>Clients</td><td>Web, mobile, নাকি দুটোই? Third-party API দরকার?</td></tr>
-<tr><td>Non-functional</td><td>Latency কত চাই? Availability (৯৯.৯%?)? Consistency নাকি availability বেশি জরুরি? Durability?</td></tr>
-<tr><td>Constraint</td><td>বিদ্যমান tech stack কী? কোন সেবা কাজে লাগানো যাবে? Budget/টিম সাইজ?</td></tr>
-<tr><td>Data</td><td>ডেটার ধরন (text/media)? কতদিন রাখব? কোনো regulation (GDPR, ব্যাংকিং)?</td></tr>
+<tr><th>বিভাগ</th><th>নমুনা প্রশ্ন</th></tr>
+<tr><td>Feature</td><td>ঠিক কোন কোন ফিচার? MVP কী? কী বাদ?</td></tr>
+<tr><td>Scale</td><td>MAU/DAU কত? ৩/৬/১২ মাসে কত বাড়বে? read বেশি না write?</td></tr>
+<tr><td>Client</td><td>Web, mobile, নাকি দুটোই?</td></tr>
+<tr><td>Non-functional</td><td>Latency, availability, consistency নাকি availability বেশি জরুরি?</td></tr>
+<tr><td>Constraint</td><td>বিদ্যমান tech stack, কাজে লাগানো যায় এমন সেবা, regulation</td></tr>
 </table>
-
-<h4>উদাহরণ — "News Feed ডিজাইন করুন"</h4>
 <div class="card">
-<p><b>Candidate:</b> Mobile app নাকি web? নাকি দুটোই?<br>
-<b>Interviewer:</b> দুটোই।<br>
-<b>Candidate:</b> সবচেয়ে গুরুত্বপূর্ণ ফিচার কী?<br>
-<b>Interviewer:</b> পোস্ট করা এবং বন্ধুদের feed দেখা।<br>
-<b>Candidate:</b> Feed কি সময়ের উল্টো ক্রমে (reverse chronological) নাকি কোনো ranking-এ? (ranking মানে ঘনিষ্ঠ বন্ধুর পোস্ট বেশি গুরুত্ব পাবে।)<br>
-<b>Interviewer:</b> সরলতার জন্য reverse chronological ধরো।<br>
-<b>Candidate:</b> একজনের সর্বোচ্চ কত বন্ধু?<br>
-<b>Interviewer:</b> ৫,০০০।<br>
-<b>Candidate:</b> Traffic কেমন?<br>
-<b>Interviewer:</b> ১ কোটি DAU।<br>
-<b>Candidate:</b> Feed-এ ছবি/ভিডিও থাকবে?<br>
-<b>Interviewer:</b> হ্যাঁ, দুটোই।</p></div>
-<p>এই ৬টা প্রশ্নেই ডিজাইনের গতিপথ বদলে গেল — ranking বাদ পড়ল (জটিলতা কমল), media যোগ হলো (CDN/object storage দরকার), বন্ধু সংখ্যা ৫০০০ (fan-out সমস্যা আসবে)।</p>
-<div class="callout best"><span class="tag">ধাপ ১ শেষে আপনার হাতে থাকা উচিত</span>
-(১) Functional requirement-এর ছোট তালিকা; (২) Non-functional requirement (scale, latency, availability, consistency); (৩) লিখে রাখা assumption; (৪) <b>কী বাদ</b> সেটাও — "out of scope: ranking, ads, search।"</div>
+<p><b>উদাহরণ — "News Feed ডিজাইন করুন":</b><br>
+<b>Candidate:</b> Mobile, web, নাকি দুটোই? — <b>Interviewer:</b> দুটোই।<br>
+<b>Candidate:</b> মূল ফিচার? — <b>Interviewer:</b> পোস্ট করা ও বন্ধুদের feed দেখা।<br>
+<b>Candidate:</b> Feed কি reverse chronological নাকি ranked? — <b>Interviewer:</b> সরলতার জন্য reverse chronological।<br>
+<b>Candidate:</b> সর্বোচ্চ বন্ধু? Traffic? — <b>Interviewer:</b> ৫,০০০ বন্ধু; ১ কোটি DAU।<br>
+<b>Candidate:</b> Media থাকবে? — <b>Interviewer:</b> ছবি ও ভিডিও দুটোই।</p></div>
+<p>ছয়টা প্রশ্নে design বদলে গেল: ranking বাদ (সরল), media যোগ (CDN/object storage), ৫,০০০ বন্ধু (fan-out সমস্যা)।</p>
+<div class="callout best"><span class="tag">ধাপ ১ শেষে হাতে থাকবে</span>
+Functional ও non-functional requirement, লিখে রাখা assumption, আর <b>out of scope</b> তালিকা ("ranking, ads, search নয়")।</div>
 
 <h3>৩.৪ ধাপ ২ — High-Level Design ও সম্মতি</h3>
-<p>এই ধাপের লক্ষ্য: একটা <b>প্রাথমিক নকশা</b> দাঁড় করানো এবং interviewer-কে সঙ্গে নেওয়া। তাঁকে সহকর্মী ভাবুন — অনেক ভালো interviewer কথা বলতে ও জড়িত হতে ভালোবাসেন।</p>
 <ul>
-<li><b>বোর্ডে বক্স-ডায়াগ্রাম আঁকুন:</b> client (mobile/web), API gateway, web server, database, cache, CDN, message queue, object storage।</li>
-<li><b>প্রস্তাব দিয়ে সঙ্গে সঙ্গে feedback চান:</b> "এই কাঠামো ঠিক দিকে যাচ্ছে? কোন অংশে আগে ঢুকব?"</li>
-<li><b>Back-of-the-envelope</b> করুন (অধ্যায় ২) — তবে আগে জিজ্ঞেস করুন "এখনই হিসাব করব, নাকি পরে?"। এতে design scale-এর সঙ্গে খাপ খায় কিনা যাচাই হয়।</li>
-<li><b>কিছু concrete use case হাঁটুন:</b> "ব্যবহারকারী পোস্ট করলে ডেটা কোথায় যায়? বন্ধু feed খুললে কী ঘটে?" — এতে আপনার না-ভাবা edge case বেরিয়ে আসে।</li>
-<li><b>API ও DB schema কি এখনই?</b> সমস্যার ধরনের উপর নির্ভর: "Design Google Search" — এখন schema খুব নিচু স্তর। "মাল্টিপ্লেয়ার পোকারের backend" — schema/API এখনই আলোচ্য। জিজ্ঞেস করে নিন।</li>
+<li>বক্স-ডায়াগ্রাম আঁকুন: client, API gateway, web server, DB, cache, CDN, queue, object storage।</li>
+<li>Interviewer-কে teammate ভাবুন — প্রস্তাব দিয়েই feedback চান।</li>
+<li>Back-of-the-envelope করুন (অধ্যায় ২) — আগে জিজ্ঞেস করুন এখনই করবেন কিনা।</li>
+<li>কয়েকটা concrete use case হাঁটুন; edge case বেরিয়ে আসে।</li>
+<li>API/schema এখনই কি না — সমস্যার ধরন দেখে: "Google Search" এ নিচু স্তর, "পোকার backend"-এ জরুরি।</li>
 </ul>
-<h4>উদাহরণ — News Feed-এর high-level (দুটো প্রবাহ)</h4>
 <div class="diagram"><pre>
- প্রবাহ ১: Feed Publishing (পোস্ট করা)
-   User ─► Load Balancer ─► Web Server ─► Post Service ─► [Post DB + Cache]
-                                     └──► Fanout Service ─► বন্ধুদের feed cache-এ পোস্ট ঢোকাও
-                                     └──► Notification Service
-
- প্রবাহ ২: News Feed Building (feed দেখা)
-   User ─► Load Balancer ─► Web Server ─► News Feed Service ─► [Feed Cache] ─► (post, user ডেটা জুড়ে) ─► ফেরত
+ Publishing:  User ─► LB ─► Web Server ─► Post Service ─► [Post DB + Cache]
+                                     └─► Fanout Service ─► বন্ধুদের feed cache
+ Retrieval:   User ─► LB ─► Web Server ─► News Feed Service ─► [Feed Cache] ─► ফেরত
 </pre></div>
-<p>লক্ষ্য করুন: এখানে আমরা <b>কীভাবে</b> fan-out কাজ করে তা ব্যাখ্যা করছি না — শুধু বলছি দুটো প্রবাহ আছে। বিস্তারিত পরের ধাপে, এবং ১১ নং অধ্যায়ে।</p>
 
-<h3>৩.৫ ধাপ ৩ — Design Deep Dive</h3>
-<p>এখন আপনারা দুজনেই একমত: scope ঠিক, high-level খসড়া তৈরি, feedback পাওয়া গেছে। এবার <b>কোন component-এ গভীরে যাবেন</b> তা interviewer-এর সঙ্গে ঠিক করুন — প্রতিটা interview আলাদা:</p>
-<table>
-<tr><th>Interviewer-এর আগ্রহ</th><th>তখন কী করবেন</th></tr>
-<tr><td>High-level-এই থাকতে চান</td><td>আরও use case ও ট্রেড-অফ আলোচনা, গভীরে ঢোকার জোর নয়</td></tr>
-<tr><td>Senior পদ — performance</td><td>Bottleneck, resource estimation, latency ভাঙা</td></tr>
-<tr><td>URL shortener</td><td>Hash/ID তৈরির ফাংশন ও collision</td></tr>
-<tr><td>Chat system</td><td>Latency কমানো, online/offline presence, message ordering</td></tr>
-<tr><td>Rate limiter</td><td>Algorithm বাছাই, distributed race condition</td></tr>
-</table>
+<h3>৩.৫ ধাপ ৩ — Deep Dive</h3>
+<p>কোথায় গভীরে যাবেন তা interviewer-এর সাথে ঠিক করুন: URL shortener-এ ID তৈরি, chat-এ latency ও presence, rate limiter-এ algorithm ও race condition। সবচেয়ে ঝুঁকিপূর্ণ ও scale-সংবেদনশীল অংশ আগে (celebrity fan-out, seat double-booking)। প্রতিটা সিদ্ধান্তে <b>বিকল্প ও trade-off</b> বলুন — এটাই senior সংকেত।</p>
 <div class="callout mistake"><span class="tag">সময় ব্যবস্থাপনা</span>
-ছোট খুঁটিনাটিতে ডুবে যাওয়া সহজ। উদাহরণ: News Feed-এ Facebook-এর EdgeRank ranking অ্যালগরিদম নিয়ে ১০ মিনিট বলা — চমকপ্রদ, কিন্তু আপনি <b>scalable সিস্টেম ডিজাইন করতে পারেন</b> তার প্রমাণ নয়। নিজেকে জিজ্ঞেস করুন: "এই আলোচনা আমার কোন দক্ষতার সংকেত দিচ্ছে?"</div>
-<div class="callout best"><span class="tag">Deep dive-এর কৌশল</span>
-সবচেয়ে ঝুঁকিপূর্ণ বা স্কেল-সংবেদনশীল অংশ আগে ধরুন (যেমন <b>celebrity-র fan-out</b>, <b>seat double-booking</b>)। প্রতিটা সিদ্ধান্তে <b>বিকল্প ও ট্রেড-অফ</b> বলুন: "Push model দ্রুত read দেয় কিন্তু celebrity-র জন্য ব্যয়বহুল; তাই hybrid নেব।" Trade-off বলতে পারাই senior সংকেত।</div>
+ছোট খুঁটিনাটিতে ডুববেন না (যেমন Facebook EdgeRank ১০ মিনিট ধরে)। নিজেকে জিজ্ঞেস করুন: এই আলোচনা আমার কোন দক্ষতার প্রমাণ দিচ্ছে?</div>
 
 <h3>৩.৬ ধাপ ৪ — Wrap Up</h3>
-<p>শেষ কয়েক মিনিটে interviewer follow-up করবেন, নয়তো আপনাকে স্বাধীনভাবে বলতে দেবেন। কাজে লাগার দিকগুলো:</p>
 <ul>
-<li><b>Bottleneck ও উন্নতি:</b> কখনো বলবেন না "আমার design নিখুঁত"। সবসময় কিছু উন্নতির জায়গা থাকে — এটা সমালোচনামূলক চিন্তার সুযোগ।</li>
-<li><b>সংক্ষিপ্ত recap:</b> বিশেষত যদি একাধিক বিকল্প আলোচনা করে থাকেন — দীর্ঘ সেশনের পর interviewer-এর স্মৃতি তাজা করে।</li>
-<li><b>Error case:</b> সার্ভার crash, নেটওয়ার্ক ছিন্ন, partial failure, retry-তে duplicate।</li>
-<li><b>Operations:</b> Metrics, error log কীভাবে মনিটর করবেন? কীভাবে rollout (canary/blue-green)?</li>
-<li><b>পরবর্তী scale:</b> আজ ১০ লাখ চললে ১ কোটিতে কী বদলাবে?</li>
-<li><b>আরও সময় থাকলে:</b> কী কী পরিমার্জন করতাম (security, privacy, cost, কম-জরুরি ফিচার)।</li>
+<li><b>Bottleneck ও উন্নতি:</b> "আমার design নিখুঁত" কখনো বলবেন না।</li>
+<li><b>Recap:</b> বিশেষত একাধিক বিকল্প আলোচনা করলে।</li>
+<li><b>Error case:</b> server crash, network ছিন্ন, retry-তে duplicate।</li>
+<li><b>Operations:</b> metrics, log, rollout (canary/blue-green)।</li>
+<li><b>পরবর্তী scale:</b> ১০ লাখ থেকে ১ কোটিতে কী বদলাবে?</li>
 </ul>
 
 <h3>৩.৭ Do ও Don't</h3>
 <div class="grid2">
 <div class="box"><b>✅ Do</b>
 <ul>
-<li>সবসময় স্পষ্টীকরণ চান — নিজের assumption-কে সত্য ধরে নেবেন না।</li>
-<li>Requirement পুরো বুঝুন।</li>
-<li>মনে রাখুন: "সেরা" উত্তর নেই — স্টার্টআপের design আর লক্ষ কোটি ব্যবহারকারীর design আলাদা।</li>
-<li>ভাবনা জোরে বলুন।</li>
-<li>সম্ভব হলে একাধিক পদ্ধতি প্রস্তাব করুন।</li>
-<li>Blueprint-এ একমত হলে সবচেয়ে গুরুত্বপূর্ণ component আগে গভীরে যান।</li>
-<li>Interviewer-কে teammate ভাবুন; ধারণা যাচাই করুন।</li>
-<li>কখনো হাল ছাড়বেন না।</li>
+<li>সবসময় স্পষ্টীকরণ চান।</li>
+<li>চিন্তা জোরে বলুন; সম্ভব হলে একাধিক পদ্ধতি দিন।</li>
+<li>গুরুত্বপূর্ণ component আগে গভীরে যান।</li>
+<li>Feedback বারবার চান; হাল ছাড়বেন না।</li>
 </ul></div>
 <div class="box"><b>❌ Don't</b>
 <ul>
-<li>প্রচলিত প্রশ্নের জন্য অপ্রস্তুত থাকবেন না।</li>
 <li>Requirement না বুঝে সমাধানে ঝাঁপ দেবেন না।</li>
-<li>শুরুতেই একটা component-এর অতি-গভীরে যাবেন না — আগে high-level, পরে drill down।</li>
-<li>আটকে গেলে hint চাইতে লজ্জা পাবেন না।</li>
-<li>নীরবে চিন্তা করবেন না।</li>
-<li>Design বলে ফেললেই ভাববেন না শেষ — interviewer "শেষ" না বলা পর্যন্ত নয়। Feedback বারবার চান।</li>
+<li>শুরুতেই একটা component-এর অতি-গভীরে যাবেন না।</li>
+<li>নীরবে ভাববেন না; আটকে গেলে hint চান।</li>
+<li>Interviewer "শেষ" না বলা পর্যন্ত ভাববেন না শেষ।</li>
 </ul></div>
 </div>
 
-<h3>৩.৮ একটা পূর্ণ নমুনা — ৪৫ মিনিটের "Design a Notification System" রূপরেখা</h3>
+<h3>৩.৮ নমুনা — ৪৫ মিনিটে "Notification System"</h3>
 <table>
-<tr><th>সময়</th><th>কী বলছেন/আঁকছেন</th></tr>
-<tr><td>০–৫</td><td>প্রশ্ন: কোন channel (push/SMS/email)? Real-time নাকি scheduled? কত notification/দিন? Opt-out দরকার? → লিখে রাখলাম: ১ কোটি/দিন, তিন channel, soft real-time, opt-out আছে।</td></tr>
-<tr><td>৫–১৫</td><td>High-level: Services → Notification Service → Queue (channel-ভিত্তিক) → Workers → তৃতীয় পক্ষ (FCM, APNs, SMS gateway)। Rough হিসাব: ১ কোটি ÷ ৮৬,৪০০ ≈ ১২০ QPS, peak ১,০০০ — queue দরকার spike শুষতে।</td></tr>
-<tr><td>১৫–৩৫</td><td>Deep dive: reliability (retry + dead-letter, <b>idempotency</b> যাতে ডুপ্লিকেট না যায়), rate limiting প্রতি-ব্যবহারকারী, template, user preference, analytics।</td></tr>
-<tr><td>৩৫–৪৫</td><td>Wrap: bottleneck (তৃতীয় পক্ষের throttle), কোনো provider ডাউন হলে fallback, monitoring (delivery rate, latency), ১০ গুণ scale-এ কী বদলাবে।</td></tr>
+<tr><th>সময়</th><th>কী করছেন</th></tr>
+<tr><td>০–৫</td><td>প্রশ্ন: কোন channel (push/SMS/email)? real-time? কত notification/দিন? opt-out? → ধরলাম ১ কোটি/দিন, তিন channel।</td></tr>
+<tr><td>৫–১৫</td><td>High-level: services → Notification Service → channel-ভিত্তিক queue → workers → FCM/APNs/SMS gateway। ১ কোটি ÷ ৮৬,৪০০ ≈ ১২০ QPS, peak ≈ ১,০০০ — queue spike শুষবে।</td></tr>
+<tr><td>১৫–৩৫</td><td>Deep dive: retry + dead-letter, <b>idempotency</b> (duplicate রোধ), per-user rate limit, template, preference।</td></tr>
+<tr><td>৩৫–৪৫</td><td>Wrap: তৃতীয় পক্ষের throttle, provider ডাউনে fallback, delivery-rate monitoring, ১০ গুণ scale।</td></tr>
 </table>
 
-<h3>৩.৯ অনুশীলনের পরামর্শ</h3>
-<ol>
-<li><b>সময় ধরে মহড়া করুন</b> — ফোনে টাইমার দিয়ে একটা প্রশ্ন (৪৫ মিনিট), ধাপগুলো মেনে।</li>
-<li><b>জোরে বলুন</b> — নিজেকে রেকর্ড করুন; শুনে দেখুন কোথায় চুপ করে গিয়েছিলেন।</li>
-<li><b>Mock interview</b> করুন সহকর্মীর সঙ্গে; feedback নিন।</li>
-<li>প্রতিটা অধ্যায়ের শেষে নিজেকে জিজ্ঞেস করুন: <i>"পরের বার এই ধরনের প্রশ্ন এলে ধাপ ১-এ কী কী প্রশ্ন করব?"</i></li>
-<li>বাস্তব সিস্টেমের blog পড়ুন (Netflix, Uber, Stripe Engineering) — নিজের design-এর সঙ্গে তুলনা করুন।</li>
-</ol>
-
-<h3>৩.১০ Interview প্রশ্নোত্তর</h3>
-<div class="card"><b>প্র১. System design interview-তে প্রথম কী করবেন?</b>
-<p>সমাধানে যাবেন না। প্রথম ৩-১০ মিনিট প্রশ্ন করে scope, scale ও non-functional requirement পরিষ্কার করুন, assumption লিখে রাখুন, কী <b>বাদ</b> তাও ঠিক করুন।</p></div>
-<div class="card"><b>প্র২. Interviewer কোনো প্রশ্নের উত্তর না দিয়ে বললেন "তুমি ধরে নাও" — তখন?</b>
-<p>যুক্তিসঙ্গত ও রক্ষণশীল একটা মান ধরুন, বোর্ডে লিখুন, এবং জানান "প্রয়োজনে পরে সামঞ্জস্য করব।" ধারণা-তৈরির ক্ষমতাও মূল্যায়নের অংশ।</p></div>
-<div class="card"><b>প্র৩. মাঝপথে বুঝলেন প্রথম design-এ ভুল ছিল — কী করবেন?</b>
-<p>সরাসরি স্বীকার করে সংশোধন করুন: "এখানে আমার ধারণা ভুল ছিল কারণ…, তাই বদলাচ্ছি।" একগুঁয়েমি সবচেয়ে খারাপ; নমনীয়তা ও শেখার ক্ষমতা ইতিবাচক সংকেত।</p></div>
-<div class="card"><b>প্র৪. কোন component-এ deep dive করবেন তা কীভাবে বাছবেন?</b>
-<p>তিনটা মানদণ্ড: (ক) interviewer-এর ইঙ্গিত, (খ) যেটা scale/correctness-এ সবচেয়ে ঝুঁকিপূর্ণ (hotspot, consistency), (গ) সমস্যাটার "চরিত্র-নির্ধারক" অংশ (URL shortener-এ ID generation, chat-এ delivery)। তারপর জিজ্ঞেস করুন "এখান থেকে শুরু করি?"</p></div>
-<div class="card"><b>প্র৫. "এই design কীভাবে ১০ গুণ বড় হবে?" — কী বলবেন?</b>
-<p>প্রথমে bottleneck চিহ্নিত করুন (যেমন DB write), তারপর ক্রমে: cache বাড়ানো, read replica, sharding, async/queue, CDN, multi-region। প্রতিটার <b>খরচ ও জটিলতা</b> উল্লেখ করুন; এবং পরিমাপ-ভিত্তিক সিদ্ধান্তের কথা বলুন।</p></div>
-<div class="card"><b>প্র৬. Over-engineering এড়ানোর ব্যবহারিক নিয়ম কী?</b>
-<p>প্রতিটা component বসানোর আগে নিজেকে জিজ্ঞেস করুন: "এটা কোন নির্দিষ্ট requirement বা হিসাব-করা bottleneck সমাধান করছে?" উত্তর না থাকলে বসাবেন না। সরল দিয়ে শুরু করে প্রয়োজনে বাড়ানোই সঠিক পথ।</p></div>
+<h3>৩.৯ Interview প্রশ্নোত্তর</h3>
+<div class="card"><b>প্র১. প্রথমে কী করবেন?</b>
+<p>সমাধানে যাবেন না। ৩–১০ মিনিট প্রশ্ন করে scope, scale, non-functional requirement পরিষ্কার করুন, assumption লিখুন, কী <b>বাদ</b> তা ঠিক করুন।</p></div>
+<div class="card"><b>প্র২. Interviewer বললেন "তুমি ধরে নাও" — তখন?</b>
+<p>যুক্তিসঙ্গত রক্ষণশীল মান ধরুন, বোর্ডে লিখুন, বলুন "প্রয়োজনে পরে বদলাব।" ধারণা-তৈরির ক্ষমতাও মূল্যায়নের অংশ।</p></div>
+<div class="card"><b>প্র৩. মাঝপথে নিজের ভুল বুঝলে?</b>
+<p>সরাসরি স্বীকার করে সংশোধন করুন: "এখানে ধারণা ভুল ছিল কারণ…, তাই বদলাচ্ছি।" একগুঁয়েমি সবচেয়ে খারাপ।</p></div>
+<div class="card"><b>প্র৪. কোন component-এ deep dive করবেন?</b>
+<p>(ক) interviewer-এর ইঙ্গিত, (খ) scale/correctness-এ সবচেয়ে ঝুঁকিপূর্ণ অংশ, (গ) সমস্যার চরিত্র-নির্ধারক অংশ। তারপর জিজ্ঞেস করুন "এখান থেকে শুরু করি?"</p></div>
+<div class="card"><b>প্র৫. Over-engineering কীভাবে এড়াবেন?</b>
+<p>প্রতিটা component বসানোর আগে জিজ্ঞেস করুন: এটা কোন নির্দিষ্ট requirement বা হিসাব-করা bottleneck সমাধান করছে? উত্তর না থাকলে বসাবেন না; সরল দিয়ে শুরু করে প্রয়োজনে বাড়ান।</p></div>
 </template>
 
 <template data-page="ratelimiter">
 <h2 class="title">৪. Design a Rate Limiter</h2>
-<p class="lead"><b>Rate Limiter</b> নিয়ন্ত্রণ করে একজন client বা সার্ভিস নির্দিষ্ট সময়ে কতগুলো request পাঠাতে পারবে। সীমা পেরোলে বাড়তি request আটকে দেওয়া হয়। এটা framework (অধ্যায় ৩)-এর প্রথম পূর্ণ প্রয়োগ: আমরা ৪ ধাপ মেনে প্রশ্ন করব, high-level আঁকব, deep dive করব, ও wrap-up করব — সাথে C# ও Redis-এ চলনসই কোড।</p>
+<p class="lead"><b>Rate Limiter</b> নিয়ন্ত্রণ করে একজন client নির্দিষ্ট সময়ে কতগুলো request পাঠাতে পারবে; সীমা পেরোলে বাড়তি request আটকে দেওয়া হয়। এটা অধ্যায় ৩-এর ৪ ধাপের প্রথম পূর্ণ প্রয়োগ।</p>
 
 <div class="callout why"><span class="tag">কেন এই অধ্যায়</span>
-Rate limiter ছোট সিস্টেম কিন্তু interview-র দারুণ প্রশ্ন, কারণ একসাথে ধরা পড়ে: algorithm-বাছাই, distributed state, race condition, failure handling ও trade-off। আর বাস্তবে আপনার প্রতিটা public API-তে এটা লাগবেই — login brute-force, SMS/OTP বোমাবাজি, তৃতীয় পক্ষের paid API-র খরচ — সবখানে।</div>
+ছোট সিস্টেম, কিন্তু একসাথে ধরা পড়ে: algorithm বাছাই, distributed state, race condition, failure handling ও trade-off। বাস্তবেও login brute-force, OTP/SMS বোমাবাজি, paid তৃতীয় পক্ষ API-র খরচ — সবখানে লাগে।</div>
 
 <h3>৪.১ কেন Rate Limit?</h3>
 <table>
-<tr><th>কারণ</th><th>ব্যাখ্যা</th><th>ERP/Payment প্রেক্ষাপট</th></tr>
-<tr><td>DoS / অপব্যবহার ঠেকানো</td><td>ইচ্ছাকৃত বা অনিচ্ছাকৃত (বাগযুক্ত client লুপে request পাঠাচ্ছে) অতিরিক্ত call আটকে resource starvation রোধ</td><td>Login endpoint-এ password-guessing বন্ধ</td></tr>
-<tr><td>খরচ কমানো</td><td>কম অপ্রয়োজনীয় request = কম সার্ভার; উচ্চ-অগ্রাধিকার API-তে বেশি resource</td><td>Per-call বিল হয় এমন বাইরের API (credit check, SMS gateway, payment verify)</td></tr>
-<tr><td>সার্ভার ওভারলোড রোধ</td><td>Bot ও ভুল-আচরণকারী ব্যবহারকারীর বাড়তি traffic ছেঁকে ফেলা</td><td>রিপোর্ট export-এর মতো ভারী endpoint</td></tr>
-<tr><td>ন্যায্যতা (Fairness)</td><td>একজন tenant যেন সবার resource না খায় (noisy neighbor)</td><td>Multi-tenant SaaS ERP</td></tr>
+<tr><th>কারণ</th><th>ERP/Payment উদাহরণ</th></tr>
+<tr><td>DoS ও অপব্যবহার ঠেকানো</td><td>Login endpoint-এ password-guessing বন্ধ</td></tr>
+<tr><td>খরচ কমানো</td><td>Per-call বিলের বাইরের API (SMS gateway, credit check)</td></tr>
+<tr><td>সার্ভার ওভারলোড রোধ</td><td>ভারী রিপোর্ট export, bot traffic</td></tr>
+<tr><td>ন্যায্যতা</td><td>Multi-tenant SaaS-এ একজন tenant যেন সবার resource না খায়</td></tr>
 </table>
-<p>বাস্তব উদাহরণ: Google Docs API প্রতি ব্যবহারকারীর জন্য ৬০ সেকেন্ডে ৩০০ read request-এর ডিফল্ট সীমা রাখে; Stripe, AWS API Gateway — সবাই কোনো না কোনো রূপে rate limit চালায়।</p>
 
-<h3>৪.২ ধাপ ১ — সমস্যা বুঝুন ও Scope ঠিক করুন</h3>
-<div class="card">
-<p><b>Candidate:</b> Client-side নাকি server-side API rate limiter?<br>
-<b>Interviewer:</b> Server-side।<br>
-<b>Candidate:</b> Throttle কিসের ভিত্তিতে — IP, user ID, নাকি অন্য কিছু?<br>
-<b>Interviewer:</b> নমনীয় হতে হবে — বিভিন্ন rule সমর্থন করবে।<br>
-<b>Candidate:</b> Scale কত? স্টার্টআপ নাকি বড় কোম্পানি?<br>
-<b>Interviewer:</b> বিপুল সংখ্যক request সামলাতে হবে।<br>
-<b>Candidate:</b> Distributed পরিবেশে চলবে?<br>
-<b>Interviewer:</b> হ্যাঁ।<br>
-<b>Candidate:</b> আলাদা সার্ভিস, নাকি application code-এর ভেতরে?<br>
-<b>Interviewer:</b> তোমার design সিদ্ধান্ত।<br>
-<b>Candidate:</b> Throttle হলে ব্যবহারকারীকে জানাব?<br>
-<b>Interviewer:</b> হ্যাঁ।</p></div>
-<h4>Requirement তালিকা</h4>
+<h3>৪.২ ধাপ ১ — Requirement</h3>
+<p>প্রশ্ন করে ঠিক হলো: <b>server-side API limiter</b>, নমনীয় rule (IP / user ID / endpoint), বিপুল scale, distributed পরিবেশ, throttle হলে ব্যবহারকারীকে জানাতে হবে।</p>
 <table>
 <tr><th>ধরন</th><th>Requirement</th></tr>
-<tr><td>Functional</td><td>অতিরিক্ত request <b>নির্ভুলভাবে</b> আটকানো; নমনীয় rule (user/IP/API key/endpoint); throttle হলে স্পষ্ট বার্তা (HTTP 429)</td></tr>
-<tr><td>Non-functional</td><td><b>কম latency</b> (প্রতি request-এ কয়েক ms-এর বেশি যোগ করা যাবে না); <b>কম memory</b>; <b>distributed</b> (বহু সার্ভারের মধ্যে ভাগ); <b>fault tolerant</b> (limiter-এর cache মরলেও পুরো সিস্টেম না থামে)</td></tr>
+<tr><td>Functional</td><td>অতিরিক্ত request নির্ভুলভাবে আটকানো; নমনীয় rule; স্পষ্ট বার্তা (HTTP 429)</td></tr>
+<tr><td>Non-functional</td><td>কম latency (কয়েক ms-এর বেশি নয়), কম memory, distributed, <b>fault tolerant</b> (limiter-এর cache মরলেও সিস্টেম না থামে)</td></tr>
 </table>
 
-<h3>৪.৩ ধাপ ২ — High-Level Design</h3>
-<h4>Rate limiter কোথায় বসবে?</h4>
+<h3>৪.৩ ধাপ ২ — Rate Limiter কোথায় বসবে?</h3>
 <table>
 <tr><th>অবস্থান</th><th>মন্তব্য</th></tr>
-<tr><td>Client-side</td><td>❌ নির্ভরযোগ্য নয় — client অনায়াসে জাল করা যায়, আর আপনার নিয়ন্ত্রণও নেই। শুধু ভদ্র client-এর সহায়ক হিসেবে (অনাবশ্যক call কমাতে)।</td></tr>
-<tr><td>Server-side (app code)</td><td>✅ পূর্ণ নিয়ন্ত্রণ — algorithm আপনার ইচ্ছামতো। কিন্তু প্রতিটা service-এ পুনরাবৃত্ত কোড ও ভাষা-নির্ভরতা।</td></tr>
-<tr><td>Middleware / API Gateway</td><td>✅ <b>সাধারণত সেরা:</b> একটা জায়গায় সব API-র জন্য; SSL termination, authentication, IP allow-list-এর পাশে। (Azure API Management, Kong, AWS API Gateway, Nginx, YARP)</td></tr>
+<tr><td>Client-side</td><td>❌ client জাল করা যায়, নিয়ন্ত্রণ নেই</td></tr>
+<tr><td>Server-side (app code)</td><td>✅ algorithm-এ পূর্ণ নিয়ন্ত্রণ; কিন্তু প্রতি service-এ পুনরাবৃত্ত কোড</td></tr>
+<tr><td>Middleware / API Gateway</td><td>✅ <b>সাধারণত সেরা</b> — এক জায়গায় সব API-র জন্য (Azure API Management, Kong, Nginx, YARP)</td></tr>
 </table>
 <div class="diagram"><pre>
-   Client ──► [ Rate Limiter Middleware ] ──► API Servers
-                    │  সীমার মধ্যে → সামনে এগোয়
-                    └─ সীমা পেরোলে → ফেরত পাঠায় HTTP 429 Too Many Requests
-
- উদাহরণ: সীমা = ২ request/সেকেন্ড;  এক সেকেন্ডে ৩টা request:
-   req1 ✅   req2 ✅   req3 ❌ (429)
+ Client ──► [ Rate Limiter Middleware ] ──► API Servers
+                 │ সীমার মধ্যে → এগোয়
+                 └ সীমা পেরোলে → HTTP 429 Too Many Requests
+ (সীমা ২/সেকেন্ড, ৩টা request এলে: ✅ ✅ ❌)
 </pre></div>
-<div class="callout best"><span class="tag">Gateway না নিজে বানাবেন?</span>
-<ul style="margin:6px 0">
-<li>আপনার stack-এ efficient ভাষা ও cache আছে? Algorithm-এ পূর্ণ নিয়ন্ত্রণ চান? → নিজে বানান।</li>
-<li>Microservice + আগে থেকেই API gateway (auth, IP whitelist) আছে? → gateway-তেই rate limit যোগ করুন।</li>
-<li>ইঞ্জিনিয়ারিং সময় কম? → commercial/managed gateway; নিজে বানানো সময়সাপেক্ষ।</li>
-<li>সীমা: তৃতীয় পক্ষ gateway-তে সাধারণত নির্দিষ্ট কয়েকটা algorithm-ই মেলে।</li>
-</ul></div>
+<p>Microservice ও gateway আগে থেকেই থাকলে gateway-তে যোগ করুন; ইঞ্জিনিয়ারিং সময় কম হলে managed gateway; algorithm-এ পূর্ণ নিয়ন্ত্রণ চাইলে নিজে বানান।</p>
 
-<h3>৪.৪ পাঁচটা Algorithm — গভীরে</h3>
-<p>এখানেই অধ্যায়ের মূল সম্পদ। প্রতিটা: কীভাবে কাজ করে → সুবিধা → অসুবিধা → কখন।</p>
+<h3>৪.৪ পাঁচটা Algorithm</h3>
 
 <h4>ক) Token Bucket</h4>
-<p>একটা <b>বালতি</b> যার নির্দিষ্ট ধারণক্ষমতা (capacity)। নির্দিষ্ট হারে (refill rate) বালতিতে <b>token</b> ঢালা হয়; ভরে গেলে বাড়তিটা উপচে পড়ে (নষ্ট)। প্রতিটা request <b>১টা token খরচ</b> করে — token থাকলে request পাশ, না থাকলে বাতিল।</p>
+<p>বালতির নির্দিষ্ট capacity; নির্দিষ্ট হারে token ঢালা হয় (ভরলে উপচে যায়)। প্রতিটা request ১টা token খরচ করে — token না থাকলে বাতিল। Parameter: <b>bucket size</b> (সর্বোচ্চ burst) ও <b>refill rate</b>।</p>
 <div class="diagram"><pre>
- Refiller: ২ token/সেকেন্ড ──►  ┌──────────┐ capacity = ৪
-                                │ ● ● ● ●  │   ← ভরা; বাড়তি token উপচে যায়
-                                └────┬─────┘
- Request আসে ──► token আছে? ──হ্যাঁ──► ১টা token সরাও ──► পাশ ✅
-                      └─ না ──► বাতিল ❌ (429)
-
- টাইমলাইন (capacity=4, refill=৪/মিনিট):  শুরুতে ৪ token
-   ০s: ৩টা request → ৩ token খরচ → বাকি ১
-   ১৫s: +১ token (refill) → ২
-   ২০s: ৩টা request → ২টা পাশ, ১টা ❌
+ Refiller: ২ token/s ──► [ ● ● ● ● ] capacity = ৪
+ Request ──► token আছে? ─হ্যাঁ─► ১টা সরাও, পাশ ✅
+                  └─ না ──► বাতিল ❌ (429)
 </pre></div>
-<p><b>Parameter ২টা:</b> bucket size (সর্বোচ্চ burst) ও refill rate (দীর্ঘমেয়াদি গড় হার)।</p>
-<p><b>কয়টা bucket?</b> নিয়মের উপর নির্ভর: প্রতি API endpoint-এ আলাদা (যেমন ১ post/সেকেন্ড, ১৫০ বন্ধু/দিন, ৫ like/সেকেন্ড = ৩টা bucket/ব্যবহারকারী); IP-ভিত্তিক হলে প্রতি IP-র একটা; পুরো সিস্টেমে ১০,০০০ req/s সীমা হলে একটা global bucket।</p>
-<table>
-<tr><th>✅ সুবিধা</th><th>❌ অসুবিধা</th></tr>
-<tr><td>বাস্তবায়ন সহজ; memory কম (প্রতি key মাত্র ২টা মান: token সংখ্যা ও শেষ refill সময়)।<br><b>Burst সমর্থন</b> — token জমা থাকলে স্বল্প সময়ে ফাটা traffic পাশ।</td><td>দুটো parameter (size, rate) সঠিকভাবে tune করা চ্যালেঞ্জিং।</td></tr>
-</table>
-<p>ব্যবহার: Amazon ও Stripe তাদের API-তে এটা ব্যবহার করে — burst সহনশীলতাই কারণ।</p>
-<div class="callout behind"><span class="tag">পর্দার পেছনে — Timer ছাড়াই Refill (Lazy Refill)</span>
-প্রতি সেকেন্ডে লক্ষ লক্ষ bucket-এ background timer চালানো অসম্ভব। বাস্তবে প্রতিটা bucket-এ শুধু <code>(tokens, lastRefillTime)</code> রাখা হয়। Request এলে হিসাব: <code>tokens = min(capacity, tokens + (এখন − lastRefillTime) × rate)</code>। এতে কোনো timer লাগে না, আর হিসাব request-এর সময়েই হয়।</div>
-
-<h4>C# — In-memory Token Bucket (একটা process-এর জন্য)</h4>
-<pre>
-public sealed class TokenBucket
-{
-    private readonly double _capacity;
-    private readonly double _refillPerSecond;
-    private double _tokens;
-    private long _lastTicks;
-    private readonly object _gate = new();
-
-    public TokenBucket(double capacity, double refillPerSecond)
-    {
-        _capacity = capacity;
-        _refillPerSecond = refillPerSecond;
-        _tokens = capacity;                          <span class="c">// শুরুতে ভরা → প্রথম burst পাশ</span>
-        _lastTicks = Stopwatch.GetTimestamp();
-    }
-
-    public bool TryConsume(int cost = 1)
-    {
-        lock (_gate)                                  <span class="c">// check-then-act যেন atomic হয়</span>
-        {
-            var now = Stopwatch.GetTimestamp();
-            var elapsed = (now - _lastTicks) / (double)Stopwatch.Frequency;
-            _tokens = Math.Min(_capacity, _tokens + elapsed * _refillPerSecond);  <span class="c">// lazy refill</span>
-            _lastTicks = now;
-
-            if (_tokens &lt; cost) return false;
-            _tokens -= cost;
-            return true;
-        }
-    }
-}</pre>
+<p><b>✅</b> সহজ, memory কম (প্রতি key-তে ২টা মান), burst সমর্থন। <b>❌</b> দুটো parameter tune করা কঠিন। ব্যবহার: Amazon, Stripe।</p>
+<div class="callout behind"><span class="tag">Lazy Refill</span>
+লক্ষ bucket-এ timer চলে না। শুধু <code>(tokens, lastRefillTime)</code> রাখা হয়; request-এর সময় হিসাব: <code>tokens = min(capacity, tokens + (now − last) × rate)</code>।</div>
 
 <h4>খ) Leaking Bucket</h4>
-<p>Token bucket-এর মতো, কিন্তু request <b>নির্দিষ্ট স্থির হারে</b> প্রক্রিয়া হয়। সাধারণত একটা <b>FIFO queue</b> দিয়ে বানানো: request এলে queue ভরা না থাকলে ঢোকে, নইলে বাতিল; আলাদা প্রক্রিয়া নির্দিষ্ট বিরতিতে queue থেকে একটা করে তুলে চালায় (বালতির নিচের ছিদ্র দিয়ে সমান হারে পানি ঝরার মতো)।</p>
-<div class="diagram"><pre>
- Request ──► queue ভরা? ──না──► [ ■ ■ ■ ■ ]  (FIFO, size = bucket size)
-                │ হ্যাঁ                      │ স্থির হারে (outflow rate) একটা করে
-                ▼                            ▼
-             বাতিল ❌                    প্রক্রিয়া হয় ✅
-</pre></div>
-<p><b>Parameter:</b> bucket size (= queue size) ও outflow rate।</p>
-<table>
-<tr><th>✅ সুবিধা</th><th>❌ অসুবিধা</th></tr>
-<tr><td>Queue-র আকার সীমিত → memory কম।<br><b>স্থির আউটপুট হার</b> — যেখানে downstream সেবা স্থির গতি চায় (যেমন তৃতীয় পক্ষ API যা প্রতি সেকেন্ডে ১০টার বেশি নেয় না)।</td><td>হঠাৎ burst-এ queue পুরোনো request-এ ভরে যায়; সেগুলো সময়মতো না চললে <b>নতুন request-ও আটকে যায়</b>।<br>দুটো parameter tune করা কঠিন।</td></tr>
-</table>
-<p>ব্যবহার: Shopify এই পদ্ধতি নেয়। Nginx-এর <code>limit_req</code>-ও এই ধরনের আচরণ দেখায়। বিপরীত তুলনা: <b>Token bucket = burst অনুমোদন, Leaking bucket = burst মসৃণ করে সমান হারে বের করে।</b></p>
+<p>FIFO queue; request এলে queue ভরা না থাকলে ঢোকে, নইলে বাতিল। আলাদা প্রক্রিয়া <b>স্থির হারে</b> queue থেকে তুলে চালায়। Parameter: queue size ও outflow rate।</p>
+<p><b>✅</b> স্থির আউটপুট হার (downstream-এর জন্য), memory কম। <b>❌</b> burst-এ queue পুরোনো request-এ ভরে নতুনগুলো আটকে যায়। ব্যবহার: Shopify, Nginx <code>limit_req</code>। মনে রাখুন: <b>Token bucket burst অনুমোদন করে, Leaking bucket burst মসৃণ করে।</b></p>
 
 <h4>গ) Fixed Window Counter</h4>
-<p>সময়রেখাকে নির্দিষ্ট আকারের <b>জানালায়</b> ভাগ করা (যেমন প্রতি ১ মিনিট), প্রতিটার জন্য একটা counter। Request এলে counter +১; সীমায় পৌঁছালে নতুন জানালা শুরু না হওয়া পর্যন্ত বাকিগুলো বাতিল।</p>
-<div class="diagram"><pre>
- সীমা = ৫ request/মিনিট          counter reset হয় প্রতি round মিনিটে
-
- ২:০০:০০ ───────────── ২:০১:০০ ───────────── ২:০২:০০
-          ... ৫টা request ▲ ৫টা request ...
-                      (২:০০:৩০ → ২:০১:৩০) এই ৬০ সেকেন্ডে ১০টা পাশ!  ← সীমার দ্বিগুণ
-</pre></div>
-<div class="callout mistake"><span class="tag">মূল দুর্বলতা — Boundary Burst</span>
-জানালার <b>শেষে</b> ৫টা ও পরের জানালার <b>শুরুতে</b> ৫টা request এলে, মাঝের যেকোনো ৬০ সেকেন্ডে ১০টা request পাশ হয়ে যায় — মানে সীমার দ্বিগুণ। Login rate-limit-এ এটা আক্রমণকারীকে বাড়তি সুযোগ দেয়।</div>
-<table>
-<tr><th>✅ সুবিধা</th><th>❌ অসুবিধা</th></tr>
-<tr><td>Memory-সাশ্রয়ী (প্রতি key-র একটা integer); সহজবোধ্য; কিছু ক্ষেত্রে "প্রতি মাসে ১০০০ call" ধরনের quota-র জন্য আদর্শ — জানালা শেষে quota reset হওয়াই যা চাই।</td><td>জানালার ধারে traffic spike হলে অনুমোদিত সীমার চেয়ে বেশি request ঢোকে।</td></tr>
-</table>
+<p>সময়কে নির্দিষ্ট জানালায় ভাগ, প্রতিটার একটা counter; সীমায় পৌঁছালে নতুন জানালা পর্যন্ত বাতিল।</p>
+<div class="callout mistake"><span class="tag">Boundary Burst</span>
+সীমা ৫/মিনিট: ২:০০:৩০–২:০১:০০-এ ৫টা, ২:০১:০০–২:০১:৩০-এ আরও ৫টা → মাঝের ৬০ সেকেন্ডে ১০টা পাশ, সীমার দ্বিগুণ।</div>
+<p><b>✅</b> সবচেয়ে সহজ ও সস্তা; দৈনিক/মাসিক quota-র জন্য উপযুক্ত। <b>❌</b> জানালার ধারে spike।</p>
 
 <h4>ঘ) Sliding Window Log</h4>
-<p>Fixed window-র সীমানা-সমস্যার সমাধান। প্রতিটা request-এর <b>timestamp</b> সংরক্ষণ (Redis sorted set-এ)। নতুন request এলে: (১) জানালার বাইরের পুরোনো timestamp মুছে ফেলো; (২) নতুনটা যোগ করো; (৩) log-এর আকার সীমার মধ্যে থাকলে পাশ, নইলে বাতিল।</p>
+<p>প্রতিটা request-এর timestamp রাখা (Redis sorted set)। নতুন request এলে জানালার বাইরের timestamp মুছে নতুনটা যোগ; log-এর আকার সীমার মধ্যে থাকলে পাশ।</p>
+<p><b>✅</b> সবচেয়ে নির্ভুল — যেকোনো rolling জানালায় সীমা ভাঙে না। <b>❌</b> অনেক memory (প্রতি request-এর timestamp)। টিপ: বাতিল request log-এ না রাখলে memory কমে।</p>
+
+<h4>ঙ) Sliding Window Counter (Hybrid)</h4>
+<p>আগের ও বর্তমান জানালার counter রেখে overlap-অনুপাতে ওজনযুক্ত যোগ:</p>
 <div class="diagram"><pre>
- সীমা = ২ request/মিনিট
- ১:০০:০১ → log=[১:০০:০১]               ✅
- ১:০০:৩০ → log=[১:০০:০১, ১:০০:৩০]      ✅ (২ ≤ ২)
- ১:০০:৫০ → log=[…, ১:০০:৫০] (৩ > ২)   ❌ বাতিল (timestamp log-এ থেকেই যায়)
- ১:০১:৪০ → জানালা [১:০০:৪০, ১:০১:৪০) → ১:০০:০১ ও ১:০০:৩০ পুরোনো, মুছে যায় → log আকার ১ ✅
+ count = বর্তমান + আগের × (আগের জানালার overlap%)
+ সীমা ৭/মিনিট; আগের মিনিটে ৫, বর্তমানে ৩; request এল ৩০% পয়েন্টে:
+ count = ৩ + ৫ × ০.৭ = ৬.৫ → ৬ ≤ ৭ ✅
 </pre></div>
+<p><b>✅</b> spike মসৃণ, memory কম। <b>❌</b> আনুমানিক (আগের জানালা সমানভাবে ছড়ানো ধরে নেয়); Cloudflare-এর পরীক্ষায় ৪০ কোটি request-এ মাত্র ০.০০৩% ভুল।</p>
+
+<h4>তুলনা ও বাছাই</h4>
 <table>
-<tr><th>✅ সুবিধা</th><th>❌ অসুবিধা</th></tr>
-<tr><td><b>সবচেয়ে নির্ভুল</b> — যেকোনো rolling জানালায় সীমা কখনো ভাঙে না।</td><td><b>অনেক memory</b> — প্রতিটা request-এর timestamp রাখতে হয় (বই অনুযায়ী বাতিল হওয়া request-এরও থেকে যেতে পারে)। সীমা ১০,০০০/মিনিট হলে প্রতি user-এ ১০,০০০ entry!</td></tr>
-</table>
-<div class="callout best"><span class="tag">অপ্টিমাইজেশন নোট</span>
-বাতিল হওয়া request-এর timestamp log-এ <b>না রাখলে</b> memory কিছুটা কমে, এবং আক্রমণকারী ক্রমাগত চেষ্টা করেই নিজের জানালা "লম্বা" রাখতে পারে না (নিচের Lua কোড তাই করে)। নির্ভুলতা চান কিন্তু memory কম? → পরের algorithm।</div>
-
-<h4>ঙ) Sliding Window Counter (হাইব্রিড)</h4>
-<p>Fixed window counter ও sliding window log-এর মিশ্রণ: আগের ও বর্তমান জানালার counter রাখুন, আর rolling জানালা কতটা আগের জানালার সঙ্গে overlap করে তার অনুপাত দিয়ে <b>ওজনযুক্ত যোগফল</b> বের করুন:</p>
-<div class="diagram"><pre>
- rolling count = বর্তমান জানালার count + আগের জানালার count × (আগের জানালার overlap%)
-
- উদাহরণ: সীমা = ৭/মিনিট;  আগের মিনিটে ৫টা, বর্তমান মিনিটে ৩টা।
- নতুন request এল বর্তমান মিনিটের ৩০% পয়েন্টে → rolling জানালার ৭০% আগের মিনিটের উপর।
-
- count = ৩ + ৫ × ০.৭ = ৬.৫  → নিচে গোল করলে ৬ ≤ ৭ ✅ পাশ
- (আরও ১টা এলে সীমা ছুঁয়ে যাবে)
-</pre></div>
-<table>
-<tr><th>✅ সুবিধা</th><th>❌ অসুবিধা</th></tr>
-<tr><td>Traffic spike মসৃণ করে (আগের জানালার গড় ব্যবহার); memory-সাশ্রয়ী (প্রতি key-তে ২টা counter)।</td><td>আগের জানালার request সমানভাবে ছড়ানো ধরে নেওয়া আনুমানিক হিসাব — কড়া look-back-এর জন্য নয়। তবে Cloudflare-এর পরীক্ষায় ৪০ কোটি request-এ মাত্র ০.০০৩% ভুল সিদ্ধান্ত।</td></tr>
-</table>
-
-<h4>তুলনা ও বাছাই-গাইড</h4>
-<table>
-<tr><th></th><th>Token Bucket</th><th>Leaking Bucket</th><th>Fixed Window</th><th>Sliding Log</th><th>Sliding Counter</th></tr>
-<tr><td>Memory/key</td><td>খুব কম</td><td>কম (queue)</td><td>খুব কম</td><td><b>বেশি</b></td><td>খুব কম</td></tr>
+<tr><th></th><th>Token Bucket</th><th>Leaking</th><th>Fixed Window</th><th>Sliding Log</th><th>Sliding Counter</th></tr>
+<tr><td>Memory</td><td>কম</td><td>কম</td><td>খুব কম</td><td><b>বেশি</b></td><td>কম</td></tr>
 <tr><td>নির্ভুলতা</td><td>ভালো</td><td>ভালো</td><td>সীমানায় দুর্বল</td><td><b>সর্বোচ্চ</b></td><td>প্রায় নির্ভুল</td></tr>
-<tr><td>Burst</td><td>✅ অনুমোদিত</td><td>❌ মসৃণ করে</td><td>সীমানায় অনিয়ন্ত্রিত</td><td>নিয়ন্ত্রিত</td><td>মসৃণ</td></tr>
-<tr><td>সহজতা</td><td>সহজ</td><td>মাঝারি</td><td>সবচেয়ে সহজ</td><td>মাঝারি</td><td>মাঝারি</td></tr>
-<tr><td>উপযুক্ত</td><td>সাধারণ public API, burst-বান্ধব</td><td>downstream-এ স্থির হার দরকার</td><td>মাসিক/দৈনিক quota</td><td>কম volume, কড়া নির্ভুলতা (login, OTP)</td><td>বড় scale, ভালো ভারসাম্য</td></tr>
+<tr><td>Burst</td><td>✅</td><td>❌ মসৃণ</td><td>সীমানায় অনিয়ন্ত্রিত</td><td>নিয়ন্ত্রিত</td><td>মসৃণ</td></tr>
+<tr><td>উপযুক্ত</td><td>সাধারণ public API</td><td>স্থির হার দরকার</td><td>মাসিক quota</td><td>login/OTP (কম volume, কড়া)</td><td>বড় scale</td></tr>
 </table>
-<div class="callout best"><span class="tag">Interview-তে কীভাবে বলবেন</span>
-"সাধারণ API-র জন্য আমি <b>Token Bucket</b> নেব — সরল, কম memory, burst সহনশীল (Stripe/Amazon ব্যবহার করে)। Login/OTP-র মতো কম-volume কিন্তু কড়া সীমায় <b>Sliding Window Log</b>। বিপুল scale-এ নির্ভুলতা-memory ভারসাম্যে <b>Sliding Window Counter</b>। প্রয়োজনে এগুলো মিশিয়েও চলে — যেমন global-এ token bucket, প্রতি user-এ sliding log।"</div>
+<div class="callout best"><span class="tag">Interview-তে</span>
+"সাধারণ API-তে <b>Token Bucket</b> (সরল, burst-সহনশীল); login/OTP-তে <b>Sliding Window Log</b>; বিপুল scale-এ <b>Sliding Window Counter</b>।" প্রয়োজনে মিশিয়েও চলে।</div>
 
-<h3>৪.৫ Counter কোথায় রাখবেন? — Redis</h3>
-<p>Disk-ভিত্তিক DB ধীর (অধ্যায় ২-এর disk seek মনে করুন)। তাই <b>in-memory cache</b> — দ্রুত, আর সময়-ভিত্তিক expiration সমর্থন করে। Redis-এর দুটো মূল command: <code>INCR</code> (counter ১ বাড়ায়) ও <code>EXPIRE</code> (timeout, পেরোলে key নিজে মুছে যায়)।</p>
-<div class="diagram"><pre>
- Client ─► Rate Limiter Middleware ─► Redis থেকে counter/bucket পড়ো
-                                          │ সীমা পেরোলে → ❌ 429
-                                          │ নইলে → API Server-এ পাঠাও + counter আপডেট (Redis)
-</pre></div>
+<h3>৪.৫ Counter কোথায়? — Redis</h3>
+<p>Disk ধীর, তাই in-memory <b>Redis</b>: <code>INCR</code> counter বাড়ায়, <code>EXPIRE</code> timeout-এ key নিজে মুছে যায়। Middleware Redis থেকে counter পড়ে, সীমা পেরোলে ❌ 429, নইলে request এগোয় ও counter আপডেট হয়।</p>
 
-<h3>৪.৬ ধাপ ৩ — Deep Dive</h3>
-<p>High-level নকশা এখনও তিনটা প্রশ্নের উত্তর দেয়নি: <b>Rule কোথায় থাকে? সীমা পেরোলে কী হয়? Distributed পরিবেশে কীভাবে সঠিক থাকবে?</b></p>
-
-<h4>৪.৬.১ Rate Limiting Rules</h4>
-<p>Rule কোডে hardcode নয় — <b>configuration</b> হিসেবে রাখুন (ফাইল/DB), যাতে deploy ছাড়াই বদলানো যায়। Lyft-এর open-source rate limiter যেমন করে — আমাদের নিজস্ব উদাহরণে:</p>
+<h3>৪.৬ ধাপ ৩ — Deep Dive: Rule, 429 ও Header</h3>
+<p><b>Rule</b> কোডে hardcode নয়, configuration-এ (ফাইল/DB); worker নিয়মিত cache রিফ্রেশ করে — deploy ছাড়াই বদলানো যায়:</p>
 <pre>
-<span class="c"># rules.yaml</span>
 - domain: auth
   descriptors:
     - key: endpoint
       value: login
-      rate_limit: { unit: minute, requests_per_unit: 5 }      <span class="c"># প্রতি IP/ব্যবহারকারী মিনিটে ৫ লগইন</span>
-- domain: messaging
-  descriptors:
-    - key: message_type
-      value: marketing
-      rate_limit: { unit: day, requests_per_unit: 5 }         <span class="c"># দিনে ৫টা marketing SMS</span>
+      rate_limit: { unit: minute, requests_per_unit: 5 }
 - domain: api
   descriptors:
     - key: plan
       value: free
       rate_limit: { unit: minute, requests_per_unit: 60 }
-    - key: plan
-      value: premium
-      rate_limit: { unit: minute, requests_per_unit: 600 }
 </pre>
-<p>Worker বা background reload নিয়মিত disk থেকে rule এনে cache-এ রাখে; middleware cache থেকে rule পড়ে — ফলে প্রতি request-এ disk ছোঁয়া লাগে না।</p>
-
-<h4>৪.৬.২ সীমা পেরোলে কী করবেন?</h4>
-<ul>
-<li><b>HTTP 429 (Too Many Requests)</b> ফেরত দিন।</li>
-<li>কিছু ক্ষেত্রে request <b>বাতিল না করে queue-তে রেখে পরে চালান</b> — যেমন সিস্টেম-ওভারলোডে আটকে যাওয়া order পরে প্রক্রিয়া করা (বাতিল করলে ব্যবসা হারাবে)।</li>
-</ul>
-<h4>Rate-limit Header</h4>
-<p>Client জানবে কীভাবে সে throttle হচ্ছে ও কতটা বাকি? HTTP response header-এ:</p>
+<p><b>সীমা পেরোলে:</b> HTTP <b>429</b> ফেরত দিন; কিছু ক্ষেত্রে (যেমন order) বাতিল না করে queue-তে রেখে পরে চালান। সঙ্গে header:</p>
 <table>
 <tr><th>Header</th><th>অর্থ</th></tr>
-<tr><td><code>X-RateLimit-Limit</code></td><td>প্রতি জানালায় সর্বোচ্চ কতটা call</td></tr>
-<tr><td><code>X-RateLimit-Remaining</code></td><td>এই জানালায় আর কতটা অনুমোদিত</td></tr>
-<tr><td><code>Retry-After</code> (প্রামাণ্য HTTP header; বইয়ে <code>X-Ratelimit-Retry-After</code>)</td><td>আবার কখন চেষ্টা করা যাবে (সেকেন্ডে)</td></tr>
+<tr><td><code>X-RateLimit-Limit</code></td><td>প্রতি জানালায় সর্বোচ্চ call</td></tr>
+<tr><td><code>X-RateLimit-Remaining</code></td><td>আর কতটা বাকি</td></tr>
+<tr><td><code>Retry-After</code></td><td>কত সেকেন্ড পর আবার চেষ্টা (প্রামাণ্য HTTP header)</td></tr>
 </table>
-<p>429 পাঠালে <code>Retry-After</code> অবশ্যই দিন — ভালো client নিজে নিজেই অপেক্ষা করবে; অন্ধ retry-র ঝড় থামবে।</p>
-
-<h4>৪.৬.৩ বিস্তারিত নকশা</h4>
-<div class="diagram"><pre>
- ┌─────────────┐  নিয়মিত pull   ┌───────────────┐
- │ Rules (disk)│ ───────────────►│ Rules Cache   │
- └─────────────┘   (Workers)     └──────┬────────┘
-                                         │ rule পড়ে
- Client ──► [ Rate Limiter Middleware ] ◄┘
-                │ counter/bucket পড়ে-লেখে
-                ▼
-          [ Redis (counters) ]
-                │
-   সীমার মধ্যে ──► API Servers
-   সীমা পেরোলে ──► 429 + headers ──► (ঐচ্ছিক) Message Queue-তে রাখো পরে চালাতে
-</pre></div>
 
 <h3>৪.৭ Distributed পরিবেশের দুটো কঠিন সমস্যা</h3>
-<p>একটা সার্ভারে rate limiter বানানো সহজ। বহু সার্ভার ও concurrent thread-এ <b>Race Condition</b> ও <b>Synchronization</b> — আসল চ্যালেঞ্জ।</p>
 
 <h4>সমস্যা ১: Race Condition</h4>
-<p>সাধারণ লজিক: (১) Redis থেকে counter পড়ো; (২) <code>counter+1</code> সীমা ছাড়ায় কিনা দেখো; (৩) না ছাড়ালে Redis-এ বাড়িয়ে লেখো। দুটো request একসাথে এলে:</p>
-<div class="diagram"><pre>
- Redis: counter = 3,  সীমা = ৪
-
- Thread A: পড়ল 3 ─┐
- Thread B: পড়ল 3 ─┤  (দুজনেই ৩ দেখল, কেউ অন্যের লেখা জানে না)
- Thread A: 3+1=4 ≤ 4 → লিখল 4  ✅ পাশ
- Thread B: 3+1=4 ≤ 4 → লিখল 4  ✅ পাশ     ← আসলে counter হওয়া উচিত ছিল ৫ → একটা request সীমা ভেঙে ঢুকে গেল
-</pre></div>
-<p><b>Lock</b> স্পষ্ট সমাধান, কিন্তু সিস্টেম ধীর করে (সবাই লাইনে)। বাস্তব সমাধান:</p>
-<ul>
-<li><b>Atomic অপারেশন:</b> Redis-এ <code>INCR</code> নিজেই atomic — আগে বাড়াও, <i>তারপর</i> ফলাফল (নতুন মান) সীমার সাথে মিলাও।</li>
-<li><b>Lua script:</b> একাধিক ধাপ (পড়ো-হিসাব করো-লেখো) এক script-এ — Redis এটাকে অবিভাজ্যভাবে চালায়, মাঝে অন্য কমান্ড ঢোকে না।</li>
-<li><b>Sorted set:</b> sliding log-এ timestamp রাখার জন্য।</li>
-</ul>
+<p>পড়ো → সীমা দেখো → লেখো: দুই thread একসাথে counter = ৩ পড়ে দুজনেই ৪ লেখে (হওয়া উচিত ছিল ৫) — একটা request সীমা ভেঙে ঢুকে যায়। <b>Lock</b> ধীর; সমাধান: Redis-এর atomic <code>INCR</code> বা পুরো লজিক একটা <b>Lua script</b>-এ (Redis অবিভাজ্যভাবে চালায়)।</p>
 
 <h4>C# + Redis — Lua দিয়ে Atomic Token Bucket</h4>
 <pre>
-<span class="c">// bucket: capacity, refill/sec, cost — সময় Redis-এর নিজের ঘড়ি থেকে (client ঘড়ির skew এড়াতে)</span>
 private const string TokenBucketLua = @"
 local capacity = tonumber(ARGV[1])
 local rate     = tonumber(ARGV[2])
 local cost     = tonumber(ARGV[3])
 local t   = redis.call('TIME')
-local now = tonumber(t[1]) * 1000 + math.floor(tonumber(t[2]) / 1000)   -- ms
+local now = tonumber(t[1]) * 1000 + math.floor(tonumber(t[2]) / 1000)   -- Redis-এর ঘড়ি (ms)
 
 local d = redis.call('HMGET', KEYS[1], 'tokens', 'ts')
 local tokens = tonumber(d[1]); if tokens == nil then tokens = capacity end
 local ts     = tonumber(d[2]); if ts == nil then ts = now end
 
-tokens = math.min(capacity, tokens + math.max(0, now - ts) / 1000 * rate)  -- lazy refill
+tokens = math.min(capacity, tokens + math.max(0, now - ts) / 1000 * rate)   -- lazy refill
 local allowed = 0
 if tokens >= cost then tokens = tokens - cost; allowed = 1 end
 
 redis.call('HSET', KEYS[1], 'tokens', tokens, 'ts', now)
-redis.call('PEXPIRE', KEYS[1], math.ceil(capacity / rate * 1000) * 2)     -- নিষ্ক্রিয় key নিজে মুছবে
+redis.call('PEXPIRE', KEYS[1], math.ceil(capacity / rate * 1000) * 2)       -- নিষ্ক্রিয় key মুছবে
 return { allowed, math.floor(tokens) }
 ";
 
@@ -1106,176 +682,75 @@ public async Task&lt;(bool Allowed, int Remaining)&gt; TryAcquireAsync(string ke
         new RedisValue[] { capacity, ratePerSec, 1 }))!;
     return ((int)res[0] == 1, (int)res[1]);
 }</pre>
-<div class="callout behind"><span class="tag">Fixed Window ও Sliding Log-এর Lua (সংক্ষেপে)</span>
-<pre style="margin:8px 0 0">
-<span class="c">-- Fixed window: INCR + প্রথমবারে EXPIRE (দুটো আলাদা কমান্ডে crash হলে TTL-হীন key থেকে যেত — তাই script)</span>
-local c = redis.call('INCR', KEYS[1])
-if c == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end
-return c
-
-<span class="c">-- Sliding window log (sorted set): ARGV = now_ms, window_ms, limit, unique_id</span>
-redis.call('ZREMRANGEBYSCORE', KEYS[1], 0, ARGV[1] - ARGV[2])   <span class="c">-- পুরোনো timestamp সাফ</span>
-if redis.call('ZCARD', KEYS[1]) &lt; tonumber(ARGV[3]) then
-  redis.call('ZADD', KEYS[1], ARGV[1], ARGV[4])                 <span class="c">-- শুধু অনুমোদিত request log-এ</span>
-  redis.call('PEXPIRE', KEYS[1], ARGV[2])
-  return 1
-end
-return 0</pre></div>
 
 <h4>সমস্যা ২: Synchronization</h4>
-<p>লক্ষ ব্যবহারকারী সামলাতে বহু rate limiter সার্ভার লাগে, আর web tier stateless হওয়ায় একই client-এর request একবার limiter-1-এ, একবার limiter-2-এ যেতে পারে। প্রত্যেকের নিজস্ব counter থাকলে কেউই পুরো ছবি জানে না → সীমা কার্যকর হয় না।</p>
+<p>Web tier stateless, তাই একই client-এর request একবার limiter-1-এ, একবার limiter-2-এ যায়; প্রত্যেকের নিজস্ব counter থাকলে সীমা কার্যকর হয় না।</p>
 <table>
 <tr><th>সমাধান</th><th>মূল্যায়ন</th></tr>
-<tr><td>Sticky session (একই client সবসময় একই limiter-এ)</td><td>❌ স্কেলযোগ্য নয়, নমনীয় নয়; limiter মরলে counter হারায়।</td></tr>
-<tr><td><b>কেন্দ্রীয় data store (Redis)</b></td><td>✅ সব limiter একই counter পড়ে-লেখে। সবচেয়ে প্রচলিত। বড় scale-এ Redis Cluster (key দিয়ে shard — অধ্যায় ৫-এর consistent hashing)।</td></tr>
+<tr><td>Sticky session</td><td>❌ স্কেল হয় না, limiter মরলে counter হারায়</td></tr>
+<tr><td><b>কেন্দ্রীয় Redis</b></td><td>✅ সবাই একই counter পড়ে-লেখে; বড় scale-এ Redis Cluster</td></tr>
 </table>
 
-<h4>৪.৭.৩ Performance Optimization</h4>
+<h4>Performance ও Failure Handling</h4>
 <ul>
-<li><b>Multi-data-center / Edge:</b> ব্যবহারকারী দূরে হলে limiter-এ যাওয়াই ধীর। Cloudflare-এর মতো edge সার্ভার (কয়েকশ লোকেশন) নিকটতম জায়গায় limit প্রয়োগ করে latency কমায়।</li>
-<li><b>Eventual consistency-তে sync:</b> সব region-এর counter তাৎক্ষণিক মেলানো ব্যয়বহুল। সামান্য তফাত মেনে নিয়ে asynchronous sync — "প্রতি region নিজস্ব quota-র অংশ নেয়, পরে মেলায়"। ছোট ভুলে (সীমার কয়েক % বেশি) ব্যবসার ক্ষতি নেই।</li>
-<li><b>Local + Global স্তর:</b> প্রতি সার্ভারে ছোট in-memory limiter (দ্রুত, Redis-এ না গিয়েই স্পষ্ট অপব্যবহার কাটে) + Redis-এ নির্ভুল global limiter।</li>
-<li><b>Redis round-trip কমান:</b> pipeline/Lua; একটা request-এ একবারই Redis-এ যান।</li>
+<li><b>Edge / multi-data-center:</b> ব্যবহারকারীর কাছের edge-এ limit প্রয়োগ করে latency কমান; region-গুলোর মধ্যে <b>eventual consistency</b>-তে sync (সীমার সামান্য বেশি ঢোকা সহনীয়)।</li>
+<li><b>Local + Global:</b> প্রতি সার্ভারে ছোট in-memory limiter + Redis-এ নির্ভুল global limiter।</li>
+<li><b>Redis ডাউন হলে:</b> সাধারণ API-তে <b>fail-open</b> (সেবা চলুক) + local fallback + alert; OTP/payment-এর মতো ঝুঁকিপূর্ণ endpoint-এ <b>fail-closed</b>। Redis call-এ কড়া timeout (২০–৫০ ms) ও circuit breaker দিন।</li>
+<li><b>Monitoring:</b> ৪২৯-এর হার ও কোন key-তে বেশি — rule অতি-কড়া হলে বৈধ request মরে; flash sale-এ limiter অকেজো হলে burst-সহনশীল algorithm নিন।</li>
 </ul>
 
-<h4>৪.৭.৪ Failure Handling — Fail-open না Fail-closed?</h4>
-<p>Redis ডাউন হলে rate limiter কী করবে?</p>
-<table>
-<tr><th>Fail-open (request ঢুকতে দাও)</th><th>Fail-closed (সব আটকাও)</th></tr>
-<tr><td>সেবা চালু থাকে; কিন্তু সাময়িকভাবে সুরক্ষা নেই</td><td>সুরক্ষিত; কিন্তু limiter-এর সমস্যায় পুরো সেবা বন্ধ</td></tr>
-<tr><td><b>অধিকাংশ API-র সঠিক পছন্দ</b> — "fault tolerance" requirement মেনে</td><td>কড়া নিরাপত্তা endpoint-এ (OTP পাঠানো, ব্যয়বহুল paid call)</td></tr>
-</table>
-<div class="callout best"><span class="tag">Best Practice</span>
-Redis call-এ কড়া timeout দিন (যেমন ২০-৫০ ms), circuit breaker বসান, ব্যর্থ হলে fail-open ও local fallback limiter-এ নামুন — আর অবশ্যই alert তুলুন যাতে সুরক্ষাহীন সময় কেউ লক্ষ না করে থেকে যায়।</div>
-
-<h4>৪.৭.৫ Monitoring</h4>
-<p>Rate limiter বসিয়ে ভুলে গেলে চলবে না। মাপুন:</p>
-<ul>
-<li><b>Rule কার্যকর কিনা:</b> বেশি বৈধ request বাতিল হলে rule অতি-কড়া → ঢিলে করুন। ৪২৯-এর হার, কোন key/endpoint-এ বেশি।</li>
-<li><b>Algorithm কার্যকর কিনা:</b> হঠাৎ traffic-এ (flash sale) limiter অকেজো হচ্ছে? → burst-সহনশীল algorithm (token bucket) বা বড় bucket।</li>
-<li>Limiter-এর নিজের latency ও Redis স্বাস্থ্য।</li>
-</ul>
-
-<h3>৪.৮ .NET-এ বাস্তবায়ন — ASP.NET Core Built-in Rate Limiting</h3>
-<p>.NET 7+ এ <code>Microsoft.AspNetCore.RateLimiting</code> middleware আছে — চারটা ধরন: <b>Fixed window, Sliding window, Token bucket, Concurrency</b>। (কোড লেখার সময় ভার্সনের API ডকুমেন্টেশন মিলিয়ে নেবেন।)</p>
+<h3>৪.৮ .NET-এ বাস্তবায়ন — ASP.NET Core Built-in Limiter</h3>
+<p>.NET 7+ এ <code>AddRateLimiter</code>: Fixed window, Sliding window, Token bucket, Concurrency।</p>
 <pre>
-builder.Services.AddRateLimiter(options =&gt;
+builder.Services.AddRateLimiter(o =&gt;
 {
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-    <span class="c">// ১. Token bucket — সাধারণ API; user-ভিত্তিক partition (anonymous হলে IP)</span>
-    options.AddPolicy("api", httpContext =&gt;
-        RateLimitPartition.GetTokenBucketLimiter(
-            partitionKey: httpContext.User.Identity?.Name
-                          ?? httpContext.Connection.RemoteIpAddress?.ToString() ?? "anon",
-            factory: _ =&gt; new TokenBucketRateLimiterOptions
-            {
-                TokenLimit = 20,                                   <span class="c">// bucket size (burst)</span>
-                TokensPerPeriod = 10,                              <span class="c">// refill</span>
-                ReplenishmentPeriod = TimeSpan.FromSeconds(1),     <span class="c">// ১০ token/সেকেন্ড</span>
-                QueueLimit = 0,                                    <span class="c">// অপেক্ষা নয়, সরাসরি বাতিল</span>
-                AutoReplenishment = true
-            }));
+    o.AddPolicy("api", ctx =&gt; RateLimitPartition.GetTokenBucketLimiter(
+        ctx.User.Identity?.Name ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "anon",
+        _ =&gt; new TokenBucketRateLimiterOptions
+        {
+            TokenLimit = 20, TokensPerPeriod = 10,
+            ReplenishmentPeriod = TimeSpan.FromSeconds(1),
+            QueueLimit = 0, AutoReplenishment = true
+        }));
 
-    <span class="c">// ২. Sliding window — login-এর জন্য কড়া সীমা</span>
-    options.AddPolicy("login", ctx =&gt;
-        RateLimitPartition.GetSlidingWindowLimiter(
-            ctx.Connection.RemoteIpAddress?.ToString() ?? "anon",
-            _ =&gt; new SlidingWindowRateLimiterOptions
-            {
-                PermitLimit = 5, Window = TimeSpan.FromMinutes(1),
-                SegmentsPerWindow = 6, QueueLimit = 0           <span class="c">// ১০ সেকেন্ডের ৬ খণ্ড → sliding window counter ধরনের</span>
-            }));
-
-    <span class="c">// ৩. ৪২৯ হলে Retry-After সহ বার্তা</span>
-    options.OnRejected = async (context, ct) =&gt;
+    o.OnRejected = (context, ct) =&gt;
     {
         if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
             context.HttpContext.Response.Headers.RetryAfter =
                 ((int)retryAfter.TotalSeconds).ToString(CultureInfo.InvariantCulture);
-
-        context.HttpContext.Response.ContentType = "application/problem+json";
-        await context.HttpContext.Response.WriteAsJsonAsync(new
-        {
-            title = "Too many requests",
-            status = 429,
-            detail = "অনুগ্রহ করে কিছুক্ষণ পরে আবার চেষ্টা করুন।"
-        }, ct);
+        return ValueTask.CompletedTask;
     };
 });
 
-var app = builder.Build();
-app.UseRateLimiter();                                    <span class="c">// routing-এর পরে</span>
-app.MapPost("/auth/login", LoginHandler).RequireRateLimiting("login");
+app.UseRateLimiter();
 app.MapGroup("/api").RequireRateLimiting("api");</pre>
-<div class="callout mistake"><span class="tag">সীমাবদ্ধতা — এটা <u>per-instance</u></span>
-এই built-in limiter প্রতিটা app instance-এর <b>নিজস্ব memory-তে</b> চলে। ৫টা instance-এ সীমা ১০/সেকেন্ড দিলে কার্যত মোট ৫০/সেকেন্ড ঢুকবে — ঠিক "synchronization" সমস্যা। সত্যিকারের global সীমার জন্য: (ক) gateway/edge-এ (Azure API Management-এর <code>rate-limit-by-key</code> policy, YARP, Nginx, Cloudflare); অথবা (খ) উপরের Redis Lua পদ্ধতি; অথবা (গ) ছোট instance-সংখ্যায় সীমা ÷ instance-সংখ্যা।</div>
+<div class="callout mistake"><span class="tag">সীমাবদ্ধতা — per-instance</span>
+এই limiter প্রতিটা instance-এর <b>নিজস্ব memory-তে</b> চলে; ৫টা instance-এ ১০/সেকেন্ড দিলে কার্যত ৫০/সেকেন্ড ঢোকে। সত্যিকারের global সীমায়: gateway/edge (Azure APIM <code>rate-limit-by-key</code>, YARP, Nginx) অথবা উপরের Redis Lua পদ্ধতি।</div>
 
-<h3>৪.৯ ধাপ ৪ — Wrap Up: আলোচনার অতিরিক্ত বিষয়</h3>
+<h3>৪.৯ ধাপ ৪ — Wrap Up</h3>
 <table>
 <tr><th>বিষয়</th><th>ব্যাখ্যা</th></tr>
-<tr><td>Hard বনাম Soft</td><td><b>Hard:</b> সীমা কোনোভাবেই ছাড়ানো যাবে না। <b>Soft:</b> স্বল্প সময়ের জন্য ছাড়ানো সহ্য করা হয় (যেমন sliding counter বা async sync-এর ফলে)।</td></tr>
-<tr><td>বিভিন্ন স্তরে</td><td>আমরা Layer 7 (HTTP/application) নিয়ে বললাম। Layer 3 (IP)-এও সম্ভব — যেমন Linux <code>iptables</code>/firewall/WAF দিয়ে IP-ভিত্তিক সীমা; DDoS-এর জন্য edge-এ (Cloudflare, Azure Front Door)।</td></tr>
-<tr><td>কোন key-তে সীমা</td><td>IP (NAT-এর পেছনে বহু ব্যবহারকারী একই IP — অন্যায্য হতে পারে), user ID, API key, tenant, device ID। প্রায়ই মিশ্রণ।</td></tr>
-<tr><td>Client-এর ভদ্রতা</td><td>(১) নিজের cache ব্যবহার করে call কমান; (২) সীমা জেনে burst এড়ান; (৩) exception ধরে সুন্দরভাবে recover; (৪) retry-তে <b>exponential backoff + jitter</b>।</td></tr>
+<tr><td>Hard বনাম Soft</td><td>Hard: সীমা কোনোভাবেই ছাড়ানো যাবে না; Soft: স্বল্প সময়ের জন্য ছাড়ানো সহনীয়</td></tr>
+<tr><td>বিভিন্ন স্তরে</td><td>আমরা Layer 7 (HTTP) দেখলাম; Layer 3 (IP)-এ iptables/WAF/edge-এ DDoS সুরক্ষা সম্ভব</td></tr>
+<tr><td>কোন key-তে</td><td>IP (NAT-এর পেছনে অন্যায্য হতে পারে), user ID, API key, tenant</td></tr>
+<tr><td>Client-এর ভদ্রতা</td><td>cache ব্যবহার, burst এড়ানো, retry-তে <b>exponential backoff + jitter</b> ও <code>Retry-After</code> মানা (নইলে thundering herd)</td></tr>
 </table>
-<h4>C# Client — Polly দিয়ে Backoff + Jitter ও Retry-After</h4>
-<pre>
-var pipeline = new ResiliencePipelineBuilder&lt;HttpResponseMessage&gt;()
-    .AddRetry(new RetryStrategyOptions&lt;HttpResponseMessage&gt;
-    {
-        MaxRetryAttempts = 4,
-        BackoffType = DelayBackoffType.Exponential,   <span class="c">// ১s, ২s, ৪s, ৮s ...</span>
-        Delay = TimeSpan.FromSeconds(1),
-        UseJitter = true,                             <span class="c">// ঝাঁক-বেঁধে একসাথে retry এড়াতে</span>
-        ShouldHandle = new PredicateBuilder&lt;HttpResponseMessage&gt;()
-            .HandleResult(r =&gt; r.StatusCode == HttpStatusCode.TooManyRequests
-                            || (int)r.StatusCode &gt;= 500),
-        DelayGenerator = args =&gt;                      <span class="c">// সার্ভার Retry-After দিলে সেটা মানো</span>
-            args.Outcome.Result?.Headers.RetryAfter?.Delta is { } d
-                ? new ValueTask&lt;TimeSpan?&gt;(d)
-                : new ValueTask&lt;TimeSpan?&gt;((TimeSpan?)null)   <span class="c">// null হলে ডিফল্ট backoff</span>
-    })
-    .Build();</pre>
-<div class="callout behind"><span class="tag">বইয়ের বাইরে — Thundering Herd</span>
-১০০০ client একসাথে ৪২৯ পেয়ে ঠিক ১ সেকেন্ড পরে আবার একসাথে retry করলে সার্ভারে নতুন ঢেউ আছড়ে পড়ে। তাই backoff-এ <b>jitter</b> (র‍্যান্ডম বিলম্ব) জরুরি।</div>
 
-<h3>৪.১০ সারসংক্ষেপ</h3>
-<ol>
-<li><b>অবস্থান:</b> API gateway/middleware (client-side নয়)।</li>
-<li><b>Algorithm:</b> Token Bucket (ডিফল্ট), Sliding Window (কড়া/নির্ভুল), Fixed Window (quota), Leaking Bucket (স্থির আউটপুট)।</li>
-<li><b>State:</b> Redis-এ; atomicity-র জন্য Lua/INCR।</li>
-<li><b>Response:</b> HTTP 429 + <code>Retry-After</code> + <code>RateLimit-*</code> header।</li>
-<li><b>Distributed:</b> কেন্দ্রীয় store, edge/multi-DC, eventual consistency।</li>
-<li><b>Failure:</b> সাধারণত fail-open + alert।</li>
-<li><b>Monitor:</b> ৪২৯ হার ও rule-এর কার্যকারিতা।</li>
-</ol>
-
-<h3>৪.১১ নিজে করুন</h3>
-<ol>
-<li>উপরের in-memory <code>TokenBucket</code>-এ xUnit টেস্ট লিখুন: capacity=3, rate=1/s — ৪টা request তাৎক্ষণিক (৩টা পাশ, ১টা বাতিল), ১.১ সেকেন্ড পর আবার ১টা পাশ। (<code>TimeProvider</code> ইনজেক্ট করলে <code>Thread.Sleep</code> ছাড়াই টেস্ট হয়।)</li>
-<li>Sliding window counter-এর সূত্র দিয়ে একটা ছোট ফাংশন লিখুন: <code>Allow(prevCount, currCount, elapsedFractionOfCurrentWindow, limit)</code>।</li>
-<li>Docker-এ Redis চালিয়ে Lua script-টা ১০০টা concurrent <code>Task</code> দিয়ে চালান; capacity ২০ হলে ঠিক ২০টা পাশ হচ্ছে কিনা দেখুন (এটাই race-condition-মুক্ত হওয়ার প্রমাণ)।</li>
-<li>আপনার প্রজেক্টের login endpoint-এ <code>RequireRateLimiting</code> যোগ করে Postman-এ ৬ বার ঠেলে ৪২৯ ও <code>Retry-After</code> দেখুন।</li>
-</ol>
-
-<h3>৪.১২ Interview প্রশ্নোত্তর</h3>
-<div class="card"><b>প্র১. Token bucket আর leaking bucket-এর মূল পার্থক্য কী?</b>
-<p>Token bucket burst <b>অনুমোদন করে</b> (জমা token থাকলে একসাথে অনেক request পাশ); leaking bucket আউটপুট <b>স্থির হারে</b> মসৃণ করে (burst জমা হয় queue-তে)। তাই burst-বান্ধব public API-তে token bucket, downstream স্থির গতি চাইলে leaking bucket।</p></div>
+<h3>৪.১০ Interview প্রশ্নোত্তর</h3>
+<div class="card"><b>প্র১. Token bucket আর leaking bucket-এর পার্থক্য কী?</b>
+<p>Token bucket burst <b>অনুমোদন করে</b> (জমা token থাকলে একসাথে অনেক request পাশ); leaking bucket আউটপুট <b>স্থির হারে</b> মসৃণ করে। Burst-বান্ধব public API-তে token bucket, downstream স্থির গতি চাইলে leaking bucket।</p></div>
 <div class="card"><b>প্র২. Fixed window counter-এ কী সমস্যা? সমাধান?</b>
-<p>জানালার সীমানায় burst — শেষে N + শুরুতে N = ২N request অল্প সময়ে ঢুকতে পারে। সমাধান: sliding window log (নির্ভুল, memory বেশি) বা sliding window counter (প্রায়-নির্ভুল, memory কম)।</p></div>
-<div class="card"><b>প্র৩. বহু সার্ভারে rate limiter কীভাবে সঠিক রাখবেন?</b>
-<p>কেন্দ্রীয় Redis-এ counter; check-and-update atomic করতে Lua script বা INCR; sticky session নয় (স্কেল হয় না)। বড় scale-এ Redis cluster ও multi-region-এ eventual consistency সহ আঞ্চলিক quota।</p></div>
-<div class="card"><b>প্র৪. Race condition কীভাবে হয় ও ঠেকান?</b>
-<p>read-then-write দুটো আলাদা ধাপ — দুই thread একই মান পড়ে ও overwrite করে। Lock ধীর; তাই Redis-এর atomic <code>INCR</code> বা পুরো লজিক Lua script-এ (Redis single-threaded হওয়ায় script মাঝপথে বিভক্ত হয় না)।</p></div>
+<p>জানালার সীমানায় burst — শেষে N + শুরুতে N = ২N request অল্প সময়ে ঢোকে। সমাধান: sliding window log (নির্ভুল, memory বেশি) বা sliding window counter (প্রায়-নির্ভুল, memory কম)।</p></div>
+<div class="card"><b>প্র৩. বহু সার্ভারে rate limiter সঠিক রাখবেন কীভাবে?</b>
+<p>কেন্দ্রীয় Redis-এ counter; check-and-update atomic করতে Lua/INCR; sticky session নয়। বড় scale-এ Redis Cluster ও multi-region-এ eventual consistency।</p></div>
+<div class="card"><b>প্র৪. Race condition কীভাবে ঘটে ও ঠেকান?</b>
+<p>read-then-write দুটো আলাদা ধাপ — দুই thread একই মান পড়ে overwrite করে। Lock ধীর; তাই atomic <code>INCR</code> বা পুরো লজিক Lua script-এ (Redis single-threaded, তাই script মাঝপথে বিভক্ত হয় না)।</p></div>
 <div class="card"><b>প্র৫. Redis ডাউন হলে কী হবে?</b>
-<p>নিরাপত্তা-গুরুত্ব অনুযায়ী সিদ্ধান্ত: সাধারণ API-তে fail-open (সেবা চলুক) + local in-memory fallback + alert; OTP/payment-এর মতো ঝুঁকিপূর্ণ endpoint-এ fail-closed। Timeout ও circuit breaker অবশ্যই।</p></div>
-<div class="card"><b>প্র৬. IP-ভিত্তিক rate limit-এর ঝুঁকি কী?</b>
-<p>একই অফিস/মোবাইল ক্যারিয়ার NAT-এর পেছনে বহু ব্যবহারকারী একই IP — নিরীহ ব্যবহারকারীও আটকে যায়; আবার আক্রমণকারী IP ঘুরিয়ে (botnet) পার পায়। তাই authenticated হলে user ID/API key ধরুন, IP কে শুধু anonymous ও login-এর মতো ক্ষেত্রে, ও বাড়তি সংকেত (device fingerprint, CAPTCHA) সহ।</p></div>
-<div class="card"><b>প্র৭. Rate limiter-এর rule বদলাতে কি deploy লাগবে?</b>
-<p>না। Rule configuration হিসেবে সংরক্ষিত (ফাইল/DB/feature-flag), worker নিয়মিত পড়ে cache রিফ্রেশ করে। এতে অপারেশনাল পরিবর্তন (যেমন flash sale-এ সীমা বাড়ানো) তাৎক্ষণিক হয়।</p></div>
-<div class="card"><b>প্র৮. Throttle হওয়া request কি বাতিল না করে দেরিতে চালানো যায়?</b>
-<p>যায় — queue-তে রেখে (leaking bucket-এর মতো) বা ৪২৯ + client-এর retry। কোনটা ঠিক তা ব্যবসা-নির্ভর: order/payment-এ হারানো চলবে না (queue + idempotency); search-এ বাতিল করাই ঠিক।</p></div>
+<p>নিরাপত্তা-গুরুত্ব অনুযায়ী: সাধারণ API-তে fail-open + local fallback + alert; OTP/payment-এ fail-closed। Timeout ও circuit breaker অবশ্যই।</p></div>
+<div class="card"><b>প্র৬. IP-ভিত্তিক limit-এর ঝুঁকি কী?</b>
+<p>NAT-এর পেছনে বহু ব্যবহারকারী একই IP — নিরীহরাও আটকে যায়; আবার botnet IP ঘুরিয়ে পার পায়। Authenticated হলে user ID/API key ধরুন; IP শুধু anonymous ও login-এ, সাথে CAPTCHA/device fingerprint।</p></div>
 </template>
 
 <template data-page="consistenthash">
