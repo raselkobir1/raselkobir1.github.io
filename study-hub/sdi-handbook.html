@@ -1261,7 +1261,7 @@ public static class Base62
 </table>
 <p>বইয়ের পছন্দ <b>Base62</b> — write পথ সরল। তবে দুটো বাস্তব দায় আছে:</p>
 <div class="callout mistake"><span class="tag">দায় ১ — ৭ অক্ষরে ধরানো</span>
-Snowflake ID (৬৪-বিট) base62-এ ১০-১১ অক্ষর। ৭ অক্ষরে থাকতে ID < ৩.৫ ট্রিলিয়ন লাগবে। সমাধান: <b>range allocation</b> — কেন্দ্রীয় counter (DB sequence/Redis/ZooKeeper) প্রতি app সার্ভারকে ১০ লাখ ID-র ব্লক দেয়; সার্ভার ব্লকের ভেতর memory-তে বাড়ায়। Crash-এ অব্যবহৃত ID হারালেও ক্ষতি নেই।</div>
+Snowflake ID (৬৪-বিট) base62-এ ১০-১১ অক্ষর। ৭ অক্ষরে থাকতে ID ৩.৫ ট্রিলিয়নের কম হতে হবে। সমাধান: <b>range allocation</b> — কেন্দ্রীয় counter (DB sequence/Redis/ZooKeeper) প্রতি app সার্ভারকে ১০ লাখ ID-র ব্লক দেয়; সার্ভার ব্লকের ভেতর memory-তে বাড়ায়। Crash-এ অব্যবহৃত ID হারালেও ক্ষতি নেই।</div>
 <div class="callout mistake"><span class="tag">দায় ২ — Enumeration</span>
 ক্রমিক কোডে কেউ পরপর লিংক খুলে অন্যের গোপন ইনভয়েস/পেমেন্ট লিংক সংগ্রহ করতে পারে। প্রতিকার: ID-কে <b>বিপরীতযোগ্য scramble</b> (Feistel/Sqids-ধরনের) করে base62 করা। মনে রাখুন, অস্পষ্টতা নিরাপত্তা নয় — সংবেদনশীল ডেটায় আসল authorization লাগবে।</div>
 
@@ -2424,7 +2424,7 @@ Memory ≈ 100 ns, Disk seek ≈ 10 ms, একই DC round trip ≈ 0.5 ms, cros
 </ol>
 
 <h3>১৬.৪ বাস্তব সিস্টেম পড়ার তালিকা</h3>
-<p>বই যে লেখাগুলো পড়তে বলে (নাম দিয়ে খুঁজুন): <b>Dynamo</b> (Amazon-এর KV store — chapter 6 এর ভিত্তি), <b>Bigtable</b> ও <b>Google File System</b>, <b>Scaling Memcache at Facebook</b>, <b>TAO</b> (সামাজিক graph store), <b>Haystack</b> (ফটো storage), <b>Snowflake</b> (Twitter ID), <b>Differential Synchronization</b> (Google Docs), <b>How We've Scaled Dropbox</b>, Netflix tech blog (ABR, Open Connect, experimentation), <b>Uber/Pinterest/LinkedIn/Instagram/WhatsApp architecture</b>। আরও: highscalability.com ও system-design-primer (GitHub)।</p>
+<p>বই যে লেখাগুলো পড়তে বলে (নাম দিয়ে খুঁজুন): <b>Dynamo</b> (Amazon-এর KV store — chapter 6 এর ভিত্তি), <b>Bigtable</b> ও <b>Google File System</b>, <b>Scaling Memcache at Facebook</b>, <b>TAO</b> (সামাজিক graph store), <b>Haystack</b> (ফটো storage), <b>Snowflake</b> (Twitter ID), <b>Differential Synchronization</b> (Google Docs), <b>How We've Scaled Dropbox</b>, Netflix stack ও experimentation platform (বইয়ের তালিকা); এর বাইরে Netflix tech blog-এ ABR ও Open Connect নিয়ে লেখা পাবেন, <b>Uber/Pinterest/LinkedIn/Instagram/WhatsApp architecture</b>। আরও: highscalability.com ও system-design-primer (GitHub)।</p>
 <div class="callout best"><span class="tag">পড়ার পদ্ধতি</span>
 প্রতিটা লেখায় তিনটা প্রশ্ন: (১) <b>কোন সমস্যা</b> তাদের এই সিদ্ধান্তে ঠেলল? (২) <b>কী ছেড়েছে</b> (trade-off)? (৩) আমার ERP/Payment প্রেক্ষাপটে কোনটা খাটে? ইন্টারভিউয়ের আগে সংশ্লিষ্ট কোম্পানির engineering blog পড়ে যান।</div>
 
