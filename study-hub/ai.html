@@ -3935,6 +3935,38 @@ HNSW : স্তরভিত্তিক গ্রাফ — উপরে বড
 ৩. similarity threshold — প্রাসঙ্গিক কিছু না থাকলে "জানি না"
 ৪. golden set দিয়ে hit-rate@k / MRR মাপা</pre>
 <p><b>ব্যাখ্যা:</b> (১) শুধু "সবচেয়ে কাছের" দেখে ফল দিলে একজনের গোপন ডকুমেন্ট আরেকজন দেখে ফেলতে পারে — ফিল্টার LLM-এর উপর ছাড়বেন না। (২) Index ও query-র operator মেলান (cosine index + <code>&lt;-&gt;</code> হলে index ব্যবহার হয় না)। (৩) Vector search সবসময় কিছু একটা "সবচেয়ে কাছের" দেয়, তাই threshold ছাড়া অপ্রাসঙ্গিক context থেকে hallucination হয়। (৪) কঠোর filter থাকলে post-filtering-এ ফল কমে যায় — in-filter বা <code>ef_search</code> বাড়ান। (৫) হুবহু শব্দ (ID, কোড, নাম)-এ vector দুর্বল, hybrid + reranker ব্যবহার করুন। (৬) আগে retrieval মাপুন, তারপর prompt/LLM বদলান।</p>
+
+<h3>৯২) RAG আর MCP-র সম্পর্ক কী? দুটো কি একটা আরেকটার বিকল্প?</h3>
+<pre>RAG → কৌশল (pattern):  কোন তথ্য খুঁজে এনে prompt-এ দেব?
+MCP → প্রোটোকল (plumbing): AI কীভাবে বাইরের tool/ডেটায় পৌঁছাবে?</pre>
+<p><b>ব্যাখ্যা:</b> দুটো আলাদা স্তরের জিনিস, বিকল্প নয়। RAG বলে <i>কী করতে হবে</i> (retrieve → context-এ বসাও → উত্তর), MCP বলে <i>কীভাবে সংযোগ হবে</i> (JSON-RPC, <code>tools/list</code>, <code>tools/call</code>)। একটা ছাড়া আরেকটা চলে: ছোট app-এ MCP ছাড়াই RAG হয়, আবার RAG ছাড়াই MCP দিয়ে live API/DB tool দেওয়া যায়। বাস্তবে মেলানো হয় দুভাবে — retrieval-কে MCP tool/resource হিসেবে expose করে যেকোনো client-এর জন্য reusable করা, অথবা Drive/Confluence/DB-র MCP server থেকে live ডেটা এনে context বানানো।</p>
+
+<h3>৯৩) RAG কখন ব্যবহার করবেন, আর কখন MCP (SQL/API tool)?</h3>
+<pre>নীতি/ব্যাখ্যা/"কীভাবে" প্রশ্ন, ডকুমেন্টে উত্তর → RAG
+নির্ভুল সংখ্যা/রেকর্ড (balance, invoice amount)  → SQL/API MCP tool
+কাজ করাতে হবে (voucher, email)                   → MCP write tool + confirmation</pre>
+<p><b>ব্যাখ্যা:</b> Vector search "সবচেয়ে কাছের" অনুমান করে, তাই নির্ভুল সংখ্যায় ভুল দিতে পারে; SQL নিখুঁত। আবার অসংখ্য ডকুমেন্টে অর্থভিত্তিক খোঁজা SQL দিয়ে হয় না। MCP কেবল সংযোগ-পথ দেয় — বড় ডকুমেন্ট ভাণ্ডারে semantic search-এর জন্য embedding/vector index তবুও লাগে। দুই ধরনের প্রশ্ন একসাথে এলে (যেমন "outstanding কত, আর policy অনুযায়ী approval লাগবে?") দুই ধরনের tool-ই রাখুন।</p>
+
+<h3>৯৪) RAG-কে MCP Server হিসেবে expose করলে "G" (Generation) কোথায় হয়?</h3>
+<pre>MCP Server : query → embed → vector search → top-k chunk + source  (শুধু R)
+Host LLM   : chunk পড়ে উত্তর লেখে                                  (G)</pre>
+<p><b>ব্যাখ্যা:</b> MCP Server শুধু retrieval করে chunk ও source ফেরত দেয় (<code>search_policy_docs(query, topK)</code>); উত্তর লেখে Host-এর LLM। সুবিধা: একবার বানানো retrieval tool chat app, IDE assistant, Claude Desktop — সবাই ব্যবহার করতে পারে, আর কোন LLM ব্যবহার হবে সেটা Host ঠিক করে। Tool-এ <code>topK</code> সীমা, ব্যবহারকারীর permission অনুযায়ী metadata filter ও প্রতিটা hit-এ source/page ফেরত দিন।</p>
+
+<h3>৯৫) Agentic RAG কী, আর classic RAG থেকে কীভাবে আলাদা?</h3>
+<pre>Classic : প্রতিটা প্রশ্নে fixed pipeline → একবার retrieve → উত্তর
+Agentic : মডেল নিজে ঠিক করে কখন/কোন উৎসে/কতবার খুঁজবে (tool call loop)</pre>
+<p><b>ব্যাখ্যা:</b> Agentic RAG-এ retrieval একটা tool; মডেল দরকার মনে করলে ডাকে, প্রথম ফল দুর্বল হলে query বদলে আবার খোঁজে, আর vector DB, SQL, API — একাধিক উৎস মেলাতে পারে (MCP দিয়ে সব tool হিসেবে)। বিনিময়ে একাধিক LLM call-এ latency/cost বাড়ে ও আচরণ অনুমান করা কঠিন — তাই iteration সীমা, timeout ও golden-set evaluation দরকার। সহজ Q&amp;A-তে classic RAG-ই সস্তা ও নির্ভরযোগ্য।</p>
+
+<h3>৯৬) RAG-এর retrieval tool MCP-তে বানালে security-তে কী খেয়াল রাখবেন?</h3>
+<pre>১. ব্যবহারকারীর role/permission অনুযায়ী metadata filter (Server-এ, LLM-এ নয়)
+২. Retrieved chunk = untrusted ডেটা (Prompt Injection)
+৩. Argument validate; topK/ঘনঘন call-এ সীমা; audit log</pre>
+<p><b>ব্যাখ্যা:</b> (১) Tool সবার হয়ে একই index খুঁজলে একজনের গোপন ডকুমেন্ট আরেকজনের কাছে যেতে পারে — filter অবশ্যই Server-এ ও আসল ব্যবহারকারীর পরিচয়ে। (২) ডকুমেন্টের ভেতরে "আগের নির্দেশ ভুলে যাও…" লুকানো থাকতে পারে; retrieved টেক্সট instruction নয়, ডেটা — system prompt-এ আলাদা করে বলুন, write tool-এ confirmation রাখুন। (৩) অবিশ্বস্ত third-party MCP server install করবেন না; কে কোন query চালালো লগ রাখুন।</p>
+
+<h3>৯৭) MCP থাকলে কি RAG লাগে না? আবার RAG থাকলে কি MCP লাগে না?</h3>
+<pre>"MCP থাকলে RAG লাগে না"  → ভুল: MCP শুধু সংযোগ-পথ, semantic search দেয় না
+"RAG থাকলে MCP লাগে না"  → ছোট একক app-এ ঠিক; live ডেটা/action লাগলে যথেষ্ট নয়</pre>
+<p><b>ব্যাখ্যা:</b> MCP দিয়ে মডেল Drive বা DB-তে পৌঁছাতে পারে, কিন্তু হাজার হাজার ডকুমেন্টে "অর্থে কাছের" অংশ খুঁজতে embedding + vector/hybrid search লাগে — সেটাই RAG-এর কাজ। উল্টো দিকে, RAG শুধু পড়ে; আজকের sales আনা, voucher তৈরি, ইমেইল পাঠানো — এসব live ডেটা ও action-এর জন্য MCP tool। এক বাক্যে: RAG = কী তথ্য আনব, Function Calling = মডেল কীভাবে চাইবে, MCP = সেটা কোন standard পথে আসবে।</p>
 </template>
 
 <!-- ============================ RENDER ============================ -->
