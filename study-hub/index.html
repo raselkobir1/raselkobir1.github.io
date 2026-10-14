@@ -123,6 +123,13 @@
   .tprog .pfill{height:100%; background:var(--c,var(--accent))}
   .tprog .ptext{font-size:11.5px; color:var(--muted); margin-top:5px}
 
+  /* Category sections */
+  .cat{margin:0 0 38px}
+  .cat-head{display:flex; align-items:center; gap:12px; margin:0 0 14px; padding:10px 14px; background:var(--panel); border:1px solid var(--border); border-left:5px solid var(--cc,var(--accent)); border-radius:12px}
+  .cat-head .cicon{font-size:22px}
+  .cat-head h2{font-size:19px; margin:0; flex:1}
+  .cat-head h2 small{display:block; font-size:12.5px; font-weight:400; color:var(--muted); margin-top:1px}
+  .cat-head .ccount{font-size:12px; color:var(--muted); background:var(--panel2); border:1px solid var(--border); border-radius:20px; padding:3px 11px; white-space:nowrap}
   .empty{grid-column:1/-1; text-align:center; color:var(--muted); padding:50px 0}
 
   footer{margin-top:46px; padding-top:20px; border-top:1px solid var(--border); color:var(--muted); font-size:13px; text-align:center}
@@ -180,7 +187,7 @@
     </div>
   </div>
 
-  <div class="grid" id="grid"></div>
+  <div id="grid"></div>
 
   <footer>ক্রমশ আরও টপিক যোগ হবে • Study Hub</footer>
 </div>
@@ -192,135 +199,149 @@
 const topics = [
   { id:"kafka",      icon:"⚡",  title:"Apache Kafka", accent:"#ff8c42",
     desc:"Distributed event streaming — architecture, storage internals, producer/consumer, replication থেকে production।",
-    tags:["১৭ অধ্যায়","Beginner→Advanced"], ready:true, href:"kafka-mastery-bangla.html" },
+    tags:["১৭ অধ্যায়","Beginner→Advanced"], ready:true, href:"kafka-mastery-bangla.html", cat:"data" },
 
   { id:"rabbitmq",   icon:"🐰",  title:"RabbitMQ", accent:"#f96a6a",
     desc:"Message broker — AMQP, exchange, queue, binding, routing, DLX/DLQ, quorum queue থেকে production।",
-    tags:["১২ অধ্যায়","Beginner→Advanced"], ready:true, href:"rabbitmq.html" },
+    tags:["১২ অধ্যায়","Beginner→Advanced"], ready:true, href:"rabbitmq.html", cat:"data" },
 
   { id:"docker",     icon:"🐳",  title:"Docker", accent:"#4aa3ff",
     desc:"Image, layer, Dockerfile, multi-stage, volume, network, Compose ও .NET stack — production-grade।",
-    tags:["১২ অধ্যায়","Beginner→Advanced"], ready:true, href:"docker.html" },
+    tags:["১২ অধ্যায়","Beginner→Advanced"], ready:true, href:"docker.html", cat:"devops" },
 
   { id:"kubernetes", icon:"☸️",  title:"Kubernetes", accent:"#7b9cff",
     desc:"Pod/Deployment/Service/Ingress internals, storage, scheduling, scaling, Helm, RBAC ও ASP.NET Core deployment — production-grade।",
-    tags:["১৩ অধ্যায়","Beginner→Advanced"], ready:true, href:"kubernetes.html" },
+    tags:["১৩ অধ্যায়","Beginner→Advanced"], ready:true, href:"kubernetes.html", cat:"devops" },
 
   { id:"csharp",     icon:"💜",  title:"C# / .NET", accent:"#bc8cff",
     desc:"Language core, OOP, LINQ, async/await, memory, modern C#, reflection, DI, configuration/logging, ASP.NET Core, EF Core ও testing — production-grade।",
-    tags:["২০ অধ্যায়","Beginner→Advanced"], ready:true, href:"csharp.html" },
+    tags:["২০ অধ্যায়","Beginner→Advanced"], ready:true, href:"csharp.html", cat:"code" },
 
   { id:"sql",        icon:"🗄️",  title:"SQL · PostgreSQL · SQL Server", accent:"#3fb950",
     desc:"Portable SQL (join, window, CTE, tx, index) + PostgreSQL ও SQL Server specifics — production-grade।",
-    tags:["১৯ অধ্যায়","+ interview · tuning · CDC"], ready:true, href:"sql.html" },
+    tags:["১৯ অধ্যায়","+ interview · tuning · CDC"], ready:true, href:"sql.html", cat:"data" },
 
   { id:"redis",      icon:"🧱",  title:"Redis", accent:"#f85149",
     desc:"Data types, persistence, eviction, pub/sub, streams, replication, caching pattern ও .NET — production-grade।",
-    tags:["১২ অধ্যায়","Beginner→Advanced"], ready:true, href:"redis.html" },
+    tags:["১২ অধ্যায়","Beginner→Advanced"], ready:true, href:"redis.html", cat:"data" },
 
   { id:"git",        icon:"🌿",  title:"Git", accent:"#e3b341",
     desc:"Internals, branch/merge/rebase, remote workflow, undo/recovery, submodule/worktree — প্রতিটা command-এর কারণ ও প্রভাবসহ।",
-    tags:["১২ অধ্যায়","Beginner→Advanced"], ready:true, href:"git.html" },
+    tags:["১২ অধ্যায়","Beginner→Advanced"], ready:true, href:"git.html", cat:"code" },
 
   { id:"auth",       icon:"🔐",  title:"Auth & Keycloak", accent:"#eab308",
     desc:"AuthN vs AuthZ, password hashing, JWT internals, OAuth2/OIDC flows, Keycloak realm/client, BFF pattern ও .NET integration।",
-    tags:["১৩ অধ্যায়","Beginner→Advanced"], ready:true, href:"auth.html" },
+    tags:["১৩ অধ্যায়","Beginner→Advanced"], ready:true, href:"auth.html", cat:"code" },
 
   { id:"distsys",    icon:"🕸️",  title:"Distributed Systems", accent:"#2dd4bf",
     desc:"CAP theorem, consistency, consensus, replication, partitioning, fault tolerance ও design pattern।",
-    tags:["১৪ অধ্যায়","Beginner→Advanced"], ready:true, href:"distsys.html" },
+    tags:["১৪ অধ্যায়","Beginner→Advanced"], ready:true, href:"distsys.html", cat:"sd" },
 
   { id:"design",     icon:"🧩",  title:"OOP, SOLID ও Design Patterns", accent:"#fb7185",
     desc:"OOP-এর চার স্তম্ভ, Composition over Inheritance, SOLID-এর ৫টি নীতি, GoF Design Pattern, Anti-pattern ও Webhook — .NET উদাহরণসহ।",
-    tags:["১৪ অধ্যায়","Beginner→Advanced"], ready:true, href:"design.html" },
+    tags:["১৪ অধ্যায়","Beginner→Advanced"], ready:true, href:"design.html", cat:"arch" },
 
   { id:"linux",      icon:"🐧",  title:"Linux Mastery", accent:"#94a3b8",
     desc:"Kernel, permission, process, shell scripting, networking, systemd, SSH, monitoring, security ও automation — production-grade।",
-    tags:["১৪ অধ্যায়","Beginner→Advanced"], ready:true, href:"linux.html" },
+    tags:["১৪ অধ্যায়","Beginner→Advanced"], ready:true, href:"linux.html", cat:"devops" },
 
   { id:"react",      icon:"⚛️",  title:"Modern React", accent:"#61dafb",
     desc:"Hooks, state management, data fetching, routing, performance, Server Components/Next.js, React-Next.js সম্পর্ক, testing, patterns, a11y, production concerns ও interview Q&A।",
-    tags:["১৬ অধ্যায়","Beginner→Advanced"], ready:true, href:"react.html" },
+    tags:["১৬ অধ্যায়","Beginner→Advanced"], ready:true, href:"react.html", cat:"code" },
 
   { id:"angular",    icon:"🅰️",  title:"Modern Angular", accent:"#dd0031",
     desc:"Standalone components, Signals, DI, RxJS, routing, forms, NgRx, change detection, testing, a11y, production concerns ও interview Q&A।",
-    tags:["১৫ অধ্যায়","Beginner→Advanced"], ready:true, href:"angular.html" },
+    tags:["১৫ অধ্যায়","Beginner→Advanced"], ready:true, href:"angular.html", cat:"code" },
 
   { id:"ai",         icon:"🤖",  title:"AI Engineering", accent:"#a78bfa",
     desc:"LLM fundamentals, prompt engineering, embeddings, Vector DB (শূন্য থেকে), RAG, tool calling, MCP, LangChain/LangGraph, AI agents, prediction model-কে real app-এ ব্যবহার, time-series forecasting, evaluation, safety ও production-এ AI feature বসানো।",
-    tags:["২৩ অধ্যায়","Beginner→Advanced"], ready:true, href:"ai.html" },
+    tags:["২৩ অধ্যায়","Beginner→Advanced"], ready:true, href:"ai.html", cat:"ai" },
 
   { id:"vectordb", icon:"🧲", title:"Vector Database Mastery", accent:"#2dd4bf",
     desc:"Vector ও Embedding-এর গণিত, embedding model বাছাই (বাংলাসহ), ANN (HNSW, IVF, PQ), index tuning ও quantization, chunking, hybrid search ও rerank, Chroma, pgvector (.NET সহ), Qdrant, অন্য Vector DB-র তুলনা, End-to-End RAG, evaluation, production architecture, security ও ৫৬টা interview প্রশ্ন।",
-    tags:["১৭ অধ্যায়","Beginner→Advanced"], ready:true, href:"vectordb.html" },
+    tags:["১৭ অধ্যায়","Beginner→Advanced"], ready:true, href:"vectordb.html", cat:"ai" },
 
   { id:"devops",     icon:"♾️",  title:"DevOps", accent:"#38bdf8",
     desc:"CI/CD pipeline, Infrastructure as Code, Configuration Management, GitOps, Secrets, Observability, SRE, Incident Management ও DevSecOps।",
-    tags:["১৩ অধ্যায়","Beginner→Advanced"], ready:true, href:"devops.html" },
+    tags:["১৩ অধ্যায়","Beginner→Advanced"], ready:true, href:"devops.html", cat:"devops" },
 
   { id:"english",    icon:"🗣️",  title:"Spoken English for Engineers", accent:"#34d399",
     desc:"Phonetics, stress ও intonation, basic grammar, common everyday words ও expressions, standup/code review/interview-এর বাস্তব ভাষা, phrasal verbs ও idioms — সফটওয়্যার ইঞ্জিনিয়ারদের জন্য spoken ও written English।",
-    tags:["১৬ অধ্যায়","Beginner→Advanced"], ready:true, href:"english.html" },
+    tags:["১৬ অধ্যায়","Beginner→Advanced"], ready:true, href:"english.html", cat:"career" },
 
   { id:"networking", icon:"🌐", title:"Networking", accent:"#22d3ee",
     desc:"OSI/TCP-IP model, Ethernet/VLAN, IP addressing ও subnetting, routing, TCP/UDP, DNS, HTTP/TLS, NAT/Firewall, VPN, wireless ও cloud networking — production-grade।",
-    tags:["১৫ অধ্যায়","Beginner→Advanced"], ready:true, href:"networking.html" },
+    tags:["১৫ অধ্যায়","Beginner→Advanced"], ready:true, href:"networking.html", cat:"devops" },
 
   { id:"microservices", icon:"🛰️", title:"Microservices Architecture", accent:"#818cf8",
     desc:"Monolith বনাম Microservices, DDD/decomposition, communication, API Gateway, Saga, event-driven, resilience, service mesh, observability, security, testing, deployment, anti-pattern ও .NET বাস্তবায়ন।",
-    tags:["১৮ অধ্যায়","Beginner→Advanced"], ready:true, href:"microservices.html" },
+    tags:["১৮ অধ্যায়","Beginner→Advanced"], ready:true, href:"microservices.html", cat:"arch" },
 
   { id:"ddd", icon:"🧠", title:"Domain-Driven Design", accent:"#06b6d4",
     desc:"Ubiquitous Language, Bounded Context, Context Mapping, Entity/Value Object, Aggregate, Domain Event, Repository, Strategic Design, Event Storming, Hexagonal Architecture, CQRS/ES, DDD ও Microservices সম্পর্ক ও .NET বাস্তবায়ন।",
-    tags:["১৮ অধ্যায়","Beginner→Advanced"], ready:true, href:"ddd.html" },
+    tags:["১৮ অধ্যায়","Beginner→Advanced"], ready:true, href:"ddd.html", cat:"arch" },
 
   { id:"agile", icon:"🏃", title:"Agile ও Scrum", accent:"#f59e0b",
     desc:"Agile Manifesto, Scrum roles/events/artifacts, User Story, Estimation, Kanban, Backlog, Definition of Done/Ready, Metrics, Scaling (SAFe/LeSS), Retrospective, Anti-pattern ও DevOps সম্পর্ক।",
-    tags:["১৮ অধ্যায়","Beginner→Advanced"], ready:true, href:"agile.html" },
+    tags:["১৮ অধ্যায়","Beginner→Advanced"], ready:true, href:"agile.html", cat:"career" },
 
   { id:"problemsolving", icon:"🧮", title:"Problem Solving ও DSA", accent:"#d946ef",
     desc:"Complexity analysis, Data Structure ও Algorithm-এর পরিচিতি ও প্রকারভেদ, Two Pointers/Sliding Window, Hashing, Recursion/Backtracking, Sorting/Binary Search, Linked List, Stack/Queue, Trees, Heap, Graph (BFS/DFS/Dijkstra/Union-Find), Dynamic Programming, Greedy ও Interview Strategy।",
-    tags:["২০ অধ্যায়","Beginner→Advanced"], ready:true, href:"problemsolving.html" },
+    tags:["২০ অধ্যায়","Beginner→Advanced"], ready:true, href:"problemsolving.html", cat:"code" },
 
   { id:"aws", icon:"☁️", title:"AWS", accent:"#ff9900",
     desc:"Cloud Foundation, IAM, EC2, VPC, S3, Storage, RDS/Aurora, DynamoDB, Load Balancing/Auto Scaling, Route 53, CloudFront, Lambda/Serverless, API Gateway, Messaging, Containers, IaC, Observability, Security ও Cost Optimization — Basic থেকে Advanced।",
-    tags:["২০ অধ্যায়","Beginner→Advanced"], ready:true, href:"aws.html" },
+    tags:["২০ অধ্যায়","Beginner→Advanced"], ready:true, href:"aws.html", cat:"devops" },
 
   { id:"azure", icon:"🔷", title:"Azure", accent:"#0078d4",
     desc:"Cloud Foundation, Microsoft Entra ID/RBAC, Virtual Machines, VNet, Blob Storage, Managed Disks/Files, Azure SQL, Cosmos DB, Load Balancing/Scale Sets, DNS/Traffic Manager, CDN/Front Door, Functions, API Management, Messaging, AKS/Containers, ARM/Bicep, Monitor, Security ও Cost Management — Basic থেকে Advanced।",
-    tags:["২০ অধ্যায়","Beginner→Advanced"], ready:true, href:"azure.html" },
+    tags:["২০ অধ্যায়","Beginner→Advanced"], ready:true, href:"azure.html", cat:"devops" },
 
   { id:"systemdesign", icon:"🧩", title:"System Design", accent:"#6366f1",
     desc:"Estimation, Scalability/Load Balancing, Caching/CDN, Database (SQL/NoSQL, Sharding, Consistent Hashing), Message Queue, API/Rate Limiting, Bloom Filter/Quorum/Gossip, Reliability/DR, এবং URL Shortener, Rate Limiter, Distributed Cache, News Feed, Chat, Notification, Ride-Sharing, Video Streaming, Web Crawler-এর মতো Case Study — Basic থেকে Advanced।",
-    tags:["২০ অধ্যায়","Beginner→Advanced"], ready:true, href:"systemdesign.html" },
+    tags:["২০ অধ্যায়","Beginner→Advanced"], ready:true, href:"systemdesign.html", cat:"sd" },
 
   { id:"architecture", icon:"🏛️", title:"Software Architecture Patterns", accent:"#f97316",
     desc:"Architecture fundamentals ও Quality Attributes, Layered, Client-Server, Monolith, Modular Monolith, SOA, Microservices, Event-Driven, Hexagonal/Clean/Onion, Pipe-and-Filter, Space-Based, Peer-to-Peer, Serverless, C4 Model/ADR ডকুমেন্টেশন, এবং সঠিক আর্কিটেকচার বেছে নেওয়ার Decision Framework।",
-    tags:["১৭ অধ্যায়","Beginner→Advanced"], ready:true, href:"architecture.html" },
+    tags:["১৭ অধ্যায়","Beginner→Advanced"], ready:true, href:"architecture.html", cat:"arch" },
 
   { id:"scalability", icon:"📈", title:"Scalability, Load Balancing ও Traffic Management", accent:"#22c55e",
     desc:"Vertical/Horizontal Scaling, App ও Database Scaling (Replication/Sharding/Cache/CDN), Load Balancer (L4/L7, Algorithms, Global LB), API Gateway, API Design ও Versioning (REST, Pagination, SemVer, Deprecation), Idempotency Key Pattern, Concurrent Request Handling (Lock, Isolation Level, Distributed Lock), এবং Rate Limiting Algorithms — Basic থেকে Advanced।",
-    tags:["১৭ অধ্যায়","Beginner→Advanced"], ready:true, href:"scalability.html" },
+    tags:["১৭ অধ্যায়","Beginner→Advanced"], ready:true, href:"scalability.html", cat:"sd" },
 
   { id:"softskills", icon:"🤝", title:"Soft Skills, Interview ও Negotiation Mastery", accent:"#ec4899",
     desc:"Communication (Active Listening, Workplace ও Async Communication), Public Speaking, Emotional Intelligence, Teamwork ও Feedback (Radical Candor), Time Management, Interview Preparation (STAR Method, Technical Interview Strategy), এবং Negotiation (BATNA, Salary Negotiation) ও Career Growth — Basic থেকে Advanced।",
-    tags:["১৬ অধ্যায়","Beginner→Advanced"], ready:true, href:"softskills.html" },
+    tags:["১৬ অধ্যায়","Beginner→Advanced"], ready:true, href:"softskills.html", cat:"career" },
 
   { id:"accounting", icon:"📒", title:"Financial Accounting Mastery", accent:"#16a34a",
     desc:"Accounting Equation, Double-Entry System, Debit ও Credit (T-Account, Golden Rules), Chart of Accounts, Journal ও Ledger, Trial Balance, Adjusting Entries, Financial Statements (Income Statement, Balance Sheet, Cash Flow), Accounting Cycle/Closing Entries, এবং Financial Ratio Analysis — Basic থেকে Advanced।",
-    tags:["১৭ অধ্যায়","Beginner→Advanced"], ready:true, href:"accounting.html" },
+    tags:["১৭ অধ্যায়","Beginner→Advanced"], ready:true, href:"accounting.html", cat:"career" },
 
   { id:"sdcasestudies", icon:"🏗️", title:"System Design Case Studies", accent:"#4f46e5",
     desc:"Case Study Framework, E-commerce/Flash Sale, Payment System, Booking/Reservation, Search Engine, Collaborative Editor (Google Docs), Distributed File Storage (Dropbox), Real-time Leaderboard, Analytics Pipeline, Proximity Service, Task Scheduler, Monitoring/Alerting, একটা Full Mock Interview Walkthrough, ও Recurring Design Pattern সারাংশ — Basic থেকে Advanced।",
-    tags:["১৫ অধ্যায়","Beginner→Advanced"], ready:true, href:"sd-case-studies.html" },
+    tags:["১৫ অধ্যায়","Beginner→Advanced"], ready:true, href:"sd-case-studies.html", cat:"sd" },
 
   { id:"sdihandbook", icon:"🧠", title:"System Design Interview Handbook", accent:"#f59e0b",
     desc:"Alex Xu-র System Design Interview (Vol. 1) ভিত্তিক বাংলা কোর্স, C#/.NET প্রেক্ষাপটে — Scale from Zero to Millions, Back-of-the-Envelope Estimation, ৪ ধাপের Interview Framework, Rate Limiter, Consistent Hashing, Key-Value Store, Unique ID Generator, URL Shortener, Web Crawler, Notification, News Feed, Chat, Search Autocomplete, YouTube, Google Drive ও চূড়ান্ত Cheat Sheet — C# কোডসহ।",
-    tags:["১৬ অধ্যায়","Beginner→Advanced"], ready:true, href:"sdi-handbook.html" },
+    tags:["১৬ অধ্যায়","Beginner→Advanced"], ready:true, href:"sdi-handbook.html", cat:"sd" },
 
   { id:"python", icon:"🐍", title:"Python ও FastAPI Mastery", accent:"#eab308",
     desc:"Python basic থেকে advanced (Data Types, Control Flow, Function, Collections, File/JSON, Exception, OOP, Generator, Decorator, Type Hints, Concurrency/asyncio, pytest), জনপ্রিয় Library (requests, pandas, NumPy, Pydantic, SQLAlchemy) এবং FastAPI বিস্তারিত (Pydantic, Dependency Injection, SQLAlchemy CRUD, JWT Auth, Background Task, WebSocket, Testing, Docker Deployment), AI Service, ৬ সপ্তাহের Roadmap (প্রতি সপ্তাহের পূর্ণ exercise) ও কোড-সহ Interview প্রশ্নোত্তর।",
-    tags:["২৬ অধ্যায়","Beginner→Advanced"], ready:true, href:"python.html" },
+    tags:["২৬ অধ্যায়","Beginner→Advanced"], ready:true, href:"python.html", cat:"code" },
+];
+
+// ================= CATEGORIES =================
+// একই ক্যাটাগরির কোর্স একসাথে পাশাপাশি দেখায়। নতুন টপিকে cat:"<id>" দিন; না দিলে "অন্যান্য"-তে যাবে।
+// ক্যাটাগরির ক্রম এই তালিকার ক্রম অনুযায়ী।
+const categories = [
+  { id:"sd",     icon:"🧩", title:"System Design",                 sub:"Interview, Scalability, Case Study ও Distributed Systems", accent:"#6366f1",
+    order:["systemdesign","sdihandbook","sdcasestudies","scalability","distsys"] },   // order: ঐচ্ছিক — এই ক্রমে আগে দেখায়
+  { id:"arch",   icon:"🏛️", title:"Architecture ও Design",         sub:"Architecture Pattern, Microservices, DDD, OOP/SOLID",     accent:"#f97316" },
+  { id:"data",   icon:"🗄️", title:"Data ও Messaging",              sub:"Database, Cache ও Message Broker",                         accent:"#ff8c42" },
+  { id:"devops", icon:"☁️", title:"DevOps, Cloud ও Infrastructure", sub:"Container, Cloud, Linux ও Networking",                    accent:"#38bdf8" },
+  { id:"ai",     icon:"🤖", title:"AI ও Vector Database",          sub:"LLM, RAG, Embedding ও Vector DB",                          accent:"#a78bfa" },
+  { id:"code",   icon:"💻", title:"Programming ও Frameworks",      sub:"Language, Frontend/Backend Framework, DSA, Git, Auth",     accent:"#61dafb" },
+  { id:"career", icon:"🎯", title:"Career, Soft Skills ও Business", sub:"English, Agile, Interview, Accounting",                    accent:"#ec4899" },
 ];
 
 // ================= PROGRESS =================
@@ -406,9 +427,22 @@ function chapterTotal(t, saved){
       const okT = !term || (t.title+' '+t.id+' '+t.desc).toLowerCase().includes(term);
       return okF && okT;
     });
-    grid.innerHTML = list.length
-      ? list.map(card).join('')
-      : '<div class="empty">কোনো টপিক মেলেনি — অন্য কিছু খুঁজে দেখুন।</div>';
+    if(!list.length){
+      grid.innerHTML = '<div class="empty">কোনো টপিক মেলেনি — অন্য কিছু খুঁজে দেখুন।</div>';
+      return;
+    }
+    const known = new Set(categories.map(c=>c.id));
+    const rank = (c,t)=>{ const i = (c.order||[]).indexOf(t.id); return i<0 ? 999 : i; };
+    const groups = categories.map(c=>({ c, items:list.filter(t=>t.cat===c.id).sort((a,b)=>rank(c,a)-rank(c,b)) }));
+    const rest = list.filter(t=>!known.has(t.cat));
+    if(rest.length) groups.push({ c:{ id:'other', icon:'📦', title:'অন্যান্য', sub:'', accent:'#9aa7b4' }, items:rest });
+    grid.innerHTML = groups.filter(g=>g.items.length).map(g=>
+        `<section class="cat" id="cat-${g.c.id}" style="--cc:${g.c.accent}">`
+      + `<div class="cat-head"><span class="cicon">${g.c.icon}</span>`
+      + `<h2>${g.c.title}${g.c.sub ? `<small>${g.c.sub}</small>` : ''}</h2>`
+      + `<span class="ccount">${g.items.length}টা কোর্স</span></div>`
+      + `<div class="grid">${g.items.map(card).join('')}</div></section>`
+    ).join('');
   }
 
   chips.addEventListener('click', e=>{
