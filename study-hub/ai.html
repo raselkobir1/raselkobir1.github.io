@@ -1510,8 +1510,123 @@ Console.WriteLine(reply.Text);</pre>
 <div class="callout behind"><span class="tag">পর্দার পেছনে — কে কোনটা করে</span>
 মডেল কোনো tool নিজে চালায় না (ধাপ ৩ শুধু prediction)। আসল execution ঘটে MCP Server-এ (ধাপ ৪–৬), যেখানে আপনার code ও security নিয়ম চলে। একটা প্রশ্নে একাধিক tool লাগলে ধাপ ৩–৭ কয়েকবার ঘোরে — এটাই Agent loop-এর ভিত্তি।</div>
 
-<h4>RAG-কেও MCP-র ভেতরে আনা যায়</h4>
-<p>"কোম্পানির accounting policy কী?" ধরনের প্রশ্নে আরেকটা tool বা resource রাখুন: <code>search_policy_docs(query)</code> — ভেতরে embedding + pgvector search চলে, MCP Server শুধু top chunk ফেরত দেয়। এভাবে একই AI Assistant একসাথে <b>live ডেটা</b> (tool) ও <b>ডকুমেন্ট জ্ঞান</b> (RAG) দুটোই ব্যবহার করে।</p>
+<h3>RAG ও MCP-র সম্পর্ক — বিস্তারিত</h3>
+<p>নতুনরা প্রায়ই RAG আর MCP-কে প্রতিযোগী ভাবে ("কোনটা বেছে নেব?")। আসলে এরা <b>আলাদা স্তরের জিনিস</b> এবং একসাথে কাজ করে। এক লাইনে: <b>RAG হলো একটা কৌশল (pattern)</b> — "উত্তর দেওয়ার আগে প্রাসঙ্গিক তথ্য খুঁজে এনে prompt-এ দাও"। <b>MCP হলো একটা প্রোটোকল (plumbing)</b> — "AI কীভাবে বাইরের tool/ডেটার সাথে standard উপায়ে কথা বলবে"। একটা <i>কী করতে হবে</i> বলে, আরেকটা <i>কীভাবে সংযোগ হবে</i> বলে।</p>
+
+<div class="callout why"><span class="tag">উপমা — লাইব্রেরি ও ফোন-লাইন</span>
+RAG হলো "উত্তর লেখার আগে লাইব্রেরি থেকে সঠিক বইয়ের পাতা বের করে পড়ে নেওয়া"। MCP হলো সেই লাইব্রেরির সাথে (এবং ব্যাংক, ইমেইল, GitHub-এর সাথেও) যুক্ত হওয়ার <b>একটাই standard সকেট</b>। লাইব্রেরি থেকে পড়া মানেই সকেট লাগবে এমন নয় — আবার সকেট থাকলেই যে সব কাজ "পড়ে-উত্তর-দেওয়া" তাও নয়।</div>
+
+<h4>১. মূল পার্থক্য এক নজরে</h4>
+<table>
+<tr><th></th><th>RAG</th><th>MCP</th></tr>
+<tr><td>ধরন</td><td>আর্কিটেকচার/পদ্ধতি (pattern)</td><td>যোগাযোগের প্রোটোকল (JSON-RPC)</td></tr>
+<tr><td>মূল প্রশ্ন</td><td>"কোন তথ্য মডেলকে দেখাব?"</td><td>"মডেল কীভাবে বাইরের সিস্টেমে পৌঁছাবে?"</td></tr>
+<tr><td>কাজ</td><td>Chunk → Embed → Vector search → Prompt-এ context → উত্তর</td><td>Host ↔ Client ↔ Server; <code>tools/list</code>, <code>tools/call</code>, <code>resources/read</code></td></tr>
+<tr><td>ডেটার প্রকৃতি</td><td>বেশি ক্ষেত্রে <b>স্থির/ধীরে-বদলানো ডকুমেন্ট</b> (policy, manual, wiki)</td><td><b>Live ডেটা ও action</b> (আজকের sales, voucher তৈরি, ইমেইল পাঠানো)</td></tr>
+<tr><td>Side effect</td><td>সাধারণত নেই — শুধু পড়া</td><td>থাকতে পারে (write tool)</td></tr>
+<tr><td>কে সিদ্ধান্ত নেয়</td><td>সাধারণত application (সবসময় retrieve করে) — বা agent নিজে</td><td>মডেল (কোন tool, কী argument)</td></tr>
+<tr><td>ছাড়া চলে?</td><td>হ্যাঁ — MCP ছাড়াই RAG হয়</td><td>হ্যাঁ — RAG ছাড়াই MCP হয়</td></tr>
+</table>
+
+<h4>২. আসল সম্পর্ক — তিনটা পথ</h4>
+<p>দুটো একে অপরের উপর নির্ভরশীল নয়, কিন্তু বাস্তবে তিনভাবে মিলিত হয়:</p>
+<table>
+<tr><th>#</th><th>সম্পর্ক</th><th>ব্যাখ্যা</th></tr>
+<tr><td>১</td><td><b>আলাদা — RAG MCP ছাড়া</b></td><td>নিজের app-এর ভেতরেই retrieval চলে: প্রতিটা প্রশ্নে app নিজে vector search করে context prompt-এ বসায়। কোনো MCP Server নেই। ছোট, একক application-এর জন্য সবচেয়ে সহজ।</td></tr>
+<tr><td>২</td><td><b>RAG-কে MCP Server হিসেবে expose করা</b></td><td>Retrieval-কে একটা <code>search_policy_docs(query)</code> tool (বা resource) বানানো। ভেতরে embedding + pgvector চলে; বাইরে থেকে যেকোনো MCP client (আপনার chat app, IDE assistant, Claude Desktop) একই tool ব্যবহার করতে পারে। <b>একবার বানাও, সব জায়গায় ব্যবহার করো।</b></td></tr>
+<tr><td>৩</td><td><b>MCP দিয়ে RAG-এর "উৎস" আনা</b></td><td>Knowledge যদি নিজের vector DB-তে না থেকে Confluence, Google Drive, SharePoint, GitHub বা database-এ থাকে, তাহলে তাদের MCP server থেকে ডেটা এনে (লাইভ) context বানানো হয় — আগে থেকে index না করেই।</td></tr>
+</table>
+
+<h4>৩. পথ ২ — RAG-কে MCP Tool হিসেবে বানানো (পূর্ণ architecture)</h4>
+<div class="diagram"><pre>
+ ┌──────────────────── MCP Host (Chat API / Agent) ────────────────────┐
+ │  User: "Vendor payment-এর approval limit কত?"                       │
+ │            │                                                        │
+ │            ▼                                                        │
+ │        LLM ── (১) tool call প্রস্তাব: search_policy_docs(...)         │
+ │            ▲                                                        │
+ │            │ (৪) top-k chunk + source                               │
+ │        MCP Client                                                   │
+ └────────────┬────────────────────────────────────────────────────────┘
+              │ tools/call  (JSON-RPC)
+              ▼
+ ┌──────────── MCP Server: "knowledge" ────────────────────────────────┐
+ │  (২) query → embedding model → vector                               │
+ │  (৩) pgvector similarity search + metadata filter (ব্যবহারকারীর role) │
+ │       → top-k chunk, প্রতিটার সাথে source/page                      │
+ └─────────────────────────────────────────────────────────────────────┘
+</pre></div>
+<pre><span class="c">// RAG-এর retrieval অংশটা MCP Tool হিসেবে — আগের AccountingTools-এর পাশেই বসে</span>
+[McpServerToolType]
+public class KnowledgeTools(IEmbeddingGenerator&lt;string, Embedding&lt;float&gt;&gt; embedder,
+                            IPolicyChunkStore store, IUserContext user)
+{
+    [McpServerTool, Description(
+        "কোম্পানির নীতিমালা (policy, approval limit, নিয়ম) ডকুমেন্টে খোঁজে এবং সবচেয়ে প্রাসঙ্গিক অংশ উৎসসহ ফেরত দেয়। " +
+        "নীতি/নিয়ম/প্রক্রিয়া নিয়ে প্রশ্নে ব্যবহার করো। আজকের sales বা balance-এর মতো live সংখ্যার জন্য নয়। শুধু পড়ে।")]
+    public async Task&lt;IReadOnlyList&lt;PolicyHit&gt;&gt; SearchPolicyDocs(
+        [Description("প্রশ্ন বা কীওয়ার্ড, যেমন 'vendor payment approval limit'")] string query,
+        [Description("কয়টা অংশ চাই (১–৮)")] int topK = 4)
+    {
+        topK = Math.Clamp(topK, 1, 8);                                   <span class="c">// argument validate</span>
+        var vector = (await embedder.GenerateAsync(query)).Vector;
+        return await store.SearchAsync(vector, topK, allowedRoles: user.Roles); <span class="c">// ব্যবহারকারীর permission অনুযায়ী ফিল্টার</span>
+    }
+}
+
+public record PolicyHit(string Text, string Source, int Page, double Score);</pre>
+<p>লক্ষ্য করুন: এখানে <b>"G" (Generation) MCP Server-এ হয় না</b>। Server শুধু <i>Retrieval</i> করে chunk ফেরত দেয়; উত্তর লেখে Host-এর LLM। অর্থাৎ MCP Server RAG-এর "R" অংশের প্যাকেজিং, আর LLM-এর উত্তর তৈরি হলো "G"।</p>
+
+<h4>৪. একটা প্রশ্নে RAG + MCP একসাথে (Agentic RAG)</h4>
+<p>প্রশ্ন: <i>"Triplover-এর এই মাসের outstanding কত, আর কোম্পানির নীতি অনুযায়ী এতে কি approval লাগবে?"</i> — এক প্রশ্নে দুই ধরনের জ্ঞান দরকার:</p>
+<table>
+<tr><th>ধাপ</th><th>LLM কী বেছে নেয়</th><th>কোন ধরনের উৎস</th><th>ফল</th></tr>
+<tr><td>১</td><td><code>get_customer_outstanding("Triplover")</code></td><td><b>Live ডেটা</b> — MCP tool → Accounting API → PostgreSQL</td><td>৪২,০০,০০০ BDT</td></tr>
+<tr><td>২</td><td><code>search_policy_docs("outstanding approval limit")</code></td><td><b>ডকুমেন্ট জ্ঞান</b> — RAG (MCP tool হিসেবে expose করা)</td><td>"৩০ লক্ষ টাকার বেশি হলে CFO approval — policy §4.2"</td></tr>
+<tr><td>৩</td><td>নিজে যুক্তি করে মেলায়</td><td>দুটো ফলাফল context-এ</td><td>"৪২ লক্ষ &gt; ৩০ লক্ষ, তাই CFO approval লাগবে (সূত্র: §4.2)"</td></tr>
+</table>
+<p>এখানে retrieval আর "সবসময় প্রতিটা প্রশ্নে চলে" না — মডেল নিজে সিদ্ধান্ত নেয় কখন খুঁজবে। একে বলে <span class="kw">Agentic RAG</span>। সাধারণ (classic) RAG আর এর পার্থক্য:</p>
+<table>
+<tr><th></th><th>Classic RAG</th><th>MCP-ভিত্তিক Agentic RAG</th></tr>
+<tr><td>Retrieval কখন</td><td>প্রতিটা প্রশ্নে অবশ্যই, fixed pipeline</td><td>মডেল দরকার মনে করলে (tool call)</td></tr>
+<tr><td>উৎস</td><td>একটা vector DB</td><td>একাধিক — vector DB, SQL, API, ফাইল — সব tool হিসেবে</td></tr>
+<tr><td>একাধিকবার খোঁজা</td><td>সাধারণত একবার</td><td>প্রথম ফল ভালো না হলে query বদলে আবার খুঁজতে পারে</td></tr>
+<tr><td>Latency/cost</td><td>কম, অনুমানযোগ্য</td><td>বেশি (একাধিক LLM call), কিন্তু নমনীয়</td></tr>
+<tr><td>নিয়ন্ত্রণ</td><td>সহজ</td><td>কঠিন — iteration সীমা, evaluation দরকার</td></tr>
+</table>
+
+<h4>৫. MCP-র তিন primitive-এ RAG কীভাবে বসে</h4>
+<table>
+<tr><th>Primitive</th><th>RAG-এ ব্যবহার</th><th>উদাহরণ</th></tr>
+<tr><td><b>Tool</b></td><td>মডেল query বানিয়ে খোঁজে — সবচেয়ে প্রচলিত রূপ</td><td><code>search_policy_docs(query, topK)</code></td></tr>
+<tr><td><b>Resource</b></td><td>নির্দিষ্ট ডকুমেন্ট/chunk URI দিয়ে সরাসরি পড়া (খোঁজা ছাড়া); Tool-এর ফলে পাওয়া source খুলে পুরোটা পড়তে কাজে লাগে</td><td><code>policy://vendor-payments#4.2</code></td></tr>
+<tr><td><b>Prompt</b></td><td>"নীতি-সম্মত কি না যাচাই করো" ধরনের পুনঃব্যবহারযোগ্য workflow template, যা ভেতরে retrieval tool ব্যবহার করতে বলে</td><td><code>check_policy_compliance</code></td></tr>
+</table>
+
+<h4>৬. কখন কী ব্যবহার করবেন — সিদ্ধান্ত নির্দেশিকা</h4>
+<table>
+<tr><th>পরিস্থিতি</th><th>সিদ্ধান্ত</th></tr>
+<tr><td>একটাই app, ছোট ডকুমেন্ট-সেট, শুধু Q&amp;A</td><td>সরল RAG, app-এর ভেতরে। MCP বাড়তি জটিলতা।</td></tr>
+<tr><td>একাধিক app/client (chat, IDE, বট) একই knowledge ব্যবহার করবে</td><td>RAG-কে MCP Server বানান — একবার বানিয়ে সবাই ব্যবহার করবে</td></tr>
+<tr><td>প্রশ্ন "নির্ভুল সংখ্যা/রেকর্ড" ধরনের (balance, invoice amount)</td><td>RAG নয় — SQL/API MCP tool। Vector search অনুমান করে, SQL নিখুঁত।</td></tr>
+<tr><td>প্রশ্ন "নীতি/ব্যাখ্যা/কীভাবে" ধরনের</td><td>RAG (ডকুমেন্ট retrieval)</td></tr>
+<tr><td>কাজ করাতে হবে (voucher তৈরি, ইমেইল)</td><td>MCP write tool + confirmation — RAG-এর কাজ নয়</td></tr>
+<tr><td>দুটোই লাগে</td><td>MCP Host-এ দুই ধরনের tool রাখুন; মডেল বেছে নেবে (Agentic RAG)</td></tr>
+<tr><td>Knowledge বাইরের সিস্টেমে (Drive, Confluence) আছে ও প্রায়ই বদলায়</td><td>তাদের MCP server দিয়ে live আনুন; ঘনঘন কোয়েরি হলে নিজের index-ও রাখুন</td></tr>
+</table>
+
+<div class="callout best"><span class="tag">Best practice — RAG-কে MCP Tool বানালে</span>
+(১) Description-এ স্পষ্ট লিখুন <i>কখন</i> এটা ব্যবহার হবে ও কখন নয় (policy বনাম live সংখ্যা) — নইলে মডেল ভুল tool বাছবে। (২) প্রতিটা hit-এর সাথে <b>source ও page</b> ফেরত দিন, যাতে উত্তরে citation দেওয়া যায়। (৩) <code>topK</code> সীমিত রাখুন ও chunk ছোট রাখুন — বড় result context ফুলিয়ে খরচ ও noise বাড়ায়। (৪) <b>ব্যবহারকারীর permission</b> অনুযায়ী metadata filter করুন — RAG-এর ফাঁক দিয়ে অন্যের গোপন ডকুমেন্ট যেন না বেরোয়। (৫) কিছু না পেলে খালি তালিকা ফেরত দিন, যাতে মডেল "জানি না" বলতে পারে — অনুমান নয়।</div>
+
+<div class="callout mistake"><span class="tag">ভুল ধারণা ও সমস্যা</span>
+<b>১. "MCP থাকলে RAG লাগে না"</b> — ভুল। MCP কেবল সংযোগ-পথ; বড় ডকুমেন্ট ভাণ্ডারে অর্থভিত্তিক (semantic) খোঁজার জন্য embedding/vector search তবুও লাগে।<br>
+<b>২. "RAG থাকলে MCP লাগে না"</b> — ছোট app-এ সত্যি, কিন্তু live ডেটা ও action দরকার হলে (আজকের sales, voucher) RAG যথেষ্ট নয়।<br>
+<b>৩. Retrieved chunk-এ Prompt Injection</b> — ডকুমেন্টের ভেতরে লুকানো "আগের নির্দেশ ভুলে যাও…" লেখা থাকতে পারে। Retrieved টেক্সট <b>ডেটা</b>, instruction নয় — Safety অধ্যায়ের নিয়ম মানুন।<br>
+<b>৪. সব কিছু RAG দিয়ে করা</b> — সংখ্যাভিত্তিক/কাঠামোগত প্রশ্নে vector search ভুল সংখ্যা দিতে পারে; সেগুলোর জন্য SQL tool।<br>
+<b>৫. অনেক tool + বড় chunk</b> — context দ্রুত ভরে ও মডেল বিভ্রান্ত হয়; tool কমান, result ছোট রাখুন।</div>
+
+<div class="callout behind"><span class="tag">পর্দার পেছনে — এক বাক্যে সারাংশ</span>
+RAG = <b>কী তথ্য</b> আনব (retrieval কৌশল), Function Calling = মডেল <b>কীভাবে চাইবে</b> (ফরম্যাট), MCP = সেই তথ্য/action <b>কোথা থেকে, কোন standard পথে</b> আসবে (প্রোটোকল)। তিনটা মিলেই AI Accounting Assistant: MCP-র মাধ্যমে পাওয়া দুই ধরনের tool — একটা <b>live ডেটা</b>, একটা <b>RAG</b> — আর LLM দুটো মিলিয়ে উত্তর দেয়।</div>
 
 <h3>পূর্ণ Roadmap — শূন্য থেকে Production AI Agent পর্যন্ত</h3>
 <table>
