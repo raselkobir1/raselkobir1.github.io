@@ -181,7 +181,7 @@ const pages = [
 </pre></div>
 
 <div class="callout why"><span class="tag">কেন Communication এই ফ্রেমওয়ার্কের একটা অবিচ্ছেদ্য অংশ</span>
-Case Study শুধু টেকনিক্যাল জ্ঞান পরীক্ষা করে না — এটা পরীক্ষা করে আপনি অস্পষ্ট, open-ended সমস্যা কীভাবে পদ্ধতিগতভাবে সামলান। জোরে জোরে চিন্তা প্রকাশ করা (thinking aloud), প্রতিটা সিদ্ধান্তের কারণ ব্যাখ্যা করা — এই দক্ষতাগুলো এই সাইটের Scalability কোর্সের "Technical Interview Strategy" চ্যাপ্টারে বিস্তারিত আলোচিত হয়েছে, এবং প্রতিটা Case Study-তে সরাসরি প্রযোজ্য।</div>
+Case Study শুধু টেকনিক্যাল জ্ঞান পরীক্ষা করে না — এটা পরীক্ষা করে আপনি অস্পষ্ট, open-ended সমস্যা কীভাবে পদ্ধতিগতভাবে সামলান। জোরে জোরে চিন্তা প্রকাশ করা (thinking aloud), প্রতিটা সিদ্ধান্তের কারণ ব্যাখ্যা করা — এই দক্ষতাগুলো এই সাইটের System Architecture কোর্সের "Technical Interview Strategy" চ্যাপ্টারে বিস্তারিত আলোচিত হয়েছে, এবং প্রতিটা Case Study-তে সরাসরি প্রযোজ্য।</div>
 
 <div class="callout mistake"><span class="tag">Common mistake — Requirement স্পষ্ট না করেই ডিজাইন শুরু করা</span>
 "Design Twitter" শুনেই সরাসরি database schema আঁকা শুরু করা একটা মারাত্মক ভুল — কারণ Twitter-এর জন্য ডিজাইন সম্পূর্ণ ভিন্ন হবে যদি scale ১০ লাখ ইউজার হয় বনাম ১০০ কোটি ইউজার, বা যদি শুধু text post হয় বনাম video-ও অন্তর্ভুক্ত থাকে। ৫ মিনিট স্পষ্টীকরণ প্রশ্নে ব্যয় করা পরবর্তী ৪০ মিনিট ভুল দিকে যাওয়া থেকে বাঁচায়।</div>
@@ -212,7 +212,7 @@ Case Study শুধু টেকনিক্যাল জ্ঞান পরী
 </pre></div>
 
 <h3>Deep Dive — Oversell সমস্যা সমাধান</h3>
-<p>মূল চ্যালেঞ্জ হলো দুইজন গ্রাহক একই সাথে শেষ একটা আইটেম কিনতে চাইলে race condition তৈরি হয় (এই সাইটের Scalability কোর্সের Concurrency Advanced চ্যাপ্টারে বিস্তারিত আলোচিত)। দুইটা প্রধান সমাধান —</p>
+<p>মূল চ্যালেঞ্জ হলো দুইজন গ্রাহক একই সাথে শেষ একটা আইটেম কিনতে চাইলে race condition তৈরি হয় (এই সাইটের System Architecture কোর্সের Concurrency Advanced চ্যাপ্টারে বিস্তারিত আলোচিত)। দুইটা প্রধান সমাধান —</p>
 <table>
 <tr><th>পদ্ধতি</th><th>কীভাবে কাজ করে</th><th>Trade-off</th></tr>
 <tr><td>Atomic DB Decrement</td><td><code>UPDATE inventory SET stock = stock - 1 WHERE product_id = X AND stock > 0</code> — একটা atomic SQL statement, affected row 0 হলে বুঝবেন stock শেষ</td><td>সহজ, নির্ভরযোগ্য, কিন্তু high-contention-এ একটা row-তে সব request সিরিয়ালাইজড হয়ে bottleneck তৈরি করতে পারে</td></tr>
@@ -221,13 +221,13 @@ Case Study শুধু টেকনিক্যাল জ্ঞান পরী
 
 <h3>Flash Sale-এর জন্য বিশেষ স্কেলিং কৌশল</h3>
 <ul>
-<li><b>Virtual Waiting Room:</b> সেলের ঠিক আগে/সময় ট্র্যাফিক একটা queue-তে রাখা এবং ধাপে ধাপে backend-এ ছেড়ে দেওয়া, যাতে backend কখনও তার ক্যাপাসিটির বাইরে চাপ না পায় (এই সাইটের Scalability কোর্সের Rate Limiting চ্যাপ্টারের admission control ধারণার সরাসরি প্রয়োগ)।</li>
+<li><b>Virtual Waiting Room:</b> সেলের ঠিক আগে/সময় ট্র্যাফিক একটা queue-তে রাখা এবং ধাপে ধাপে backend-এ ছেড়ে দেওয়া, যাতে backend কখনও তার ক্যাপাসিটির বাইরে চাপ না পায় (এই সাইটের System Architecture কোর্সের Rate Limiting চ্যাপ্টারের admission control ধারণার সরাসরি প্রয়োগ)।</li>
 <li><b>Aggressive Caching:</b> প্রোডাক্টের তথ্য (নাম, দাম, ছবি) heavily cache করা, কারণ এগুলো ফ্ল্যাশ সেলের সময় বারবার পড়া হয় কিন্তু পরিবর্তন হয় না — শুধু stock count টাই dynamic।</li>
 <li><b>Checkout Queue Isolation:</b> Checkout/Payment flow-কে Browse flow থেকে আলাদা সার্ভিস/resource pool-এ রাখা, যাতে browsing traffic checkout-কে প্রভাবিত না করে, বা উল্টোটা।</li>
 </ul>
 
 <div class="callout why"><span class="tag">কেন এখানে Idempotency অত্যন্ত গুরুত্বপূর্ণ</span>
-ফ্ল্যাশ সেলের সময় নেটওয়ার্ক timeout-এর কারণে client প্রায়ই "Place Order" রিকোয়েস্ট retry করে। যদি Order Service idempotency key (এই সাইটের Scalability কোর্সের Idempotency চ্যাপ্টারে বিস্তারিত) ব্যবহার না করে, একই গ্রাহক দুর্ঘটনাক্রমে দুইবার অর্ডার করে ফেলতে পারেন, বা দুইবার শেষ stock-টা claim করার চেষ্টা করতে পারেন।</div>
+ফ্ল্যাশ সেলের সময় নেটওয়ার্ক timeout-এর কারণে client প্রায়ই "Place Order" রিকোয়েস্ট retry করে। যদি Order Service idempotency key (এই সাইটের System Architecture কোর্সের Idempotency চ্যাপ্টারে বিস্তারিত) ব্যবহার না করে, একই গ্রাহক দুর্ঘটনাক্রমে দুইবার অর্ডার করে ফেলতে পারেন, বা দুইবার শেষ stock-টা claim করার চেষ্টা করতে পারেন।</div>
 
 <div class="callout mistake"><span class="tag">Common mistake — শুধু Application-লেভেল লজিক দিয়ে Oversell ঠেকানোর চেষ্টা</span>
 "প্রথমে stock চেক করো, তারপর order করো" — এই দুই-ধাপের লজিক application কোডে লিখলে দুইটা concurrent request-ই "stock আছে" দেখতে পারে এবং দুইটাই order সফল করে ফেলতে পারে। Stock decrement অবশ্যই database-লেভেলে atomic হতে হবে, application-লেভেল check-then-act যথেষ্ট না।</div>
@@ -261,7 +261,7 @@ Reserve-then-Confirm পদ্ধতিতে reservation TTL (যেমন ১�
 </pre></div>
 
 <h3>Deep Dive — Idempotency এবং Payment State Machine</h3>
-<p>একটা পেমেন্ট রিকোয়েস্ট নেটওয়ার্ক timeout-এর কারণে retry হতে পারে — এই সাইটের Scalability কোর্সের Idempotency Key Pattern চ্যাপ্টারে আলোচিত পদ্ধতি এখানে সরাসরি প্রযোজ্য, প্রতিটা চার্জ রিকোয়েস্টে একটা client-generated idempotency key থাকতে হবে।</p>
+<p>একটা পেমেন্ট রিকোয়েস্ট নেটওয়ার্ক timeout-এর কারণে retry হতে পারে — এই সাইটের System Architecture কোর্সের Idempotency Key Pattern চ্যাপ্টারে আলোচিত পদ্ধতি এখানে সরাসরি প্রযোজ্য, প্রতিটা চার্জ রিকোয়েস্টে একটা client-generated idempotency key থাকতে হবে।</p>
 <p>প্রতিটা পেমেন্ট একটা <span class="kw">State Machine</span> অনুসরণ করে, কারণ external gateway (Stripe/PayPal)-এর সাথে যোগাযোগ asynchronous এবং ব্যর্থ হতে পারে —</p>
 <div class="diagram"><pre>
   Created ──▶ Processing ──▶ Succeeded
@@ -311,9 +311,9 @@ Reserve-then-Confirm পদ্ধতিতে reservation TTL (যেমন ১�
 <tr><th>পদ্ধতি</th><th>বাস্তবায়ন</th><th>Trade-off</th></tr>
 <tr><td>Pessimistic Locking</td><td><code>SELECT ... FOR UPDATE</code> দিয়ে সংশ্লিষ্ট তারিখের row-গুলো lock করে, availability যাচাই করে, তারপর update করা</td><td>নির্ভরযোগ্য, কিন্তু high-demand তারিখে (holiday season) lock contention বাড়তে পারে</td></tr>
 <tr><td>Optimistic Locking + Retry</td><td>একটা version কলাম দিয়ে conflict শুধু commit-এর সময় যাচাই করা, conflict হলে ব্যবহারকারীকে আবার চেষ্টা করতে বলা</td><td>কম contention-এ ভালো throughput, কিন্তু high-demand তারিখে বারবার retry-এর কারণে ব্যবহারকারীর অভিজ্ঞতা খারাপ হতে পারে</td></tr>
-<tr><td>Distributed Lock (Redis)</td><td>room_id + date range-এর ওপর একটা সাময়িক distributed lock নেওয়া, বুকিং সম্পন্ন হলে ছেড়ে দেওয়া</td><td>Microservices আর্কিটেকচারে (যেখানে booking logic ডাটাবেস transaction-এর বাইরে ছড়িয়ে থাকতে পারে) কার্যকর, কিন্তু lock expiry/fencing token সঠিকভাবে সামলাতে হয় (Scalability কোর্সের Concurrency Advanced চ্যাপ্টারে বিস্তারিত)</td></tr>
+<tr><td>Distributed Lock (Redis)</td><td>room_id + date range-এর ওপর একটা সাময়িক distributed lock নেওয়া, বুকিং সম্পন্ন হলে ছেড়ে দেওয়া</td><td>Microservices আর্কিটেকচারে (যেখানে booking logic ডাটাবেস transaction-এর বাইরে ছড়িয়ে থাকতে পারে) কার্যকর, কিন্তু lock expiry/fencing token সঠিকভাবে সামলাতে হয় (System Architecture কোর্সের Concurrency Advanced চ্যাপ্টারে বিস্তারিত)</td></tr>
 </table>
-<p>এই সাইটের Scalability কোর্সের Concurrency Advanced চ্যাপ্টারে আলোচিত Pessimistic/Optimistic Locking-এর একই মূলনীতি এখানে প্রযোজ্য — পার্থক্য শুধু এই যে এখানে একটা single row না, একটা তারিখ-রেঞ্জ জুড়ে একাধিক row-এর ওপর ভারসাম্য বজায় রাখতে হয়।</p>
+<p>এই সাইটের System Architecture কোর্সের Concurrency Advanced চ্যাপ্টারে আলোচিত Pessimistic/Optimistic Locking-এর একই মূলনীতি এখানে প্রযোজ্য — পার্থক্য শুধু এই যে এখানে একটা single row না, একটা তারিখ-রেঞ্জ জুড়ে একাধিক row-এর ওপর ভারসাম্য বজায় রাখতে হয়।</p>
 
 <h3>Booking Hold Pattern</h3>
 <p>E-commerce Case Study-এর মতোই, বুকিং সিস্টেম প্রায়ই একটা সাময়িক "hold" তৈরি করে (যেমন ১০ মিনিট) যখন ব্যবহারকারী পেমেন্ট সম্পন্ন করছেন — এই সময়ে সেই রুম অন্য কাউকে দেখানো হয় না, কিন্তু hold expire হলে (পেমেন্ট সম্পন্ন না হলে) স্বয়ংক্রিয়ভাবে আবার available হয়ে যায়।</p>
@@ -557,7 +557,7 @@ Chunk-কে তার filename বা position দিয়ে না, বর�
 <h3>Deep Dive — Duplicate ও Late Event সামলানো</h3>
 <table>
 <tr><th>সমস্যা</th><th>সমাধান</th></tr>
-<tr><td>Duplicate Event (একই ক্লিক দুইবার ingest হওয়া, network retry-এর কারণে)</td><td>প্রতিটা ইভেন্টে একটা unique event ID দেওয়া, aggregation-এর আগে idempotent deduplication করা (Scalability কোর্সের Idempotency চ্যাপ্টারের নীতি প্রযোজ্য)</td></tr>
+<tr><td>Duplicate Event (একই ক্লিক দুইবার ingest হওয়া, network retry-এর কারণে)</td><td>প্রতিটা ইভেন্টে একটা unique event ID দেওয়া, aggregation-এর আগে idempotent deduplication করা (System Architecture কোর্সের Idempotency চ্যাপ্টারের নীতি প্রযোজ্য)</td></tr>
 <tr><td>Late Event (৫ মিনিট আগের একটা ক্লিক নেটওয়ার্ক বিলম্বে এখন এসে পৌঁছালো)</td><td><span class="kw">Watermarking</span> — একটা নির্দিষ্ট সময় (grace period) পর্যন্ত দেরিতে আসা ইভেন্ট গ্রহণ করা এবং সংশ্লিষ্ট window-এর aggregate আপডেট করা, তারপর window "চূড়ান্ত" ঘোষণা করা</td></tr>
 </table>
 
@@ -660,7 +660,7 @@ Geohash-এর length (precision) নির্ধারণ করে grid cell �
                    ▼
             Lease Expire ──▶ Task আবার Queue-তে ফিরে এলো ──▶ Worker B তুলে নিল
 </pre></div>
-<p>এই পদ্ধতি <b>at-least-once</b> execution guarantee দেয় (task মিস হবে না), কিন্তু এতে একটা task দুইবার চলার সম্ভাব্যতা থেকে যায় (যদি Worker A আসলে কাজ শেষ করে ফেলেছিল কিন্তু acknowledge পাঠানোর আগেই crash করে) — তাই প্রতিটা task-এর নিজস্ব business logic-কে idempotent (Scalability কোর্সের Idempotency চ্যাপ্টার) হতে হবে।</p>
+<p>এই পদ্ধতি <b>at-least-once</b> execution guarantee দেয় (task মিস হবে না), কিন্তু এতে একটা task দুইবার চলার সম্ভাব্যতা থেকে যায় (যদি Worker A আসলে কাজ শেষ করে ফেলেছিল কিন্তু acknowledge পাঠানোর আগেই crash করে) — তাই প্রতিটা task-এর নিজস্ব business logic-কে idempotent (System Architecture কোর্সের Idempotency চ্যাপ্টার) হতে হবে।</p>
 
 <h3>Recurring Task (Cron) সামলানো</h3>
 <p>একটা recurring task (যেমন "প্রতি রাত ২টায়") একটা একক entry হিসেবে না রেখে, প্রতিটা execution-এর জন্য পরবর্তী due_time গণনা করে একটা নতুন one-time task entry তৈরি করা হয় — Scheduler সবসময় "due_time ≤ এখন" এমন task-ই খুঁজে বের করে।</p>
@@ -675,7 +675,7 @@ Distributed system-এ সত্যিকারের exactly-once execution gua
 যদি একটা worker task তোলার সাথে সাথেই সেটাকে "completed" চিহ্নিত করে, তারপর process করতে গিয়ে crash করে, সেই task চিরকাল হারিয়ে যায় (queue-তে ফিরে আসে না কারণ ইতিমধ্যে "done" মার্ক করা)। Task সম্পূর্ণ সফলভাবে শেষ হওয়ার পরেই acknowledge করা উচিত, তোলার সময় না।</div>
 
 <div class="callout best"><span class="tag">Best practice — Exponential Backoff দিয়ে Retry করুন</span>
-একটা ব্যর্থ task সাথে সাথেই বারবার retry করলে downstream সার্ভিসের ওপর চাপ আরও বাড়িয়ে দিতে পারে (বিশেষ করে যদি সেই সার্ভিস সাময়িকভাবে overload হয়ে থাকে)। Scalability কোর্সের Concurrency Advanced চ্যাপ্টারে আলোচিত Exponential Backoff with Jitter এখানেও প্রযোজ্য — প্রতিটা retry-এর মধ্যে ক্রমবর্ধমান বিরতি রাখা।</div>
+একটা ব্যর্থ task সাথে সাথেই বারবার retry করলে downstream সার্ভিসের ওপর চাপ আরও বাড়িয়ে দিতে পারে (বিশেষ করে যদি সেই সার্ভিস সাময়িকভাবে overload হয়ে থাকে)। System Architecture কোর্সের Concurrency Advanced চ্যাপ্টারে আলোচিত Exponential Backoff with Jitter এখানেও প্রযোজ্য — প্রতিটা retry-এর মধ্যে ক্রমবর্ধমান বিরতি রাখা।</div>
 </template>
 
 <template data-page="monitoring">
@@ -697,7 +697,7 @@ Distributed system-এ সত্যিকারের exactly-once execution gua
                                                                     │
                                                     threshold ছাড়ালে ──▶ [Notification Dispatch]
                                                                               (Slack, Email, SMS,
-                                                                               Scalability কোর্সের
+                                                                               System Architecture কোর্সের
                                                                                Communication চ্যাপ্টারে
                                                                                আলোচিত channel-এ)
 </pre></div>

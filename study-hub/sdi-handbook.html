@@ -175,7 +175,7 @@ const pages = [
  User ─► [ Load Balancer ] ──► Web Server 2          Server 1 মরলে health check ধরে,
         (public IP)  └──► Web Server 3 (নতুন)        সব traffic বাকিদের কাছে যায়
 </pre></div>
-<p>Client শুধু LB-র IP চেনে, web server সরাসরি পৌঁছানো যায় না (নিরাপত্তা)। LB-ও জোড়ায়/managed হওয়া চাই, নইলে সে-ই SPOF। বিস্তারিত: <a href="scalability.html" style="color:var(--accent2)">Scalability কোর্স</a>।</p>
+<p>Client শুধু LB-র IP চেনে, web server সরাসরি পৌঁছানো যায় না (নিরাপত্তা)। LB-ও জোড়ায়/managed হওয়া চাই, নইলে সে-ই SPOF। বিস্তারিত: <a href="system-architecture.html" style="color:var(--accent2)">System Architecture কোর্স</a>।</p>
 
 <h3>১.৩ ধাপ ৩ — Database Replication</h3>
 <div class="diagram"><pre>
